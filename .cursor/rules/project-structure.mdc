@@ -1,0 +1,93 @@
+---
+description: Full shortgen project structure, pipeline flow, and conventions
+alwaysApply: true
+---
+
+# shortgen — Project Structure
+
+Remotion-based short video generator. Combines AI-generated images + voice with word-level captions for faceless shorts.
+
+## Directory Layout
+
+```
+shortgen/
+├── src/                    # Remotion React compositions
+│   ├── Root.tsx            # Fetches index.json, registers ShortVideoComposition per cacheKey
+│   ├── ShortVideo.tsx      # Main composition; loads manifest, renders Series + CaptionsOverlay
+│   ├── SceneSlide.tsx      # One scene: image + audio, fade in/out
+│   ├── CaptionsOverlay.tsx # TikTok-style word captions (@remotion/captions)
+│   └── types.ts            # VideoManifest, SceneInput, Caption
+├── public/                 # Static assets for Remotion
+│   └── shortgen/{cacheKey}/  # Per-content assets
+│       ├── manifest.json   # Pipeline output: scenes, captions, dimensions
+│       ├── images/         # image_1.png, ...
+│       └── voice/          # voice_1.mp3, ...
+├── generation/             # Python pipeline
+│   ├── scripts/           # Pipeline modules (run from generation/scripts/)
+│   │   ├── run_pipeline.py         # Orchestrator: 5-step pipeline
+│   │   ├── generate_script.py     # Step 1: LLM → script.md
+│   │   ├── run_chunker.py         # Step 2: LLM → chunks.json
+│   │   ├── generate_images.py     # Step 3: Replicate img2img → images/
+│   │   ├── generate_voice.py      # Step 3: ElevenLabs TTS → voice/
+│   │   ├── prepare_remotion_assets.py  # Step 4: copy to public/, manifest, Whisper captions
+│   │   ├── render_video.py        # Step 5: npx remotion render
+│   │   ├── path_utils.py          # project_root, cache_path, video_public, etc.
+│   │   ├── models.py              # Pydantic: Scene, Chunks, ChunksOutput
+│   │   └── logger.py              # step_start/end, cache_hit/miss, progress
+│   ├── prompts/           # LLM system prompts
+│   │   ├── short-script-system-prompt.md
+│   │   └── transcript-chunker-system-prompt.md
+│   ├── assets/            # Mascot reference (mascot_canvas.png)
+│   ├── cache/             # Per-content cache (key = SHA256 of raw content, first 16 chars)
+│   │   └── {cacheKey}/
+│   │       ├── script.md
+│   │       ├── chunks.json        # Scenes with text, imagery, section, image_path, voice_path
+│   │       ├── images/            # image_1.png, image_N_request.json
+│   │       ├── voice/             # voice_1.mp3, ...
+│   │       └── captions/captions.json  # Whisper word-level (cached)
+│   └── requirements.txt
+└── remotion.config.ts
+```
+
+## Pipeline Flow (5 Steps)
+
+1. **Script** — Raw content → GPT-4o → `cache/{cacheKey}/script.md` (40–60s short script)
+2. **Chunks** — Script → GPT-4o (structured) → `chunks.json` (scenes: text, imagery, section)
+3. **Images + Voice** — Parallel: Replicate img2img (mascot ref) + ElevenLabs TTS → `images/`, `voice/`
+4. **Prepare** — Copy assets to `public/shortgen/{cacheKey}/`, run Whisper for word captions → `manifest.json`
+5. **Render** — `npx remotion render ShortVideo -o short.mp4 --props='{"cacheKey":"..."}'`
+
+Cache key = first 16 chars of SHA256(raw_content).
+
+## Key Data Structures
+
+**chunks.json** (pipeline): `{ "scenes": [{ "text", "imagery", "section", "image_path", "voice_path" }] }`
+
+**manifest.json** (Remotion): `{ "cacheKey", "fps": 30, "width": 540, "height": 960, "durationInFrames", "scenes": [{ "text", "imagePath", "voicePath", "durationInSeconds" }], "captions": [{ "text", "startMs", "endMs", "timestampMs", "confidence" }] }`
+
+**index.json** (`public/shortgen/index.json`): `{ "cacheKeys": [...] }` — written by prepare for Remotion Studio discovery.
+
+## Env Vars
+
+`.env`: `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `REPLICATE_API_TOKEN`
+
+## Commands
+
+```bash
+# Full pipeline
+python generation/scripts/run_pipeline.py -f content.txt
+
+# Options: --skip-render, --no-whisper, --max-scenes N
+
+# Prepare only (after images+voice exist)
+python generation/scripts/prepare_remotion_assets.py CACHE_KEY
+
+# Remotion Studio (set props: { "cacheKey": "d87aa21852dabc8b" })
+npx remotion studio
+```
+
+## APIs & Dependencies
+
+- **Images**: Replicate `openai/gpt-image-1-mini` img2img, mascot as reference, hand-drawn stick figure style
+- **Voice**: ElevenLabs `eleven_multilingual_v2`, voice Adam
+- **Captions**: faster-whisper (word-level) or scene-level fallback from chunk text

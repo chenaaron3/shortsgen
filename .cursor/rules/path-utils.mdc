@@ -1,0 +1,33 @@
+---
+description: Path management for the pipeline (path_utils.py)
+globs: generation/**/*.py
+alwaysApply: false
+---
+
+# Path Utils
+
+Use `path_utils` for all paths. Do not hardcode paths or construct them manually.
+
+## Imports
+
+```python
+from path_utils import cache_path, video_public, project_root, prompts_dir, assets_dir, mascot_path, env_path
+```
+
+## Key Functions
+
+| Function | Returns |
+|----------|---------|
+| `cache_path(cache_key, *parts)` | `cache/{cache_key}/parts` — chunks.json, images/, voice/, captions/ |
+| `video_public()` | `public/` — Remotion static assets |
+| `project_root()` | Project root |
+| `prompts_dir()` | `generation/prompts/` |
+| `assets_dir()` | `generation/assets/` |
+| `mascot_path()` | Default mascot canvas |
+| `env_path()` | Project .env |
+
+## Rules
+
+1. Cache assets live under `cache_path(cache_key, ...)` — e.g. `cache_path(cache_key, "chunks.json")`, `cache_path(cache_key, "images", "image_1.png")`.
+2. Remotion output goes under `video_public() / "shortgen" / cache_key` — manifests, images, voice.
+3. Scripts run from `generation/scripts/`; path_utils resolves relative to project root.

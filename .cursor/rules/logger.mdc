@@ -1,0 +1,43 @@
+---
+description: Pipeline logging conventions (logger.py)
+globs: generation/scripts/**/*.py
+alwaysApply: false
+---
+
+# Pipeline Logger
+
+Use `logger` (not `print`) for all pipeline output.
+
+## Step Boundaries
+
+- `step_start(name)` — step header with emoji. Call at start of each pipeline step.
+- `step_end(name, outputs=[...], cache_hits=N, cache_misses=M)` — step footer with outputs and optional cache stats.
+- `set_step_context(num, total)` — set Step N/T for headers (called by run_pipeline).
+
+## Cache Reporting
+
+- `cache_hit(path)` — ✓ when reading from cache.
+- `cache_miss(path)` — ○ when generating.
+- `cache_stats_summary(hits, misses, to_generate)` — one-line summary for parallel steps (images, voice).
+
+## Progress & Output
+
+- `progress(current, total, message)` — thread-safe progress line, e.g. `[3/10] saved -> image_1.png`.
+- `output(path, label)` — log an output file.
+- `info(msg)` — general info.
+- `warn(msg)` — to stderr.
+- `error(msg)` — to stderr.
+
+## Example
+
+```python
+from logger import step_start, step_end, cache_hit, cache_miss
+
+step_start("Images")
+if cached.exists():
+    cache_hit(cached)
+else:
+    cache_miss(cached)
+    # ... generate ...
+step_end("Images", outputs=[out_path], cache_hits=1, cache_misses=0)
+```

@@ -1,0 +1,25 @@
+{
+  "name": "shortgen",
+  "version": "1.0.0",
+  "description": "Remotion-based short video generator",
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion build",
+    "render": "remotion render",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.300",
+    "@remotion/cli": "4.0.300",
+    "@remotion/captions": "4.0.300",
+    "@remotion/media-utils": "4.0.300",
+    "@remotion/renderer": "4.0.300",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "remotion": "4.0.300"
+  },
+  "devDependencies": {
+    "@types/react": "18.2.0",
+    "typescript": "^5.0.0"
+  }
+}

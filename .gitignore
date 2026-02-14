@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Build outputs
+out/
+*.mp4
+
+# Environment
+.env
+
+# Cache and generated assets
+generation/cache/

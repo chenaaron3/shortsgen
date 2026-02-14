@@ -1,0 +1,653 @@
+{
+  "cacheKey": "d87aa21852dabc8b",
+  "fps": 30,
+  "width": 540,
+  "height": 960,
+  "durationInFrames": 904,
+  "scenes": [
+    {
+      "text": "Stop chasing big changes overnight.",
+      "imagePath": "images/image_1.png",
+      "voicePath": "voice/voice_1.mp3",
+      "durationInSeconds": 2.455510204081633
+    },
+    {
+      "text": "It's not about running a marathon or mastering French right now.",
+      "imagePath": "images/image_2.png",
+      "voicePath": "voice/voice_2.mp3",
+      "durationInSeconds": 3.422040816326531
+    },
+    {
+      "text": "Real change is slow\u2014it's about getting 1% better every day.",
+      "imagePath": "images/image_3.png",
+      "voicePath": "voice/voice_3.mp3",
+      "durationInSeconds": 4.362448979591837
+    },
+    {
+      "text": "Ask yourself, 'Who do I want to become?'",
+      "imagePath": "images/image_4.png",
+      "voicePath": "voice/voice_4.mp3",
+      "durationInSeconds": 2.455510204081633
+    },
+    {
+      "text": "Let that identity guide your actions.",
+      "imagePath": "images/image_5.png",
+      "voicePath": "voice/voice_5.mp3",
+      "durationInSeconds": 2.3248979591836734
+    },
+    {
+      "text": "Want to be a healthy person? Choose the stairs.",
+      "imagePath": "images/image_6.png",
+      "voicePath": "voice/voice_6.mp3",
+      "durationInSeconds": 3.2914285714285714
+    },
+    {
+      "text": "Want to be a linguist? Practice a single word.",
+      "imagePath": "images/image_7.png",
+      "voicePath": "voice/voice_7.mp3",
+      "durationInSeconds": 2.8212244897959184
+    },
+    {
+      "text": "A habit sticks when you make it obvious, attractive, easy, and satisfying.",
+      "imagePath": "images/image_8.png",
+      "voicePath": "voice/voice_8.mp3",
+      "durationInSeconds": 4.440816326530612
+    },
+    {
+      "text": "Change isn't a leap. It's tiny, consistent steps in the right direction.",
+      "imagePath": "images/image_9.png",
+      "voicePath": "voice/voice_9.mp3",
+      "durationInSeconds": 4.54530612244898
+    }
+  ],
+  "captions": [
+    {
+      "text": " Stop",
+      "startMs": 0,
+      "endMs": 220,
+      "timestampMs": 110,
+      "confidence": null
+    },
+    {
+      "text": " chasing",
+      "startMs": 220,
+      "endMs": 560,
+      "timestampMs": 390,
+      "confidence": null
+    },
+    {
+      "text": " big",
+      "startMs": 560,
+      "endMs": 880,
+      "timestampMs": 720,
+      "confidence": null
+    },
+    {
+      "text": " changes",
+      "startMs": 880,
+      "endMs": 1340,
+      "timestampMs": 1110,
+      "confidence": null
+    },
+    {
+      "text": " overnight.",
+      "startMs": 1340,
+      "endMs": 1760,
+      "timestampMs": 1550,
+      "confidence": null
+    },
+    {
+      "text": " It's",
+      "startMs": 2456,
+      "endMs": 2656,
+      "timestampMs": 2556,
+      "confidence": null
+    },
+    {
+      "text": " not",
+      "startMs": 2656,
+      "endMs": 2776,
+      "timestampMs": 2716,
+      "confidence": null
+    },
+    {
+      "text": " about",
+      "startMs": 2776,
+      "endMs": 2996,
+      "timestampMs": 2886,
+      "confidence": null
+    },
+    {
+      "text": " running",
+      "startMs": 2996,
+      "endMs": 3296,
+      "timestampMs": 3146,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 3296,
+      "endMs": 3456,
+      "timestampMs": 3376,
+      "confidence": null
+    },
+    {
+      "text": " marathon",
+      "startMs": 3456,
+      "endMs": 3736,
+      "timestampMs": 3596,
+      "confidence": null
+    },
+    {
+      "text": " or",
+      "startMs": 3736,
+      "endMs": 4036,
+      "timestampMs": 3886,
+      "confidence": null
+    },
+    {
+      "text": " mastering",
+      "startMs": 4036,
+      "endMs": 4396,
+      "timestampMs": 4216,
+      "confidence": null
+    },
+    {
+      "text": " French",
+      "startMs": 4396,
+      "endMs": 4716,
+      "timestampMs": 4556,
+      "confidence": null
+    },
+    {
+      "text": " right",
+      "startMs": 4716,
+      "endMs": 5076,
+      "timestampMs": 4896,
+      "confidence": null
+    },
+    {
+      "text": " now.",
+      "startMs": 5076,
+      "endMs": 5316,
+      "timestampMs": 5196,
+      "confidence": null
+    },
+    {
+      "text": " Real",
+      "startMs": 5878,
+      "endMs": 6098,
+      "timestampMs": 5988,
+      "confidence": null
+    },
+    {
+      "text": " change",
+      "startMs": 6098,
+      "endMs": 6398,
+      "timestampMs": 6248,
+      "confidence": null
+    },
+    {
+      "text": " is",
+      "startMs": 6398,
+      "endMs": 6698,
+      "timestampMs": 6548,
+      "confidence": null
+    },
+    {
+      "text": " slow.",
+      "startMs": 6698,
+      "endMs": 6978,
+      "timestampMs": 6838,
+      "confidence": null
+    },
+    {
+      "text": " It's",
+      "startMs": 7558,
+      "endMs": 7658,
+      "timestampMs": 7608,
+      "confidence": null
+    },
+    {
+      "text": " about",
+      "startMs": 7658,
+      "endMs": 7818,
+      "timestampMs": 7738,
+      "confidence": null
+    },
+    {
+      "text": " getting",
+      "startMs": 7818,
+      "endMs": 8078,
+      "timestampMs": 7948,
+      "confidence": null
+    },
+    {
+      "text": " 1",
+      "startMs": 8078,
+      "endMs": 8378,
+      "timestampMs": 8228,
+      "confidence": null
+    },
+    {
+      "text": " %",
+      "startMs": 8378,
+      "endMs": 8718,
+      "timestampMs": 8548,
+      "confidence": null
+    },
+    {
+      "text": " better",
+      "startMs": 8718,
+      "endMs": 8958,
+      "timestampMs": 8838,
+      "confidence": null
+    },
+    {
+      "text": " every",
+      "startMs": 8958,
+      "endMs": 9378,
+      "timestampMs": 9168,
+      "confidence": null
+    },
+    {
+      "text": " day.",
+      "startMs": 9378,
+      "endMs": 9658,
+      "timestampMs": 9518,
+      "confidence": null
+    },
+    {
+      "text": " Ask",
+      "startMs": 10240,
+      "endMs": 10440,
+      "timestampMs": 10340,
+      "confidence": null
+    },
+    {
+      "text": " yourself,",
+      "startMs": 10440,
+      "endMs": 10800,
+      "timestampMs": 10620,
+      "confidence": null
+    },
+    {
+      "text": " who",
+      "startMs": 11100,
+      "endMs": 11280,
+      "timestampMs": 11190,
+      "confidence": null
+    },
+    {
+      "text": " do",
+      "startMs": 11280,
+      "endMs": 11420,
+      "timestampMs": 11350,
+      "confidence": null
+    },
+    {
+      "text": " I",
+      "startMs": 11420,
+      "endMs": 11540,
+      "timestampMs": 11480,
+      "confidence": null
+    },
+    {
+      "text": " want",
+      "startMs": 11540,
+      "endMs": 11700,
+      "timestampMs": 11620,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 11700,
+      "endMs": 11840,
+      "timestampMs": 11770,
+      "confidence": null
+    },
+    {
+      "text": " become?",
+      "startMs": 11840,
+      "endMs": 12080,
+      "timestampMs": 11960,
+      "confidence": null
+    },
+    {
+      "text": " Let",
+      "startMs": 12696,
+      "endMs": 12856,
+      "timestampMs": 12776,
+      "confidence": null
+    },
+    {
+      "text": " that",
+      "startMs": 12856,
+      "endMs": 12996,
+      "timestampMs": 12926,
+      "confidence": null
+    },
+    {
+      "text": " identity",
+      "startMs": 12996,
+      "endMs": 13316,
+      "timestampMs": 13156,
+      "confidence": null
+    },
+    {
+      "text": " guide",
+      "startMs": 13316,
+      "endMs": 13796,
+      "timestampMs": 13556,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 13796,
+      "endMs": 14016,
+      "timestampMs": 13906,
+      "confidence": null
+    },
+    {
+      "text": " actions.",
+      "startMs": 14016,
+      "endMs": 14336,
+      "timestampMs": 14176,
+      "confidence": null
+    },
+    {
+      "text": " Want",
+      "startMs": 15020,
+      "endMs": 15200,
+      "timestampMs": 15110,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 15200,
+      "endMs": 15340,
+      "timestampMs": 15270,
+      "confidence": null
+    },
+    {
+      "text": " be",
+      "startMs": 15340,
+      "endMs": 15440,
+      "timestampMs": 15390,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 15440,
+      "endMs": 15540,
+      "timestampMs": 15490,
+      "confidence": null
+    },
+    {
+      "text": " healthy",
+      "startMs": 15540,
+      "endMs": 15740,
+      "timestampMs": 15640,
+      "confidence": null
+    },
+    {
+      "text": " person?",
+      "startMs": 15740,
+      "endMs": 16220,
+      "timestampMs": 15980,
+      "confidence": null
+    },
+    {
+      "text": " Choose",
+      "startMs": 17000,
+      "endMs": 17140,
+      "timestampMs": 17070,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 17140,
+      "endMs": 17360,
+      "timestampMs": 17250,
+      "confidence": null
+    },
+    {
+      "text": " stairs.",
+      "startMs": 17360,
+      "endMs": 17680,
+      "timestampMs": 17520,
+      "confidence": null
+    },
+    {
+      "text": " Want",
+      "startMs": 18312,
+      "endMs": 18472,
+      "timestampMs": 18392,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 18472,
+      "endMs": 18612,
+      "timestampMs": 18542,
+      "confidence": null
+    },
+    {
+      "text": " be",
+      "startMs": 18612,
+      "endMs": 18712,
+      "timestampMs": 18662,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 18712,
+      "endMs": 18792,
+      "timestampMs": 18752,
+      "confidence": null
+    },
+    {
+      "text": " linguist?",
+      "startMs": 18792,
+      "endMs": 19292,
+      "timestampMs": 19042,
+      "confidence": null
+    },
+    {
+      "text": " Practice",
+      "startMs": 19552,
+      "endMs": 19812,
+      "timestampMs": 19682,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 19812,
+      "endMs": 19992,
+      "timestampMs": 19902,
+      "confidence": null
+    },
+    {
+      "text": " single",
+      "startMs": 19992,
+      "endMs": 20192,
+      "timestampMs": 20092,
+      "confidence": null
+    },
+    {
+      "text": " word.",
+      "startMs": 20192,
+      "endMs": 20592,
+      "timestampMs": 20392,
+      "confidence": null
+    },
+    {
+      "text": " A",
+      "startMs": 21133,
+      "endMs": 21233,
+      "timestampMs": 21183,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 21233,
+      "endMs": 21453,
+      "timestampMs": 21343,
+      "confidence": null
+    },
+    {
+      "text": " sticks",
+      "startMs": 21453,
+      "endMs": 21793,
+      "timestampMs": 21623,
+      "confidence": null
+    },
+    {
+      "text": " when",
+      "startMs": 21793,
+      "endMs": 22093,
+      "timestampMs": 21943,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 22093,
+      "endMs": 22213,
+      "timestampMs": 22153,
+      "confidence": null
+    },
+    {
+      "text": " make",
+      "startMs": 22213,
+      "endMs": 22373,
+      "timestampMs": 22293,
+      "confidence": null
+    },
+    {
+      "text": " it",
+      "startMs": 22373,
+      "endMs": 22493,
+      "timestampMs": 22433,
+      "confidence": null
+    },
+    {
+      "text": " obvious,",
+      "startMs": 22493,
+      "endMs": 22793,
+      "timestampMs": 22643,
+      "confidence": null
+    },
+    {
+      "text": " attractive,",
+      "startMs": 23133,
+      "endMs": 23393,
+      "timestampMs": 23263,
+      "confidence": null
+    },
+    {
+      "text": " easy",
+      "startMs": 23833,
+      "endMs": 24033,
+      "timestampMs": 23933,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 24033,
+      "endMs": 24373,
+      "timestampMs": 24203,
+      "confidence": null
+    },
+    {
+      "text": " satisfying.",
+      "startMs": 24373,
+      "endMs": 24813,
+      "timestampMs": 24593,
+      "confidence": null
+    },
+    {
+      "text": " Change",
+      "startMs": 25574,
+      "endMs": 25834,
+      "timestampMs": 25704,
+      "confidence": null
+    },
+    {
+      "text": " isn't",
+      "startMs": 25834,
+      "endMs": 26234,
+      "timestampMs": 26034,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 26234,
+      "endMs": 26334,
+      "timestampMs": 26284,
+      "confidence": null
+    },
+    {
+      "text": " leap,",
+      "startMs": 26334,
+      "endMs": 26534,
+      "timestampMs": 26434,
+      "confidence": null
+    },
+    {
+      "text": " it's",
+      "startMs": 27014,
+      "endMs": 27234,
+      "timestampMs": 27124,
+      "confidence": null
+    },
+    {
+      "text": " tiny",
+      "startMs": 27234,
+      "endMs": 27434,
+      "timestampMs": 27334,
+      "confidence": null
+    },
+    {
+      "text": " consistent",
+      "startMs": 27434,
+      "endMs": 27854,
+      "timestampMs": 27644,
+      "confidence": null
+    },
+    {
+      "text": " steps",
+      "startMs": 27854,
+      "endMs": 28494,
+      "timestampMs": 28174,
+      "confidence": null
+    },
+    {
+      "text": " in",
+      "startMs": 28494,
+      "endMs": 28774,
+      "timestampMs": 28634,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 28774,
+      "endMs": 28854,
+      "timestampMs": 28814,
+      "confidence": null
+    },
+    {
+      "text": " right",
+      "startMs": 28854,
+      "endMs": 29014,
+      "timestampMs": 28934,
+      "confidence": null
+    },
+    {
+      "text": " direction.",
+      "startMs": 29014,
+      "endMs": 29374,
+      "timestampMs": 29194,
+      "confidence": null
+    }
+  ]
+}
