@@ -1,0 +1,779 @@
+{
+  "cacheKey": "d63da0a1d05e2891",
+  "fps": 30,
+  "width": 540,
+  "height": 960,
+  "durationInFrames": 956,
+  "scenes": [
+    {
+      "text": "You're approaching habit change all wrong.",
+      "imagePath": "images/image_1.png",
+      "voicePath": "voice/voice_1.mp3",
+      "durationInSeconds": 2.5338775510204083
+    },
+    {
+      "text": "Most people focus on what they want to achieve\u2014lose weight, write a book, make money.",
+      "imagePath": "images/image_2.png",
+      "voicePath": "voice/voice_2.mp3",
+      "durationInSeconds": 5.564081632653061
+    },
+    {
+      "text": "But the real magic happens when you shift your focus to who you want to become.",
+      "imagePath": "images/image_3.png",
+      "voicePath": "voice/voice_3.mp3",
+      "durationInSeconds": 4.310204081632653
+    },
+    {
+      "text": "Instead of saying, \"I'm trying to quit,\" say, \"I'm not a smoker.\"",
+      "imagePath": "images/image_4.png",
+      "voicePath": "voice/voice_4.mp3",
+      "durationInSeconds": 4.0751020408163265
+    },
+    {
+      "text": "Every action you take is a vote for the person you want to be.",
+      "imagePath": "images/image_5.png",
+      "voicePath": "voice/voice_5.mp3",
+      "durationInSeconds": 3.3436734693877552
+    },
+    {
+      "text": "Write one page, and you're voting to be a writer.",
+      "imagePath": "images/image_6.png",
+      "voicePath": "voice/voice_6.mp3",
+      "durationInSeconds": 3.0563265306122447
+    },
+    {
+      "text": "Hit the gym once, and you're voting to be athletic.",
+      "imagePath": "images/image_7.png",
+      "voicePath": "voice/voice_7.mp3",
+      "durationInSeconds": 3.0563265306122447
+    },
+    {
+      "text": "Change your identity, and your habits will follow.",
+      "imagePath": "images/image_8.png",
+      "voicePath": "voice/voice_8.mp3",
+      "durationInSeconds": 2.873469387755102
+    },
+    {
+      "text": "You're not your habits; you're the story you tell yourself.",
+      "imagePath": "images/image_9.png",
+      "voicePath": "voice/voice_9.mp3",
+      "durationInSeconds": 3.0563265306122447
+    }
+  ],
+  "captions": [
+    {
+      "text": " You're",
+      "startMs": 0,
+      "endMs": 260,
+      "timestampMs": 130,
+      "confidence": null
+    },
+    {
+      "text": " approaching",
+      "startMs": 260,
+      "endMs": 560,
+      "timestampMs": 410,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 560,
+      "endMs": 940,
+      "timestampMs": 750,
+      "confidence": null
+    },
+    {
+      "text": " change",
+      "startMs": 940,
+      "endMs": 1280,
+      "timestampMs": 1110,
+      "confidence": null
+    },
+    {
+      "text": " all",
+      "startMs": 1280,
+      "endMs": 1640,
+      "timestampMs": 1460,
+      "confidence": null
+    },
+    {
+      "text": " wrong.",
+      "startMs": 1640,
+      "endMs": 1960,
+      "timestampMs": 1800,
+      "confidence": null
+    },
+    {
+      "text": " Most",
+      "startMs": 2534,
+      "endMs": 2754,
+      "timestampMs": 2644,
+      "confidence": null
+    },
+    {
+      "text": " people",
+      "startMs": 2754,
+      "endMs": 2954,
+      "timestampMs": 2854,
+      "confidence": null
+    },
+    {
+      "text": " focus",
+      "startMs": 2954,
+      "endMs": 3394,
+      "timestampMs": 3174,
+      "confidence": null
+    },
+    {
+      "text": " on",
+      "startMs": 3394,
+      "endMs": 3634,
+      "timestampMs": 3514,
+      "confidence": null
+    },
+    {
+      "text": " what",
+      "startMs": 3634,
+      "endMs": 3794,
+      "timestampMs": 3714,
+      "confidence": null
+    },
+    {
+      "text": " they",
+      "startMs": 3794,
+      "endMs": 3954,
+      "timestampMs": 3874,
+      "confidence": null
+    },
+    {
+      "text": " want",
+      "startMs": 3954,
+      "endMs": 4114,
+      "timestampMs": 4034,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 4114,
+      "endMs": 4294,
+      "timestampMs": 4204,
+      "confidence": null
+    },
+    {
+      "text": " achieve.",
+      "startMs": 4294,
+      "endMs": 4594,
+      "timestampMs": 4444,
+      "confidence": null
+    },
+    {
+      "text": " Lose",
+      "startMs": 5354,
+      "endMs": 5574,
+      "timestampMs": 5464,
+      "confidence": null
+    },
+    {
+      "text": " weight,",
+      "startMs": 5574,
+      "endMs": 5854,
+      "timestampMs": 5714,
+      "confidence": null
+    },
+    {
+      "text": " write",
+      "startMs": 6194,
+      "endMs": 6334,
+      "timestampMs": 6264,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 6334,
+      "endMs": 6494,
+      "timestampMs": 6414,
+      "confidence": null
+    },
+    {
+      "text": " book,",
+      "startMs": 6494,
+      "endMs": 6674,
+      "timestampMs": 6584,
+      "confidence": null
+    },
+    {
+      "text": " make",
+      "startMs": 7014,
+      "endMs": 7214,
+      "timestampMs": 7114,
+      "confidence": null
+    },
+    {
+      "text": " money.",
+      "startMs": 7214,
+      "endMs": 7474,
+      "timestampMs": 7344,
+      "confidence": null
+    },
+    {
+      "text": " But",
+      "startMs": 8098,
+      "endMs": 8238,
+      "timestampMs": 8168,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 8238,
+      "endMs": 8338,
+      "timestampMs": 8288,
+      "confidence": null
+    },
+    {
+      "text": " real",
+      "startMs": 8338,
+      "endMs": 8558,
+      "timestampMs": 8448,
+      "confidence": null
+    },
+    {
+      "text": " magic",
+      "startMs": 8558,
+      "endMs": 8898,
+      "timestampMs": 8728,
+      "confidence": null
+    },
+    {
+      "text": " happens",
+      "startMs": 8898,
+      "endMs": 9358,
+      "timestampMs": 9128,
+      "confidence": null
+    },
+    {
+      "text": " when",
+      "startMs": 9358,
+      "endMs": 9698,
+      "timestampMs": 9528,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 9698,
+      "endMs": 9838,
+      "timestampMs": 9768,
+      "confidence": null
+    },
+    {
+      "text": " shift",
+      "startMs": 9838,
+      "endMs": 10058,
+      "timestampMs": 9948,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 10058,
+      "endMs": 10278,
+      "timestampMs": 10168,
+      "confidence": null
+    },
+    {
+      "text": " focus",
+      "startMs": 10278,
+      "endMs": 10598,
+      "timestampMs": 10438,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 10598,
+      "endMs": 10898,
+      "timestampMs": 10748,
+      "confidence": null
+    },
+    {
+      "text": " who",
+      "startMs": 10898,
+      "endMs": 11078,
+      "timestampMs": 10988,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 11078,
+      "endMs": 11218,
+      "timestampMs": 11148,
+      "confidence": null
+    },
+    {
+      "text": " want",
+      "startMs": 11218,
+      "endMs": 11378,
+      "timestampMs": 11298,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 11378,
+      "endMs": 11518,
+      "timestampMs": 11448,
+      "confidence": null
+    },
+    {
+      "text": " become.",
+      "startMs": 11518,
+      "endMs": 11818,
+      "timestampMs": 11668,
+      "confidence": null
+    },
+    {
+      "text": " Instead",
+      "startMs": 12408,
+      "endMs": 12688,
+      "timestampMs": 12548,
+      "confidence": null
+    },
+    {
+      "text": " of",
+      "startMs": 12688,
+      "endMs": 12848,
+      "timestampMs": 12768,
+      "confidence": null
+    },
+    {
+      "text": " saying,",
+      "startMs": 12848,
+      "endMs": 13088,
+      "timestampMs": 12968,
+      "confidence": null
+    },
+    {
+      "text": " I'm",
+      "startMs": 13368,
+      "endMs": 13568,
+      "timestampMs": 13468,
+      "confidence": null
+    },
+    {
+      "text": " trying",
+      "startMs": 13568,
+      "endMs": 13748,
+      "timestampMs": 13658,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 13748,
+      "endMs": 13968,
+      "timestampMs": 13858,
+      "confidence": null
+    },
+    {
+      "text": " quit,",
+      "startMs": 13968,
+      "endMs": 14208,
+      "timestampMs": 14088,
+      "confidence": null
+    },
+    {
+      "text": " say,",
+      "startMs": 14608,
+      "endMs": 14868,
+      "timestampMs": 14738,
+      "confidence": null
+    },
+    {
+      "text": " I'm",
+      "startMs": 15148,
+      "endMs": 15328,
+      "timestampMs": 15238,
+      "confidence": null
+    },
+    {
+      "text": " not",
+      "startMs": 15328,
+      "endMs": 15468,
+      "timestampMs": 15398,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 15468,
+      "endMs": 15568,
+      "timestampMs": 15518,
+      "confidence": null
+    },
+    {
+      "text": " smoker.",
+      "startMs": 15568,
+      "endMs": 15808,
+      "timestampMs": 15688,
+      "confidence": null
+    },
+    {
+      "text": " Every",
+      "startMs": 16483,
+      "endMs": 16723,
+      "timestampMs": 16603,
+      "confidence": null
+    },
+    {
+      "text": " action",
+      "startMs": 16723,
+      "endMs": 16943,
+      "timestampMs": 16833,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 16943,
+      "endMs": 17283,
+      "timestampMs": 17113,
+      "confidence": null
+    },
+    {
+      "text": " take",
+      "startMs": 17283,
+      "endMs": 17503,
+      "timestampMs": 17393,
+      "confidence": null
+    },
+    {
+      "text": " is",
+      "startMs": 17503,
+      "endMs": 17763,
+      "timestampMs": 17633,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 17763,
+      "endMs": 17843,
+      "timestampMs": 17803,
+      "confidence": null
+    },
+    {
+      "text": " vote",
+      "startMs": 17843,
+      "endMs": 18023,
+      "timestampMs": 17933,
+      "confidence": null
+    },
+    {
+      "text": " for",
+      "startMs": 18023,
+      "endMs": 18223,
+      "timestampMs": 18123,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 18223,
+      "endMs": 18303,
+      "timestampMs": 18263,
+      "confidence": null
+    },
+    {
+      "text": " person",
+      "startMs": 18303,
+      "endMs": 18603,
+      "timestampMs": 18453,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 18603,
+      "endMs": 18803,
+      "timestampMs": 18703,
+      "confidence": null
+    },
+    {
+      "text": " want",
+      "startMs": 18803,
+      "endMs": 18943,
+      "timestampMs": 18873,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 18943,
+      "endMs": 19103,
+      "timestampMs": 19023,
+      "confidence": null
+    },
+    {
+      "text": " be.",
+      "startMs": 19103,
+      "endMs": 19263,
+      "timestampMs": 19183,
+      "confidence": null
+    },
+    {
+      "text": " Write",
+      "startMs": 19827,
+      "endMs": 20027,
+      "timestampMs": 19927,
+      "confidence": null
+    },
+    {
+      "text": " one",
+      "startMs": 20027,
+      "endMs": 20227,
+      "timestampMs": 20127,
+      "confidence": null
+    },
+    {
+      "text": " page,",
+      "startMs": 20227,
+      "endMs": 20587,
+      "timestampMs": 20407,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 21027,
+      "endMs": 21187,
+      "timestampMs": 21107,
+      "confidence": null
+    },
+    {
+      "text": " you're",
+      "startMs": 21187,
+      "endMs": 21347,
+      "timestampMs": 21267,
+      "confidence": null
+    },
+    {
+      "text": " voting",
+      "startMs": 21347,
+      "endMs": 21527,
+      "timestampMs": 21437,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 21527,
+      "endMs": 21787,
+      "timestampMs": 21657,
+      "confidence": null
+    },
+    {
+      "text": " be",
+      "startMs": 21787,
+      "endMs": 21907,
+      "timestampMs": 21847,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 21907,
+      "endMs": 22007,
+      "timestampMs": 21957,
+      "confidence": null
+    },
+    {
+      "text": " writer.",
+      "startMs": 22007,
+      "endMs": 22187,
+      "timestampMs": 22097,
+      "confidence": null
+    },
+    {
+      "text": " Hit",
+      "startMs": 22883,
+      "endMs": 23043,
+      "timestampMs": 22963,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 23043,
+      "endMs": 23183,
+      "timestampMs": 23113,
+      "confidence": null
+    },
+    {
+      "text": " gym",
+      "startMs": 23183,
+      "endMs": 23343,
+      "timestampMs": 23263,
+      "confidence": null
+    },
+    {
+      "text": " once,",
+      "startMs": 23343,
+      "endMs": 23703,
+      "timestampMs": 23523,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 24063,
+      "endMs": 24223,
+      "timestampMs": 24143,
+      "confidence": null
+    },
+    {
+      "text": " you're",
+      "startMs": 24223,
+      "endMs": 24383,
+      "timestampMs": 24303,
+      "confidence": null
+    },
+    {
+      "text": " voting",
+      "startMs": 24383,
+      "endMs": 24563,
+      "timestampMs": 24473,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 24563,
+      "endMs": 24803,
+      "timestampMs": 24683,
+      "confidence": null
+    },
+    {
+      "text": " be",
+      "startMs": 24803,
+      "endMs": 24923,
+      "timestampMs": 24863,
+      "confidence": null
+    },
+    {
+      "text": " athletic.",
+      "startMs": 24923,
+      "endMs": 25243,
+      "timestampMs": 25083,
+      "confidence": null
+    },
+    {
+      "text": " Change",
+      "startMs": 25940,
+      "endMs": 26140,
+      "timestampMs": 26040,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 26140,
+      "endMs": 26400,
+      "timestampMs": 26270,
+      "confidence": null
+    },
+    {
+      "text": " identity",
+      "startMs": 26400,
+      "endMs": 26740,
+      "timestampMs": 26570,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 26740,
+      "endMs": 27280,
+      "timestampMs": 27010,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 27280,
+      "endMs": 27400,
+      "timestampMs": 27340,
+      "confidence": null
+    },
+    {
+      "text": " habits",
+      "startMs": 27400,
+      "endMs": 27660,
+      "timestampMs": 27530,
+      "confidence": null
+    },
+    {
+      "text": " will",
+      "startMs": 27660,
+      "endMs": 27920,
+      "timestampMs": 27790,
+      "confidence": null
+    },
+    {
+      "text": " follow.",
+      "startMs": 27920,
+      "endMs": 28260,
+      "timestampMs": 28090,
+      "confidence": null
+    },
+    {
+      "text": " You're",
+      "startMs": 28813,
+      "endMs": 28973,
+      "timestampMs": 28893,
+      "confidence": null
+    },
+    {
+      "text": " not",
+      "startMs": 28973,
+      "endMs": 29153,
+      "timestampMs": 29063,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 29153,
+      "endMs": 29293,
+      "timestampMs": 29223,
+      "confidence": null
+    },
+    {
+      "text": " habits,",
+      "startMs": 29293,
+      "endMs": 29533,
+      "timestampMs": 29413,
+      "confidence": null
+    },
+    {
+      "text": " you're",
+      "startMs": 29973,
+      "endMs": 30113,
+      "timestampMs": 30043,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 30113,
+      "endMs": 30253,
+      "timestampMs": 30183,
+      "confidence": null
+    },
+    {
+      "text": " story",
+      "startMs": 30253,
+      "endMs": 30513,
+      "timestampMs": 30383,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 30513,
+      "endMs": 30733,
+      "timestampMs": 30623,
+      "confidence": null
+    },
+    {
+      "text": " tell",
+      "startMs": 30733,
+      "endMs": 30893,
+      "timestampMs": 30813,
+      "confidence": null
+    },
+    {
+      "text": " yourself.",
+      "startMs": 30893,
+      "endMs": 31173,
+      "timestampMs": 31033,
+      "confidence": null
+    }
+  ]
+}

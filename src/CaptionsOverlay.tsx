@@ -1,12 +1,11 @@
-import React from "react";
-import { useCurrentFrame } from "remotion";
-import { AbsoluteFill, interpolate } from "remotion";
-import type { Caption } from "./types";
-import {
-  createTikTokStyleCaptions,
-  type TikTokPage,
-} from "@remotion/captions";
+import React from 'react';
+import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
 
+import { createTikTokStyleCaptions } from '@remotion/captions';
+
+import type { TikTokPage } from '@remotion/captions';
+
+import type { Caption } from "./types";
 type CaptionsOverlayProps = {
   captions: Caption[];
   fps: number;
@@ -56,34 +55,45 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
 
+  // Deterministic "random" rotation per caption (stable across frames, -2 to 2 deg)
+  const rotation =
+    ((currentPage.startMs * 7919 +
+      [...currentPage.text].reduce((a, c) => a + c.charCodeAt(0), 0)) %
+      5) -
+    2;
+
   return (
     <AbsoluteFill
       style={{
-        justifyContent: "center",
+        justifyContent: "flex-end",
         alignItems: "center",
+        paddingBottom: height * 0.25,
       }}
     >
       <div
         style={{
           color: "#FFE135",
-          padding: "8px 20px",
+          padding: "12px 24px",
           maxWidth: width * 0.9,
           fontFamily: "system-ui, -apple-system, sans-serif",
-          fontSize: Math.min(width * 0.07, 32),
+          fontSize: Math.min(width * 0.11, 52),
           fontWeight: 800,
           textAlign: "center",
           whiteSpace: "pre-wrap" as const,
           opacity,
-          transform: `rotate(-2deg) scale(${scale})`,
+          transform: `rotate(${rotation}deg) scale(${scale})`,
+          backgroundColor: "rgba(0, 0, 0, 0.35)",
+          borderRadius: 8,
+          boxShadow: "0 2px 12px rgba(0, 0, 0, 0.25)",
           textShadow: [
-            "3px 3px 0 #000",
-            "-3px -3px 0 #000",
-            "3px -3px 0 #000",
-            "-3px 3px 0 #000",
-            "0 3px 0 #000",
-            "0 -3px 0 #000",
-            "3px 0 0 #000",
-            "-3px 0 0 #000",
+            "2px 2px 0 #000",
+            "-2px -2px 0 #000",
+            "2px -2px 0 #000",
+            "-2px 2px 0 #000",
+            "0 2px 0 #000",
+            "0 -2px 0 #000",
+            "2px 0 0 #000",
+            "-2px 0 0 #000",
           ].join(", "),
         }}
       >

@@ -1,0 +1,88 @@
+{
+  "cacheKey": "9d643835a8643f2f",
+  "fps": 30,
+  "width": 540,
+  "height": 960,
+  "durationInFrames": 977,
+  "scenes": [
+    {
+      "text": "Want to build habits that stick?",
+      "imagePath": "images/image_1.png",
+      "voicePath": "voice/voice_1.mp3",
+      "durationInSeconds": 1.906938775510204
+    },
+    {
+      "text": "Here\u2019s the secret.",
+      "imagePath": "images/image_2.png",
+      "voicePath": "voice/voice_2.mp3",
+      "durationInSeconds": 1.28
+    },
+    {
+      "text": "First, identify the cue.",
+      "imagePath": "images/image_3.png",
+      "voicePath": "voice/voice_3.mp3",
+      "durationInSeconds": 1.8024489795918368
+    },
+    {
+      "text": "It's the trigger that sets everything in motion.",
+      "imagePath": "images/image_4.png",
+      "voicePath": "voice/voice_4.mp3",
+      "durationInSeconds": 2.742857142857143
+    },
+    {
+      "text": "Maybe it's your phone lighting up.",
+      "imagePath": "images/image_5.png",
+      "voicePath": "voice/voice_5.mp3",
+      "durationInSeconds": 1.8546938775510204
+    },
+    {
+      "text": "Next, understand the craving.",
+      "imagePath": "images/image_6.png",
+      "voicePath": "voice/voice_6.mp3",
+      "durationInSeconds": 1.906938775510204
+    },
+    {
+      "text": "You're not craving Instagram; you're craving relief from boredom.",
+      "imagePath": "images/image_7.png",
+      "voicePath": "voice/voice_7.mp3",
+      "durationInSeconds": 3.944489795918367
+    },
+    {
+      "text": "Third, focus on the response.",
+      "imagePath": "images/image_8.png",
+      "voicePath": "voice/voice_8.mp3",
+      "durationInSeconds": 2.115918367346939
+    },
+    {
+      "text": "Make it easy. If it's too hard, it won't happen.",
+      "imagePath": "images/image_9.png",
+      "voicePath": "voice/voice_9.mp3",
+      "durationInSeconds": 2.873469387755102
+    },
+    {
+      "text": "Finally, don\u2019t forget the reward.",
+      "imagePath": "images/image_10.png",
+      "voicePath": "voice/voice_10.mp3",
+      "durationInSeconds": 2.1681632653061222
+    },
+    {
+      "text": "It\u2019s the payoff that teaches your brain to do it again.",
+      "imagePath": "images/image_11.png",
+      "voicePath": "voice/voice_11.mp3",
+      "durationInSeconds": 3.0040816326530613
+    },
+    {
+      "text": "Master these four steps: cue, craving, response, reward.",
+      "imagePath": "images/image_12.png",
+      "voicePath": "voice/voice_12.mp3",
+      "durationInSeconds": 4.6236734693877555
+    },
+    {
+      "text": "That\u2019s how you design habits that last.",
+      "imagePath": "images/image_13.png",
+      "voicePath": "voice/voice_13.mp3",
+      "durationInSeconds": 2.3510204081632655
+    }
+  ],
+  "captions": []
+}

@@ -17,11 +17,10 @@ export const RemotionRoot: React.FC = () => {
 
   return (
     <>
-      {cacheKeys.length > 0
-        ? cacheKeys.map((key) => (
-            <ShortVideoComposition key={key} cacheKey={key} />
-          ))
-        : <ShortVideoComposition />}
+      <ShortVideoComposition />
+      {cacheKeys.map((key) => (
+        <ShortVideoComposition key={key} cacheKey={key} />
+      ))}
     </>
   );
 };

@@ -8,105 +8,129 @@ You receive a block of original content (from a book, article, or notes). Your j
 
 ---
 
-## 1. Choose a Structure Pattern
+## 1. The Narrative Arc
 
-Select the structure that best fits the source content:
+Every script follows this unified arc. Create an **open loop** in the hook—leave the viewer asking "what?"—then build to the payoff.
 
-### Option A: The Reframe (Identity Shift)
-Use when challenging a belief or misconception.
-1. **Hook (0–3s):** Confrontational or "negative" hook.
-2. **Flip (3–10s):** "You think X, but it's actually Y."
-3. **Insight (10–30s):** Explain the mechanism or psychology.
-4. **Anchor (30–45s):** Identity statement.
-
-### Option B: The List (Actionable)
-Use when the source offers specific steps or tips.
-1. **Hook (0–3s):** Promise/Benefit or "Novelty" hook.
-2. **Item 1 (Standard):** The baseline tip.
-3. **Item 2 (Surprising):** The counter-intuitive tip.
-4. **Item 3 (The Key):** The most important tip.
-5. **Close:** One line summary.
-
-### Option C: The Story (Emotional)
-Use when the source contains a strong anecdote.
-1. **Hook (0–3s):** "In 1995..." or "A psychologist walked into a room..."
-2. **Conflict:** The problem or tension.
-3. **Resolution:** The turning point.
-4. **Lesson:** The takeaway in one sentence.
+| Section | Timing | Purpose |
+|---------|--------|---------|
+| **Hook** | 0–5s | Open loop. A surprising claim, question, or scenario that creates curiosity. **Do not** reveal the answer. ("You don't lack discipline" → leaves "then what do I lack?") |
+| **Body—Setup** | 5–25s | Set the scene. Use concrete details, a mini-story, or the mechanism. Build tension or context. **Still withhold the payoff.** |
+| **Body—Core Concept** | 25–45s | Close the loop. Deliver the one clear idea. Simple language. "The thing most people miss is X." |
+| **Close** | 45–60s | Actionable. One thing to do, or an identity statement that reframes who they are. |
 
 ---
 
-## 2. Choose a Hook Type
+## 2. Hook Types (Open Loops Only)
 
-Pick the strongest opener based on the angle:
+Pick a hook that creates a **curiosity gap**. The viewer must want to know more.
 
-- **Confrontational:** "You don't lack discipline." / "Stop doing this if you want to win."
-- **Curiosity/Novelty:** "The #1 secret to..." / "3 tips you haven't heard of..." / "Today I want to reveal..."
-- **Story Opener:** "He lost everything in one day." / "Imagine you're 80 years old."
-- **Fear/Negativity:** "This habit is ruining your focus." / "Why you're still broke."
+- **Curiosity gap:** "The one habit that ruins focus." (What habit? I need to know.)
+- **Contrarian claim:** "You don't lack willpower." (Then what?)
+- **Story opener:** "In 1995, a psychologist walked into a room..." (What happened?)
+- **Avoid:** Hooks that immediately answer the question. "Discipline is environment design" gives away the punchline—use that for the core concept, not the hook.
 
 ---
 
-## 3. Style Rules (Viral Checklist)
+## 3. Made to Stick (SUCCESs)
+
+Apply these principles from *Made to Stick*:
+
+- **Simple:** One core idea. Strip everything else. If you can't say it in one sentence, simplify.
+- **Unexpected:** Open loop, surprise, break a schema. "You think X" — then flip it.
+- **Concrete:** Sensory details. "Get up when it's cold" > "be disciplined." Specific numbers, names, scenes.
+- **Credible:** Details that feel real. "A psychologist in 1995" > "Experts say." Testable claims.
+- **Emotional:** Make them feel something—frustration, hope, curiosity, relief.
+- **Stories:** Even micro-stories (situation → conflict → resolution) beat abstract advice.
+
+---
+
+## 4. Style Rules (Viral Checklist)
 
 Before outputting, verify:
+
 - **Grade Level:** Aim for 5th-8th grade readability. Simple words.
 - **Visual Writing:** Use concrete nouns/verbs. Don't say "be disciplined", say "get up when it's cold".
 - **Short Lines:** One idea per sentence. No run-ons.
 - **Strong Verbs:** "You're overstimulated" > "You tend to be overstimulated."
 - **No Filler:** Delete: "In order to...", "Basically,", "So yeah."
-- **Open Loops:** Don't give the whole answer in the first sentence. Build to it.
+- **Open Loops (Primary Rule):** The hook and setup must create a gap; only the core concept closes it. Body must have a clear setup phase before the payoff.
 - **No Hashtags/CTAs:** End on the content punchline.
 
 ---
 
-## 4. Output Format
-
-Label the chosen structure and sections.
+## 5. Output Format
 
 ```
-[STRUCTURE: Reframe/List/Story]
-
 [HOOK]
-...
+... (open loop)
 
 [BODY]
-...
+... (setup first, then core concept—close the loop)
 
 [CLOSE]
-...
+... (actionable)
 ```
 
 ---
 
 ## Examples
 
-### Example 1 (Reframe Structure)
+### Example 1: Separation of Tasks
 ```
-[STRUCTURE: Reframe]
-
 [HOOK]
-You don't lack discipline.
+The reason you feel anxious around people… isn't what you think.
 
 [BODY]
-You lack friction control. Your phone is engineered to hijack dopamine. Every notification is a variable reward. You're not weak—you're outgunned. The fix isn't more willpower. It's fewer triggers.
+When someone criticizes you, your mind tries to fix their opinion.
+When someone misunderstands you, you try to change how they see you.
+So you carry their reactions like they're your responsibility.
+But their reaction is their task—not yours.
 
 [CLOSE]
-Discipline isn't willpower. It's environment design.
+Next time you feel judged, ask: "Is this my task… or theirs?"
 ```
 
-### Example 2 (List Structure)
+### Example 2: Need for Recognition
 ```
-[STRUCTURE: List]
-
 [HOOK]
-3 studying tips you haven't heard of.
+The more you need validation, the less free you become.
 
 [BODY]
-Number one: Use 40hz binaural beats. It tunes your brainwaves for focus.
-Number two: The "Overt Visual Focus" trick. Stare at a dot on the wall for 30 seconds before you start. It triggers acetylcholine release.
-Number three: Cold exposure after learning. It spikes adrenaline and locks in the memory.
+If you post to be praised, you depend on praise.
+If you act to avoid criticism, you depend on criticism.
+Your behavior slowly becomes controlled by other people's reactions.
+Needing recognition is a form of dependence.
 
 [CLOSE]
-Don't just study harder. Study biologically.
+Do one thing this week that no one will applaud you for.
+```
+
+### Example 3: Choosing Meaning
+```
+[HOOK]
+Two people fail. Only one grows. Here's why.
+
+[BODY]
+Both made the same mistake. Both felt embarrassed.
+But one decided, "This proves I'm not capable."
+The other decided, "This is training."
+The event didn't shape them. The meaning did.
+
+[CLOSE]
+When something goes wrong, choose the interpretation that makes you stronger.
+```
+
+### Example 4: Living in the Present Task
+```
+[HOOK]
+Most stress comes from something that isn't even happening.
+
+[BODY]
+Regret replays the past. Anxiety rehearses the future.
+Your body reacts to scenarios that don't exist right now.
+Stress grows when you leave the present task.
+
+[CLOSE]
+Shrink your world to one action in front of you. Finish that. Nothing else.
 ```

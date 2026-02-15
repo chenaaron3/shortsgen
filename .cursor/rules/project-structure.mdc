@@ -27,7 +27,7 @@ shortgen/
 │   │   ├── run_pipeline.py         # Orchestrator: 5-step pipeline
 │   │   ├── generate_script.py     # Step 1: LLM → script.md
 │   │   ├── run_chunker.py         # Step 2: LLM → chunks.json
-│   │   ├── generate_images.py     # Step 3: Replicate img2img → images/
+│   │   ├── generate_images.py     # Step 3: OpenAI images/edits (img2img) → images/
 │   │   ├── generate_voice.py      # Step 3: ElevenLabs TTS → voice/
 │   │   ├── prepare_remotion_assets.py  # Step 4: copy to public/, manifest, Whisper captions
 │   │   ├── render_video.py        # Step 5: npx remotion render
@@ -53,7 +53,7 @@ shortgen/
 
 1. **Script** — Raw content → GPT-4o → `cache/{cacheKey}/script.md` (40–60s short script)
 2. **Chunks** — Script → GPT-4o (structured) → `chunks.json` (scenes: text, imagery, section)
-3. **Images + Voice** — Parallel: Replicate img2img (mascot ref) + ElevenLabs TTS → `images/`, `voice/`
+3. **Images + Voice** — Parallel: OpenAI images/edits (mascot ref) + ElevenLabs TTS → `images/`, `voice/`
 4. **Prepare** — Copy assets to `public/shortgen/{cacheKey}/`, run Whisper for word captions → `manifest.json`
 5. **Render** — `npx remotion render ShortVideo -o short.mp4 --props='{"cacheKey":"..."}'`
 
@@ -69,7 +69,7 @@ Cache key = first 16 chars of SHA256(raw_content).
 
 ## Env Vars
 
-`.env`: `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `REPLICATE_API_TOKEN`
+`.env`: `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`
 
 ## Commands
 
@@ -88,6 +88,6 @@ npx remotion studio
 
 ## APIs & Dependencies
 
-- **Images**: Replicate `openai/gpt-image-1-mini` img2img, mascot as reference, hand-drawn stick figure style
+- **Images**: OpenAI `gpt-image-1-mini` images/edits (img2img), mascot as reference, hand-drawn stick figure style
 - **Voice**: ElevenLabs `eleven_multilingual_v2`, voice Adam
 - **Captions**: faster-whisper (word-level) or scene-level fallback from chunk text

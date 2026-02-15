@@ -27,7 +27,7 @@ npm install
 pip install -r generation/requirements.txt
 ```
 
-Create a `.env` with `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `REPLICATE_API_TOKEN` as needed.
+Create a `.env` with `OPENAI_API_KEY`, `ELEVENLABS_API_KEY` as needed.
 
 ## Usage
 

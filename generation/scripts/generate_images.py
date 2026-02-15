@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate mascot scene images from chunker JSON using Replicate img2img.
+Generate mascot scene images from chunker JSON using OpenAI images/edits (img2img).
 Called by run_pipeline. Outputs to cache/{cache_key}/images/.
 """
 
@@ -11,9 +11,9 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
-import requests
 from dotenv import load_dotenv
 
 from models import Chunks
@@ -22,30 +22,20 @@ from logger import cache_stats_summary, error, info, progress, step_end, step_st
 
 load_dotenv(env_path())
 
-REPLICATE_API = "https://api.replicate.com/v1"
-GPT_MINI = "openai/gpt-image-1-mini"
-NANO_BANANA_PRO = "google/nano-banana-pro"
-REPLICATE_VERSION = GPT_MINI
-PREDICT_URL = f"{REPLICATE_API}/predictions"
+GPT_IMAGE_MINI = "gpt-image-1-mini"
+GPT_IMAGE_1 = "gpt-image-1"
+GPT_IMAGE_15 = "gpt-image-1.5"
+DEFAULT_MODEL = GPT_IMAGE_MINI
 
-# Model → input params override (merged with common: image, prompt)
-MODEL_INPUT_PARAMS: dict[str, dict[str, str]] = {
-    GPT_MINI: {
-        "aspect_ratio": "2:3",
-    },
-    NANO_BANANA_PRO: {
-        "aspect_ratio": "9:16",
-        "resolution": "1K",
-    },
+# Model → size override (must be valid API sizes: 1024x1024, 1536x1024, 1024x1536, auto)
+MODEL_SIZE: dict[str, str] = {
+    GPT_IMAGE_MINI: "1024x1536",
+    GPT_IMAGE_1: "1024x1536",
+    GPT_IMAGE_15: "1024x1536",
 }
 RETRY_DELAY = 5  # seconds between retries on 429
 DEFAULT_INPUT_FIDELITY = "low"  # "low" = more scene/pose variation
 DEFAULT_CONCURRENCY = 4  # parallel image generations (I/O-bound)
-
-# Target output size and aspect ratio (9:16 = vertical/shorts)
-OUTPUT_WIDTH = 540
-OUTPUT_HEIGHT = 960
-ASPECT_RATIO = "2:3"
 
 STYLE_PROMPT = (
     "Hand-drawn stick figure style. Black line art. "
@@ -87,7 +77,7 @@ def load_chunks(path: Path) -> Chunks:
 
 
 def image_to_data_uri(path: Path) -> str:
-    """Convert image file to base64 data URI for Replicate API."""
+    """Convert image file to base64 data URI for OpenAI images/edits API."""
     data = path.read_bytes()
     b64 = base64.b64encode(data).decode("ascii")
     ext = path.suffix.lower()
@@ -98,77 +88,80 @@ def image_to_data_uri(path: Path) -> str:
 def generate_image(
     mascot_path: Path,
     prompt: str,
-    token: str,
+    api_key: str,
     input_fidelity: str = DEFAULT_INPUT_FIDELITY,
-    model: str = REPLICATE_VERSION,
+    model: str = DEFAULT_MODEL,
 ) -> bytes:
-    """Call Replicate img2img model via HTTP API. Returns image bytes."""
+    """Call OpenAI images/edits API (img2img) via JSON. SDK uses multipart which only supports dall-e-2."""
     image_uri = image_to_data_uri(mascot_path)
-    model_params = dict(MODEL_INPUT_PARAMS.get(model, {}))
-    inp: dict[str, str] = {
-        "image": image_uri,
+    size = MODEL_SIZE.get(model, "1024x1536")
+
+    payload = {
+        "images": [{"image_url": image_uri}],
         "prompt": prompt,
-        **model_params,
+        "model": model,
+        "size": size,
+        "quality": "low",
+        "output_format": "png",
+        "n": 1,
     }
-    if model == "openai/gpt-image-1-mini":
-        inp["input_fidelity"] = input_fidelity
-        openai_key = os.getenv("OPENAI_API_KEY")
-        if openai_key:
-            inp["openai_api_key"] = openai_key
-    payload = {"version": model, "input": inp}
+    if model != GPT_IMAGE_MINI:
+        payload["input_fidelity"] = input_fidelity
 
     for attempt in range(10):
-        resp = requests.post(
-            PREDICT_URL,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-                "Prefer": "wait=60",
-            },
-            json=payload,
-            timeout=90,
-        )
-        if resp.status_code == 429 and attempt < 9:
-            wait = RETRY_DELAY * (attempt + 1)
-            warn(f"  Rate limited (429), retrying in {wait}s...")
-            time.sleep(wait)
-            continue
-        resp.raise_for_status()
-
-        pred = resp.json()
-        if pred.get("status") == "failed":
-            err = pred.get("error", "Unknown error")
-            raise RuntimeError(f"Replicate prediction failed: {err}")
-
-        output = pred.get("output")
-        if output is None:
-            if attempt < 9:
+        try:
+            req = Request(
+                "https://api.openai.com/v1/images/edits",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            with urlopen(req, timeout=120) as resp:
+                result = json.loads(resp.read().decode())
+        except HTTPError as e:
+            body = ""
+            if e.fp:
+                try:
+                    body = e.fp.read().decode()
+                except Exception:
+                    pass
+            if e.code == 429 and attempt < 9:
                 wait = RETRY_DELAY * (attempt + 1)
-                warn(f"  No output from Replicate, retrying in {wait}s...")
+                warn(f"  Rate limited (429), retrying in {wait}s...")
                 time.sleep(wait)
                 continue
-            raise RuntimeError("No output from Replicate")
+            raise RuntimeError(f"OpenAI API error {e.code}: {body or str(e)}") from e
 
-        # Output is typically a URL string for img2img
-        url = output[0] if isinstance(output, list) else output
-        if not isinstance(url, str) or not url.startswith("http"):
-            raise RuntimeError(f"Unexpected output format: {output}")
+        data = result.get("data")
+        if not data:
+            if attempt < 9:
+                wait = RETRY_DELAY * (attempt + 1)
+                warn(f"  No output from OpenAI, retrying in {wait}s...")
+                time.sleep(wait)
+                continue
+            raise RuntimeError("No output from OpenAI images/edits")
 
-        with urlopen(url) as r:
-            return r.read()
+        b64_data = data[0].get("b64_json")
+        if not b64_data:
+            raise RuntimeError("OpenAI returned no base64 image data")
+
+        return base64.b64decode(b64_data)
 
 def _generate_one(
     i: int,
     mascot: Path,
     full_prompt: str,
-    token: str,
+    api_key: str,
     input_fidelity: str,
     model: str,
 ) -> tuple[int, bytes | None, str | None]:
     """Worker: generate one image. Returns (index, img_bytes, error_msg)."""
     try:
         img_bytes = generate_image(
-            mascot, full_prompt, token, input_fidelity, model=model
+            mascot, full_prompt, api_key, input_fidelity, model=model
         )
         return (i, img_bytes, None)
     except Exception as e:
@@ -183,7 +176,7 @@ def run(
     skip_existing: bool = True,
     max_scenes: int | None = None,
     concurrency: int = DEFAULT_CONCURRENCY,
-    model: str = REPLICATE_VERSION,
+    model: str = DEFAULT_MODEL,
 ) -> Chunks:
     """
     Generate images from chunks. Uses per-image cache.
@@ -196,9 +189,9 @@ def run(
     if not mascot.exists():
         raise RuntimeError(f"Mascot not found at {mascot}")
 
-    token = os.getenv("REPLICATE_API_TOKEN")
-    if not token:
-        raise RuntimeError("REPLICATE_API_TOKEN not found")
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not found")
 
     scenes = chunks.scenes
     if not scenes:
@@ -239,7 +232,7 @@ def run(
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
             executor.submit(
-                _generate_one, i, mascot, full_prompt, token, input_fidelity, model
+                _generate_one, i, mascot, full_prompt, api_key, input_fidelity, model
             ): (i, imagery, filename, full_prompt, request_path)
             for i, imagery, filename, full_prompt, request_path in work
         }

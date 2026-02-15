@@ -1,0 +1,778 @@
+{
+  "cacheKey": "98932a8ed00e2619",
+  "fps": 30,
+  "width": 540,
+  "height": 960,
+  "durationInFrames": 1071,
+  "scenes": [
+    {
+      "text": "What if I told you that willpower isn't the key to breaking bad habits?",
+      "imagePath": "images/image_1.png",
+      "voicePath": "voice/voice_1.mp3",
+      "durationInSeconds": 3.944489795918367
+    },
+    {
+      "text": "Think about it.",
+      "imagePath": "images/image_2.png",
+      "voicePath": "voice/voice_2.mp3",
+      "durationInSeconds": 1.0971428571428572
+    },
+    {
+      "text": "Most of our habits run on autopilot, triggered by cues we barely notice.",
+      "imagePath": "images/image_3.png",
+      "voicePath": "voice/voice_3.mp3",
+      "durationInSeconds": 4.54530612244898
+    },
+    {
+      "text": "James Clear suggests that it's not about forcing change with sheer willpower.",
+      "imagePath": "images/image_4.png",
+      "voicePath": "voice/voice_4.mp3",
+      "durationInSeconds": 4.493061224489796
+    },
+    {
+      "text": "Instead, it's about making these cues visible.",
+      "imagePath": "images/image_5.png",
+      "voicePath": "voice/voice_5.mp3",
+      "durationInSeconds": 2.9518367346938774
+    },
+    {
+      "text": "Imagine listing every habit you have, good or bad. That's the 'Habit Scorecard.'",
+      "imagePath": "images/image_6.png",
+      "voicePath": "voice/voice_6.mp3",
+      "durationInSeconds": 5.198367346938776
+    },
+    {
+      "text": "Now, picture planning your actions with precision\u2014'I'll read at 7 PM on my couch.'",
+      "imagePath": "images/image_7.png",
+      "voicePath": "voice/voice_7.mp3",
+      "durationInSeconds": 5.146122448979592
+    },
+    {
+      "text": "Redesign your environment.",
+      "imagePath": "images/image_8.png",
+      "voicePath": "voice/voice_8.mp3",
+      "durationInSeconds": 1.8024489795918368
+    },
+    {
+      "text": "Place triggers for good habits in your path and hide those for bad ones.",
+      "imagePath": "images/image_9.png",
+      "voicePath": "voice/voice_9.mp3",
+      "durationInSeconds": 3.8922448979591837
+    },
+    {
+      "text": "Shift your world, not your willpower.",
+      "imagePath": "images/image_10.png",
+      "voicePath": "voice/voice_10.mp3",
+      "durationInSeconds": 2.6383673469387756
+    }
+  ],
+  "captions": [
+    {
+      "text": " What",
+      "startMs": 0,
+      "endMs": 160,
+      "timestampMs": 80,
+      "confidence": null
+    },
+    {
+      "text": " if",
+      "startMs": 160,
+      "endMs": 280,
+      "timestampMs": 220,
+      "confidence": null
+    },
+    {
+      "text": " I",
+      "startMs": 280,
+      "endMs": 420,
+      "timestampMs": 350,
+      "confidence": null
+    },
+    {
+      "text": " told",
+      "startMs": 420,
+      "endMs": 660,
+      "timestampMs": 540,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 660,
+      "endMs": 860,
+      "timestampMs": 760,
+      "confidence": null
+    },
+    {
+      "text": " that",
+      "startMs": 860,
+      "endMs": 980,
+      "timestampMs": 920,
+      "confidence": null
+    },
+    {
+      "text": " willpower",
+      "startMs": 980,
+      "endMs": 1200,
+      "timestampMs": 1090,
+      "confidence": null
+    },
+    {
+      "text": " isn't",
+      "startMs": 1200,
+      "endMs": 1860,
+      "timestampMs": 1530,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 1860,
+      "endMs": 1980,
+      "timestampMs": 1920,
+      "confidence": null
+    },
+    {
+      "text": " key",
+      "startMs": 1980,
+      "endMs": 2180,
+      "timestampMs": 2080,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 2180,
+      "endMs": 2380,
+      "timestampMs": 2280,
+      "confidence": null
+    },
+    {
+      "text": " breaking",
+      "startMs": 2380,
+      "endMs": 2580,
+      "timestampMs": 2480,
+      "confidence": null
+    },
+    {
+      "text": " bad",
+      "startMs": 2580,
+      "endMs": 2940,
+      "timestampMs": 2760,
+      "confidence": null
+    },
+    {
+      "text": " habits?",
+      "startMs": 2940,
+      "endMs": 3260,
+      "timestampMs": 3100,
+      "confidence": null
+    },
+    {
+      "text": " Think",
+      "startMs": 3944,
+      "endMs": 4124,
+      "timestampMs": 4034,
+      "confidence": null
+    },
+    {
+      "text": " about",
+      "startMs": 4124,
+      "endMs": 4344,
+      "timestampMs": 4234,
+      "confidence": null
+    },
+    {
+      "text": " it.",
+      "startMs": 4344,
+      "endMs": 4604,
+      "timestampMs": 4474,
+      "confidence": null
+    },
+    {
+      "text": " Most",
+      "startMs": 5042,
+      "endMs": 5282,
+      "timestampMs": 5162,
+      "confidence": null
+    },
+    {
+      "text": " of",
+      "startMs": 5282,
+      "endMs": 5402,
+      "timestampMs": 5342,
+      "confidence": null
+    },
+    {
+      "text": " our",
+      "startMs": 5402,
+      "endMs": 5522,
+      "timestampMs": 5462,
+      "confidence": null
+    },
+    {
+      "text": " habits",
+      "startMs": 5522,
+      "endMs": 5762,
+      "timestampMs": 5642,
+      "confidence": null
+    },
+    {
+      "text": " run",
+      "startMs": 5762,
+      "endMs": 6062,
+      "timestampMs": 5912,
+      "confidence": null
+    },
+    {
+      "text": " on",
+      "startMs": 6062,
+      "endMs": 6222,
+      "timestampMs": 6142,
+      "confidence": null
+    },
+    {
+      "text": " autopilot,",
+      "startMs": 6222,
+      "endMs": 6882,
+      "timestampMs": 6552,
+      "confidence": null
+    },
+    {
+      "text": " triggered",
+      "startMs": 7182,
+      "endMs": 7422,
+      "timestampMs": 7302,
+      "confidence": null
+    },
+    {
+      "text": " by",
+      "startMs": 7422,
+      "endMs": 7702,
+      "timestampMs": 7562,
+      "confidence": null
+    },
+    {
+      "text": " cues",
+      "startMs": 7702,
+      "endMs": 8002,
+      "timestampMs": 7852,
+      "confidence": null
+    },
+    {
+      "text": " we",
+      "startMs": 8002,
+      "endMs": 8302,
+      "timestampMs": 8152,
+      "confidence": null
+    },
+    {
+      "text": " barely",
+      "startMs": 8302,
+      "endMs": 8482,
+      "timestampMs": 8392,
+      "confidence": null
+    },
+    {
+      "text": " notice.",
+      "startMs": 8482,
+      "endMs": 8922,
+      "timestampMs": 8702,
+      "confidence": null
+    },
+    {
+      "text": " James",
+      "startMs": 9587,
+      "endMs": 9787,
+      "timestampMs": 9687,
+      "confidence": null
+    },
+    {
+      "text": " Clear",
+      "startMs": 9787,
+      "endMs": 10087,
+      "timestampMs": 9937,
+      "confidence": null
+    },
+    {
+      "text": " suggests",
+      "startMs": 10087,
+      "endMs": 10687,
+      "timestampMs": 10387,
+      "confidence": null
+    },
+    {
+      "text": " that",
+      "startMs": 10687,
+      "endMs": 11107,
+      "timestampMs": 10897,
+      "confidence": null
+    },
+    {
+      "text": " it's",
+      "startMs": 11107,
+      "endMs": 11287,
+      "timestampMs": 11197,
+      "confidence": null
+    },
+    {
+      "text": " not",
+      "startMs": 11287,
+      "endMs": 11387,
+      "timestampMs": 11337,
+      "confidence": null
+    },
+    {
+      "text": " about",
+      "startMs": 11387,
+      "endMs": 11587,
+      "timestampMs": 11487,
+      "confidence": null
+    },
+    {
+      "text": " forcing",
+      "startMs": 11587,
+      "endMs": 11987,
+      "timestampMs": 11787,
+      "confidence": null
+    },
+    {
+      "text": " change",
+      "startMs": 11987,
+      "endMs": 12327,
+      "timestampMs": 12157,
+      "confidence": null
+    },
+    {
+      "text": " with",
+      "startMs": 12327,
+      "endMs": 12687,
+      "timestampMs": 12507,
+      "confidence": null
+    },
+    {
+      "text": " sheer",
+      "startMs": 12687,
+      "endMs": 12887,
+      "timestampMs": 12787,
+      "confidence": null
+    },
+    {
+      "text": " willpower.",
+      "startMs": 12887,
+      "endMs": 13287,
+      "timestampMs": 13087,
+      "confidence": null
+    },
+    {
+      "text": " Instead,",
+      "startMs": 14080,
+      "endMs": 14440,
+      "timestampMs": 14260,
+      "confidence": null
+    },
+    {
+      "text": " it's",
+      "startMs": 14760,
+      "endMs": 14880,
+      "timestampMs": 14820,
+      "confidence": null
+    },
+    {
+      "text": " about",
+      "startMs": 14880,
+      "endMs": 15020,
+      "timestampMs": 14950,
+      "confidence": null
+    },
+    {
+      "text": " making",
+      "startMs": 15020,
+      "endMs": 15400,
+      "timestampMs": 15210,
+      "confidence": null
+    },
+    {
+      "text": " these",
+      "startMs": 15400,
+      "endMs": 15640,
+      "timestampMs": 15520,
+      "confidence": null
+    },
+    {
+      "text": " cues",
+      "startMs": 15640,
+      "endMs": 15940,
+      "timestampMs": 15790,
+      "confidence": null
+    },
+    {
+      "text": " visible.",
+      "startMs": 15940,
+      "endMs": 16420,
+      "timestampMs": 16180,
+      "confidence": null
+    },
+    {
+      "text": " Imagine",
+      "startMs": 17032,
+      "endMs": 17392,
+      "timestampMs": 17212,
+      "confidence": null
+    },
+    {
+      "text": " listing",
+      "startMs": 17392,
+      "endMs": 17652,
+      "timestampMs": 17522,
+      "confidence": null
+    },
+    {
+      "text": " every",
+      "startMs": 17652,
+      "endMs": 18072,
+      "timestampMs": 17862,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 18072,
+      "endMs": 18372,
+      "timestampMs": 18222,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 18372,
+      "endMs": 18592,
+      "timestampMs": 18482,
+      "confidence": null
+    },
+    {
+      "text": " have,",
+      "startMs": 18592,
+      "endMs": 18852,
+      "timestampMs": 18722,
+      "confidence": null
+    },
+    {
+      "text": " good",
+      "startMs": 19192,
+      "endMs": 19332,
+      "timestampMs": 19262,
+      "confidence": null
+    },
+    {
+      "text": " or",
+      "startMs": 19332,
+      "endMs": 19492,
+      "timestampMs": 19412,
+      "confidence": null
+    },
+    {
+      "text": " bad.",
+      "startMs": 19492,
+      "endMs": 19792,
+      "timestampMs": 19642,
+      "confidence": null
+    },
+    {
+      "text": " That's",
+      "startMs": 20392,
+      "endMs": 20632,
+      "timestampMs": 20512,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 20632,
+      "endMs": 20732,
+      "timestampMs": 20682,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 20732,
+      "endMs": 20952,
+      "timestampMs": 20842,
+      "confidence": null
+    },
+    {
+      "text": " scorecard.",
+      "startMs": 20952,
+      "endMs": 21612,
+      "timestampMs": 21282,
+      "confidence": null
+    },
+    {
+      "text": " Now",
+      "startMs": 22230,
+      "endMs": 22410,
+      "timestampMs": 22320,
+      "confidence": null
+    },
+    {
+      "text": " picture",
+      "startMs": 22410,
+      "endMs": 22650,
+      "timestampMs": 22530,
+      "confidence": null
+    },
+    {
+      "text": " planning",
+      "startMs": 22650,
+      "endMs": 23050,
+      "timestampMs": 22850,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 23050,
+      "endMs": 23310,
+      "timestampMs": 23180,
+      "confidence": null
+    },
+    {
+      "text": " actions",
+      "startMs": 23310,
+      "endMs": 23650,
+      "timestampMs": 23480,
+      "confidence": null
+    },
+    {
+      "text": " with",
+      "startMs": 23650,
+      "endMs": 23970,
+      "timestampMs": 23810,
+      "confidence": null
+    },
+    {
+      "text": " precision.",
+      "startMs": 23970,
+      "endMs": 24370,
+      "timestampMs": 24170,
+      "confidence": null
+    },
+    {
+      "text": " I'll",
+      "startMs": 25050,
+      "endMs": 25190,
+      "timestampMs": 25120,
+      "confidence": null
+    },
+    {
+      "text": " read",
+      "startMs": 25190,
+      "endMs": 25350,
+      "timestampMs": 25270,
+      "confidence": null
+    },
+    {
+      "text": " at",
+      "startMs": 25350,
+      "endMs": 25510,
+      "timestampMs": 25430,
+      "confidence": null
+    },
+    {
+      "text": " 7",
+      "startMs": 25510,
+      "endMs": 25810,
+      "timestampMs": 25660,
+      "confidence": null
+    },
+    {
+      "text": " p",
+      "startMs": 25810,
+      "endMs": 26010,
+      "timestampMs": 25910,
+      "confidence": null
+    },
+    {
+      "text": " .m.",
+      "startMs": 26010,
+      "endMs": 26230,
+      "timestampMs": 26120,
+      "confidence": null
+    },
+    {
+      "text": " on",
+      "startMs": 26290,
+      "endMs": 26310,
+      "timestampMs": 26300,
+      "confidence": null
+    },
+    {
+      "text": " my",
+      "startMs": 26310,
+      "endMs": 26450,
+      "timestampMs": 26380,
+      "confidence": null
+    },
+    {
+      "text": " couch.",
+      "startMs": 26450,
+      "endMs": 26710,
+      "timestampMs": 26580,
+      "confidence": null
+    },
+    {
+      "text": " Redesign",
+      "startMs": 27376,
+      "endMs": 27876,
+      "timestampMs": 27626,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 27876,
+      "endMs": 28076,
+      "timestampMs": 27976,
+      "confidence": null
+    },
+    {
+      "text": " environment.",
+      "startMs": 28076,
+      "endMs": 28576,
+      "timestampMs": 28326,
+      "confidence": null
+    },
+    {
+      "text": " Place",
+      "startMs": 29179,
+      "endMs": 29399,
+      "timestampMs": 29289,
+      "confidence": null
+    },
+    {
+      "text": " triggers",
+      "startMs": 29399,
+      "endMs": 29699,
+      "timestampMs": 29549,
+      "confidence": null
+    },
+    {
+      "text": " for",
+      "startMs": 29699,
+      "endMs": 29979,
+      "timestampMs": 29839,
+      "confidence": null
+    },
+    {
+      "text": " good",
+      "startMs": 29979,
+      "endMs": 30139,
+      "timestampMs": 30059,
+      "confidence": null
+    },
+    {
+      "text": " habits",
+      "startMs": 30139,
+      "endMs": 30459,
+      "timestampMs": 30299,
+      "confidence": null
+    },
+    {
+      "text": " in",
+      "startMs": 30459,
+      "endMs": 30699,
+      "timestampMs": 30579,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 30699,
+      "endMs": 30799,
+      "timestampMs": 30749,
+      "confidence": null
+    },
+    {
+      "text": " path",
+      "startMs": 30799,
+      "endMs": 31119,
+      "timestampMs": 30959,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 31119,
+      "endMs": 31399,
+      "timestampMs": 31259,
+      "confidence": null
+    },
+    {
+      "text": " hide",
+      "startMs": 31399,
+      "endMs": 31599,
+      "timestampMs": 31499,
+      "confidence": null
+    },
+    {
+      "text": " those",
+      "startMs": 31599,
+      "endMs": 31819,
+      "timestampMs": 31709,
+      "confidence": null
+    },
+    {
+      "text": " for",
+      "startMs": 31819,
+      "endMs": 32039,
+      "timestampMs": 31929,
+      "confidence": null
+    },
+    {
+      "text": " bad",
+      "startMs": 32039,
+      "endMs": 32239,
+      "timestampMs": 32139,
+      "confidence": null
+    },
+    {
+      "text": " ones.",
+      "startMs": 32239,
+      "endMs": 32499,
+      "timestampMs": 32369,
+      "confidence": null
+    },
+    {
+      "text": " Shift",
+      "startMs": 33071,
+      "endMs": 33291,
+      "timestampMs": 33181,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 33291,
+      "endMs": 33531,
+      "timestampMs": 33411,
+      "confidence": null
+    },
+    {
+      "text": " world,",
+      "startMs": 33531,
+      "endMs": 33871,
+      "timestampMs": 33701,
+      "confidence": null
+    },
+    {
+      "text": " not",
+      "startMs": 34231,
+      "endMs": 34411,
+      "timestampMs": 34321,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 34411,
+      "endMs": 34591,
+      "timestampMs": 34501,
+      "confidence": null
+    },
+    {
+      "text": " willpower.",
+      "startMs": 34591,
+      "endMs": 34871,
+      "timestampMs": 34731,
+      "confidence": null
+    }
+  ]
+}
