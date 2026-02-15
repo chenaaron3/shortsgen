@@ -109,10 +109,12 @@ def run(
     skip_existing: bool = True,
     max_scenes: int | None = None,
     concurrency: int = DEFAULT_CONCURRENCY,
+    skip_cache: bool = False,
 ) -> Chunks:
     """
     Generate voice for each scene. Uses per-scene cache.
     Output: cache/{cache_key}/voice/voice_1.mp3, etc.
+    skip_cache: if True, regenerate all voice even when cached (for --step 3 iteration).
     """
     voice_dir = cache_path(cache_key, "voice")
 
@@ -149,7 +151,7 @@ def run(
             continue
 
         filename = voice_dir / f"voice_{i + 1}.mp3"
-        if skip_existing and filename.exists():
+        if not skip_cache and skip_existing and filename.exists():
             scene.voice_path = str(filename)
             cached_count += 1
             continue

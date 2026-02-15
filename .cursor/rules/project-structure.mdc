@@ -77,7 +77,7 @@ Cache key = first 16 chars of SHA256(raw_content).
 # Full pipeline
 python generation/scripts/run_pipeline.py -f content.txt
 
-# Options: --skip-render, --no-whisper, --max-scenes N
+# Options: --step S (script, chunker, image, voice, prepare, video), --max-scenes N
 
 # Prepare only (after images+voice exist)
 python generation/scripts/prepare_remotion_assets.py CACHE_KEY

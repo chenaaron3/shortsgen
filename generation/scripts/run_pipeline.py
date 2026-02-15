@@ -7,6 +7,7 @@ Image and voice generation run concurrently after chunking.
 
 Usage:
   python generation/scripts/run_pipeline.py -f content.txt
+  python generation/scripts/run_pipeline.py -f content.txt --step image  # run up to image, skip cache
   cat content.txt | python generation/scripts/run_pipeline.py
 """
 
@@ -48,14 +49,10 @@ def main():
         help="Only generate first N scenes (for testing)",
     )
     parser.add_argument(
-        "--skip-render",
-        action="store_true",
-        help="Stop after prepare, do not render video",
-    )
-    parser.add_argument(
-        "--no-whisper",
-        action="store_true",
-        help="Use scene-level captions instead of Whisper word-level",
+        "--step",
+        choices=["script", "chunker", "image", "voice", "prepare", "video"],
+        metavar="STEP",
+        help="Run up to and including STEP, skipping cache for it (script, chunker, image, voice, prepare, video)",
     )
     args = parser.parse_args()
 
@@ -75,53 +72,86 @@ def main():
     cache_key = content_hash(raw_content)
     info(f"🔑 cache_key: {cache_key}")
 
-    set_step_context(1, 5)
-    script = run_script(raw_content, cache_key)
-    set_step_context(2, 5)
-    chunks = run_chunker(script, cache_key)
-    set_step_context(3, 5)
+    step_target = args.step
+    if step_target:
+        info(f"  Running up to {step_target} (skipping cache for {step_target})")
+
+    set_step_context(1, 6)
+    script = run_script(raw_content, cache_key, skip_cache=step_target == "script")
+    if step_target == "script":
+        out_dir = cache_path(cache_key)
+        info("")
+        info(f"✅ Done (step 1)")
+        info(f"   📁 Output: {out_dir}")
+        info(f"   📝 Script:  {out_dir / 'script.md'}")
+        return
+    set_step_context(2, 6)
+    chunks = run_chunker(script, cache_key, skip_cache=step_target == "chunker")
+    if step_target == "chunker":
+        out_dir = cache_path(cache_key)
+        info("")
+        info(f"✅ Done (step 2)")
+        info(f"   📁 Output: {out_dir}")
+        info(f"   📝 Script:  {out_dir / 'script.md'}")
+        info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
+        return
+
+    set_step_context(3, 6)
     with ThreadPoolExecutor(max_workers=2) as executor:
         future_images = executor.submit(
             run_images,
             chunks,
             cache_key,
             max_scenes=args.max_scenes,
+            skip_cache=step_target == "image",
         )
         future_voice = executor.submit(
             run_voice,
             chunks,
             cache_key,
             max_scenes=args.max_scenes,
+            skip_cache=step_target == "voice",
         )
         for future in as_completed([future_images, future_voice]):
             future.result()
 
-    set_step_context(4, 5)
+    if step_target in ("image", "voice"):
+        out_dir = cache_path(cache_key)
+        info("")
+        info(f"✅ Done (step 3)")
+        info(f"   📁 Output: {out_dir}")
+        info(f"   📝 Script:  {out_dir / 'script.md'}")
+        info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
+        info(f"   🖼️ Images:  {out_dir / 'images'}")
+        info(f"   🔊 Voice:   {out_dir / 'voice'}")
+        return
+
+    set_step_context(4, 6)
     try:
         prepare(
             cache_key,
             video_public(),
-            use_whisper=not args.no_whisper,
+            use_whisper=True,
             whisper_model="base.en",
+            skip_cache=step_target == "prepare",
         )
     except Exception as e:
         error(str(e))
         sys.exit(1)
 
-    if args.skip_render:
+    if step_target == "prepare":
         out_dir = cache_path(cache_key)
         info("")
-        info("✅ Done (--skip-render)")
+        info(f"✅ Done (step 4)")
         info(f"   📁 Output: {out_dir}")
         info(f"   📝 Script:  {out_dir / 'script.md'}")
         info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
         info(f"   🖼️ Images:  {out_dir / 'images'}")
         info(f"   🔊 Voice:   {out_dir / 'voice'}")
         info(f"   📦 Manifest: {video_public() / 'shortgen' / cache_key / 'manifest.json'}")
-        info(f"   🎬 Render:  npx remotion render ShortVideo -o {cache_path(cache_key, 'short.mp4')} --props='{{\"cacheKey\":\"{cache_key}\"}}'")
         return
 
-    set_step_context(5, 5)
+    set_step_context(6, 6)
     try:
         output_path = run_render(cache_key)
     except Exception as e:

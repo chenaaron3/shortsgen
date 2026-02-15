@@ -1,41 +1,25 @@
 #!/usr/bin/env python3
 """
-Generate mascot scene images from chunker JSON using OpenAI images/edits (img2img).
+Generate mascot scene images from chunker JSON.
+Uses image_generator layer for backend (gpt or replicate). All API/config logic is abstracted.
 Called by run_pipeline. Outputs to cache/{cache_key}/images/.
 """
 
-import base64
 import json
-import os
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from urllib.request import Request, urlopen
-from urllib.error import HTTPError
 
 from dotenv import load_dotenv
 
+from image_generator import generate_image as generate_image_impl, get_config
 from models import Chunks
 from path_utils import env_path, mascot_path as default_mascot_path, cache_path
-from logger import cache_stats_summary, error, info, progress, step_end, step_start, warn
+from logger import cache_stats_summary, error, progress, step_end, step_start
 
 load_dotenv(env_path())
 
-GPT_IMAGE_MINI = "gpt-image-1-mini"
-GPT_IMAGE_1 = "gpt-image-1"
-GPT_IMAGE_15 = "gpt-image-1.5"
-DEFAULT_MODEL = GPT_IMAGE_MINI
-
-# Model → size override (must be valid API sizes: 1024x1024, 1536x1024, 1024x1536, auto)
-MODEL_SIZE: dict[str, str] = {
-    GPT_IMAGE_MINI: "1024x1536",
-    GPT_IMAGE_1: "1024x1536",
-    GPT_IMAGE_15: "1024x1536",
-}
-RETRY_DELAY = 5  # seconds between retries on 429
-DEFAULT_INPUT_FIDELITY = "low"  # "low" = more scene/pose variation
-DEFAULT_CONCURRENCY = 4  # parallel image generations (I/O-bound)
+DEFAULT_CONCURRENCY = 2
 
 STYLE_PROMPT = (
     "Hand-drawn stick figure style. Black line art. "
@@ -76,92 +60,18 @@ def load_chunks(path: Path) -> Chunks:
         sys.exit(1)
 
 
-def image_to_data_uri(path: Path) -> str:
-    """Convert image file to base64 data URI for OpenAI images/edits API."""
-    data = path.read_bytes()
-    b64 = base64.b64encode(data).decode("ascii")
-    ext = path.suffix.lower()
-    mime = "image/png" if ext == ".png" else "image/jpeg" if ext in (".jpg", ".jpeg") else "image/png"
-    return f"data:{mime};base64,{b64}"
-
-
-def generate_image(
-    mascot_path: Path,
-    prompt: str,
-    api_key: str,
-    input_fidelity: str = DEFAULT_INPUT_FIDELITY,
-    model: str = DEFAULT_MODEL,
-) -> bytes:
-    """Call OpenAI images/edits API (img2img) via JSON. SDK uses multipart which only supports dall-e-2."""
-    image_uri = image_to_data_uri(mascot_path)
-    size = MODEL_SIZE.get(model, "1024x1536")
-
-    payload = {
-        "images": [{"image_url": image_uri}],
-        "prompt": prompt,
-        "model": model,
-        "size": size,
-        "quality": "low",
-        "output_format": "png",
-        "n": 1,
-    }
-    if model != GPT_IMAGE_MINI:
-        payload["input_fidelity"] = input_fidelity
-
-    for attempt in range(10):
-        try:
-            req = Request(
-                "https://api.openai.com/v1/images/edits",
-                data=json.dumps(payload).encode("utf-8"),
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                method="POST",
-            )
-            with urlopen(req, timeout=120) as resp:
-                result = json.loads(resp.read().decode())
-        except HTTPError as e:
-            body = ""
-            if e.fp:
-                try:
-                    body = e.fp.read().decode()
-                except Exception:
-                    pass
-            if e.code == 429 and attempt < 9:
-                wait = RETRY_DELAY * (attempt + 1)
-                warn(f"  Rate limited (429), retrying in {wait}s...")
-                time.sleep(wait)
-                continue
-            raise RuntimeError(f"OpenAI API error {e.code}: {body or str(e)}") from e
-
-        data = result.get("data")
-        if not data:
-            if attempt < 9:
-                wait = RETRY_DELAY * (attempt + 1)
-                warn(f"  No output from OpenAI, retrying in {wait}s...")
-                time.sleep(wait)
-                continue
-            raise RuntimeError("No output from OpenAI images/edits")
-
-        b64_data = data[0].get("b64_json")
-        if not b64_data:
-            raise RuntimeError("OpenAI returned no base64 image data")
-
-        return base64.b64decode(b64_data)
-
 def _generate_one(
     i: int,
     mascot: Path,
     full_prompt: str,
-    api_key: str,
-    input_fidelity: str,
-    model: str,
+    model: str | None,
 ) -> tuple[int, bytes | None, str | None]:
     """Worker: generate one image. Returns (index, img_bytes, error_msg)."""
     try:
-        img_bytes = generate_image(
-            mascot, full_prompt, api_key, input_fidelity, model=model
+        img_bytes = generate_image_impl(
+            mascot_path=mascot,
+            prompt=full_prompt,
+            model=model,
         )
         return (i, img_bytes, None)
     except Exception as e:
@@ -171,27 +81,25 @@ def _generate_one(
 def run(
     chunks: Chunks,
     cache_key: str,
-    input_fidelity: str = DEFAULT_INPUT_FIDELITY,
     mascot_path: Path | None = None,
     skip_existing: bool = True,
     max_scenes: int | None = None,
     concurrency: int = DEFAULT_CONCURRENCY,
-    model: str = DEFAULT_MODEL,
+    model: str | None = None,
+    skip_cache: bool = False,
 ) -> Chunks:
     """
     Generate images from chunks. Uses per-image cache.
     cache_key = same as script/chunks. Output: cache/{cache_key}/images/image_1.png, etc.
     max_scenes: if set, only generate this many scenes (for testing).
     concurrency: number of parallel API calls (default 4).
+    model: optional override for image generator (uses backend default if None).
+    skip_cache: if True, regenerate all images even when cached (for --step image iteration).
     """
     images_dir = cache_path(cache_key, "images")
     mascot = mascot_path or default_mascot_path()
     if not mascot.exists():
         raise RuntimeError(f"Mascot not found at {mascot}")
-
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY not found")
 
     scenes = chunks.scenes
     if not scenes:
@@ -200,9 +108,9 @@ def run(
     images_dir.mkdir(parents=True, exist_ok=True)
     total = len(scenes)
     to_process = scenes[:max_scenes] if max_scenes is not None else scenes
+    config = get_config(model_override=model)
 
-    # Handle cached scenes and build work list for generation
-    work: list[tuple[int, str, Path, str, Path]] = []  # (i, imagery, filename, full_prompt, request_path)
+    work: list[tuple[int, str, Path, str, Path]] = []
     cached_count = 0
     for i, scene in enumerate(to_process):
         imagery = scene.imagery
@@ -210,7 +118,7 @@ def run(
             continue
 
         filename = images_dir / f"image_{i + 1}.png"
-        if skip_existing and filename.exists():
+        if not skip_cache and skip_existing and filename.exists():
             scene.image_path = str(filename)
             cached_count += 1
             continue
@@ -232,7 +140,11 @@ def run(
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
             executor.submit(
-                _generate_one, i, mascot, full_prompt, api_key, input_fidelity, model
+                _generate_one,
+                i,
+                mascot,
+                full_prompt,
+                model,
             ): (i, imagery, filename, full_prompt, request_path)
             for i, imagery, filename, full_prompt, request_path in work
         }
@@ -259,9 +171,8 @@ def run(
                     {
                         "imagery": imagery,
                         "full_prompt": full_prompt,
-                        "input_fidelity": input_fidelity,
                         "mascot": str(mascot),
-                        "model": model,
+                        **config,
                     },
                     indent=2,
                 ),

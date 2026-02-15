@@ -71,15 +71,17 @@ def run(
     script: str,
     cache_key: str,
     model: str = "gpt-4o",
+    skip_cache: bool = False,
 ) -> Chunks:
     """
     Chunk script into scenes. Uses cache if available.
     cache_key = same as script (1:1). Output: cache/{cache_key}/chunks.json
+    skip_cache: if True, regenerate even when cached (for --step 2 iteration).
     """
     step_start("Chunks")
     chunks_path = cache_path(cache_key, "chunks.json")
 
-    if chunks_path.exists():
+    if not skip_cache and chunks_path.exists():
         cache_hit(chunks_path)
         step_end("Chunks", outputs=[chunks_path], cache_hits=1, cache_misses=0)
         return Chunks.model_validate(json.loads(chunks_path.read_text(encoding="utf-8")))

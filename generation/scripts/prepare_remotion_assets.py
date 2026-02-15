@@ -98,8 +98,11 @@ def prepare(
     video_public: Path,
     use_whisper: bool = True,
     whisper_model: str = "base.en",
+    skip_cache: bool = False,
 ) -> Path:
-    """Copy assets to public and create manifest. Returns path to manifest."""
+    """Copy assets to public and create manifest. Returns path to manifest.
+    skip_cache: if True, regenerate Whisper captions even when cached (for --step 4 iteration).
+    """
     step_start("Prepare Remotion assets")
     chunks_path = cache_path(cache_key, "chunks.json")
     if not chunks_path.exists():
@@ -162,7 +165,7 @@ def prepare(
     captions_path.parent.mkdir(parents=True, exist_ok=True)
 
     if use_whisper and WhisperModel is not None:
-        if captions_path.exists():
+        if not skip_cache and captions_path.exists():
             info("  ✓ loading cached Whisper captions")
             captions = json.loads(captions_path.read_text(encoding="utf-8"))
         else:

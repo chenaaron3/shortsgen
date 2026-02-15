@@ -59,15 +59,17 @@ def run(
     raw_content: str,
     cache_key: str,
     model: str = "gpt-4o",
+    skip_cache: bool = False,
 ) -> str:
     """
     Generate script from raw content. Uses cache if available.
     cache_key = hash of raw content. Output: cache/{cache_key}/script.md
+    skip_cache: if True, regenerate even when cached (for --step 1 iteration).
     """
     step_start("Script")
     script_path = cache_path(cache_key, "script.md")
 
-    if script_path.exists():
+    if not skip_cache and script_path.exists():
         cache_hit(script_path)
         step_end("Script", outputs=[script_path], cache_hits=1, cache_misses=0)
         return script_path.read_text(encoding="utf-8")

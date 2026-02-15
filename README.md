@@ -36,7 +36,7 @@ Create a `.env` with `OPENAI_API_KEY`, `ELEVENLABS_API_KEY` as needed.
 python generation/scripts/run_pipeline.py -f content.txt
 ```
 
-Use `--skip-render` to stop after preparing assets; the pipeline will print the manual render command.
+Use `--step S` (script, chunker, image, voice, prepare, video) to run up to that step and skip its cache (useful for iterating).
 
 ### Preview in Remotion Studio
 
@@ -54,4 +54,3 @@ Captions use **Whisper** (faster-whisper) for word-level timestamps when availab
 pip install faster-whisper
 ```
 
-Use `--no-whisper` to fall back to scene-level captions from chunk text.
