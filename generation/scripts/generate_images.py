@@ -19,7 +19,7 @@ from logger import cache_stats_summary, error, progress, step_end, step_start
 
 load_dotenv(env_path())
 
-DEFAULT_CONCURRENCY = 2
+DEFAULT_CONCURRENCY = 10
 
 STYLE_PROMPT = (
     "Hand-drawn stick figure style. Black line art. "

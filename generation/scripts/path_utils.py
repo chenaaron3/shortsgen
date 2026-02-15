@@ -23,7 +23,7 @@ def assets_dir() -> Path:
 
 def mascot_path() -> Path:
     """Default mascot canvas image path."""
-    return assets_dir() / "mascot_canvas.png"
+    return assets_dir() / "mascot_simple.png"
 
 
 def prompts_dir() -> Path:

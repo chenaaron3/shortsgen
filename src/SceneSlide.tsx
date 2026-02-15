@@ -1,5 +1,5 @@
-import React from "react";
-import { AbsoluteFill, Audio, Img, interpolate, useCurrentFrame } from "remotion";
+import React from 'react';
+import { AbsoluteFill, Audio, Img, interpolate, useCurrentFrame } from 'remotion';
 
 const FADE_FRAMES = 8; // ~0.27s subtle image fade at 30fps
 
@@ -29,7 +29,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
     <AbsoluteFill
       style={{
         backgroundColor: "#fff",
-        justifyContent: "center",
+        justifyContent: "flex-end",
         alignItems: "center",
       }}
     >

@@ -1,0 +1,778 @@
+{
+  "cacheKey": "f36663b1bcc89f02",
+  "fps": 30,
+  "width": 540,
+  "height": 960,
+  "durationInFrames": 1068,
+  "scenes": [
+    {
+      "text": "The secret to building wealth isn't what most people think.",
+      "imagePath": "images/image_1.png",
+      "voicePath": "voice/voice_1.mp3",
+      "durationInSeconds": 3.1608163265306124
+    },
+    {
+      "text": "Imagine planting a tree. Each year, it grows a little taller.",
+      "imagePath": "images/image_2.png",
+      "voicePath": "voice/voice_2.mp3",
+      "durationInSeconds": 3.657142857142857
+    },
+    {
+      "text": "But soon, it doesn't just grow branches\u2014it grows new trees.",
+      "imagePath": "images/image_3.png",
+      "voicePath": "voice/voice_3.mp3",
+      "durationInSeconds": 3.7616326530612243
+    },
+    {
+      "text": "That's compounding. Every dollar invested isn't just earning interest on itself.",
+      "imagePath": "images/image_4.png",
+      "voicePath": "voice/voice_4.mp3",
+      "durationInSeconds": 4.858775510204081
+    },
+    {
+      "text": "It's earning on the interest too.",
+      "imagePath": "images/image_5.png",
+      "voicePath": "voice/voice_5.mp3",
+      "durationInSeconds": 1.933061224489796
+    },
+    {
+      "text": "Invest $10,000 at 7%, and you're not just making 7% on the original amount.",
+      "imagePath": "images/image_6.png",
+      "voicePath": "voice/voice_6.mp3",
+      "durationInSeconds": 5.564081632653061
+    },
+    {
+      "text": "You're making 7% on each year's growth.",
+      "imagePath": "images/image_7.png",
+      "voicePath": "voice/voice_7.mp3",
+      "durationInSeconds": 2.7689795918367346
+    },
+    {
+      "text": "Over time, this snowball effect turns small seeds into a forest of wealth.",
+      "imagePath": "images/image_8.png",
+      "voicePath": "voice/voice_8.mp3",
+      "durationInSeconds": 4.675918367346939
+    },
+    {
+      "text": "Start planting your financial seeds today.",
+      "imagePath": "images/image_9.png",
+      "voicePath": "voice/voice_9.mp3",
+      "durationInSeconds": 2.6383673469387756
+    },
+    {
+      "text": "Let time and compounding do the heavy lifting.",
+      "imagePath": "images/image_10.png",
+      "voicePath": "voice/voice_10.mp3",
+      "durationInSeconds": 2.5861224489795918
+    }
+  ],
+  "captions": [
+    {
+      "text": " The",
+      "startMs": 0,
+      "endMs": 140,
+      "timestampMs": 70,
+      "confidence": null
+    },
+    {
+      "text": " secret",
+      "startMs": 140,
+      "endMs": 420,
+      "timestampMs": 280,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 420,
+      "endMs": 600,
+      "timestampMs": 510,
+      "confidence": null
+    },
+    {
+      "text": " building",
+      "startMs": 600,
+      "endMs": 880,
+      "timestampMs": 740,
+      "confidence": null
+    },
+    {
+      "text": " wealth",
+      "startMs": 880,
+      "endMs": 1180,
+      "timestampMs": 1030,
+      "confidence": null
+    },
+    {
+      "text": " isn't",
+      "startMs": 1180,
+      "endMs": 1580,
+      "timestampMs": 1380,
+      "confidence": null
+    },
+    {
+      "text": " what",
+      "startMs": 1580,
+      "endMs": 1720,
+      "timestampMs": 1650,
+      "confidence": null
+    },
+    {
+      "text": " most",
+      "startMs": 1720,
+      "endMs": 1940,
+      "timestampMs": 1830,
+      "confidence": null
+    },
+    {
+      "text": " people",
+      "startMs": 1940,
+      "endMs": 2240,
+      "timestampMs": 2090,
+      "confidence": null
+    },
+    {
+      "text": " think.",
+      "startMs": 2240,
+      "endMs": 2580,
+      "timestampMs": 2410,
+      "confidence": null
+    },
+    {
+      "text": " Imagine",
+      "startMs": 3161,
+      "endMs": 3481,
+      "timestampMs": 3321,
+      "confidence": null
+    },
+    {
+      "text": " planting",
+      "startMs": 3481,
+      "endMs": 3821,
+      "timestampMs": 3651,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 3821,
+      "endMs": 4041,
+      "timestampMs": 3931,
+      "confidence": null
+    },
+    {
+      "text": " tree.",
+      "startMs": 4041,
+      "endMs": 4261,
+      "timestampMs": 4151,
+      "confidence": null
+    },
+    {
+      "text": " Each",
+      "startMs": 4781,
+      "endMs": 4881,
+      "timestampMs": 4831,
+      "confidence": null
+    },
+    {
+      "text": " year",
+      "startMs": 4881,
+      "endMs": 5181,
+      "timestampMs": 5031,
+      "confidence": null
+    },
+    {
+      "text": " it",
+      "startMs": 5181,
+      "endMs": 5401,
+      "timestampMs": 5291,
+      "confidence": null
+    },
+    {
+      "text": " grows",
+      "startMs": 5401,
+      "endMs": 5601,
+      "timestampMs": 5501,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 5601,
+      "endMs": 5781,
+      "timestampMs": 5691,
+      "confidence": null
+    },
+    {
+      "text": " little",
+      "startMs": 5781,
+      "endMs": 5921,
+      "timestampMs": 5851,
+      "confidence": null
+    },
+    {
+      "text": " taller.",
+      "startMs": 5921,
+      "endMs": 6241,
+      "timestampMs": 6081,
+      "confidence": null
+    },
+    {
+      "text": " but",
+      "startMs": 6818,
+      "endMs": 6958,
+      "timestampMs": 6888,
+      "confidence": null
+    },
+    {
+      "text": " soon",
+      "startMs": 6958,
+      "endMs": 7198,
+      "timestampMs": 7078,
+      "confidence": null
+    },
+    {
+      "text": " it",
+      "startMs": 7198,
+      "endMs": 7458,
+      "timestampMs": 7328,
+      "confidence": null
+    },
+    {
+      "text": " doesn't",
+      "startMs": 7458,
+      "endMs": 7758,
+      "timestampMs": 7608,
+      "confidence": null
+    },
+    {
+      "text": " just",
+      "startMs": 7758,
+      "endMs": 7878,
+      "timestampMs": 7818,
+      "confidence": null
+    },
+    {
+      "text": " grow",
+      "startMs": 7878,
+      "endMs": 8098,
+      "timestampMs": 7988,
+      "confidence": null
+    },
+    {
+      "text": " branches,",
+      "startMs": 8098,
+      "endMs": 8498,
+      "timestampMs": 8298,
+      "confidence": null
+    },
+    {
+      "text": " it",
+      "startMs": 8998,
+      "endMs": 9058,
+      "timestampMs": 9028,
+      "confidence": null
+    },
+    {
+      "text": " grows",
+      "startMs": 9058,
+      "endMs": 9238,
+      "timestampMs": 9148,
+      "confidence": null
+    },
+    {
+      "text": " new",
+      "startMs": 9238,
+      "endMs": 9518,
+      "timestampMs": 9378,
+      "confidence": null
+    },
+    {
+      "text": " trees.",
+      "startMs": 9518,
+      "endMs": 9878,
+      "timestampMs": 9698,
+      "confidence": null
+    },
+    {
+      "text": " That's",
+      "startMs": 10580,
+      "endMs": 10880,
+      "timestampMs": 10730,
+      "confidence": null
+    },
+    {
+      "text": " compounding.",
+      "startMs": 10880,
+      "endMs": 11400,
+      "timestampMs": 11140,
+      "confidence": null
+    },
+    {
+      "text": " Every",
+      "startMs": 11880,
+      "endMs": 12040,
+      "timestampMs": 11960,
+      "confidence": null
+    },
+    {
+      "text": " dollar",
+      "startMs": 12040,
+      "endMs": 12340,
+      "timestampMs": 12190,
+      "confidence": null
+    },
+    {
+      "text": " invested",
+      "startMs": 12340,
+      "endMs": 12800,
+      "timestampMs": 12570,
+      "confidence": null
+    },
+    {
+      "text": " isn't",
+      "startMs": 12800,
+      "endMs": 13320,
+      "timestampMs": 13060,
+      "confidence": null
+    },
+    {
+      "text": " just",
+      "startMs": 13320,
+      "endMs": 13460,
+      "timestampMs": 13390,
+      "confidence": null
+    },
+    {
+      "text": " earning",
+      "startMs": 13460,
+      "endMs": 13800,
+      "timestampMs": 13630,
+      "confidence": null
+    },
+    {
+      "text": " interest",
+      "startMs": 13800,
+      "endMs": 14220,
+      "timestampMs": 14010,
+      "confidence": null
+    },
+    {
+      "text": " on",
+      "startMs": 14220,
+      "endMs": 14460,
+      "timestampMs": 14340,
+      "confidence": null
+    },
+    {
+      "text": " itself.",
+      "startMs": 14460,
+      "endMs": 14680,
+      "timestampMs": 14570,
+      "confidence": null
+    },
+    {
+      "text": " It's",
+      "startMs": 15438,
+      "endMs": 15618,
+      "timestampMs": 15528,
+      "confidence": null
+    },
+    {
+      "text": " earning",
+      "startMs": 15618,
+      "endMs": 15818,
+      "timestampMs": 15718,
+      "confidence": null
+    },
+    {
+      "text": " on",
+      "startMs": 15818,
+      "endMs": 16038,
+      "timestampMs": 15928,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 16038,
+      "endMs": 16138,
+      "timestampMs": 16088,
+      "confidence": null
+    },
+    {
+      "text": " interest",
+      "startMs": 16138,
+      "endMs": 16418,
+      "timestampMs": 16278,
+      "confidence": null
+    },
+    {
+      "text": " too.",
+      "startMs": 16418,
+      "endMs": 16818,
+      "timestampMs": 16618,
+      "confidence": null
+    },
+    {
+      "text": " Invest",
+      "startMs": 17371,
+      "endMs": 17631,
+      "timestampMs": 17501,
+      "confidence": null
+    },
+    {
+      "text": " $10",
+      "startMs": 17631,
+      "endMs": 17991,
+      "timestampMs": 17811,
+      "confidence": null
+    },
+    {
+      "text": " ,000",
+      "startMs": 17991,
+      "endMs": 18491,
+      "timestampMs": 18241,
+      "confidence": null
+    },
+    {
+      "text": " at",
+      "startMs": 18491,
+      "endMs": 18871,
+      "timestampMs": 18681,
+      "confidence": null
+    },
+    {
+      "text": " 7",
+      "startMs": 18871,
+      "endMs": 19131,
+      "timestampMs": 19001,
+      "confidence": null
+    },
+    {
+      "text": " %",
+      "startMs": 19131,
+      "endMs": 19631,
+      "timestampMs": 19381,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 19631,
+      "endMs": 19971,
+      "timestampMs": 19801,
+      "confidence": null
+    },
+    {
+      "text": " you're",
+      "startMs": 19971,
+      "endMs": 20111,
+      "timestampMs": 20041,
+      "confidence": null
+    },
+    {
+      "text": " not",
+      "startMs": 20111,
+      "endMs": 20231,
+      "timestampMs": 20171,
+      "confidence": null
+    },
+    {
+      "text": " just",
+      "startMs": 20231,
+      "endMs": 20391,
+      "timestampMs": 20311,
+      "confidence": null
+    },
+    {
+      "text": " making",
+      "startMs": 20391,
+      "endMs": 20631,
+      "timestampMs": 20511,
+      "confidence": null
+    },
+    {
+      "text": " 7",
+      "startMs": 20631,
+      "endMs": 20991,
+      "timestampMs": 20811,
+      "confidence": null
+    },
+    {
+      "text": " %",
+      "startMs": 20991,
+      "endMs": 21411,
+      "timestampMs": 21201,
+      "confidence": null
+    },
+    {
+      "text": " on",
+      "startMs": 21411,
+      "endMs": 21551,
+      "timestampMs": 21481,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 21551,
+      "endMs": 21671,
+      "timestampMs": 21611,
+      "confidence": null
+    },
+    {
+      "text": " original",
+      "startMs": 21671,
+      "endMs": 21871,
+      "timestampMs": 21771,
+      "confidence": null
+    },
+    {
+      "text": " amount.",
+      "startMs": 21871,
+      "endMs": 22331,
+      "timestampMs": 22101,
+      "confidence": null
+    },
+    {
+      "text": " you're",
+      "startMs": 22936,
+      "endMs": 23136,
+      "timestampMs": 23036,
+      "confidence": null
+    },
+    {
+      "text": " making",
+      "startMs": 23136,
+      "endMs": 23356,
+      "timestampMs": 23246,
+      "confidence": null
+    },
+    {
+      "text": " 7",
+      "startMs": 23356,
+      "endMs": 23696,
+      "timestampMs": 23526,
+      "confidence": null
+    },
+    {
+      "text": " %",
+      "startMs": 23696,
+      "endMs": 24116,
+      "timestampMs": 23906,
+      "confidence": null
+    },
+    {
+      "text": " on",
+      "startMs": 24116,
+      "endMs": 24296,
+      "timestampMs": 24206,
+      "confidence": null
+    },
+    {
+      "text": " each",
+      "startMs": 24296,
+      "endMs": 24476,
+      "timestampMs": 24386,
+      "confidence": null
+    },
+    {
+      "text": " year's",
+      "startMs": 24476,
+      "endMs": 24856,
+      "timestampMs": 24666,
+      "confidence": null
+    },
+    {
+      "text": " growth.",
+      "startMs": 24856,
+      "endMs": 25116,
+      "timestampMs": 24986,
+      "confidence": null
+    },
+    {
+      "text": " Over",
+      "startMs": 25704,
+      "endMs": 25864,
+      "timestampMs": 25784,
+      "confidence": null
+    },
+    {
+      "text": " time,",
+      "startMs": 25864,
+      "endMs": 26224,
+      "timestampMs": 26044,
+      "confidence": null
+    },
+    {
+      "text": " this",
+      "startMs": 26484,
+      "endMs": 26644,
+      "timestampMs": 26564,
+      "confidence": null
+    },
+    {
+      "text": " snowball",
+      "startMs": 26644,
+      "endMs": 26924,
+      "timestampMs": 26784,
+      "confidence": null
+    },
+    {
+      "text": " effect",
+      "startMs": 26924,
+      "endMs": 27364,
+      "timestampMs": 27144,
+      "confidence": null
+    },
+    {
+      "text": " turns",
+      "startMs": 27364,
+      "endMs": 27804,
+      "timestampMs": 27584,
+      "confidence": null
+    },
+    {
+      "text": " small",
+      "startMs": 27804,
+      "endMs": 28164,
+      "timestampMs": 27984,
+      "confidence": null
+    },
+    {
+      "text": " seeds",
+      "startMs": 28164,
+      "endMs": 28544,
+      "timestampMs": 28354,
+      "confidence": null
+    },
+    {
+      "text": " into",
+      "startMs": 28544,
+      "endMs": 28944,
+      "timestampMs": 28744,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 28944,
+      "endMs": 29084,
+      "timestampMs": 29014,
+      "confidence": null
+    },
+    {
+      "text": " forest",
+      "startMs": 29084,
+      "endMs": 29304,
+      "timestampMs": 29194,
+      "confidence": null
+    },
+    {
+      "text": " of",
+      "startMs": 29304,
+      "endMs": 29564,
+      "timestampMs": 29434,
+      "confidence": null
+    },
+    {
+      "text": " wealth.",
+      "startMs": 29564,
+      "endMs": 29804,
+      "timestampMs": 29684,
+      "confidence": null
+    },
+    {
+      "text": " Start",
+      "startMs": 30380,
+      "endMs": 30640,
+      "timestampMs": 30510,
+      "confidence": null
+    },
+    {
+      "text": " planting",
+      "startMs": 30640,
+      "endMs": 30960,
+      "timestampMs": 30800,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 30960,
+      "endMs": 31240,
+      "timestampMs": 31100,
+      "confidence": null
+    },
+    {
+      "text": " financial",
+      "startMs": 31240,
+      "endMs": 31580,
+      "timestampMs": 31410,
+      "confidence": null
+    },
+    {
+      "text": " seeds",
+      "startMs": 31580,
+      "endMs": 32000,
+      "timestampMs": 31790,
+      "confidence": null
+    },
+    {
+      "text": " today.",
+      "startMs": 32000,
+      "endMs": 32480,
+      "timestampMs": 32240,
+      "confidence": null
+    },
+    {
+      "text": " Let",
+      "startMs": 33019,
+      "endMs": 33179,
+      "timestampMs": 33099,
+      "confidence": null
+    },
+    {
+      "text": " time",
+      "startMs": 33179,
+      "endMs": 33439,
+      "timestampMs": 33309,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 33439,
+      "endMs": 33619,
+      "timestampMs": 33529,
+      "confidence": null
+    },
+    {
+      "text": " compounding",
+      "startMs": 33619,
+      "endMs": 34159,
+      "timestampMs": 33889,
+      "confidence": null
+    },
+    {
+      "text": " do",
+      "startMs": 34159,
+      "endMs": 34399,
+      "timestampMs": 34279,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 34399,
+      "endMs": 34519,
+      "timestampMs": 34459,
+      "confidence": null
+    },
+    {
+      "text": " heavy",
+      "startMs": 34519,
+      "endMs": 34679,
+      "timestampMs": 34599,
+      "confidence": null
+    },
+    {
+      "text": " lifting.",
+      "startMs": 34679,
+      "endMs": 34999,
+      "timestampMs": 34839,
+      "confidence": null
+    }
+  ]
+}

@@ -1,0 +1,584 @@
+{
+  "cacheKey": "429e51bb89c93668",
+  "fps": 30,
+  "width": 540,
+  "height": 960,
+  "durationInFrames": 759,
+  "scenes": [
+    {
+      "text": "The easiest way to start a new habit isn't what you think.",
+      "imagePath": "images/image_1.png",
+      "voicePath": "voice/voice_1.mp3",
+      "durationInSeconds": 3.2914285714285714
+    },
+    {
+      "text": "Forget willpower. The secret lies in your daily rituals.",
+      "imagePath": "images/image_2.png",
+      "voicePath": "voice/voice_2.mp3",
+      "durationInSeconds": 3.6048979591836736
+    },
+    {
+      "text": "Imagine this: you already brush your teeth every morning.",
+      "imagePath": "images/image_3.png",
+      "voicePath": "voice/voice_3.mp3",
+      "durationInSeconds": 3.474285714285714
+    },
+    {
+      "text": "What if you attached a new habit right there?",
+      "imagePath": "images/image_4.png",
+      "voicePath": "voice/voice_4.mp3",
+      "durationInSeconds": 2.6383673469387756
+    },
+    {
+      "text": "It's called habit stacking.",
+      "imagePath": "images/image_5.png",
+      "voicePath": "voice/voice_5.mp3",
+      "durationInSeconds": 1.6718367346938776
+    },
+    {
+      "text": "By linking a new action to an existing routine, you tap into your brain's existing pathways.",
+      "imagePath": "images/image_6.png",
+      "voicePath": "voice/voice_6.mp3",
+      "durationInSeconds": 5.668571428571428
+    },
+    {
+      "text": "Choose one habit you already do.",
+      "imagePath": "images/image_7.png",
+      "voicePath": "voice/voice_7.mp3",
+      "durationInSeconds": 2.1681632653061222
+    },
+    {
+      "text": "Attach a new goal to it. Watch how it sticks.",
+      "imagePath": "images/image_8.png",
+      "voicePath": "voice/voice_8.mp3",
+      "durationInSeconds": 2.7689795918367346
+    }
+  ],
+  "captions": [
+    {
+      "text": " The",
+      "startMs": 0,
+      "endMs": 140,
+      "timestampMs": 70,
+      "confidence": null
+    },
+    {
+      "text": " easiest",
+      "startMs": 140,
+      "endMs": 420,
+      "timestampMs": 280,
+      "confidence": null
+    },
+    {
+      "text": " way",
+      "startMs": 420,
+      "endMs": 760,
+      "timestampMs": 590,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 760,
+      "endMs": 940,
+      "timestampMs": 850,
+      "confidence": null
+    },
+    {
+      "text": " start",
+      "startMs": 940,
+      "endMs": 1180,
+      "timestampMs": 1060,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 1180,
+      "endMs": 1360,
+      "timestampMs": 1270,
+      "confidence": null
+    },
+    {
+      "text": " new",
+      "startMs": 1360,
+      "endMs": 1480,
+      "timestampMs": 1420,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 1480,
+      "endMs": 1740,
+      "timestampMs": 1610,
+      "confidence": null
+    },
+    {
+      "text": " isn't",
+      "startMs": 1740,
+      "endMs": 2200,
+      "timestampMs": 1970,
+      "confidence": null
+    },
+    {
+      "text": " what",
+      "startMs": 2200,
+      "endMs": 2340,
+      "timestampMs": 2270,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 2340,
+      "endMs": 2460,
+      "timestampMs": 2400,
+      "confidence": null
+    },
+    {
+      "text": " think.",
+      "startMs": 2460,
+      "endMs": 2700,
+      "timestampMs": 2580,
+      "confidence": null
+    },
+    {
+      "text": " Forget",
+      "startMs": 3291,
+      "endMs": 3551,
+      "timestampMs": 3421,
+      "confidence": null
+    },
+    {
+      "text": " willpower,",
+      "startMs": 3551,
+      "endMs": 3991,
+      "timestampMs": 3771,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 4451,
+      "endMs": 4571,
+      "timestampMs": 4511,
+      "confidence": null
+    },
+    {
+      "text": " secret",
+      "startMs": 4571,
+      "endMs": 4851,
+      "timestampMs": 4711,
+      "confidence": null
+    },
+    {
+      "text": " lies",
+      "startMs": 4851,
+      "endMs": 5191,
+      "timestampMs": 5021,
+      "confidence": null
+    },
+    {
+      "text": " in",
+      "startMs": 5191,
+      "endMs": 5431,
+      "timestampMs": 5311,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 5431,
+      "endMs": 5531,
+      "timestampMs": 5481,
+      "confidence": null
+    },
+    {
+      "text": " daily",
+      "startMs": 5531,
+      "endMs": 5711,
+      "timestampMs": 5621,
+      "confidence": null
+    },
+    {
+      "text": " rituals.",
+      "startMs": 5711,
+      "endMs": 6231,
+      "timestampMs": 5971,
+      "confidence": null
+    },
+    {
+      "text": " Imagine",
+      "startMs": 6896,
+      "endMs": 7236,
+      "timestampMs": 7066,
+      "confidence": null
+    },
+    {
+      "text": " this,",
+      "startMs": 7236,
+      "endMs": 7476,
+      "timestampMs": 7356,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 7956,
+      "endMs": 8176,
+      "timestampMs": 8066,
+      "confidence": null
+    },
+    {
+      "text": " already",
+      "startMs": 8176,
+      "endMs": 8416,
+      "timestampMs": 8296,
+      "confidence": null
+    },
+    {
+      "text": " brush",
+      "startMs": 8416,
+      "endMs": 8736,
+      "timestampMs": 8576,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 8736,
+      "endMs": 8976,
+      "timestampMs": 8856,
+      "confidence": null
+    },
+    {
+      "text": " teeth",
+      "startMs": 8976,
+      "endMs": 9196,
+      "timestampMs": 9086,
+      "confidence": null
+    },
+    {
+      "text": " every",
+      "startMs": 9196,
+      "endMs": 9496,
+      "timestampMs": 9346,
+      "confidence": null
+    },
+    {
+      "text": " morning.",
+      "startMs": 9496,
+      "endMs": 9796,
+      "timestampMs": 9646,
+      "confidence": null
+    },
+    {
+      "text": " What",
+      "startMs": 10371,
+      "endMs": 10551,
+      "timestampMs": 10461,
+      "confidence": null
+    },
+    {
+      "text": " if",
+      "startMs": 10551,
+      "endMs": 10691,
+      "timestampMs": 10621,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 10691,
+      "endMs": 10811,
+      "timestampMs": 10751,
+      "confidence": null
+    },
+    {
+      "text": " attached",
+      "startMs": 10811,
+      "endMs": 11031,
+      "timestampMs": 10921,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 11031,
+      "endMs": 11351,
+      "timestampMs": 11191,
+      "confidence": null
+    },
+    {
+      "text": " new",
+      "startMs": 11351,
+      "endMs": 11531,
+      "timestampMs": 11441,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 11531,
+      "endMs": 11791,
+      "timestampMs": 11661,
+      "confidence": null
+    },
+    {
+      "text": " right",
+      "startMs": 11791,
+      "endMs": 12131,
+      "timestampMs": 11961,
+      "confidence": null
+    },
+    {
+      "text": " there?",
+      "startMs": 12131,
+      "endMs": 12451,
+      "timestampMs": 12291,
+      "confidence": null
+    },
+    {
+      "text": " It's",
+      "startMs": 13009,
+      "endMs": 13189,
+      "timestampMs": 13099,
+      "confidence": null
+    },
+    {
+      "text": " called",
+      "startMs": 13189,
+      "endMs": 13369,
+      "timestampMs": 13279,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 13369,
+      "endMs": 13649,
+      "timestampMs": 13509,
+      "confidence": null
+    },
+    {
+      "text": " stacking.",
+      "startMs": 13649,
+      "endMs": 14069,
+      "timestampMs": 13859,
+      "confidence": null
+    },
+    {
+      "text": " By",
+      "startMs": 14681,
+      "endMs": 14861,
+      "timestampMs": 14771,
+      "confidence": null
+    },
+    {
+      "text": " linking",
+      "startMs": 14861,
+      "endMs": 15081,
+      "timestampMs": 14971,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 15081,
+      "endMs": 15341,
+      "timestampMs": 15211,
+      "confidence": null
+    },
+    {
+      "text": " new",
+      "startMs": 15341,
+      "endMs": 15461,
+      "timestampMs": 15401,
+      "confidence": null
+    },
+    {
+      "text": " action",
+      "startMs": 15461,
+      "endMs": 15801,
+      "timestampMs": 15631,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 15801,
+      "endMs": 16141,
+      "timestampMs": 15971,
+      "confidence": null
+    },
+    {
+      "text": " an",
+      "startMs": 16141,
+      "endMs": 16221,
+      "timestampMs": 16181,
+      "confidence": null
+    },
+    {
+      "text": " existing",
+      "startMs": 16221,
+      "endMs": 16521,
+      "timestampMs": 16371,
+      "confidence": null
+    },
+    {
+      "text": " routine,",
+      "startMs": 16521,
+      "endMs": 17081,
+      "timestampMs": 16801,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 17561,
+      "endMs": 17641,
+      "timestampMs": 17601,
+      "confidence": null
+    },
+    {
+      "text": " tap",
+      "startMs": 17641,
+      "endMs": 17821,
+      "timestampMs": 17731,
+      "confidence": null
+    },
+    {
+      "text": " into",
+      "startMs": 17821,
+      "endMs": 18021,
+      "timestampMs": 17921,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 18021,
+      "endMs": 18241,
+      "timestampMs": 18131,
+      "confidence": null
+    },
+    {
+      "text": " brain's",
+      "startMs": 18241,
+      "endMs": 18701,
+      "timestampMs": 18471,
+      "confidence": null
+    },
+    {
+      "text": " existing",
+      "startMs": 18701,
+      "endMs": 19161,
+      "timestampMs": 18931,
+      "confidence": null
+    },
+    {
+      "text": " pathways.",
+      "startMs": 19161,
+      "endMs": 19501,
+      "timestampMs": 19331,
+      "confidence": null
+    },
+    {
+      "text": " Choose",
+      "startMs": 20349,
+      "endMs": 20569,
+      "timestampMs": 20459,
+      "confidence": null
+    },
+    {
+      "text": " one",
+      "startMs": 20569,
+      "endMs": 20829,
+      "timestampMs": 20699,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 20829,
+      "endMs": 21109,
+      "timestampMs": 20969,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 21109,
+      "endMs": 21369,
+      "timestampMs": 21239,
+      "confidence": null
+    },
+    {
+      "text": " already",
+      "startMs": 21369,
+      "endMs": 21569,
+      "timestampMs": 21469,
+      "confidence": null
+    },
+    {
+      "text": " do.",
+      "startMs": 21569,
+      "endMs": 21969,
+      "timestampMs": 21769,
+      "confidence": null
+    },
+    {
+      "text": " Attach",
+      "startMs": 22518,
+      "endMs": 22818,
+      "timestampMs": 22668,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 22818,
+      "endMs": 22958,
+      "timestampMs": 22888,
+      "confidence": null
+    },
+    {
+      "text": " new",
+      "startMs": 22958,
+      "endMs": 23098,
+      "timestampMs": 23028,
+      "confidence": null
+    },
+    {
+      "text": " goal",
+      "startMs": 23098,
+      "endMs": 23318,
+      "timestampMs": 23208,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 23318,
+      "endMs": 23538,
+      "timestampMs": 23428,
+      "confidence": null
+    },
+    {
+      "text": " it,",
+      "startMs": 23538,
+      "endMs": 23698,
+      "timestampMs": 23618,
+      "confidence": null
+    },
+    {
+      "text": " watch",
+      "startMs": 23898,
+      "endMs": 24078,
+      "timestampMs": 23988,
+      "confidence": null
+    },
+    {
+      "text": " how",
+      "startMs": 24078,
+      "endMs": 24298,
+      "timestampMs": 24188,
+      "confidence": null
+    },
+    {
+      "text": " it",
+      "startMs": 24298,
+      "endMs": 24398,
+      "timestampMs": 24348,
+      "confidence": null
+    },
+    {
+      "text": " sticks.",
+      "startMs": 24398,
+      "endMs": 24658,
+      "timestampMs": 24528,
+      "confidence": null
+    }
+  ]
+}

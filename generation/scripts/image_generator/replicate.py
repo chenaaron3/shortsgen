@@ -11,6 +11,8 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
+from logger import warn
+
 DEFAULT_MODEL = "openai/gpt-image-1-mini"
 API_BASE = "https://api.replicate.com/v1"
 WAIT_SECONDS = 60  # Max for Prefer: wait
@@ -65,11 +67,10 @@ def generate_image(
     }
 
     for attempt in range(MAX_RETRIES):
-        req = Request(f"{API_BASE}/predictions", data=body, headers=headers, method="POST")
         try:
+            req = Request(f"{API_BASE}/predictions", data=body, headers=headers, method="POST")
             with urlopen(req, timeout=WAIT_SECONDS + 30) as resp:
                 result = json.loads(resp.read().decode())
-            break
         except HTTPError as e:
             err_body = ""
             if e.fp:
@@ -85,26 +86,66 @@ def generate_image(
                 except (json.JSONDecodeError, ValueError):
                     pass
                 retry_after = max(1, min(retry_after, 120))
+                warn(f"  Rate limited (429), retrying in {retry_after}s (attempt {attempt + 1}/{MAX_RETRIES})...")
                 time.sleep(retry_after)
                 continue
             raise RuntimeError(f"Replicate API error {e.code}: {err_body or str(e)}") from e
         except URLError as e:
+            if attempt < MAX_RETRIES - 1:
+                warn(f"  Request failed, retrying in {DEFAULT_RETRY_AFTER}s (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+                time.sleep(DEFAULT_RETRY_AFTER)
+                continue
             raise RuntimeError(f"Replicate API request failed: {e}") from e
 
-    if result.get("error"):
-        raise RuntimeError(f"Replicate prediction failed: {result['error']}")
+        try:
+            if result.get("error"):
+                raise RuntimeError(f"Replicate prediction failed: {result['error']}")
 
-    output = result.get("output")
-    if not output:
-        status = result.get("status", "unknown")
-        raise RuntimeError(f"Replicate returned no output (status={status})")
+            output = result.get("output")
+            status = result.get("status", "unknown")
 
-    # output is list of URLs for image models, or single URL
-    url = output[0] if isinstance(output, list) else output
-    if not isinstance(url, str) or not url.startswith("http"):
-        raise RuntimeError("Unexpected Replicate output format")
+            # Sync wait may timeout before model finishes — poll until complete
+            if not output and status in ("starting", "processing"):
+                get_url = (result.get("urls") or {}).get("get")
+                if not get_url:
+                    raise RuntimeError(f"Replicate returned no output (status={status}), no poll URL")
+                warn(f"  Prediction still {status}, polling until complete...")
+                poll_interval = 2
+                max_poll_time = 300  # 5 min max
+                elapsed = 0
+                while elapsed < max_poll_time:
+                    time.sleep(poll_interval)
+                    elapsed += poll_interval
+                    poll_req = Request(get_url, headers={"Authorization": f"Bearer {api_token}"})
+                    with urlopen(poll_req, timeout=30) as poll_resp:
+                        result = json.loads(poll_resp.read().decode())
+                    if result.get("error"):
+                        raise RuntimeError(f"Replicate prediction failed: {result['error']}")
+                    status = result.get("status", "unknown")
+                    output = result.get("output")
+                    if status in ("succeeded", "successful") and output:
+                        break
+                    if status in ("failed", "canceled"):
+                        raise RuntimeError(f"Replicate prediction {status}: {result.get('error', 'unknown')}")
+                if not output:
+                    raise RuntimeError(f"Replicate timed out after polling {elapsed}s (status={status})")
 
-    # Fetch image (replicate.delivery URLs may need Authorization)
-    img_req = Request(url, headers={"Authorization": f"Bearer {api_token}"})
-    with urlopen(img_req, timeout=60) as img_resp:
-        return img_resp.read()
+            if not output:
+                raise RuntimeError(f"Replicate returned no output (status={status})")
+
+            # output is list of URLs for image models, or single URL
+            url = output[0] if isinstance(output, list) else output
+            if not isinstance(url, str) or not url.startswith("http"):
+                raise RuntimeError("Unexpected Replicate output format")
+
+            # Fetch image (replicate.delivery URLs may need Authorization)
+            img_req = Request(url, headers={"Authorization": f"Bearer {api_token}"})
+            with urlopen(img_req, timeout=60) as img_resp:
+                return img_resp.read()
+
+        except (RuntimeError, HTTPError, URLError) as e:
+            if attempt < MAX_RETRIES - 1:
+                warn(f"  Prediction failed, retrying in {DEFAULT_RETRY_AFTER}s (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+                time.sleep(DEFAULT_RETRY_AFTER)
+                continue
+            raise

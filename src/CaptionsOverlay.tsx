@@ -67,7 +67,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
       style={{
         justifyContent: "flex-end",
         alignItems: "center",
-        paddingBottom: height * 0.25,
+        paddingBottom: height * 0.15,
       }}
     >
       <div
@@ -82,18 +82,18 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
           whiteSpace: "pre-wrap" as const,
           opacity,
           transform: `rotate(${rotation}deg) scale(${scale})`,
-          backgroundColor: "rgba(0, 0, 0, 0.35)",
-          borderRadius: 8,
-          boxShadow: "0 2px 12px rgba(0, 0, 0, 0.25)",
           textShadow: [
-            "2px 2px 0 #000",
-            "-2px -2px 0 #000",
-            "2px -2px 0 #000",
-            "-2px 2px 0 #000",
-            "0 2px 0 #000",
-            "0 -2px 0 #000",
-            "2px 0 0 #000",
-            "-2px 0 0 #000",
+            "0 0 4px rgba(0,0,0,0.9)",
+            "0 0 8px rgba(0,0,0,0.7)",
+            "0 4px 8px rgba(0,0,0,0.6)",
+            "4px 4px 0 #000",
+            "-4px -4px 0 #000",
+            "4px -4px 0 #000",
+            "-4px 4px 0 #000",
+            "0 4px 0 #000",
+            "0 -4px 0 #000",
+            "4px 0 0 #000",
+            "-4px 0 0 #000",
           ].join(", "),
         }}
       >
