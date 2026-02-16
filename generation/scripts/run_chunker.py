@@ -49,8 +49,10 @@ def chunk_transcript(client: OpenAI, transcript: str, model: str = "gpt-4o") -> 
         if parsed is None:
             error("Error: LLM refused or returned empty response.")
             sys.exit(1)
-        # Convert ChunksOutput to Chunks (add image_path, voice_path to each scene)
+        # Convert ChunksOutput to Chunks (add image_path, voice_path to each scene; pass title/description)
         return Chunks(
+            title=parsed.title,
+            description=parsed.description,
             scenes=[
                 Scene(
                     text=s.text,
@@ -60,7 +62,7 @@ def chunk_transcript(client: OpenAI, transcript: str, model: str = "gpt-4o") -> 
                     voice_path=None,
                 )
                 for s in parsed.scenes
-            ]
+            ],
         )
     except Exception as e:
         error(f"Error calling LLM: {e}")

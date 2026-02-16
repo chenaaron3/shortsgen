@@ -22,14 +22,15 @@ load_dotenv(env_path())
 DEFAULT_CONCURRENCY = 10
 
 STYLE_PROMPT = (
-    "Hand-drawn stick figure style. Black line art. "
-    "Character: round head, dot eyes, curved smile, thin black lines for body and limbs. "
-    "Slightly uneven, sketchy linework like pen on paper. "
-    "No background emphasis. Minimal or clean background. "
-    "Motion lines (speed lines, curved dashes) around hands and objects to show movement when action is implied. "
-    "Minimal hatching only, no gradients or color fill. Black outlines. "
-    "A single accent color may be used to highlight a primary object (e.g., important prop, focal item) if it supports the scene. "
-    "Use the reference for character design; place in the described scene with this hand-drawn sketch aesthetic."
+    "Hand-drawn stick figure style. Black line art on transparentbackground. "
+    "Crisp, clean linework. Thin solid black outlines only. "
+    "Flat style: no soft shading, no gradients, no airbrush, no gray smudges, no blotchy texture, no halftones. "
+    "Optional: discrete hatching lines only where needed; never soft or blended shading. "
+    "Motion lines (speed lines, curved dashes) around hands and objects when action is implied. "
+    "Minimal or clean background. "
+    "A single accent color may highlight one focal prop if it supports the scene. "
+    "Use the reference for character design; place in the described scene. "
+    "Result must look like crisp pen or chalk drawing, not rendered or shaded."
 )
 
 

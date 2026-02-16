@@ -51,6 +51,7 @@ def generate_image(
         "size": size,
         "quality": "low",
         "output_format": "png",
+        "background": "transparent",
         "n": 1,
     }
     if model != GPT_IMAGE_MINI:

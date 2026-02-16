@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
-from logger import warn
+from logger import info, warn
 
 DEFAULT_MODEL = "openai/gpt-image-1-mini"
 API_BASE = "https://api.replicate.com/v1"
@@ -51,6 +51,7 @@ def generate_image(
             "input_fidelity": input_fidelity,
             "output_format": "png",
             "aspect_ratio": "2:3",
+            "background": "transparent",
             "openai_api_key": api_key,
         }
     else:
@@ -68,6 +69,8 @@ def generate_image(
 
     for attempt in range(MAX_RETRIES):
         try:
+            attempt_info = f" (attempt {attempt + 1}/{MAX_RETRIES})" if attempt > 0 else ""
+            info(f"  Initiating Replicate request: model={model}{attempt_info}")
             req = Request(f"{API_BASE}/predictions", data=body, headers=headers, method="POST")
             with urlopen(req, timeout=WAIT_SECONDS + 30) as resp:
                 result = json.loads(resp.read().decode())

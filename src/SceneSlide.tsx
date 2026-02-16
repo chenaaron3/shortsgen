@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, Audio, Img, interpolate, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, Audio, Img, interpolate, staticFile, useCurrentFrame } from 'remotion';
 
 const FADE_FRAMES = 8; // ~0.27s subtle image fade at 30fps
 
@@ -17,7 +17,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
   const frame = useCurrentFrame();
   const fadeOutStart = Math.max(FADE_FRAMES, durationInFrames - FADE_FRAMES);
 
-  // Only fade the image — background stays white (no black flash)
+  // Only fade the image — background stays visible (no black flash)
   const imageOpacity = interpolate(
     frame,
     [0, FADE_FRAMES, fadeOutStart, durationInFrames],
@@ -28,18 +28,35 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: "#fff",
         justifyContent: "flex-end",
         alignItems: "center",
+        backgroundColor: "white",
       }}
     >
+      {/* <Img
+        src={staticFile("background.jpg")}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: .75,
+          zIndex: 0,
+        }}
+      /> */}
       <Img
         src={imageSrc}
         style={{
-          width: "100%",
-          height: "100%",
+          position: "absolute",
+          top: "5%",
+          left: "12.5%",
+          width: "75%",
+          height: "75%",
           objectFit: "contain",
           opacity: imageOpacity,
+          zIndex: 1,
         }}
       />
       <Audio src={audioSrc} volume={1} />

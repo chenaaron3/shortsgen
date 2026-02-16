@@ -27,6 +27,8 @@ class Chunks(BaseModel):
     """Chunked transcript with scenes for faceless short generation."""
 
     scenes: list[Scene] = Field(..., description="Scenes to generate")
+    title: str = Field(default="", description="YouTube-friendly title (from chunker or fallback)")
+    description: str = Field(default="", description="Short description for upload metadata")
 
 
 class SceneOutput(BaseModel):
@@ -42,4 +44,6 @@ class SceneOutput(BaseModel):
 class ChunksOutput(BaseModel):
     """LLM structured output for chunked transcript."""
 
+    title: str = Field(..., description="Short YouTube-friendly title for the short (under ~60 chars)")
+    description: str = Field(..., description="1-2 sentences for the short's description (YouTube description)")
     scenes: list[SceneOutput] = Field(..., description="Scenes to generate")

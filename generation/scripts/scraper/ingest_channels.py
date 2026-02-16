@@ -9,7 +9,7 @@ Output JSON structure:
   { "ChannelHandle": { channel details, subscribers, videos: [{ id, title, link, view_count, transcript }] } }
 
 Usage:
-  python ingest_channels.py [--channels-file channels.txt] [--output data.json]
+  python scraper/ingest_channels.py [--channels-file channels.txt] [--output data.json]
 """
 
 import argparse
@@ -100,7 +100,7 @@ def extract_channel_and_videos(shorts_url: str, cache_dir: Path, max_age_hours: 
         "quiet": True,
         "no_warnings": True,
         "extract_flat": False,
-        "ignoreerrors": False,
+        "ignoreerrors": True,
     }
 
     with yt_dlp.YoutubeDL(opts) as ydl:
@@ -127,6 +127,9 @@ def extract_channel_and_videos(shorts_url: str, cache_dir: Path, max_age_hours: 
             "link": e.get("url") or e.get("webpage_url") or f"https://www.youtube.com/shorts/{vid}",
             "view_count": e.get("view_count") or 0,
         })
+    skipped = len(entries) - len(videos)
+    if skipped > 0:
+        print(f"   ⚠️  Skipped {skipped} unavailable video(s) (members-only, private, etc.)")
 
     data = {
         "channel_id": channel_id,
@@ -235,7 +238,8 @@ def main():
     )
     args = parser.parse_args()
 
-    project_root = Path(__file__).resolve().parent.parent
+    # scraper/ is one level deeper than scripts/
+    project_root = Path(__file__).resolve().parent.parent.parent
     channels_file = project_root / args.channels_file
     output_path = project_root / args.output
     cache_dir = project_root / args.cache_dir

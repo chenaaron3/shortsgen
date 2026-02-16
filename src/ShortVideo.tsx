@@ -1,12 +1,9 @@
-import React from "react";
-import {
-  AbsoluteFill,
-  Composition,
-  Series,
-  staticFile,
-} from "remotion";
-import { SceneSlide } from "./SceneSlide";
-import { CaptionsOverlay } from "./CaptionsOverlay";
+import React from 'react';
+import { AbsoluteFill, Audio, Composition, interpolate, Series, staticFile } from 'remotion';
+
+import { CaptionsOverlay } from './CaptionsOverlay';
+import { SceneSlide } from './SceneSlide';
+
 import type { VideoManifest } from "./types";
 
 const FPS = 30;
@@ -37,9 +34,23 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
   }
 
   const basePath = `shortgen/${manifest.cacheKey}`;
+  const { durationInFrames, fps } = manifest;
+  const fadeFrames = Math.round(1.5 * fps); // 1.5s fade in/out
+  const fadeOutStart = Math.max(fadeFrames, durationInFrames - fadeFrames);
 
   return (
     <>
+      <Audio
+        src={staticFile("background_music.mp3")}
+        volume={(f) =>
+          interpolate(
+            f,
+            [0, fadeFrames, fadeOutStart, durationInFrames],
+            [0, 0.10, 0.10, 0],
+            { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+          )
+        }
+      />
       <Series>
         {manifest.scenes.map((scene, i) => {
           const imageSrc = staticFile(`${basePath}/${scene.imagePath}`);

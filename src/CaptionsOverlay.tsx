@@ -13,6 +13,13 @@ type CaptionsOverlayProps = {
   height: number;
 };
 
+function formatCaption(text: string): string {
+  return text
+    .trim()
+    .toUpperCase()
+    .replace(/[^\w\s]/g, "");
+}
+
 /** Word-by-word animation: each word appears as a separate caption. Use 800+ for grouped words. */
 const COMBINE_TOKENS_MS = 0;
 
@@ -68,6 +75,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
         justifyContent: "flex-end",
         alignItems: "center",
         paddingBottom: height * 0.15,
+        zIndex: 100,
       }}
     >
       <div
@@ -97,7 +105,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
           ].join(", "),
         }}
       >
-        {currentPage.text.trim()}
+        {formatCaption(currentPage.text)}
       </div>
     </AbsoluteFill>
   );

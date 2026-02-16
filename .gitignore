@@ -9,5 +9,9 @@ out/
 # Environment
 .env
 
+# YouTube upload (credentials only)
+credentials.json
+token.json
+
 # Cache and generated assets
 generation/cache/

@@ -36,21 +36,9 @@ Create a `.env` with `OPENAI_API_KEY`, `ELEVENLABS_API_KEY` as needed.
 python generation/scripts/run_pipeline.py -f content.txt
 ```
 
-Use `--step S` (script, chunker, image, voice, prepare, video) to run up to that step and skip its cache (useful for iterating).
-
-### Preview in Remotion Studio
-
-```bash
-npx remotion studio
 ```
-
-Set props: `{ "cacheKey": "d87aa21852dabc8b" }`
-
-## Captions
-
-Captions use **Whisper** (faster-whisper) for word-level timestamps when available. Install with:
-
-```bash
-pip install faster-whisper
+# Generate content
+python3 ./generation/scripts/run_pipeline.py -f ./source/atomic-habits/chapter5.txt
+# Upload video
+python3 ./generation/scripts/upload_youtube.py --cache-key 98932a8ed00e2619
 ```
-

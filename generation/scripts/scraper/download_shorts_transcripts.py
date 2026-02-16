@@ -6,8 +6,8 @@ Uses yt-dlp to fetch transcripts/subtitles only (no video download).
 Targets the channel's Shorts tab (youtube.com/@channel/shorts).
 
 Usage:
-    python download_shorts_transcripts.py "https://www.youtube.com/@ChannelName" [--output-dir transcripts]
-    
+    python scraper/download_shorts_transcripts.py "https://www.youtube.com/@ChannelName" [--output-dir transcripts]
+
 Reference: podsearch video_downloader.py (yt-dlp), hook_finder.py (subprocess/yt-dlp)
 """
 
@@ -24,23 +24,23 @@ import yt_dlp
 def get_shorts_url(channel_url: str) -> str:
     """
     Convert a channel URL to its Shorts tab URL.
-    
+
     Supports: @handle, /channel/ID, /c/name, /user/name
     """
     url = channel_url.strip().rstrip("/")
     parsed = urlparse(url)
     path = parsed.path.strip("/")
-    
+
     # Remove existing tab paths (videos, shorts, live, etc.)
     tab_paths = ("videos", "shorts", "live", "streams", "playlists", "community", "featured")
     path_parts = [p for p in path.split("/") if p.lower() not in tab_paths]
-    
+
     if not path_parts:
         raise ValueError(f"Invalid channel URL: {channel_url}")
-    
+
     # Rebuild path with /shorts
     new_path = "/".join(path_parts) + "/shorts"
-    
+
     return urlunparse((parsed.scheme or "https", parsed.netloc or "www.youtube.com", new_path, parsed.params, parsed.query, ""))
 
 
@@ -65,7 +65,7 @@ def download_channel_shorts_transcripts(
 ) -> list[str]:
     """
     Download transcripts for all Shorts in a channel.
-    
+
     Args:
         channel_url: YouTube channel URL (@handle, /channel/, /c/, /user/)
         output_dir: Directory to save transcript files
@@ -73,19 +73,19 @@ def download_channel_shorts_transcripts(
         max_videos: Max number of videos to process (None = all)
         sub_format: Subtitle format - srt, vtt, ass, etc. (default: srt)
         download_archive: Path to archive file to skip already-downloaded videos (caching)
-    
+
     Returns:
         List of downloaded transcript file paths
     """
     if sub_langs is None:
         sub_langs = ["en"]
-    
+
     shorts_url = get_shorts_url(channel_url)
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
-    
+
     downloaded_files: list[str] = []
-    
+
     options = {
         "skip_download": True,
         "writesubtitles": True,
@@ -98,7 +98,7 @@ def download_channel_shorts_transcripts(
         "quiet": False,
         "progress_hooks": [_make_progress_hook(downloaded_files)],
     }
-    
+
     if max_videos:
         options["playlistend"] = max_videos
     if download_archive:
@@ -110,10 +110,10 @@ def download_channel_shorts_transcripts(
     if max_videos:
         print(f"📊 Max videos: {max_videos}")
     print()
-    
+
     with yt_dlp.YoutubeDL(options) as ydl:
         ydl.download([shorts_url])
-    
+
     return downloaded_files
 
 
@@ -159,16 +159,16 @@ def main():
         choices=["srt", "vtt", "ass", "best"],
         help="Subtitle format (default: srt)",
     )
-    
+
     args = parser.parse_args()
-    
+
     if not is_channel_url(args.channel_url):
         print("❌ Error: URL does not appear to be a YouTube channel.", file=sys.stderr)
         print("   Supported: @handle, /channel/, /c/, /user/", file=sys.stderr)
         sys.exit(1)
-    
+
     sub_langs = [s.strip() for s in args.lang.split(",") if s.strip()]
-    
+
     try:
         files = download_channel_shorts_transcripts(
             args.channel_url,

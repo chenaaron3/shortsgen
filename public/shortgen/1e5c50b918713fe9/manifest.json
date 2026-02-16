@@ -1,0 +1,584 @@
+{
+  "cacheKey": "1e5c50b918713fe9",
+  "fps": 30,
+  "width": 540,
+  "height": 960,
+  "durationInFrames": 824,
+  "scenes": [
+    {
+      "text": "The secret to a better-behaved dog isn't what you think.",
+      "imagePath": "images/image_1.png",
+      "voicePath": "voice/voice_1.mp3",
+      "durationInSeconds": 3.2914285714285714
+    },
+    {
+      "text": "Sure, food, grooming, and exercise matter.",
+      "imagePath": "images/image_2.png",
+      "voicePath": "voice/voice_2.mp3",
+      "durationInSeconds": 2.8212244897959184
+    },
+    {
+      "text": "But focus on this one thing: daily walks.",
+      "imagePath": "images/image_3.png",
+      "voicePath": "voice/voice_3.mp3",
+      "durationInSeconds": 2.690612244897959
+    },
+    {
+      "text": "They do more than tire your dog out.",
+      "imagePath": "images/image_4.png",
+      "voicePath": "voice/voice_4.mp3",
+      "durationInSeconds": 2.3510204081632655
+    },
+    {
+      "text": "Regular walks offer mental stimulation and reduce anxiety.",
+      "imagePath": "images/image_5.png",
+      "voicePath": "voice/voice_5.mp3",
+      "durationInSeconds": 3.84
+    },
+    {
+      "text": "They prevent destructive behavior and build a bond of trust.",
+      "imagePath": "images/image_6.png",
+      "voicePath": "voice/voice_6.mp3",
+      "durationInSeconds": 3.5787755102040815
+    },
+    {
+      "text": "Even a 20-minute walk a day can transform your dog's energy into calm confidence.",
+      "imagePath": "images/image_7.png",
+      "voicePath": "voice/voice_7.mp3",
+      "durationInSeconds": 5.0416326530612245
+    },
+    {
+      "text": "Make it a ritual. Become their steady, reliable presence.",
+      "imagePath": "images/image_8.png",
+      "voicePath": "voice/voice_8.mp3",
+      "durationInSeconds": 3.84
+    }
+  ],
+  "captions": [
+    {
+      "text": " The",
+      "startMs": 0,
+      "endMs": 140,
+      "timestampMs": 70,
+      "confidence": null
+    },
+    {
+      "text": " secret",
+      "startMs": 140,
+      "endMs": 480,
+      "timestampMs": 310,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 480,
+      "endMs": 680,
+      "timestampMs": 580,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 680,
+      "endMs": 780,
+      "timestampMs": 730,
+      "confidence": null
+    },
+    {
+      "text": " better",
+      "startMs": 780,
+      "endMs": 960,
+      "timestampMs": 870,
+      "confidence": null
+    },
+    {
+      "text": " -behaved",
+      "startMs": 960,
+      "endMs": 1420,
+      "timestampMs": 1190,
+      "confidence": null
+    },
+    {
+      "text": " dog",
+      "startMs": 1420,
+      "endMs": 1660,
+      "timestampMs": 1540,
+      "confidence": null
+    },
+    {
+      "text": " isn't",
+      "startMs": 1660,
+      "endMs": 2180,
+      "timestampMs": 1920,
+      "confidence": null
+    },
+    {
+      "text": " what",
+      "startMs": 2180,
+      "endMs": 2320,
+      "timestampMs": 2250,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 2320,
+      "endMs": 2460,
+      "timestampMs": 2390,
+      "confidence": null
+    },
+    {
+      "text": " think.",
+      "startMs": 2460,
+      "endMs": 2720,
+      "timestampMs": 2590,
+      "confidence": null
+    },
+    {
+      "text": " Sure",
+      "startMs": 3291,
+      "endMs": 3551,
+      "timestampMs": 3421,
+      "confidence": null
+    },
+    {
+      "text": " food,",
+      "startMs": 3551,
+      "endMs": 3871,
+      "timestampMs": 3711,
+      "confidence": null
+    },
+    {
+      "text": " grooming",
+      "startMs": 4151,
+      "endMs": 4331,
+      "timestampMs": 4241,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 4331,
+      "endMs": 4711,
+      "timestampMs": 4521,
+      "confidence": null
+    },
+    {
+      "text": " exercise",
+      "startMs": 4711,
+      "endMs": 5051,
+      "timestampMs": 4881,
+      "confidence": null
+    },
+    {
+      "text": " matter.",
+      "startMs": 5051,
+      "endMs": 5571,
+      "timestampMs": 5311,
+      "confidence": null
+    },
+    {
+      "text": " But",
+      "startMs": 6113,
+      "endMs": 6253,
+      "timestampMs": 6183,
+      "confidence": null
+    },
+    {
+      "text": " focus",
+      "startMs": 6253,
+      "endMs": 6493,
+      "timestampMs": 6373,
+      "confidence": null
+    },
+    {
+      "text": " on",
+      "startMs": 6493,
+      "endMs": 6713,
+      "timestampMs": 6603,
+      "confidence": null
+    },
+    {
+      "text": " this",
+      "startMs": 6713,
+      "endMs": 6853,
+      "timestampMs": 6783,
+      "confidence": null
+    },
+    {
+      "text": " one",
+      "startMs": 6853,
+      "endMs": 7053,
+      "timestampMs": 6953,
+      "confidence": null
+    },
+    {
+      "text": " thing,",
+      "startMs": 7053,
+      "endMs": 7333,
+      "timestampMs": 7193,
+      "confidence": null
+    },
+    {
+      "text": " daily",
+      "startMs": 7653,
+      "endMs": 7813,
+      "timestampMs": 7733,
+      "confidence": null
+    },
+    {
+      "text": " walks.",
+      "startMs": 7813,
+      "endMs": 8213,
+      "timestampMs": 8013,
+      "confidence": null
+    },
+    {
+      "text": " They",
+      "startMs": 8803,
+      "endMs": 8943,
+      "timestampMs": 8873,
+      "confidence": null
+    },
+    {
+      "text": " do",
+      "startMs": 8943,
+      "endMs": 9103,
+      "timestampMs": 9023,
+      "confidence": null
+    },
+    {
+      "text": " more",
+      "startMs": 9103,
+      "endMs": 9363,
+      "timestampMs": 9233,
+      "confidence": null
+    },
+    {
+      "text": " than",
+      "startMs": 9363,
+      "endMs": 9603,
+      "timestampMs": 9483,
+      "confidence": null
+    },
+    {
+      "text": " tire",
+      "startMs": 9603,
+      "endMs": 9863,
+      "timestampMs": 9733,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 9863,
+      "endMs": 10103,
+      "timestampMs": 9983,
+      "confidence": null
+    },
+    {
+      "text": " dog",
+      "startMs": 10103,
+      "endMs": 10303,
+      "timestampMs": 10203,
+      "confidence": null
+    },
+    {
+      "text": " out.",
+      "startMs": 10303,
+      "endMs": 10643,
+      "timestampMs": 10473,
+      "confidence": null
+    },
+    {
+      "text": " Regular",
+      "startMs": 11154,
+      "endMs": 11494,
+      "timestampMs": 11324,
+      "confidence": null
+    },
+    {
+      "text": " walks",
+      "startMs": 11494,
+      "endMs": 11794,
+      "timestampMs": 11644,
+      "confidence": null
+    },
+    {
+      "text": " offer",
+      "startMs": 11794,
+      "endMs": 12134,
+      "timestampMs": 11964,
+      "confidence": null
+    },
+    {
+      "text": " mental",
+      "startMs": 12134,
+      "endMs": 12434,
+      "timestampMs": 12284,
+      "confidence": null
+    },
+    {
+      "text": " stimulation",
+      "startMs": 12434,
+      "endMs": 13154,
+      "timestampMs": 12794,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 13154,
+      "endMs": 13514,
+      "timestampMs": 13334,
+      "confidence": null
+    },
+    {
+      "text": " reduce",
+      "startMs": 13514,
+      "endMs": 13754,
+      "timestampMs": 13634,
+      "confidence": null
+    },
+    {
+      "text": " anxiety.",
+      "startMs": 13754,
+      "endMs": 14314,
+      "timestampMs": 14034,
+      "confidence": null
+    },
+    {
+      "text": " They",
+      "startMs": 14994,
+      "endMs": 15154,
+      "timestampMs": 15074,
+      "confidence": null
+    },
+    {
+      "text": " prevent",
+      "startMs": 15154,
+      "endMs": 15354,
+      "timestampMs": 15254,
+      "confidence": null
+    },
+    {
+      "text": " destructive",
+      "startMs": 15354,
+      "endMs": 15734,
+      "timestampMs": 15544,
+      "confidence": null
+    },
+    {
+      "text": " behaviour",
+      "startMs": 15734,
+      "endMs": 16394,
+      "timestampMs": 16064,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 16394,
+      "endMs": 16914,
+      "timestampMs": 16654,
+      "confidence": null
+    },
+    {
+      "text": " build",
+      "startMs": 16914,
+      "endMs": 17074,
+      "timestampMs": 16994,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 17074,
+      "endMs": 17254,
+      "timestampMs": 17164,
+      "confidence": null
+    },
+    {
+      "text": " bond",
+      "startMs": 17254,
+      "endMs": 17434,
+      "timestampMs": 17344,
+      "confidence": null
+    },
+    {
+      "text": " of",
+      "startMs": 17434,
+      "endMs": 17634,
+      "timestampMs": 17534,
+      "confidence": null
+    },
+    {
+      "text": " trust.",
+      "startMs": 17634,
+      "endMs": 17854,
+      "timestampMs": 17744,
+      "confidence": null
+    },
+    {
+      "text": " Even",
+      "startMs": 18573,
+      "endMs": 18813,
+      "timestampMs": 18693,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 18813,
+      "endMs": 18893,
+      "timestampMs": 18853,
+      "confidence": null
+    },
+    {
+      "text": " 20",
+      "startMs": 18893,
+      "endMs": 19113,
+      "timestampMs": 19003,
+      "confidence": null
+    },
+    {
+      "text": " minute",
+      "startMs": 19113,
+      "endMs": 19433,
+      "timestampMs": 19273,
+      "confidence": null
+    },
+    {
+      "text": " walk",
+      "startMs": 19433,
+      "endMs": 19713,
+      "timestampMs": 19573,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 19713,
+      "endMs": 19853,
+      "timestampMs": 19783,
+      "confidence": null
+    },
+    {
+      "text": " day",
+      "startMs": 19853,
+      "endMs": 20113,
+      "timestampMs": 19983,
+      "confidence": null
+    },
+    {
+      "text": " can",
+      "startMs": 20113,
+      "endMs": 20513,
+      "timestampMs": 20313,
+      "confidence": null
+    },
+    {
+      "text": " transform",
+      "startMs": 20513,
+      "endMs": 20913,
+      "timestampMs": 20713,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 20913,
+      "endMs": 21213,
+      "timestampMs": 21063,
+      "confidence": null
+    },
+    {
+      "text": " dog's",
+      "startMs": 21213,
+      "endMs": 21573,
+      "timestampMs": 21393,
+      "confidence": null
+    },
+    {
+      "text": " energy",
+      "startMs": 21573,
+      "endMs": 21733,
+      "timestampMs": 21653,
+      "confidence": null
+    },
+    {
+      "text": " into",
+      "startMs": 21733,
+      "endMs": 22153,
+      "timestampMs": 21943,
+      "confidence": null
+    },
+    {
+      "text": " calm",
+      "startMs": 22153,
+      "endMs": 22433,
+      "timestampMs": 22293,
+      "confidence": null
+    },
+    {
+      "text": " confidence.",
+      "startMs": 22433,
+      "endMs": 22913,
+      "timestampMs": 22673,
+      "confidence": null
+    },
+    {
+      "text": " Make",
+      "startMs": 23615,
+      "endMs": 23795,
+      "timestampMs": 23705,
+      "confidence": null
+    },
+    {
+      "text": " it",
+      "startMs": 23795,
+      "endMs": 23935,
+      "timestampMs": 23865,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 23935,
+      "endMs": 24015,
+      "timestampMs": 23975,
+      "confidence": null
+    },
+    {
+      "text": " ritual.",
+      "startMs": 24015,
+      "endMs": 24395,
+      "timestampMs": 24205,
+      "confidence": null
+    },
+    {
+      "text": " Become",
+      "startMs": 25015,
+      "endMs": 25195,
+      "timestampMs": 25105,
+      "confidence": null
+    },
+    {
+      "text": " their",
+      "startMs": 25195,
+      "endMs": 25435,
+      "timestampMs": 25315,
+      "confidence": null
+    },
+    {
+      "text": " steady,",
+      "startMs": 25435,
+      "endMs": 25735,
+      "timestampMs": 25585,
+      "confidence": null
+    },
+    {
+      "text": " reliable",
+      "startMs": 25755,
+      "endMs": 26315,
+      "timestampMs": 26035,
+      "confidence": null
+    },
+    {
+      "text": " presence.",
+      "startMs": 26315,
+      "endMs": 26755,
+      "timestampMs": 26535,
+      "confidence": null
+    }
+  ]
+}
