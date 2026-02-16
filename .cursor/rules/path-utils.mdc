@@ -11,7 +11,7 @@ Use `path_utils` for all paths. Do not hardcode paths or construct them manually
 ## Imports
 
 ```python
-from path_utils import cache_path, video_public, project_root, prompts_dir, assets_dir, mascot_path, env_path
+from path_utils import cache_path, video_public, project_root, prompts_dir, assets_dir, mascot_path, env_path, breakdown_cache_path
 ```
 
 ## Key Functions
@@ -19,6 +19,7 @@ from path_utils import cache_path, video_public, project_root, prompts_dir, asse
 | Function | Returns |
 |----------|---------|
 | `cache_path(cache_key, *parts)` | `cache/{cache_key}/parts` — chunks.json, images/, voice/, captions/ |
+| `breakdown_cache_path(source_hash)` | `cache/_breakdowns/{hash}/breakdown.json` |
 | `video_public()` | `public/` — Remotion static assets |
 | `project_root()` | Project root |
 | `prompts_dir()` | `generation/prompts/` |

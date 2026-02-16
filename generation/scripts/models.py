@@ -47,3 +47,27 @@ class ChunksOutput(BaseModel):
     title: str = Field(..., description="Short YouTube-friendly title for the short (under ~60 chars)")
     description: str = Field(..., description="1-2 sentences for the short's description (YouTube description)")
     scenes: list[SceneOutput] = Field(..., description="Scenes to generate")
+
+
+class SourceRef(BaseModel):
+    """Reference to source location (chapter, section, timestamp, etc.)."""
+
+    chapter: str | None = Field(default=None, description="Chapter or section number")
+    section: str | None = Field(default=None, description="Section or heading name")
+    timestamp: str | None = Field(default=None, description="Timestamp (for podcast/transcript)")
+
+
+class Nugget(BaseModel):
+    """One atomic idea from source material, pipeline-ready."""
+
+    id: str = Field(..., description="Unique slug, e.g. atomic-habits-001")
+    title: str = Field(..., description="Short descriptive title for the idea")
+    summary: str = Field(..., description="150-300 word self-contained summary, fed to script generator")
+    source_ref: SourceRef | None = Field(default=None, description="Location in source")
+    cache_key: str | None = Field(default=None, description="Pipeline cache key: first 16 chars of SHA256(summary); set when writing breakdown.json")
+
+
+class BreakdownOutput(BaseModel):
+    """LLM structured output for source breakdown."""
+
+    nuggets: list[Nugget] = Field(..., description="Atomic idea nuggets extracted from source")

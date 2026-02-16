@@ -26,6 +26,7 @@ def clear_step_context() -> None:
 
 
 _STEP_EMOJIS = {
+    "Breakdown": "📚",
     "Script": "📝",
     "Chunks": "✂️",
     "Images": "🖼️",

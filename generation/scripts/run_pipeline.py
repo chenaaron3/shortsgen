@@ -35,6 +35,125 @@ def content_hash(content: str) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
 
 
+def run(
+    raw_content: str,
+    *,
+    max_scenes: int | None = None,
+    step: str | None = None,
+) -> Path | None:
+    """
+    Run the full pipeline for raw content.
+
+    Args:
+        raw_content: Raw text to turn into a short video.
+        max_scenes: Only generate first N scenes (for testing).
+        step: Run up to and including STEP, skipping cache for it.
+              One of: script, chunker, image, voice, prepare, video.
+
+    Returns:
+        Path to output video when full pipeline completes, else None.
+    """
+    cache_key = content_hash(raw_content)
+    info(f"🔑 cache_key: {cache_key}")
+
+    step_target = step
+    if step_target:
+        info(f"  Running up to {step_target} (skipping cache for {step_target})")
+
+    set_step_context(1, 6)
+    script = run_script(raw_content, cache_key, skip_cache=step_target == "script")
+    if step_target == "script":
+        out_dir = cache_path(cache_key)
+        info("")
+        info(f"✅ Done (step 1)")
+        info(f"   📁 Output: {out_dir}")
+        info(f"   📝 Script:  {out_dir / 'script.md'}")
+        return None
+    set_step_context(2, 6)
+    chunks = run_chunker(script, cache_key, skip_cache=step_target == "chunker")
+    if step_target == "chunker":
+        out_dir = cache_path(cache_key)
+        info("")
+        info(f"✅ Done (step 2)")
+        info(f"   📁 Output: {out_dir}")
+        info(f"   📝 Script:  {out_dir / 'script.md'}")
+        info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
+        return None
+
+    set_step_context(3, 6)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        future_images = executor.submit(
+            run_images,
+            chunks,
+            cache_key,
+            max_scenes=max_scenes,
+            skip_cache=step_target == "image",
+        )
+        future_voice = executor.submit(
+            run_voice,
+            chunks,
+            cache_key,
+            max_scenes=max_scenes,
+            skip_cache=step_target == "voice",
+        )
+        for future in as_completed([future_images, future_voice]):
+            future.result()
+
+    if step_target in ("image", "voice"):
+        out_dir = cache_path(cache_key)
+        info("")
+        info(f"✅ Done (step 3)")
+        info(f"   📁 Output: {out_dir}")
+        info(f"   📝 Script:  {out_dir / 'script.md'}")
+        info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
+        info(f"   🖼️ Images:  {out_dir / 'images'}")
+        info(f"   🔊 Voice:   {out_dir / 'voice'}")
+        return None
+
+    set_step_context(4, 6)
+    try:
+        prepare(
+            cache_key,
+            video_public(),
+            use_whisper=True,
+            whisper_model="base.en",
+            skip_cache=step_target == "prepare",
+        )
+    except Exception as e:
+        error(str(e))
+        raise
+
+    if step_target == "prepare":
+        out_dir = cache_path(cache_key)
+        info("")
+        info(f"✅ Done (step 4)")
+        info(f"   📁 Output: {out_dir}")
+        info(f"   📝 Script:  {out_dir / 'script.md'}")
+        info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
+        info(f"   🖼️ Images:  {out_dir / 'images'}")
+        info(f"   🔊 Voice:   {out_dir / 'voice'}")
+        info(f"   📦 Manifest: {video_public() / 'shortgen' / cache_key / 'manifest.json'}")
+        return None
+
+    set_step_context(6, 6)
+    try:
+        output_path = run_render(cache_key, skip_cache=step_target == "video")
+    except Exception as e:
+        error(str(e))
+        raise
+
+    out_dir = cache_path(cache_key)
+    info("")
+    info("✅ Done")
+    info(f"   📁 Output: {out_dir}")
+    info(f"   📝 Script:  {out_dir / 'script.md'}")
+    info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
+    info(f"   🖼️ Images:  {out_dir / 'images'}")
+    info(f"   🔊 Voice:   {out_dir / 'voice'}")
+    info(f"   🎬 Video:   {output_path}")
+    return output_path
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run full pipeline: script → chunker → images + voice → prepare → render."
@@ -69,104 +188,10 @@ def main():
         error("Error: No content provided.")
         sys.exit(1)
 
-    cache_key = content_hash(raw_content)
-    info(f"🔑 cache_key: {cache_key}")
-
-    step_target = args.step
-    if step_target:
-        info(f"  Running up to {step_target} (skipping cache for {step_target})")
-
-    set_step_context(1, 6)
-    script = run_script(raw_content, cache_key, skip_cache=step_target == "script")
-    if step_target == "script":
-        out_dir = cache_path(cache_key)
-        info("")
-        info(f"✅ Done (step 1)")
-        info(f"   📁 Output: {out_dir}")
-        info(f"   📝 Script:  {out_dir / 'script.md'}")
-        return
-    set_step_context(2, 6)
-    chunks = run_chunker(script, cache_key, skip_cache=step_target == "chunker")
-    if step_target == "chunker":
-        out_dir = cache_path(cache_key)
-        info("")
-        info(f"✅ Done (step 2)")
-        info(f"   📁 Output: {out_dir}")
-        info(f"   📝 Script:  {out_dir / 'script.md'}")
-        info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
-        return
-
-    set_step_context(3, 6)
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        future_images = executor.submit(
-            run_images,
-            chunks,
-            cache_key,
-            max_scenes=args.max_scenes,
-            skip_cache=step_target == "image",
-        )
-        future_voice = executor.submit(
-            run_voice,
-            chunks,
-            cache_key,
-            max_scenes=args.max_scenes,
-            skip_cache=step_target == "voice",
-        )
-        for future in as_completed([future_images, future_voice]):
-            future.result()
-
-    if step_target in ("image", "voice"):
-        out_dir = cache_path(cache_key)
-        info("")
-        info(f"✅ Done (step 3)")
-        info(f"   📁 Output: {out_dir}")
-        info(f"   📝 Script:  {out_dir / 'script.md'}")
-        info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
-        info(f"   🖼️ Images:  {out_dir / 'images'}")
-        info(f"   🔊 Voice:   {out_dir / 'voice'}")
-        return
-
-    set_step_context(4, 6)
     try:
-        prepare(
-            cache_key,
-            video_public(),
-            use_whisper=True,
-            whisper_model="base.en",
-            skip_cache=step_target == "prepare",
-        )
-    except Exception as e:
-        error(str(e))
+        run(raw_content, max_scenes=args.max_scenes, step=args.step)
+    except Exception:
         sys.exit(1)
-
-    if step_target == "prepare":
-        out_dir = cache_path(cache_key)
-        info("")
-        info(f"✅ Done (step 4)")
-        info(f"   📁 Output: {out_dir}")
-        info(f"   📝 Script:  {out_dir / 'script.md'}")
-        info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
-        info(f"   🖼️ Images:  {out_dir / 'images'}")
-        info(f"   🔊 Voice:   {out_dir / 'voice'}")
-        info(f"   📦 Manifest: {video_public() / 'shortgen' / cache_key / 'manifest.json'}")
-        return
-
-    set_step_context(6, 6)
-    try:
-        output_path = run_render(cache_key)
-    except Exception as e:
-        error(str(e))
-        sys.exit(1)
-
-    out_dir = cache_path(cache_key)
-    info("")
-    info("✅ Done")
-    info(f"   📁 Output: {out_dir}")
-    info(f"   📝 Script:  {out_dir / 'script.md'}")
-    info(f"   ✂️ Chunks:  {out_dir / 'chunks.json'}")
-    info(f"   🖼️ Images:  {out_dir / 'images'}")
-    info(f"   🔊 Voice:   {out_dir / 'voice'}")
-    info(f"   🎬 Video:   {output_path}")
 
 
 if __name__ == "__main__":

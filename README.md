@@ -32,11 +32,12 @@ Create a `.env` with `OPENAI_API_KEY`, `ELEVENLABS_API_KEY` as needed.
 ## Usage
 
 ```bash
-# Full pipeline (script -> chunks -> images + voice -> prepare -> render)
-python generation/scripts/run_pipeline.py -f content.txt
-```
+# Source breakdown (book/podcast -> nuggets -> N videos)
+python generation/scripts/run_source_pipeline.py -f book.txt
 
-```
+# Full pipeline (single raw content)
+python generation/scripts/run_pipeline.py -f content.txt
+
 # Generate content
 python3 ./generation/scripts/run_pipeline.py -f ./source/atomic-habits/chapter5.txt
 # Upload video

@@ -41,6 +41,11 @@ def cache_path(cache_key: str, *parts: str) -> Path:
     return cache_base() / cache_key / Path(*parts)
 
 
+def breakdown_cache_path(source_hash: str) -> Path:
+    """Path to breakdown cache: cache/_breakdowns/{hash}/breakdown.json."""
+    return cache_base() / "_breakdowns" / source_hash / "breakdown.json"
+
+
 def video_public() -> Path:
     """Remotion public directory for static assets."""
     return _PROJECT_ROOT / "public"

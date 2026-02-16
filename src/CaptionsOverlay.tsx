@@ -21,7 +21,7 @@ function formatCaption(text: string): string {
 }
 
 /** Word-by-word animation: each word appears as a separate caption. Use 800+ for grouped words. */
-const COMBINE_TOKENS_MS = 0;
+const COMBINE_TOKENS_MS = 800;
 
 export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   captions,
@@ -46,28 +46,13 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   const pageProgress =
     (timeMs - currentPage.startMs) / currentPage.durationMs;
 
-  // Snappy in/out: quick pop in at start, quick pop out at end
+  // Appear immediately, fade out at end
   const opacity = interpolate(
     pageProgress,
-    [0, 0.08, 0.92, 1],
-    [0, 1, 1, 0],
+    [0, 0.01, 0.92, 1],
+    [1, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
-
-  // Bounce: small → large overshoot → settle at normal
-  const scale = interpolate(
-    pageProgress,
-    [0, 0.12, 0.3, 0.85, 1],
-    [0.7, 1.3, 1, 1, 0.85],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-  );
-
-  // Deterministic "random" rotation per caption (stable across frames, -2 to 2 deg)
-  const rotation =
-    ((currentPage.startMs * 7919 +
-      [...currentPage.text].reduce((a, c) => a + c.charCodeAt(0), 0)) %
-      5) -
-    2;
 
   return (
     <AbsoluteFill
@@ -80,7 +65,6 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
     >
       <div
         style={{
-          color: "#FFE135",
           padding: "12px 24px",
           maxWidth: width * 0.9,
           fontFamily: "system-ui, -apple-system, sans-serif",
@@ -88,8 +72,8 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
           fontWeight: 800,
           textAlign: "center",
           whiteSpace: "pre-wrap" as const,
+          wordSpacing: "0.1em",
           opacity,
-          transform: `rotate(${rotation}deg) scale(${scale})`,
           textShadow: [
             "0 0 4px rgba(0,0,0,0.9)",
             "0 0 8px rgba(0,0,0,0.7)",
@@ -105,7 +89,35 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
           ].join(", "),
         }}
       >
-        {formatCaption(currentPage.text)}
+        {currentPage.tokens.map((token, i) => {
+          const isActive = timeMs >= token.fromMs && timeMs < token.toMs;
+          const wordDuration = token.toMs - token.fromMs;
+          const wordProgress =
+            wordDuration > 0
+              ? (timeMs - token.fromMs) / wordDuration
+              : 0;
+          const bump = isActive
+            ? interpolate(
+              wordProgress,
+              [0, 0.12, 0.2, 0.8, 0.88, 1],
+              [1, 1.08, 1.08, 1.08, 1.08, 1],
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+            )
+            : 1;
+          return (
+            <span
+              key={i}
+              style={{
+                color: isActive ? "#FFE135" : "#FFFFFF",
+                display: "inline-block",
+                transform: `scale(${bump})`,
+              }}
+            >
+              {formatCaption(token.text)}
+              {i < currentPage.tokens.length - 1 ? " " : ""}
+            </span>
+          );
+        })}
       </div>
     </AbsoluteFill>
   );

@@ -30,7 +30,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
       style={{
         justifyContent: "flex-end",
         alignItems: "center",
-        backgroundColor: "white",
+        backgroundColor: "#FAF5ED",
       }}
     >
       {/* <Img

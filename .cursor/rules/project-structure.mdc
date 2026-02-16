@@ -24,6 +24,8 @@ shortgen/
 │       └── voice/          # voice_1.mp3, ...
 ├── generation/             # Python pipeline
 │   ├── scripts/           # Pipeline modules (run from generation/scripts/)
+│   │   ├── run_source_pipeline.py # Upstream: source → breakdown → N×pipeline
+│   │   ├── breakdown_source.py    # Break source into atomic nuggets → breakdown.json
 │   │   ├── run_pipeline.py         # Orchestrator: 5-step pipeline
 │   │   ├── generate_script.py     # Step 1: LLM → script.md
 │   │   ├── run_chunker.py         # Step 2: LLM → chunks.json
@@ -32,14 +34,17 @@ shortgen/
 │   │   ├── prepare_remotion_assets.py  # Step 4: copy to public/, manifest, Whisper captions
 │   │   ├── render_video.py        # Step 5: npx remotion render
 │   │   ├── path_utils.py          # project_root, cache_path, video_public, etc.
-│   │   ├── models.py              # Pydantic: Scene, Chunks, ChunksOutput
+│   │   ├── models.py              # Pydantic: Scene, Chunks, Nugget, BreakdownOutput, etc.
 │   │   └── logger.py              # step_start/end, cache_hit/miss, progress
 │   ├── prompts/           # LLM system prompts
+│   │   ├── source-breakdown-system-prompt.md
 │   │   ├── short-script-system-prompt.md
 │   │   └── transcript-chunker-system-prompt.md
 │   ├── assets/            # Mascot reference (mascot_canvas.png)
-│   ├── cache/             # Per-content cache (key = SHA256 of raw content, first 16 chars)
-│   │   └── {cacheKey}/
+│   ├── cache/             # Per-content cache
+│   │   ├── _breakdowns/{hash}/    # From breakdown_source
+│   │   │   └── breakdown.json     # Nuggets (id, title, summary, source_ref, cache_key); cache_key = hash(summary) → child cache
+│   │   └── {cacheKey}/            # Per-nugget (hash of summary)
 │   │       ├── script.md
 │   │       ├── chunks.json        # Scenes with text, imagery, section, image_path, voice_path
 │   │       ├── images/            # image_1.png, image_N_request.json
@@ -67,6 +72,8 @@ Cache key = first 16 chars of SHA256(raw_content).
 
 **index.json** (`public/shortgen/index.json`): `{ "cacheKeys": [...] }` — written by prepare for Remotion Studio discovery.
 
+**Breakdown → pipeline link:** Each nugget in `breakdown.json` has a **cache_key** (first 16 chars of SHA256(summary), set when writing the breakdown). So breakdown → child cache paths are in the file.
+
 ## Env Vars
 
 `.env`: `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`
@@ -74,7 +81,11 @@ Cache key = first 16 chars of SHA256(raw_content).
 ## Commands
 
 ```bash
-# Full pipeline
+# Source breakdown (book/podcast → nuggets → N videos)
+python generation/scripts/run_source_pipeline.py -f book.txt
+# Options: --skip-breakdown-cache, --max-nuggets N, --max-scenes N
+
+# Full pipeline (single raw content)
 python generation/scripts/run_pipeline.py -f content.txt
 
 # Options: --step S (script, chunker, image, voice, prepare, video), --max-scenes N
