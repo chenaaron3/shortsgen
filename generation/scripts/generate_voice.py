@@ -17,6 +17,7 @@ from elevenlabs.types import VoiceSettings
 from models import Chunks
 from path_utils import env_path, cache_path
 from logger import cache_stats_summary, error, info, progress, step_end, step_start, warn
+from usage_trace import record_voice
 
 load_dotenv(env_path())
 
@@ -97,14 +98,37 @@ def generate_voice(
     """Call ElevenLabs text-to-speech via SDK. Returns audio bytes."""
     if voice_settings is None:
         voice_settings = _voice_settings_from_env()
-    audio = client.text_to_speech.convert(
-        text=text,
-        voice_id=voice_id,
-        model_id=model_id,
-        output_format=output_format,
-        voice_settings=voice_settings,
-    )
-    # SDK returns a generator of bytes chunks; join them
+
+    # Use raw response when available to get x-character-count for usage tracking
+    raw_client = getattr(client.text_to_speech, "with_raw_response", None)
+    if raw_client is not None:
+        resp = raw_client.convert(
+            text=text,
+            voice_id=voice_id,
+            model_id=model_id,
+            output_format=output_format,
+            voice_settings=voice_settings,
+        )
+        chars_header = getattr(resp, "headers", {}).get("x-character-count") if hasattr(resp, "headers") else None
+        if chars_header is not None:
+            try:
+                record_voice("Voice", model_id, int(chars_header))
+            except (TypeError, ValueError):
+                record_voice("Voice", model_id, len(text))
+        else:
+            record_voice("Voice", model_id, len(text))
+        audio = getattr(resp, "data", resp)
+    else:
+        audio = client.text_to_speech.convert(
+            text=text,
+            voice_id=voice_id,
+            model_id=model_id,
+            output_format=output_format,
+            voice_settings=voice_settings,
+        )
+        record_voice("Voice", model_id, len(text))
+
+    # SDK may return a generator of bytes chunks; join them
     if hasattr(audio, "__iter__") and not isinstance(audio, (bytes, bytearray)):
         return b"".join(audio)
     return bytes(audio) if not isinstance(audio, bytes) else audio

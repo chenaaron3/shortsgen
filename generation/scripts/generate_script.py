@@ -15,6 +15,7 @@ from openai import OpenAI
 
 from path_utils import env_path, prompts_dir, cache_path
 from logger import cache_hit, cache_miss, error, step_end, step_start
+from usage_trace import record_llm
 
 load_dotenv(env_path())
 
@@ -41,6 +42,9 @@ def generate_script(client: OpenAI, raw_content: str, model: str = "gpt-4o") -> 
             ],
             temperature=0.7,
         )
+        if getattr(response, "usage", None):
+            u = response.usage
+            record_llm("Script", model, u.prompt_tokens, u.completion_tokens)
         return response.choices[0].message.content or ""
     except Exception as e:
         error(f"Error calling LLM: {e}")

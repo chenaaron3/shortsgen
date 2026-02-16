@@ -14,12 +14,14 @@ Usage:
 import argparse
 import json
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 from path_utils import env_path, breakdown_cache_path, cache_path
 from logger import error, info, progress
+from usage_trace import print_summary, reset as usage_reset
 from breakdown_source import run as run_breakdown, source_hash
 from run_pipeline import run as run_pipeline
 
@@ -85,6 +87,13 @@ def main():
         action="store_true",
         help="Only run breakdown, skip downstream pipeline. Print nugget JSON to stdout.",
     )
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=2,
+        metavar="N",
+        help="Max nugget pipelines to run in parallel (default: 2)",
+    )
     args = parser.parse_args()
 
     source_path = Path(args.file)
@@ -97,6 +106,7 @@ def main():
         error("Error: Source file is empty.")
         sys.exit(1)
 
+    usage_reset()
     source_key = source_hash(source_content)
     info(f"📚 Source: {source_path.name}")
     info(f"🔑 source_key: {source_key}")
@@ -105,6 +115,7 @@ def main():
         source_content,
         source_key,
         skip_cache=args.skip_breakdown_cache,
+        max_nuggets=args.max_nuggets,
     )
 
     if args.max_nuggets:
@@ -121,18 +132,30 @@ def main():
 
     total = len(nuggets)
     info("")
-    info(f"▶ Running pipeline for {total} nugget(s)")
+    info(f"▶ Running pipeline for {total} nugget(s) (concurrency={args.concurrency})")
     info("─" * 50)
 
-    failed = []
-    for i, nugget in enumerate(nuggets, 1):
-        progress(i, total, f"{nugget.id} — {nugget.title}")
-        try:
-            run_pipeline(nugget.summary, max_scenes=args.max_scenes)
-            write_videos_markdown(source_key, nuggets, source_path.name)
-        except Exception:
-            failed.append(nugget.id)
+    def run_one(nugget):
+        run_pipeline(nugget.summary, max_scenes=args.max_scenes)
+        return nugget.id, None
 
+    failed = []
+    done = 0
+    with ThreadPoolExecutor(max_workers=args.concurrency) as executor:
+        futures = {executor.submit(run_one, nugget): nugget for nugget in nuggets}
+        for future in as_completed(futures):
+            nugget = futures[future]
+            try:
+                nugget_id, _ = future.result()
+                done += 1
+                progress(done, total, f"{nugget_id} — {nugget.title}")
+            except Exception:
+                failed.append(nugget.id)
+                done += 1
+                progress(done, total, f"{nugget.id} — failed")
+            write_videos_markdown(source_key, nuggets, source_path.name)
+
+    print_summary()
     info("")
     if failed:
         info(f"⚠️ {len(failed)} nugget(s) failed: {failed}")

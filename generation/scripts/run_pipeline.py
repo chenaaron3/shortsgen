@@ -14,6 +14,7 @@ Usage:
 
 import argparse
 import hashlib
+import json
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -22,6 +23,7 @@ from dotenv import load_dotenv
 
 from path_utils import cache_path, env_path, video_public
 from logger import error, info, set_step_context
+from usage_trace import get_trace, print_summary, reset as usage_reset
 from generate_images import run as run_images
 from generate_script import run as run_script
 from generate_voice import run as run_voice
@@ -88,6 +90,7 @@ def run(
         cache_key = content_hash(raw_content)
     info(f"🔑 cache_key: {cache_key}")
 
+    usage_reset()
     invalidate_steps = _steps_from(step) if step else frozenset()
     if invalidate_steps:
         info(f"  Invalidating cache for: {', '.join(sorted(invalidate_steps))}")
@@ -145,6 +148,11 @@ def run(
         raise
 
     out_dir = cache_path(cache_key)
+    print_summary()
+    usage_path = cache_path(cache_key, "usage.json")
+    if usage_path.parent.exists():
+        usage_path.write_text(json.dumps(get_trace(), indent=2), encoding="utf-8")
+        info(f"   📊 Usage trace: {usage_path}")
     info("")
     info("✅ Done")
     info(f"   📁 Output: {out_dir}")

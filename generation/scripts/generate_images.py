@@ -16,6 +16,7 @@ from image_generator import generate_image as generate_image_impl, get_config
 from models import Chunks
 from path_utils import env_path, mascot_path as default_mascot_path, cache_path
 from logger import cache_stats_summary, error, progress, step_end, step_start
+from usage_trace import record_image
 
 load_dotenv(env_path())
 
@@ -165,6 +166,7 @@ def run(
             assert img_bytes is not None
             filename.write_bytes(img_bytes)
             to_process[i].image_path = str(filename)
+            record_image("Images", config["model"], 1)
             progress(i + 1, total, f"saved -> {filename.name}")
 
             request_path.write_text(

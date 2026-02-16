@@ -70,7 +70,10 @@ class Nugget(BaseModel):
 class BreakdownOutput(BaseModel):
     """LLM structured output for source breakdown."""
 
-    nuggets: list[Nugget] = Field(..., description="Atomic idea nuggets extracted from source")
+    nuggets: list[Nugget] = Field(
+        ...,
+        description="Atomic idea nuggets extracted from source",
+    )
 
 
 class UploadStateEntry(BaseModel):

@@ -110,6 +110,45 @@ def list_my_videos_recent(youtube) -> tuple[set[str], list[datetime]]:
     return titles, times
 
 
+def check_token_valid() -> bool:
+    """
+    Check if token.json exists and refresh token is valid (can obtain a new access token).
+    Prints result and returns True if valid, False otherwise. Does not write token.json.
+    """
+    if build is None:
+        error("Install Google API client: pip install google-api-python-client google-auth-oauthlib google-auth-httplib2")
+        return False
+    token_path = generation_root() / "token.json"
+    if not token_path.exists():
+        error("token.json not found. Run an upload once to create it.")
+        return False
+    try:
+        creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
+    except Exception as e:
+        error(f"Failed to load token.json: {e}")
+        return False
+    if not creds.refresh_token:
+        error("No refresh_token in token.json; re-authorize with a full OAuth flow.")
+        return False
+    if creds.valid:
+        info("Token is valid (access token not expired).")
+        if creds.expiry:
+            info(f"Access token expires: {creds.expiry.isoformat()}")
+        return True
+    if creds.expired and creds.refresh_token:
+        try:
+            creds.refresh(Request())
+            info("Refresh token is valid; obtained new access token.")
+            if creds.expiry:
+                info(f"New access token expires: {creds.expiry.isoformat()}")
+            return True
+        except Exception as e:
+            error(f"Refresh failed: {e}")
+            return False
+    error("Token invalid and no refresh token.")
+    return False
+
+
 def get_authenticated_service():
     """OAuth2 desktop flow; returns YouTube API service."""
     if build is None:
@@ -364,7 +403,12 @@ def main() -> None:
     parser.add_argument("--publish-at", help="Explicit publish time (e.g. '2025-02-20 09:00'). If omitted, next slot is deduced from list API.")
     parser.add_argument("--default-time", default=DEFAULT_TIME_OF_DAY, help="Default time of day for next slot (HH:MM, default 09:00)")
     parser.add_argument("--tags", help="Comma-separated tags")
+    parser.add_argument("--check-token", action="store_true", help="Only check if token.json is valid (refresh token works); then exit.")
     args = parser.parse_args()
+
+    if args.check_token:
+        ok = check_token_valid()
+        sys.exit(0 if ok else 1)
 
     if sum(1 for x in (args.cache_key, args.video, args.breakdown_hash) if x) != 1:
         error("Provide exactly one of: --cache-key, --video, or --breakdown-hash.")

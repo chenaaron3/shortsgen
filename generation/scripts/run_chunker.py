@@ -16,6 +16,7 @@ from models import Chunks, ChunksOutput, Scene
 
 from path_utils import env_path, prompts_dir, cache_path
 from logger import cache_hit, cache_miss, error, step_end, step_start
+from usage_trace import record_llm
 
 load_dotenv(env_path())
 
@@ -49,6 +50,9 @@ def chunk_transcript(client: OpenAI, transcript: str, model: str = "gpt-4o") -> 
         if parsed is None:
             error("Error: LLM refused or returned empty response.")
             sys.exit(1)
+        if getattr(completion, "usage", None):
+            u = completion.usage
+            record_llm("Chunks", model, u.prompt_tokens, u.completion_tokens)
         # Convert ChunksOutput to Chunks (add image_path, voice_path to each scene; pass title/description)
         return Chunks(
             title=parsed.title,
