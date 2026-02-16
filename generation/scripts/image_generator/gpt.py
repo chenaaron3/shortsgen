@@ -15,9 +15,9 @@ GPT_IMAGE_15 = "gpt-image-1.5"
 
 # Model → size override (must be valid API sizes: 1024x1024, 1536x1024, 1024x1536, auto)
 MODEL_SIZE: dict[str, str] = {
-    GPT_IMAGE_MINI: "1024x1536",
-    GPT_IMAGE_1: "1024x1536",
-    GPT_IMAGE_15: "1024x1536",
+    GPT_IMAGE_MINI: "1024x1024",
+    GPT_IMAGE_1: "1024x1024",
+    GPT_IMAGE_15: "1024x1024",
 }
 RETRY_DELAY = 5  # seconds between retries on 429
 

@@ -46,7 +46,7 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
           interpolate(
             f,
             [0, fadeFrames, fadeOutStart, durationInFrames],
-            [0, 0.10, 0.10, 0],
+            [0, 0.05, 0.05, 0],
             { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
           )
         }

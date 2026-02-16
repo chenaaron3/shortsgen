@@ -1,0 +1,20 @@
+---
+description: Read the README for project context before making changes
+alwaysApply: true
+---
+
+# README for context
+
+When working on **shortgen**, read **README.md** at the project root for context.
+
+The README documents:
+
+- Project structure (directories, key files)
+- Pipeline flow (single content and source breakdown)
+- Data structures (chunks.json, manifest.json, breakdown, index)
+- Setup and environment variables
+- Commands and CLI options (run_pipeline, run_source_pipeline, prepare, render, upload_youtube)
+- Conventions (path_utils, logger, run directory)
+- APIs and backends (OpenAI, ElevenLabs, Replicate, faster-whisper, YouTube)
+
+Use it to avoid hardcoding paths, missing pipeline steps, or incorrect CLI usage. For full structure and data shapes, see also `.cursor/rules/project-structure.mdc`.

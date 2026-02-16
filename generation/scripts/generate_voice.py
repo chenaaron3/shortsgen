@@ -12,6 +12,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
+from elevenlabs.types import VoiceSettings
 
 from models import Chunks
 from path_utils import env_path, cache_path
@@ -19,10 +20,16 @@ from logger import cache_stats_summary, error, info, progress, step_end, step_st
 
 load_dotenv(env_path())
 
-DEFAULT_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"  # Adam
-DEFAULT_MODEL_ID = "eleven_multilingual_v2"
+DEFAULT_VOICE_ID = "j98abMrE0ALhypC19Bnz" # https://elevenlabs.io/app/voice-library?voiceId=j98abMrE0ALhypC19Bnz
+DEFAULT_MODEL_ID = "eleven_v3"
 DEFAULT_OUTPUT_FORMAT = "mp3_44100_128"
-DEFAULT_CONCURRENCY = 1  # ElevenLabs rate limits; increase with higher tiers
+DEFAULT_CONCURRENCY = 1  # only use one
+
+# Voice settings for more realistic shorts (lively, expressive)
+DEFAULT_STABILITY = 0
+DEFAULT_SIMILARITY_BOOST = 0.9
+DEFAULT_USE_SPEAKER_BOOST = True
+DEFAULT_STYLE = 0.1
 
 
 def _update_chunks_json(cache_key: str, chunks: Chunks, field: str) -> None:
@@ -52,19 +59,50 @@ def load_chunks(path: Path) -> Chunks:
         sys.exit(1)
 
 
+def _voice_settings_from_env() -> VoiceSettings:
+    """Build VoiceSettings from env vars with defaults for shorts."""
+    def _float(key: str, default: float) -> float:
+        val = os.getenv(key)
+        if val is None:
+            return default
+        try:
+            return float(val)
+        except ValueError:
+            return default
+
+    def _bool(key: str, default: bool) -> bool:
+        val = os.getenv(key, "").strip().lower()
+        if val in ("1", "true", "yes"):
+            return True
+        if val in ("0", "false", "no"):
+            return False
+        return default
+
+    return VoiceSettings(
+        stability=_float("ELEVENLABS_STABILITY", DEFAULT_STABILITY),
+        similarity_boost=_float("ELEVENLABS_SIMILARITY_BOOST", DEFAULT_SIMILARITY_BOOST),
+        use_speaker_boost=_bool("ELEVENLABS_USE_SPEAKER_BOOST", DEFAULT_USE_SPEAKER_BOOST),
+        style=_float("ELEVENLABS_STYLE", DEFAULT_STYLE),
+    )
+
+
 def generate_voice(
     client: ElevenLabs,
     text: str,
     voice_id: str,
     model_id: str = DEFAULT_MODEL_ID,
     output_format: str = DEFAULT_OUTPUT_FORMAT,
+    voice_settings: VoiceSettings | None = None,
 ) -> bytes:
     """Call ElevenLabs text-to-speech via SDK. Returns audio bytes."""
+    if voice_settings is None:
+        voice_settings = _voice_settings_from_env()
     audio = client.text_to_speech.convert(
         text=text,
         voice_id=voice_id,
         model_id=model_id,
         output_format=output_format,
+        voice_settings=voice_settings,
     )
     # SDK returns a generator of bytes chunks; join them
     if hasattr(audio, "__iter__") and not isinstance(audio, (bytes, bytearray)):
@@ -79,6 +117,7 @@ def _generate_one(
     voice_id: str,
     model_id: str,
     output_format: str,
+    voice_settings: VoiceSettings,
 ) -> tuple[int, bytes | None, str | None]:
     """Worker: generate one voice. Returns (index, audio_bytes, error_msg)."""
     try:
@@ -88,6 +127,7 @@ def _generate_one(
             voice_id,
             model_id=model_id,
             output_format=output_format,
+            voice_settings=voice_settings,
         )
         return (i, audio_bytes, None)
     except Exception as e:
@@ -103,18 +143,19 @@ def _generate_one(
 def run(
     chunks: Chunks,
     cache_key: str,
-    voice_id: str = DEFAULT_VOICE_ID,
-    model_id: str = DEFAULT_MODEL_ID,
+    voice_id: str | None = None,
+    model_id: str | None = None,
     output_format: str = DEFAULT_OUTPUT_FORMAT,
     skip_existing: bool = True,
     max_scenes: int | None = None,
-    concurrency: int = DEFAULT_CONCURRENCY,
+    concurrency: int | None = None,
     skip_cache: bool = False,
 ) -> Chunks:
     """
     Generate voice for each scene. Uses per-scene cache.
     Output: cache/{cache_key}/voice/voice_1.mp3, etc.
     skip_cache: if True, regenerate all voice even when cached (for --step 3 iteration).
+    voice_id, model_id, concurrency default from env (ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL_ID, ELEVENLABS_CONCURRENCY).
     """
     voice_dir = cache_path(cache_key, "voice")
 
@@ -127,6 +168,15 @@ def run(
             "Add it to .env or get a key from https://elevenlabs.io/app/settings/api-keys"
         )
 
+    if voice_id is None:
+        voice_id = (os.getenv("ELEVENLABS_VOICE_ID") or "").strip() or DEFAULT_VOICE_ID
+    if model_id is None:
+        model_id = (os.getenv("ELEVENLABS_MODEL_ID") or "").strip() or DEFAULT_MODEL_ID
+    if concurrency is None:
+        val = os.getenv("ELEVENLABS_CONCURRENCY")
+        concurrency = int(val) if (val and val.strip().isdigit()) else DEFAULT_CONCURRENCY
+
+    voice_settings = _voice_settings_from_env()
     client = ElevenLabs(api_key=api_key)
 
     scenes = chunks.scenes
@@ -181,6 +231,7 @@ def run(
                 voice_id,
                 model_id,
                 output_format,
+                voice_settings,
             ): (i, text, filename)
             for i, text, filename in work
         }

@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 
 class Scene(BaseModel):
@@ -71,3 +71,14 @@ class BreakdownOutput(BaseModel):
     """LLM structured output for source breakdown."""
 
     nuggets: list[Nugget] = Field(..., description="Atomic idea nuggets extracted from source")
+
+
+class UploadStateEntry(BaseModel):
+    """One video's YouTube upload state (scheduled time and video id)."""
+
+    scheduled_at: str = Field(..., description="RFC 3339 publish time")
+    video_id: str = Field(..., description="YouTube video ID")
+
+
+class UploadState(RootModel[dict[str, UploadStateEntry]]):
+    """Upload state for a breakdown: cache_key -> entry. Persisted as upload_state.json (flat dict)."""

@@ -5,22 +5,28 @@ Supports scheduled publish (status.publishAt), title/description from chunks.jso
 when using --cache-key, list API to deduce next daily slot, and duplicate prevention
 by checking videos.list for an existing video with the same title.
 
+Modes:
+- --cache-key / --video: upload one video.
+- --breakdown-hash: upload all videos from a source breakdown (cache/_breakdowns/{hash}/).
+  Skips videos already marked as scheduled in upload_state.json (same dir as breakdown.json).
+  Schedules uploads one day after another in nugget order.
+
 Keep separate from pipeline: user chooses which videos to upload.
 Run from project root or generation/scripts/.
 """
 
 import argparse
 import json
-import os
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 # Add scripts to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from models import Chunks
-from path_utils import cache_path, generation_root, project_root
-from logger import error, info, warn
+from models import BreakdownOutput, Chunks, UploadState, UploadStateEntry
+from path_utils import breakdown_cache_path, cache_path, generation_root, project_root
+from logger import error, info, progress, warn
 
 # Optional Google API imports (required for upload)
 try:
@@ -38,6 +44,17 @@ SCOPES = [
 ]
 DEFAULT_TIME_OF_DAY = "09:00"  # HH:MM local
 RECENT_VIDEOS_LIMIT = 15  # One list call: dedupe titles + latest publish time
+UPLOAD_STATE_FILENAME = "upload_state.json"
+
+
+@dataclass
+class UploadItem:
+    """One video to upload: path, title, description; cache_key set for state persistence (breakdown)."""
+
+    cache_key: str | None
+    video_path: Path
+    title: str
+    description: str
 
 
 def list_my_videos_recent(youtube) -> tuple[set[str], list[datetime]]:
@@ -194,76 +211,116 @@ def load_metadata_from_chunks(cache_key: str) -> tuple[str, str]:
         return "", ""
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Upload a short to YouTube (API v3). Use --cache-key or --video. Title/description from chunks.json or CLI."
-    )
-    parser.add_argument("--cache-key", help="Cache key: video = cache/{key}/short.mp4, metadata from chunks.json")
-    parser.add_argument("--video", help="Path to video file (alternative to --cache-key)")
-    parser.add_argument("--title", help="Override title")
-    parser.add_argument("--description", help="Override description")
-    parser.add_argument("--privacy", default="private", choices=("public", "unlisted", "private"), help="Privacy (default: private for scheduled)")
-    parser.add_argument("--publish-at", help="Explicit publish time (e.g. '2025-02-20 09:00'). If omitted, next slot is deduced from list API.")
-    parser.add_argument("--default-time", default=DEFAULT_TIME_OF_DAY, help="Default time of day for next slot (HH:MM, default 09:00)")
-    parser.add_argument("--tags", help="Comma-separated tags")
-    args = parser.parse_args()
+def load_upload_state(breakdown_dir: Path) -> dict[str, UploadStateEntry]:
+    """Load upload_state.json from breakdown dir. Keys: cache_key -> UploadStateEntry."""
+    path = breakdown_dir / UPLOAD_STATE_FILENAME
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return {}
+        return UploadState.model_validate(data).root
+    except (json.JSONDecodeError, OSError, ValueError):
+        return {}
 
-    if not args.cache_key and not args.video:
-        error("Provide either --cache-key or --video.")
-        sys.exit(1)
-    if args.cache_key and args.video:
-        error("Provide only one of --cache-key or --video.")
-        sys.exit(1)
 
-    # Resolve video path
+def save_upload_state(breakdown_dir: Path, state: dict[str, UploadStateEntry]) -> None:
+    """Write upload_state.json next to breakdown.json."""
+    breakdown_dir.mkdir(parents=True, exist_ok=True)
+    path = breakdown_dir / UPLOAD_STATE_FILENAME
+    path.write_text(UploadState.model_validate(state).model_dump_json(indent=2), encoding="utf-8")
+
+
+def get_breakdown_nuggets_to_upload(
+    source_hash: str,
+) -> tuple[list, Path, dict]:
+    """
+    Load breakdown for source_hash; return (nuggets to upload, breakdown_dir, upload_state).
+    Nuggets to upload = have cache_key, short.mp4 exists, not already in upload_state.
+    """
+    breakdown_path = breakdown_cache_path(source_hash)
+    if not breakdown_path.exists():
+        raise FileNotFoundError(f"Breakdown not found: {breakdown_path}")
+    data = json.loads(breakdown_path.read_text(encoding="utf-8"))
+    out = BreakdownOutput.model_validate(data)
+    breakdown_dir = breakdown_path.parent
+    state = load_upload_state(breakdown_dir)
+    already = set(state.keys())
+    to_upload = []
+    for n in out.nuggets:
+        if not n.cache_key or n.cache_key in already:
+            continue
+        video_path = cache_path(n.cache_key, "short.mp4")
+        if not video_path.exists():
+            warn(f"Video missing for {n.cache_key} ({n.title}), skipping")
+            continue
+        to_upload.append(n)
+    return to_upload, breakdown_dir, state
+
+
+def build_upload_list(args) -> tuple[list[UploadItem], str | None, tuple[Path, dict[str, UploadStateEntry]] | None]:
+    """
+    Build list of items to upload from args. Single mode = one item; breakdown = many.
+    Returns (items, first_publish_at_str or None for --publish-at, persist_context or None).
+    """
+    if args.breakdown_hash:
+        try:
+            to_upload, breakdown_dir, upload_state = get_breakdown_nuggets_to_upload(args.breakdown_hash)
+        except FileNotFoundError as e:
+            error(str(e))
+            sys.exit(1)
+        items = []
+        for i, nugget in enumerate(to_upload, 1):
+            ck = nugget.cache_key
+            video_path = cache_path(ck, "short.mp4")
+            title, description = load_metadata_from_chunks(ck)
+            title = title or nugget.title or f"Short {i}"
+            if args.title and len(to_upload) == 1:
+                title = args.title
+            if args.description and len(to_upload) == 1:
+                description = args.description or ""
+            items.append(UploadItem(cache_key=ck, video_path=video_path, title=title, description=description or ""))
+        return (items, None, (breakdown_dir, upload_state))
+
     if args.cache_key:
         video_path = cache_path(args.cache_key, "short.mp4")
         if not video_path.exists():
             error(f"Video not found: {video_path}")
             sys.exit(1)
         title, description = load_metadata_from_chunks(args.cache_key)
-    else:
-        video_path = Path(args.video).resolve()
-        if not video_path.exists():
-            error(f"Video not found: {video_path}")
+        if args.title:
+            title = args.title
+        if args.description:
+            description = args.description
+        if not title:
+            error("Title is required. Add --title or re-run chunker to get title in chunks.json.")
             sys.exit(1)
-        title, description = "", ""
+        return ([UploadItem(args.cache_key, video_path, title, description or "")], args.publish_at, None)
 
-    if args.title:
-        title = args.title
-    if args.description:
-        description = args.description
-
-    if not title and args.cache_key:
-        error("Title is required. Add --title or re-run chunker to get title in chunks.json.")
+    # --video
+    video_path = Path(args.video).resolve()
+    if not video_path.exists():
+        error(f"Video not found: {video_path}")
         sys.exit(1)
-    if not title:
+    if not args.title:
         error("Title is required. Use --title.")
         sys.exit(1)
+    return ([UploadItem(None, video_path, args.title, args.description or "")], args.publish_at, None)
 
-    # Authenticate and get service
-    youtube = get_authenticated_service()
 
-    # One list call: titles for dedupe, times for next slot
-    existing_titles, publish_times = list_my_videos_recent(youtube)
-    if title in existing_titles:
-        warn(f"A video with title {title!r} already exists on the channel. Skipping to avoid duplicate.")
-        sys.exit(0)
-
-    # Publish time
-    if args.publish_at:
-        try:
-            publish_dt = parse_publish_at(args.publish_at)
-            publish_at_rfc = to_rfc3339(publish_dt)
-        except ValueError as e:
-            error(str(e))
-            sys.exit(1)
-    else:
-        publish_dt = next_publish_time(publish_times, args.default_time)
-        publish_at_rfc = to_rfc3339(publish_dt)
-        info(f"Next publish slot: {publish_at_rfc}")
-
-    # Build request body
+def upload_one(
+    youtube,
+    video_path: Path,
+    title: str,
+    description: str,
+    publish_at_rfc: str,
+    args,
+) -> str | None:
+    """
+    Upload one video; return video_id on success, None on failure.
+    Caller handles duplicate title check and state persistence.
+    """
     tags_list = [t.strip() for t in (args.tags or "").split(",") if t.strip()]
     body = {
         "snippet": {
@@ -276,9 +333,6 @@ def main() -> None:
             "publishAt": publish_at_rfc,
         },
     }
-
-    # Upload
-    info(f"Uploading {video_path} as {title!r} (scheduled {publish_at_rfc})...")
     try:
         media = MediaFileUpload(str(video_path), mimetype="video/*", resumable=True)
         request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
@@ -287,12 +341,81 @@ def main() -> None:
             status, response = request.next_chunk()
             if status:
                 info(f"  Uploaded {int(status.progress() * 100)}%")
-        video_id = response["id"]
-        info(f"Uploaded. Video ID: {video_id}")
-        info(f"  https://youtube.com/shorts/{video_id}")
+        return response["id"]
     except Exception as e:
         error(f"Upload failed: {e}")
+        return None
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Upload a short to YouTube (API v3). Use --cache-key, --video, or --breakdown-hash. Title/description from chunks.json or CLI."
+    )
+    parser.add_argument("--cache-key", help="Cache key: video = cache/{key}/short.mp4, metadata from chunks.json")
+    parser.add_argument("--video", help="Path to video file (alternative to --cache-key)")
+    parser.add_argument(
+        "--breakdown-hash",
+        metavar="HASH",
+        help="Source hash: upload all videos from cache/_breakdowns/{hash}/. Skips already-scheduled (upload_state.json).",
+    )
+    parser.add_argument("--title", help="Override title")
+    parser.add_argument("--description", help="Override description")
+    parser.add_argument("--privacy", default="private", choices=("public", "unlisted", "private"), help="Privacy (default: private for scheduled)")
+    parser.add_argument("--publish-at", help="Explicit publish time (e.g. '2025-02-20 09:00'). If omitted, next slot is deduced from list API.")
+    parser.add_argument("--default-time", default=DEFAULT_TIME_OF_DAY, help="Default time of day for next slot (HH:MM, default 09:00)")
+    parser.add_argument("--tags", help="Comma-separated tags")
+    args = parser.parse_args()
+
+    if sum(1 for x in (args.cache_key, args.video, args.breakdown_hash) if x) != 1:
+        error("Provide exactly one of: --cache-key, --video, or --breakdown-hash.")
         sys.exit(1)
+
+    items, first_publish_at_str, persist_context = build_upload_list(args)
+    if not items:
+        info("No videos to upload (all already scheduled or no short.mp4 found).")
+        return
+
+    youtube = get_authenticated_service()
+    existing_titles, publish_times = list_my_videos_recent(youtube)
+    total = len(items)
+    if total > 1:
+        info(f"Uploading {total} video(s) (sequential schedule, one per day).")
+
+    for i, item in enumerate(items):
+        if item.title in existing_titles:
+            label = item.cache_key or item.video_path.name
+            warn(f"Title {item.title!r} already on channel; skipping {label}.")
+            continue
+        if i == 0 and first_publish_at_str:
+            try:
+                publish_dt = parse_publish_at(first_publish_at_str)
+            except ValueError as e:
+                error(str(e))
+                sys.exit(1)
+            publish_at_rfc = to_rfc3339(publish_dt)
+            if total == 1:
+                info(f"Next publish slot: {publish_at_rfc}")
+        else:
+            publish_dt = next_publish_time(publish_times, args.default_time)
+            publish_at_rfc = to_rfc3339(publish_dt)
+            if total == 1:
+                info(f"Next publish slot: {publish_at_rfc}")
+        progress(i + 1, total, f"{item.title!r} @ {publish_at_rfc}")
+        info(f"Uploading {item.video_path.name} as {item.title!r} (scheduled {publish_at_rfc})...")
+        video_id = upload_one(youtube, item.video_path, item.title, item.description, publish_at_rfc, args)
+        if video_id is None:
+            error("Upload failed; stopping.")
+            sys.exit(1)
+        info(f"  https://youtube.com/shorts/{video_id}")
+        if persist_context and item.cache_key:
+            breakdown_dir, upload_state = persist_context
+            upload_state[item.cache_key] = UploadStateEntry(scheduled_at=publish_at_rfc, video_id=video_id)
+            save_upload_state(breakdown_dir, upload_state)
+        publish_times.append(publish_dt)
+        existing_titles.add(item.title)
+
+    if total > 1:
+        info(f"Done — {total} video(s) scheduled.")
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ function formatCaption(text: string): string {
 }
 
 /** Word-by-word animation: each word appears as a separate caption. Use 800+ for grouped words. */
-const COMBINE_TOKENS_MS = 800;
+const COMBINE_TOKENS_MS = 500;
 
 export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   captions,
@@ -65,10 +65,10 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
     >
       <div
         style={{
-          padding: "12px 24px",
-          maxWidth: width * 0.9,
+          padding: "16px 40px",
+          maxWidth: width * 0.82,
           fontFamily: "system-ui, -apple-system, sans-serif",
-          fontSize: Math.min(width * 0.11, 52),
+          fontSize: Math.min(width * 0.09, 44),
           fontWeight: 800,
           textAlign: "center",
           whiteSpace: "pre-wrap" as const,
