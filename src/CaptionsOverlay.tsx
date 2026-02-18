@@ -55,16 +55,14 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   );
 
   return (
-    <AbsoluteFill
-      style={{
-        justifyContent: "flex-end",
-        alignItems: "center",
-        paddingBottom: height * 0.2,
-        zIndex: 100,
-      }}
-    >
+    <AbsoluteFill style={{ width: "100%", zIndex: 100 }}>
       <div
         style={{
+          position: "relative",
+          left: "50%",
+          top: "70%",
+          transform: "translate(-50%, -50%)",
+          width: "100%",
           padding: "16px 40px",
           maxWidth: width * 0.82,
           fontFamily: "system-ui, -apple-system, sans-serif",
