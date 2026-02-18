@@ -59,7 +59,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
       style={{
         justifyContent: "flex-end",
         alignItems: "center",
-        paddingBottom: height * 0.15,
+        paddingBottom: height * 0.2,
         zIndex: 100,
       }}
     >

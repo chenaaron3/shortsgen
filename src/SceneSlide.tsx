@@ -50,10 +50,10 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
         src={imageSrc}
         style={{
           position: "absolute",
-          top: "5%",
+          top: "13%", // 126/960
           left: "12.5%",
           width: "75%",
-          height: "75%",
+          height: "auto",
           objectFit: "contain",
           opacity: imageOpacity,
           zIndex: 1,
