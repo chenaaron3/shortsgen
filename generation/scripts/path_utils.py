@@ -54,3 +54,8 @@ def video_public() -> Path:
 def env_path() -> Path:
     """Project .env file."""
     return _PROJECT_ROOT / ".env"
+
+
+def references_dir() -> Path:
+    """Reference scripts and materials."""
+    return _GENERATION_ROOT / "references"

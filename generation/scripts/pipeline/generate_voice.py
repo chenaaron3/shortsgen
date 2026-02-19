@@ -4,6 +4,7 @@ Generate TTS voice for each scene from chunker JSON using ElevenLabs Python SDK.
 Called by run_pipeline. Outputs to cache/{cache_key}/voice/.
 """
 
+import hashlib
 import json
 import os
 import sys
@@ -21,16 +22,22 @@ from usage_trace import record_voice
 
 load_dotenv(env_path())
 
-DEFAULT_VOICE_ID = "j98abMrE0ALhypC19Bnz" # https://elevenlabs.io/app/voice-library?voiceId=j98abMrE0ALhypC19Bnz
-DEFAULT_MODEL_ID = "eleven_v3"
+DEFAULT_VOICE_ID = "j98abMrE0ALhypC19Bnz"  # https://elevenlabs.io/app/voice-library?voiceId=j98abMrE0ALhypC19Bnz
+DEFAULT_MODEL_ID = "eleven_multilingual_v2"  # For request stitching (previous_text/next_text), use eleven_multilingual_v2
 DEFAULT_OUTPUT_FORMAT = "mp3_44100_128"
 DEFAULT_CONCURRENCY = 1  # only use one
 
 # Voice settings for more realistic shorts (lively, expressive)
-DEFAULT_STABILITY = 0
+DEFAULT_STABILITY = 0.5
 DEFAULT_SIMILARITY_BOOST = 0.9
 DEFAULT_USE_SPEAKER_BOOST = True
 DEFAULT_STYLE = 0.1
+
+
+def _seed_from_cache_key(cache_key: str) -> int:
+    """Deterministic seed (0–4294967295) for consistent voice across clips."""
+    h = hashlib.sha256(cache_key.encode()).hexdigest()[:8]
+    return int(h, 16) % 4294967296
 
 
 def _update_chunks_json(cache_key: str, chunks: Chunks, field: str) -> None:
@@ -87,6 +94,10 @@ def _voice_settings_from_env() -> VoiceSettings:
     )
 
 
+# eleven_v3 does not support request stitching (previous_text, next_text)
+MODELS_WITH_STITCHING = ("eleven_multilingual_v2", "eleven_turbo_v2", "eleven_turbo_v2_5")
+
+
 def generate_voice(
     client: ElevenLabs,
     text: str,
@@ -94,41 +105,56 @@ def generate_voice(
     model_id: str = DEFAULT_MODEL_ID,
     output_format: str = DEFAULT_OUTPUT_FORMAT,
     voice_settings: VoiceSettings | None = None,
+    *,
+    previous_text: str | None = None,
+    next_text: str | None = None,
+    seed: int | None = None,
 ) -> bytes:
-    """Call ElevenLabs text-to-speech via SDK. Returns audio bytes."""
+    """Call ElevenLabs text-to-speech via SDK. Returns audio bytes.
+    previous_text and next_text improve continuity when stitching clips (not supported by eleven_v3).
+    seed reduces randomness for consistent voice across clips."""
     if voice_settings is None:
         voice_settings = _voice_settings_from_env()
+
+    # Continuity params for consistent voice across clips
+    kwargs: dict = {
+        "voice_id": voice_id,
+        "text": text,
+        "model_id": model_id,
+        "output_format": output_format,
+        "voice_settings": voice_settings,
+    }
+    # Request stitching only supported by some models (e.g. eleven_multilingual_v2)
+    if model_id in MODELS_WITH_STITCHING:
+        if previous_text:
+            kwargs["previous_text"] = previous_text
+        if next_text:
+            kwargs["next_text"] = next_text
+    if seed is not None:
+        kwargs["seed"] = seed
 
     # Use raw response when available to get x-character-count for usage tracking
     raw_client = getattr(client.text_to_speech, "with_raw_response", None)
     if raw_client is not None:
-        resp = raw_client.convert(
-            text=text,
-            voice_id=voice_id,
-            model_id=model_id,
-            output_format=output_format,
-            voice_settings=voice_settings,
-        )
-        chars_header = getattr(resp, "headers", {}).get("x-character-count") if hasattr(resp, "headers") else None
-        if chars_header is not None:
-            try:
-                record_voice("Voice", model_id, int(chars_header))
-            except (TypeError, ValueError):
+        # raw_client.convert is a context manager; must use "with" to enter it
+        with raw_client.convert(**kwargs) as resp:
+            chars_header = getattr(resp, "headers", {}).get("x-character-count") if hasattr(resp, "headers") else None
+            if chars_header is not None:
+                try:
+                    record_voice("Voice", model_id, int(chars_header))
+                except (TypeError, ValueError):
+                    record_voice("Voice", model_id, len(text))
+            else:
                 record_voice("Voice", model_id, len(text))
-        else:
-            record_voice("Voice", model_id, len(text))
-        audio = getattr(resp, "data", resp)
+            audio_stream = getattr(resp, "data", None)
+            if audio_stream is not None:
+                return b"".join(audio_stream)
+            return b""
     else:
-        audio = client.text_to_speech.convert(
-            text=text,
-            voice_id=voice_id,
-            model_id=model_id,
-            output_format=output_format,
-            voice_settings=voice_settings,
-        )
+        audio = client.text_to_speech.convert(**kwargs)
         record_voice("Voice", model_id, len(text))
 
-    # SDK may return a generator of bytes chunks; join them
+    # SDK returns an iterator of bytes chunks; join them
     if hasattr(audio, "__iter__") and not isinstance(audio, (bytes, bytearray)):
         return b"".join(audio)
     return bytes(audio) if not isinstance(audio, bytes) else audio
@@ -142,6 +168,10 @@ def _generate_one(
     model_id: str,
     output_format: str,
     voice_settings: VoiceSettings,
+    *,
+    previous_text: str | None = None,
+    next_text: str | None = None,
+    seed: int | None = None,
 ) -> tuple[int, bytes | None, str | None]:
     """Worker: generate one voice. Returns (index, audio_bytes, error_msg)."""
     try:
@@ -152,6 +182,9 @@ def _generate_one(
             model_id=model_id,
             output_format=output_format,
             voice_settings=voice_settings,
+            previous_text=previous_text,
+            next_text=next_text,
+            seed=seed,
         )
         return (i, audio_bytes, None)
     except Exception as e:
@@ -202,6 +235,11 @@ def run(
 
     voice_settings = _voice_settings_from_env()
     client = ElevenLabs(api_key=api_key)
+    seed_val = (os.getenv("ELEVENLABS_SEED") or "").strip()
+    if seed_val.isdigit():
+        seed = int(seed_val) % 4294967296
+    else:
+        seed = _seed_from_cache_key(cache_key)
 
     scenes = chunks.scenes
     if not scenes:
@@ -215,11 +253,12 @@ def run(
     to_process = scenes[:max_scenes] if max_scenes is not None else scenes
     extra = f"max={max_scenes}" if max_scenes else ""
 
-    work: list[tuple[int, str, Path]] = []
+    work: list[tuple[int, str, Path, str | None, str | None]] = []
     cached_count = 0
     skipped_empty = 0
+    texts = [s.text.strip() for s in to_process]
     for i, scene in enumerate(to_process):
-        text = scene.text.strip()
+        text = texts[i]
         if not text:
             skipped_empty += 1
             continue
@@ -230,7 +269,9 @@ def run(
             cached_count += 1
             continue
 
-        work.append((i, text, filename))
+        prev = (texts[i - 1] or None) if i > 0 else None
+        nxt = (texts[i + 1] or None) if i + 1 < len(texts) else None
+        work.append((i, text, filename, prev, nxt))
 
     step_start("Voice")
     cache_stats_summary(cached_count, len(work), len(work), extra)
@@ -256,8 +297,11 @@ def run(
                 model_id,
                 output_format,
                 voice_settings,
+                previous_text=prev,
+                next_text=nxt,
+                seed=seed,
             ): (i, text, filename)
-            for i, text, filename in work
+            for i, text, filename, prev, nxt in work
         }
 
         for future in as_completed(futures):

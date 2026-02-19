@@ -3,86 +3,804 @@
   "fps": 30,
   "width": 540,
   "height": 960,
-  "durationInFrames": 977,
+  "durationInFrames": 1082,
   "scenes": [
     {
-      "text": "Want to build habits that stick?",
+      "text": "Want to hack your habits?",
       "imagePath": "images/image_1.png",
       "voicePath": "voice/voice_1.mp3",
-      "durationInSeconds": 1.906938775510204
+      "durationInSeconds": 1.5673469387755101
     },
     {
-      "text": "Here\u2019s the secret.",
+      "text": "It all starts with understanding the habit loop.",
       "imagePath": "images/image_2.png",
       "voicePath": "voice/voice_2.mp3",
-      "durationInSeconds": 1.28
+      "durationInSeconds": 2.690612244897959
     },
     {
-      "text": "First, identify the cue.",
+      "text": "Every habit you have follows a four-step loop: cue, craving, response, and reward.",
       "imagePath": "images/image_3.png",
       "voicePath": "voice/voice_3.mp3",
-      "durationInSeconds": 1.8024489795918368
+      "durationInSeconds": 6.217142857142857
     },
     {
-      "text": "It's the trigger that sets everything in motion.",
+      "text": "First, there's the cue\u2014something that triggers the habit.",
       "imagePath": "images/image_4.png",
       "voicePath": "voice/voice_4.mp3",
-      "durationInSeconds": 2.742857142857143
+      "durationInSeconds": 3.239183673469388
     },
     {
-      "text": "Maybe it's your phone lighting up.",
+      "text": "Then comes the craving, which isn't for the habit itself but for the change in state.",
       "imagePath": "images/image_5.png",
       "voicePath": "voice/voice_5.mp3",
-      "durationInSeconds": 1.8546938775510204
+      "durationInSeconds": 4.858775510204081
     },
     {
-      "text": "Next, understand the craving.",
+      "text": "The response is the habit itself, like checking your phone.",
       "imagePath": "images/image_6.png",
       "voicePath": "voice/voice_6.mp3",
-      "durationInSeconds": 1.906938775510204
+      "durationInSeconds": 3.1085714285714285
     },
     {
-      "text": "You're not craving Instagram; you're craving relief from boredom.",
+      "text": "And finally, the reward, which satisfies the craving.",
       "imagePath": "images/image_7.png",
       "voicePath": "voice/voice_7.mp3",
-      "durationInSeconds": 3.944489795918367
+      "durationInSeconds": 3.422040816326531
     },
     {
-      "text": "Third, focus on the response.",
+      "text": "Over time, just the cue can trigger the craving because your brain loves efficiency.",
       "imagePath": "images/image_8.png",
       "voicePath": "voice/voice_8.mp3",
-      "durationInSeconds": 2.115918367346939
+      "durationInSeconds": 5.093877551020408
     },
     {
-      "text": "Make it easy. If it's too hard, it won't happen.",
+      "text": "To change a habit, tweak any part of this loop.",
       "imagePath": "images/image_9.png",
       "voicePath": "voice/voice_9.mp3",
-      "durationInSeconds": 2.873469387755102
+      "durationInSeconds": 2.9257142857142857
     },
     {
-      "text": "Finally, don\u2019t forget the reward.",
+      "text": "Start with one habit loop this week and see what happens.",
       "imagePath": "images/image_10.png",
       "voicePath": "voice/voice_10.mp3",
-      "durationInSeconds": 2.1681632653061222
-    },
-    {
-      "text": "It\u2019s the payoff that teaches your brain to do it again.",
-      "imagePath": "images/image_11.png",
-      "voicePath": "voice/voice_11.mp3",
-      "durationInSeconds": 3.0040816326530613
-    },
-    {
-      "text": "Master these four steps: cue, craving, response, reward.",
-      "imagePath": "images/image_12.png",
-      "voicePath": "voice/voice_12.mp3",
-      "durationInSeconds": 4.6236734693877555
-    },
-    {
-      "text": "That\u2019s how you design habits that last.",
-      "imagePath": "images/image_13.png",
-      "voicePath": "voice/voice_13.mp3",
-      "durationInSeconds": 2.3510204081632655
+      "durationInSeconds": 2.9518367346938774
     }
   ],
-  "captions": []
+  "captions": [
+    {
+      "text": " Want",
+      "startMs": 0,
+      "endMs": 180,
+      "timestampMs": 90,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 180,
+      "endMs": 320,
+      "timestampMs": 250,
+      "confidence": null
+    },
+    {
+      "text": " hack",
+      "startMs": 320,
+      "endMs": 500,
+      "timestampMs": 410,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 500,
+      "endMs": 720,
+      "timestampMs": 610,
+      "confidence": null
+    },
+    {
+      "text": " habits?",
+      "startMs": 720,
+      "endMs": 1000,
+      "timestampMs": 860,
+      "confidence": null
+    },
+    {
+      "text": " It",
+      "startMs": 1567,
+      "endMs": 1687,
+      "timestampMs": 1627,
+      "confidence": null
+    },
+    {
+      "text": " all",
+      "startMs": 1687,
+      "endMs": 1827,
+      "timestampMs": 1757,
+      "confidence": null
+    },
+    {
+      "text": " starts",
+      "startMs": 1827,
+      "endMs": 2107,
+      "timestampMs": 1967,
+      "confidence": null
+    },
+    {
+      "text": " with",
+      "startMs": 2107,
+      "endMs": 2407,
+      "timestampMs": 2257,
+      "confidence": null
+    },
+    {
+      "text": " understanding",
+      "startMs": 2407,
+      "endMs": 2827,
+      "timestampMs": 2617,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 2827,
+      "endMs": 3127,
+      "timestampMs": 2977,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 3127,
+      "endMs": 3307,
+      "timestampMs": 3217,
+      "confidence": null
+    },
+    {
+      "text": " loop.",
+      "startMs": 3307,
+      "endMs": 3547,
+      "timestampMs": 3427,
+      "confidence": null
+    },
+    {
+      "text": " Every",
+      "startMs": 4258,
+      "endMs": 4518,
+      "timestampMs": 4388,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 4518,
+      "endMs": 4738,
+      "timestampMs": 4628,
+      "confidence": null
+    },
+    {
+      "text": " you",
+      "startMs": 4738,
+      "endMs": 4978,
+      "timestampMs": 4858,
+      "confidence": null
+    },
+    {
+      "text": " have",
+      "startMs": 4978,
+      "endMs": 5218,
+      "timestampMs": 5098,
+      "confidence": null
+    },
+    {
+      "text": " follows",
+      "startMs": 5218,
+      "endMs": 5498,
+      "timestampMs": 5358,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 5498,
+      "endMs": 5698,
+      "timestampMs": 5598,
+      "confidence": null
+    },
+    {
+      "text": " four",
+      "startMs": 5698,
+      "endMs": 5938,
+      "timestampMs": 5818,
+      "confidence": null
+    },
+    {
+      "text": " -step",
+      "startMs": 5938,
+      "endMs": 6238,
+      "timestampMs": 6088,
+      "confidence": null
+    },
+    {
+      "text": " loop,",
+      "startMs": 6238,
+      "endMs": 6478,
+      "timestampMs": 6358,
+      "confidence": null
+    },
+    {
+      "text": " cue,",
+      "startMs": 7138,
+      "endMs": 7398,
+      "timestampMs": 7268,
+      "confidence": null
+    },
+    {
+      "text": " craving,",
+      "startMs": 7758,
+      "endMs": 8238,
+      "timestampMs": 7998,
+      "confidence": null
+    },
+    {
+      "text": " response",
+      "startMs": 8518,
+      "endMs": 8838,
+      "timestampMs": 8678,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 8838,
+      "endMs": 9278,
+      "timestampMs": 9058,
+      "confidence": null
+    },
+    {
+      "text": " reward.",
+      "startMs": 9278,
+      "endMs": 9578,
+      "timestampMs": 9428,
+      "confidence": null
+    },
+    {
+      "text": " First,",
+      "startMs": 10475,
+      "endMs": 10835,
+      "timestampMs": 10655,
+      "confidence": null
+    },
+    {
+      "text": " there's",
+      "startMs": 11055,
+      "endMs": 11235,
+      "timestampMs": 11145,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 11235,
+      "endMs": 11315,
+      "timestampMs": 11275,
+      "confidence": null
+    },
+    {
+      "text": " cue,",
+      "startMs": 11315,
+      "endMs": 11555,
+      "timestampMs": 11435,
+      "confidence": null
+    },
+    {
+      "text": " something",
+      "startMs": 11955,
+      "endMs": 12275,
+      "timestampMs": 12115,
+      "confidence": null
+    },
+    {
+      "text": " that",
+      "startMs": 12275,
+      "endMs": 12475,
+      "timestampMs": 12375,
+      "confidence": null
+    },
+    {
+      "text": " triggers",
+      "startMs": 12475,
+      "endMs": 12715,
+      "timestampMs": 12595,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 12715,
+      "endMs": 12935,
+      "timestampMs": 12825,
+      "confidence": null
+    },
+    {
+      "text": " habit.",
+      "startMs": 12935,
+      "endMs": 13135,
+      "timestampMs": 13035,
+      "confidence": null
+    },
+    {
+      "text": " then",
+      "startMs": 13714,
+      "endMs": 13914,
+      "timestampMs": 13814,
+      "confidence": null
+    },
+    {
+      "text": " comes",
+      "startMs": 13914,
+      "endMs": 14154,
+      "timestampMs": 14034,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 14154,
+      "endMs": 14334,
+      "timestampMs": 14244,
+      "confidence": null
+    },
+    {
+      "text": " craving,",
+      "startMs": 14334,
+      "endMs": 14614,
+      "timestampMs": 14474,
+      "confidence": null
+    },
+    {
+      "text": " which",
+      "startMs": 15114,
+      "endMs": 15254,
+      "timestampMs": 15184,
+      "confidence": null
+    },
+    {
+      "text": " isn't",
+      "startMs": 15254,
+      "endMs": 15694,
+      "timestampMs": 15474,
+      "confidence": null
+    },
+    {
+      "text": " for",
+      "startMs": 15694,
+      "endMs": 15834,
+      "timestampMs": 15764,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 15834,
+      "endMs": 15914,
+      "timestampMs": 15874,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 15914,
+      "endMs": 16154,
+      "timestampMs": 16034,
+      "confidence": null
+    },
+    {
+      "text": " itself",
+      "startMs": 16154,
+      "endMs": 16494,
+      "timestampMs": 16324,
+      "confidence": null
+    },
+    {
+      "text": " but",
+      "startMs": 16494,
+      "endMs": 16794,
+      "timestampMs": 16644,
+      "confidence": null
+    },
+    {
+      "text": " for",
+      "startMs": 16794,
+      "endMs": 16974,
+      "timestampMs": 16884,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 16974,
+      "endMs": 17134,
+      "timestampMs": 17054,
+      "confidence": null
+    },
+    {
+      "text": " change",
+      "startMs": 17134,
+      "endMs": 17334,
+      "timestampMs": 17234,
+      "confidence": null
+    },
+    {
+      "text": " in",
+      "startMs": 17334,
+      "endMs": 17594,
+      "timestampMs": 17464,
+      "confidence": null
+    },
+    {
+      "text": " state.",
+      "startMs": 17594,
+      "endMs": 17854,
+      "timestampMs": 17724,
+      "confidence": null
+    },
+    {
+      "text": " The",
+      "startMs": 18573,
+      "endMs": 18693,
+      "timestampMs": 18633,
+      "confidence": null
+    },
+    {
+      "text": " response",
+      "startMs": 18693,
+      "endMs": 18933,
+      "timestampMs": 18813,
+      "confidence": null
+    },
+    {
+      "text": " is",
+      "startMs": 18933,
+      "endMs": 19293,
+      "timestampMs": 19113,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 19293,
+      "endMs": 19433,
+      "timestampMs": 19363,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 19433,
+      "endMs": 19633,
+      "timestampMs": 19533,
+      "confidence": null
+    },
+    {
+      "text": " itself,",
+      "startMs": 19633,
+      "endMs": 19993,
+      "timestampMs": 19813,
+      "confidence": null
+    },
+    {
+      "text": " like",
+      "startMs": 20213,
+      "endMs": 20293,
+      "timestampMs": 20253,
+      "confidence": null
+    },
+    {
+      "text": " checking",
+      "startMs": 20293,
+      "endMs": 20553,
+      "timestampMs": 20423,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 20553,
+      "endMs": 20773,
+      "timestampMs": 20663,
+      "confidence": null
+    },
+    {
+      "text": " phone.",
+      "startMs": 20773,
+      "endMs": 20993,
+      "timestampMs": 20883,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 21682,
+      "endMs": 21842,
+      "timestampMs": 21762,
+      "confidence": null
+    },
+    {
+      "text": " finally",
+      "startMs": 21842,
+      "endMs": 22182,
+      "timestampMs": 22012,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 22182,
+      "endMs": 22442,
+      "timestampMs": 22312,
+      "confidence": null
+    },
+    {
+      "text": " reward",
+      "startMs": 22442,
+      "endMs": 22762,
+      "timestampMs": 22602,
+      "confidence": null
+    },
+    {
+      "text": " which",
+      "startMs": 22762,
+      "endMs": 23042,
+      "timestampMs": 22902,
+      "confidence": null
+    },
+    {
+      "text": " satisfies",
+      "startMs": 23042,
+      "endMs": 23402,
+      "timestampMs": 23222,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 23402,
+      "endMs": 23842,
+      "timestampMs": 23622,
+      "confidence": null
+    },
+    {
+      "text": " craving.",
+      "startMs": 23842,
+      "endMs": 24022,
+      "timestampMs": 23932,
+      "confidence": null
+    },
+    {
+      "text": " over",
+      "startMs": 25104,
+      "endMs": 25304,
+      "timestampMs": 25204,
+      "confidence": null
+    },
+    {
+      "text": " time",
+      "startMs": 25304,
+      "endMs": 25624,
+      "timestampMs": 25464,
+      "confidence": null
+    },
+    {
+      "text": " just",
+      "startMs": 25624,
+      "endMs": 25904,
+      "timestampMs": 25764,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 25904,
+      "endMs": 26084,
+      "timestampMs": 25994,
+      "confidence": null
+    },
+    {
+      "text": " cue",
+      "startMs": 26084,
+      "endMs": 26264,
+      "timestampMs": 26174,
+      "confidence": null
+    },
+    {
+      "text": " can",
+      "startMs": 26264,
+      "endMs": 26464,
+      "timestampMs": 26364,
+      "confidence": null
+    },
+    {
+      "text": " trigger",
+      "startMs": 26464,
+      "endMs": 26724,
+      "timestampMs": 26594,
+      "confidence": null
+    },
+    {
+      "text": " the",
+      "startMs": 26724,
+      "endMs": 26884,
+      "timestampMs": 26804,
+      "confidence": null
+    },
+    {
+      "text": " craving",
+      "startMs": 26884,
+      "endMs": 27104,
+      "timestampMs": 26994,
+      "confidence": null
+    },
+    {
+      "text": " because",
+      "startMs": 27104,
+      "endMs": 27864,
+      "timestampMs": 27484,
+      "confidence": null
+    },
+    {
+      "text": " your",
+      "startMs": 27864,
+      "endMs": 28024,
+      "timestampMs": 27944,
+      "confidence": null
+    },
+    {
+      "text": " brain",
+      "startMs": 28024,
+      "endMs": 28324,
+      "timestampMs": 28174,
+      "confidence": null
+    },
+    {
+      "text": " loves",
+      "startMs": 28324,
+      "endMs": 28684,
+      "timestampMs": 28504,
+      "confidence": null
+    },
+    {
+      "text": " efficiency.",
+      "startMs": 28684,
+      "endMs": 29184,
+      "timestampMs": 28934,
+      "confidence": null
+    },
+    {
+      "text": " to",
+      "startMs": 30198,
+      "endMs": 30318,
+      "timestampMs": 30258,
+      "confidence": null
+    },
+    {
+      "text": " change",
+      "startMs": 30318,
+      "endMs": 30518,
+      "timestampMs": 30418,
+      "confidence": null
+    },
+    {
+      "text": " a",
+      "startMs": 30518,
+      "endMs": 30678,
+      "timestampMs": 30598,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 30678,
+      "endMs": 30938,
+      "timestampMs": 30808,
+      "confidence": null
+    },
+    {
+      "text": " tweak",
+      "startMs": 30938,
+      "endMs": 31298,
+      "timestampMs": 31118,
+      "confidence": null
+    },
+    {
+      "text": " any",
+      "startMs": 31298,
+      "endMs": 31658,
+      "timestampMs": 31478,
+      "confidence": null
+    },
+    {
+      "text": " part",
+      "startMs": 31658,
+      "endMs": 31958,
+      "timestampMs": 31808,
+      "confidence": null
+    },
+    {
+      "text": " of",
+      "startMs": 31958,
+      "endMs": 32118,
+      "timestampMs": 32038,
+      "confidence": null
+    },
+    {
+      "text": " this",
+      "startMs": 32118,
+      "endMs": 32258,
+      "timestampMs": 32188,
+      "confidence": null
+    },
+    {
+      "text": " loop.",
+      "startMs": 32258,
+      "endMs": 32478,
+      "timestampMs": 32368,
+      "confidence": null
+    },
+    {
+      "text": " Start",
+      "startMs": 33123,
+      "endMs": 33363,
+      "timestampMs": 33243,
+      "confidence": null
+    },
+    {
+      "text": " with",
+      "startMs": 33363,
+      "endMs": 33523,
+      "timestampMs": 33443,
+      "confidence": null
+    },
+    {
+      "text": " one",
+      "startMs": 33523,
+      "endMs": 33703,
+      "timestampMs": 33613,
+      "confidence": null
+    },
+    {
+      "text": " habit",
+      "startMs": 33703,
+      "endMs": 33943,
+      "timestampMs": 33823,
+      "confidence": null
+    },
+    {
+      "text": " loop",
+      "startMs": 33943,
+      "endMs": 34163,
+      "timestampMs": 34053,
+      "confidence": null
+    },
+    {
+      "text": " this",
+      "startMs": 34163,
+      "endMs": 34383,
+      "timestampMs": 34273,
+      "confidence": null
+    },
+    {
+      "text": " week",
+      "startMs": 34383,
+      "endMs": 34623,
+      "timestampMs": 34503,
+      "confidence": null
+    },
+    {
+      "text": " and",
+      "startMs": 34623,
+      "endMs": 34863,
+      "timestampMs": 34743,
+      "confidence": null
+    },
+    {
+      "text": " see",
+      "startMs": 34863,
+      "endMs": 35043,
+      "timestampMs": 34953,
+      "confidence": null
+    },
+    {
+      "text": " what",
+      "startMs": 35043,
+      "endMs": 35203,
+      "timestampMs": 35123,
+      "confidence": null
+    },
+    {
+      "text": " happens.",
+      "startMs": 35203,
+      "endMs": 35523,
+      "timestampMs": 35363,
+      "confidence": null
+    }
+  ]
 }

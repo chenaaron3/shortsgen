@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
 
 import { createTikTokStyleCaptions } from '@remotion/captions';
@@ -23,6 +23,26 @@ function formatCaption(text: string): string {
 /** Word-by-word animation: each word appears as a separate caption. Use 800+ for grouped words. */
 const COMBINE_TOKENS_MS = 500;
 
+const SENTENCE_END_PUNCTUATION = /[.!?,;]$/;
+
+/** Split captions into sentence groups. A sentence boundary is when the previous caption ends with . ! or ? */
+function splitCaptionsBySentence(captions: Caption[]): Caption[][] {
+  if (captions.length === 0) return [];
+  const groups: Caption[][] = [];
+  let current: Caption[] = [];
+  for (let i = 0; i < captions.length; i++) {
+    const c = captions[i];
+    const prev = i > 0 ? captions[i - 1] : null;
+    if (prev && current.length > 0 && SENTENCE_END_PUNCTUATION.test(prev.text.trim())) {
+      groups.push(current);
+      current = [];
+    }
+    current.push(c);
+  }
+  if (current.length > 0) groups.push(current);
+  return groups;
+}
+
 export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   captions,
   fps,
@@ -32,10 +52,18 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   const frame = useCurrentFrame();
   const timeMs = (frame / fps) * 1000;
 
-  const { pages } = createTikTokStyleCaptions({
-    captions,
-    combineTokensWithinMilliseconds: COMBINE_TOKENS_MS,
-  });
+  const pages = useMemo(() => {
+    const sentenceGroups = splitCaptionsBySentence(captions);
+    const allPages: TikTokPage[] = [];
+    for (const group of sentenceGroups) {
+      const { pages: groupPages } = createTikTokStyleCaptions({
+        captions: group,
+        combineTokensWithinMilliseconds: COMBINE_TOKENS_MS,
+      });
+      allPages.push(...groupPages);
+    }
+    return allPages;
+  }, [captions]);
 
   const currentPage = pages.find(
     (p: TikTokPage) => timeMs >= p.startMs && timeMs < p.startMs + p.durationMs
@@ -46,11 +74,11 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   const pageProgress =
     (timeMs - currentPage.startMs) / currentPage.durationMs;
 
-  // Appear immediately, fade out at end
+  // Fade in at start, hold, fade out at end
   const opacity = interpolate(
     pageProgress,
-    [0, 0.01, 0.92, 1],
-    [1, 1, 1, 0],
+    [0, 0.15, 0.85, 1],
+    [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
 
