@@ -23,19 +23,25 @@ shortgen/
 │       ├── images/         # image_1.png, ...
 │       └── voice/          # voice_1.mp3, ...
 ├── generation/             # Python pipeline
-│   ├── scripts/           # Pipeline modules (run from generation/scripts/)
-│   │   ├── run_source_pipeline.py # Upstream: source → breakdown → N×pipeline
-│   │   ├── breakdown_source.py    # Break source into atomic nuggets → breakdown.json
-│   │   ├── run_pipeline.py         # Orchestrator: 5-step pipeline
-│   │   ├── generate_script.py     # Step 1: LLM → script.md
-│   │   ├── run_chunker.py         # Step 2: LLM → chunks.json
-│   │   ├── generate_images.py     # Step 3: OpenAI images/edits (img2img) → images/
-│   │   ├── generate_voice.py      # Step 3: ElevenLabs TTS → voice/
-│   │   ├── prepare_remotion_assets.py  # Step 4: copy to public/, manifest, Whisper captions
-│   │   ├── render_video.py        # Step 5: npx remotion render
-│   │   ├── path_utils.py          # project_root, cache_path, video_public, etc.
-│   │   ├── models.py              # Pydantic: Scene, Chunks, Nugget, BreakdownOutput, etc.
-│   │   └── logger.py              # step_start/end, cache_hit/miss, progress
+│   ├── scripts/           # Run from project root (e.g. python generation/scripts/pipeline/run_pipeline.py)
+│   │   ├── pipeline/      # Content generation: script → chunker → images+voice → prepare → render
+│   │   │   ├── run_pipeline.py         # Orchestrator: 5-step pipeline
+│   │   │   ├── run_source_pipeline.py  # Source → breakdown → N×pipeline
+│   │   │   ├── breakdown_source.py     # Break source into nuggets → breakdown.json
+│   │   │   ├── generate_script.py      # Step 1: LLM → script.md
+│   │   │   ├── run_chunker.py          # Step 2: LLM → chunks.json
+│   │   │   ├── generate_images.py      # Step 3: OpenAI/Replicate → images/
+│   │   │   ├── generate_voice.py       # Step 3: ElevenLabs TTS → voice/
+│   │   │   ├── prepare_remotion_assets.py  # Step 4: copy to public/, manifest, Whisper captions
+│   │   │   └── render_video.py        # Step 5: npx remotion render
+│   │   ├── upload/        # Distribution
+│   │   │   └── upload_youtube.py
+│   │   ├── eval/         # Error analysis
+│   │   │   └── build_eval_dataset.py  # Breakdowns → eval-ui/public/eval-dataset.json
+│   │   ├── run.py         # Launcher: sets PYTHONPATH, runs scripts (e.g. run.py pipeline/run_pipeline.py -f x)
+│   ├── path_utils.py  # project_root, cache_path, video_public, etc.
+│   │   ├── models.py      # Pydantic: Scene, Chunks, Nugget, BreakdownOutput, etc.
+│   │   └── logger.py     # step_start/end, cache_hit/miss, progress
 │   ├── prompts/           # LLM system prompts
 │   │   ├── source-breakdown-system-prompt.md
 │   │   ├── short-script-system-prompt.md
@@ -81,17 +87,16 @@ Cache key = first 16 chars of SHA256(raw_content).
 ## Commands
 
 ```bash
+# Run scripts via launcher (sets PYTHONPATH) or export PYTHONPATH=generation/scripts first.
+
 # Source breakdown (book/podcast → nuggets → N videos)
-python generation/scripts/run_source_pipeline.py -f book.txt
-# Options: --skip-breakdown-cache, --max-nuggets N, --max-scenes N
+python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt
 
 # Full pipeline (single raw content)
-python generation/scripts/run_pipeline.py -f content.txt
-
-# Options: --step S (script, chunker, image, voice, prepare, video), --max-scenes N
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt
 
 # Prepare only (after images+voice exist)
-python generation/scripts/prepare_remotion_assets.py CACHE_KEY
+python generation/scripts/run.py pipeline/prepare_remotion_assets.py CACHE_KEY
 
 # Remotion Studio (set props: { "cacheKey": "d87aa21852dabc8b" })
 npx remotion studio

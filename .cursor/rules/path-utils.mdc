@@ -31,4 +31,4 @@ from path_utils import cache_path, video_public, project_root, prompts_dir, asse
 
 1. Cache assets live under `cache_path(cache_key, ...)` — e.g. `cache_path(cache_key, "chunks.json")`, `cache_path(cache_key, "images", "image_1.png")`.
 2. Remotion output goes under `video_public() / "shortgen" / cache_key` — manifests, images, voice.
-3. Scripts run from `generation/scripts/`; path_utils resolves relative to project root.
+3. Scripts run from project root (e.g. `python generation/scripts/pipeline/run_pipeline.py`); path_utils resolves relative to project root.

@@ -27,7 +27,7 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
           padding: 40,
         }}
       >
-        <p>No manifest. Run: python generation/scripts/prepare_remotion_assets.py CACHE_KEY</p>
+        <p>No manifest. Run: python generation/scripts/run.py pipeline/prepare_remotion_assets.py CACHE_KEY</p>
         <p>Then set props: {"{cacheKey: 'CACHE_KEY'}"}</p>
       </AbsoluteFill>
     );
@@ -119,7 +119,7 @@ export const ShortVideoComposition: React.FC<ShortVideoCompositionProps> = ({
         const res = await fetch(manifestUrl);
         if (!res.ok) {
           throw new Error(
-            `Failed to load manifest: ${manifestUrl}. Run: python generation/scripts/prepare_remotion_assets.py ${cacheKey}`
+            `Failed to load manifest: ${manifestUrl}. Run: python generation/scripts/run.py pipeline/prepare_remotion_assets.py ${cacheKey}`
           );
         }
         const manifest: VideoManifest = await res.json();

@@ -1,0 +1,129 @@
+[
+  {
+    "traceId": "a8bfef0c49a0c028",
+    "judgments": [
+      {
+        "dimension": "hook",
+        "pass": true,
+        "critique": "short and attractive"
+      },
+      {
+        "dimension": "body",
+        "pass": false,
+        "critique": "too vague. explain the compound interest concept. How does it shape your life trajectory? Saying it determines your future is repetitive and adds no value. Good habits => friend and bad habits => enemy is also vague and too abstract. Not concrete enough and doesn't provide value."
+      },
+      {
+        "dimension": "ending",
+        "pass": false,
+        "critique": "I like the action item listed, but \"and let time do the rest\" is cheesy"
+      }
+    ],
+    "reviewedAt": "2026-02-18T05:23:12.050Z"
+  },
+  {
+    "traceId": "6fa6059640dd7ed5",
+    "judgments": [
+      {
+        "dimension": "hook",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "body",
+        "pass": false,
+        "critique": "they love the feeling of the wind and the rhythm of their feet doesn't sound natural. Too cheesy."
+      },
+      {
+        "dimension": "ending",
+        "pass": false,
+        "critique": "How do you Find happiness in the journey? Too vague"
+      }
+    ],
+    "reviewedAt": "2026-02-19T03:22:11.515Z"
+  },
+  {
+    "traceId": "3a2143c1889b2cf4",
+    "judgments": [
+      {
+        "dimension": "hook",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "body",
+        "pass": false,
+        "critique": "\"But real change goes deeper. It starts with how you see yourself.\"\nThis would be fine, but it needs a concrete follow up.\n\"Consider this: A person who sees themselves as \"healthy\" naturally adopts healthy habits.\"\nThis line is a bunch of fluff. Of course a healthy person will eat health. This adds no value\n\"Their identity drives their actions, not the other way around.\"\nToo abstract. What does it mean for identity to drive action?"
+      },
+      {
+        "dimension": "ending",
+        "pass": true,
+        "critique": "Not very insightful. I don't feel like i learned anything"
+      }
+    ],
+    "reviewedAt": "2026-02-19T03:26:22.896Z"
+  },
+  {
+    "traceId": "1f77379c494700d4",
+    "judgments": [
+      {
+        "dimension": "hook",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "body",
+        "pass": false,
+        "critique": "\"Imagine this: You want to read more. But how?\"\nThis is a bad setup. \n\"Place a book on your pillow. It becomes a cue—a visual reminder.\"\nNot enough explanation.\n\"Now, picking up that book feels easy and rewarding.\"\nIts not that easy. Placing the book on my pillow just makes it accessible but not rewarding.\nNeed to be more realistic"
+      },
+      {
+        "dimension": "ending",
+        "pass": false,
+        "critique": "weak"
+      }
+    ],
+    "reviewedAt": "2026-02-19T03:31:36.649Z"
+  },
+  {
+    "traceId": "e6c6ba80b92e2908",
+    "judgments": [
+      {
+        "dimension": "hook",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "body",
+        "pass": false,
+        "critique": "The setup is good.\n\"It's like watching your own behavior from the outside.\"\nThis is hard to image"
+      },
+      {
+        "dimension": "ending",
+        "pass": false,
+        "critique": "Say it out loud: \"I'm scrolling\" or \"I'm snacking.\" This just sounds dumb"
+      }
+    ],
+    "reviewedAt": "2026-02-19T03:34:46.419Z"
+  },
+  {
+    "traceId": "af67ed8bd0fd2d3d",
+    "judgments": [
+      {
+        "dimension": "hook",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "body",
+        "pass": false,
+        "critique": "\"Imagine waking up and knowing exactly what to do\"\nThis is harder to be relatable\n\"Picture this\" is awkward\n"
+      },
+      {
+        "dimension": "ending",
+        "pass": false,
+        "critique": "\"Watch your habits stick like glue.\" too cheesy"
+      }
+    ],
+    "notes": "This adds no value.",
+    "reviewedAt": "2026-02-19T03:37:10.770Z"
+  }
+]

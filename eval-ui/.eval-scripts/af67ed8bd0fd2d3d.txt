@@ -1,0 +1,9 @@
+traceId: af67ed8bd0fd2d3d
+title: Implementation Intentions for Habit Success
+
+--- HOOK ---
+Struggling to stick to your goals? It might be simpler than you think.
+--- BODY ---
+Imagine waking up and knowing exactly what to do. No second-guessing, no waiting for motivation. It's possible with a simple trick: implementation intentions. Picture this: every day at 7 AM, you walk in the park. You've planned it. So when the time comes, you just go. No decisions needed.
+--- CLOSE ---
+Set one clear plan: "I will [BEHAVIOR] at [TIME] in [LOCATION]." Watch your habits stick like glue.

@@ -22,17 +22,21 @@ shortgen/
 │       ├── images/               # image_1.png, ...
 │       └── voice/               # voice_1.mp3, ...
 ├── generation/                   # Python pipeline
-│   ├── scripts/                 # Run from generation/scripts/ (or project root with path)
-│   │   ├── run_pipeline.py       # Single content: script → chunker → images+voice → prepare → render
-│   │   ├── run_source_pipeline.py # Source file → breakdown → one pipeline run per nugget
-│   │   ├── breakdown_source.py   # LLM: source → nuggets → breakdown.json
-│   │   ├── generate_script.py    # Step 1: LLM → script.md
-│   │   ├── run_chunker.py       # Step 2: LLM (structured) → chunks.json
-│   │   ├── generate_images.py   # Step 3: image_generator (gpt/replicate) → images/
-│   │   ├── generate_voice.py    # Step 3: ElevenLabs TTS → voice/
-│   │   ├── prepare_remotion_assets.py # Step 4: copy to public/, Whisper captions → manifest.json
-│   │   ├── render_video.py      # Step 5: npx remotion render ShortVideo
-│   │   ├── upload_youtube.py    # Optional: upload short.mp4 to YouTube (Data API v3)
+│   ├── scripts/                 # Run from project root (e.g. python generation/scripts/pipeline/run_pipeline.py)
+│   │   ├── pipeline/            # Content generation: script → chunker → images+voice → prepare → render
+│   │   │   ├── run_pipeline.py       # Single content: full pipeline
+│   │   │   ├── run_source_pipeline.py # Source file → breakdown → one pipeline run per nugget
+│   │   │   ├── breakdown_source.py   # LLM: source → nuggets → breakdown.json
+│   │   │   ├── generate_script.py    # Step 1: LLM → script.md
+│   │   │   ├── run_chunker.py       # Step 2: LLM (structured) → chunks.json
+│   │   │   ├── generate_images.py   # Step 3: image_generator → images/
+│   │   │   ├── generate_voice.py     # Step 3: ElevenLabs TTS → voice/
+│   │   │   ├── prepare_remotion_assets.py # Step 4: copy to public/, Whisper captions → manifest.json
+│   │   │   └── render_video.py      # Step 5: npx remotion render ShortVideo
+│   │   ├── upload/              # Distribution
+│   │   │   └── upload_youtube.py    # Upload short.mp4 to YouTube (Data API v3)
+│   │   ├── eval/                # Error analysis
+│   │   │   └── build_eval_dataset.py # Breakdowns → eval-ui/public/eval-dataset.json
 │   │   ├── path_utils.py        # cache_path, video_public, project_root, etc.
 │   │   ├── models.py            # Pydantic: Scene, Chunks, Nugget, BreakdownOutput, ...
 │   │   ├── logger.py            # step_start/end, cache_hit/miss, progress
@@ -104,32 +108,41 @@ pip install -r generation/requirements.txt
 
 ## Commands
 
-Run Python scripts from **project root** (e.g. `python generation/scripts/run_pipeline.py ...`) or from `generation/scripts/` (same module imports).
+Run Python scripts from **project root**. Use `generation/scripts/run.py` as a launcher (sets PYTHONPATH), or export `PYTHONPATH=generation/scripts` first.
 
 ```bash
-# Single content — full pipeline
-python generation/scripts/run_pipeline.py -f content.txt
+# Option: set PYTHONPATH once, then run scripts directly
+export PYTHONPATH=generation/scripts  # or: . generation/scripts/.envrc if using direnv
+python generation/scripts/pipeline/run_pipeline.py -f content.txt
+
+# Option: use the run launcher (no export needed)
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt
+```
+
+```bash
+# Single content — full pipeline (use run.py or set PYTHONPATH first)
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt
 
 # Single content — run up to a step (invalidates that step and later)
-python generation/scripts/run_pipeline.py -f content.txt --step script   # stop after script
-python generation/scripts/run_pipeline.py -f content.txt --step chunker  # stop after chunks
-python generation/scripts/run_pipeline.py -f content.txt --step image     # redo images+voice and later
-python generation/scripts/run_pipeline.py -f content.txt --step prepare   # redo prepare+render
-python generation/scripts/run_pipeline.py -f content.txt --step video    # redo render only
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step script
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step chunker
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step image
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step prepare
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step video
 
 # Limit scenes (testing)
-python generation/scripts/run_pipeline.py -f content.txt --max-scenes 3
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --max-scenes 3
 
 # Resume from cache (no raw content; starts at chunker)
-python generation/scripts/run_pipeline.py -H 8d9dea719895c33a
+python generation/scripts/run.py pipeline/run_pipeline.py -H 8d9dea719895c33a
 
 # Source → many videos
-python generation/scripts/run_source_pipeline.py -f book.txt
-python generation/scripts/run_source_pipeline.py -f book.txt --max-nuggets 5 --max-scenes 4
-python generation/scripts/run_source_pipeline.py -f book.txt --breakdown-only  # only breakdown, print JSON
+python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt
+python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt --max-nuggets 5 --max-scenes 4
+python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt --breakdown-only
 
 # Prepare only (after images+voice exist)
-python generation/scripts/prepare_remotion_assets.py 8d9dea719895c33a
+python generation/scripts/run.py pipeline/prepare_remotion_assets.py CACHE_KEY
 
 # Remotion Studio (pick composition by cacheKey in UI or set props)
 npx remotion studio
@@ -138,9 +151,8 @@ npx remotion studio
 npx remotion render ShortVideo --props '{"cacheKey":"8d9dea719895c33a"}' --codec h264 --output out/short.mp4
 
 # Upload to YouTube (optional)
-python generation/scripts/upload_youtube.py --cache-key 8d9dea719895c33a
-# Upload all videos from a source breakdown (sequential schedule; skips already-scheduled via upload_state.json)
-python generation/scripts/upload_youtube.py --breakdown-hash SOURCE_HASH
+python generation/scripts/run.py upload/upload_youtube.py --cache-key 8d9dea719895c33a
+python generation/scripts/run.py upload/upload_youtube.py --breakdown-hash SOURCE_HASH
 ```
 
 ---
