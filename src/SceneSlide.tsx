@@ -40,13 +40,26 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
     )
     : 0;
 
+  // Ken Burns: subtle zoom in over the scene
+  const scale = interpolate(
+    frame,
+    [0, durationInFrames],
+    [1, 1.06],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+  );
+
   const imageWrapperStyle = {
     position: "absolute" as const,
-    top: "13%",
-    left: "12.5%",
-    width: "75%",
+    // top: "13%",
+    // left: "12.5%",
+    // width: "75%",
+    top: "10%",
+    left: 0,
+    width: "100%",
     height: "auto" as const,
     zIndex: 1,
+    transform: `scale(${scale})`,
+    transformOrigin: "center center",
   };
 
   const baseImageStyle = {

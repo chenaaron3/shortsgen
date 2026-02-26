@@ -153,7 +153,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
         style={{
           position: "relative",
           left: "50%",
-          top: "70%",
+          top: "72%",
           transform: "translate(-50%, -50%)",
           width: "100%",
           padding: "16px 40px",

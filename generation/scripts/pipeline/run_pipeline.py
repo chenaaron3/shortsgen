@@ -177,7 +177,7 @@ def run(
             config_hash,
             video_public(),
             use_whisper=True,
-            whisper_model="base.en",
+            whisper_model="large-v3",
             skip_cache="prepare" in invalidate_steps,
         )
     except Exception as e:

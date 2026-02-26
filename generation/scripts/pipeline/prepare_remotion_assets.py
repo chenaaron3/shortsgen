@@ -39,7 +39,7 @@ def get_audio_duration_seconds(path: Path) -> float:
 
 
 def transcribe_audio_with_whisper(
-    voice_paths: list[Path], output_captions: list[dict], model_size: str = "base.en"
+    voice_paths: list[Path], output_captions: list[dict], model_size: str = "large-v3"
 ) -> None:
     """
     Transcribe each voice file with Whisper and append word-level captions.
@@ -56,7 +56,9 @@ def transcribe_audio_with_whisper(
     for voice_path in voice_paths:
         if not voice_path.exists():
             continue
-        segments, _ = model.transcribe(str(voice_path), word_timestamps=True)
+        segments, _ = model.transcribe(
+            str(voice_path), word_timestamps=True, language="en"
+        )
         for segment in segments:
             if not hasattr(segment, "words") or not segment.words:
                 # Fallback: treat whole segment as one caption
@@ -98,7 +100,7 @@ def prepare(
     config_hash: str,
     video_public_dir: Path,
     use_whisper: bool = True,
-    whisper_model: str = "base.en",
+    whisper_model: str = "large-v3",
     skip_cache: bool = False,
 ) -> Path:
     """Copy assets to public and create manifest. Returns path to manifest.
