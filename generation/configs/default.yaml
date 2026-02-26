@@ -1,0 +1,10 @@
+name: default
+breakdown:
+  model: gpt-4o
+  system_prompt: source-breakdown-system-prompt.md
+script:
+  model: gpt-4o
+  system_prompt: short-script-system-prompt.md
+chunk:
+  model: gpt-4o
+  system_prompt: transcript-chunker-system-prompt.md

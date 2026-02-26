@@ -2,7 +2,7 @@
 
 Remotion-based short video generator for faceless shorts. Turns raw content (or book/podcast sources) into vertical shorts with AI-generated script, scene images, TTS voice, and word-level captions.
 
-**Stack:** Python pipeline (script → chunker → images + voice → prepare → render) + Remotion (React) for composition and rendering. Cache-keyed by content hash; supports source breakdown into multiple nuggets (one video per nugget).
+**Stack:** Python pipeline (script → chunker → images + voice → prepare → render) + Remotion (React) for composition and rendering. Config-driven (model + prompt per step); cache scoped by config hash; supports source breakdown into multiple nuggets (one video per nugget). Run multiple configs for eval comparison.
 
 ---
 
@@ -35,17 +35,17 @@ shortgen/
 │   │   │   └── render_video.py      # Step 5: npx remotion render ShortVideo
 │   │   ├── upload/              # Distribution
 │   │   │   └── upload_youtube.py    # Upload short.mp4 to YouTube (Data API v3)
-│   │   ├── eval/                # Error analysis
-│   │   │   └── build_eval_dataset.py # Breakdowns → eval-ui/public/eval-dataset.json
 │   │   ├── path_utils.py        # cache_path, video_public, project_root, etc.
 │   │   ├── models.py            # Pydantic: Scene, Chunks, Nugget, BreakdownOutput, ...
 │   │   ├── logger.py            # step_start/end, cache_hit/miss, progress
 │   │   └── image_generator/     # Backend: gpt (OpenAI) or replicate (IMAGE_GENERATOR)
+│   ├── configs/                 # Pipeline configs (model + system prompt per step)
 │   ├── prompts/                 # LLM system prompts
 │   ├── assets/                  # Mascot reference (mascot_glasses.png)
-│   ├── cache/                   # Per-content and per-source cache
-│   │   ├── _breakdowns/{sourceHash}/  # breakdown.json, videos.md
-│   │   └── {cacheKey}/          # script.md, chunks.json, images/, voice/, captions/
+│   ├── cache/                   # Config-scoped cache
+│   │   └── {configHash}/        # Per-config
+│   │       ├── _breakdown/{sourceHash}/  # breakdown.json (shared)
+│   │       └── videos/{cacheKey}/        # script.md, chunks.json, images/, voice/, captions/
 │   └── requirements.txt
 ├── remotion.config.ts
 └── package.json
@@ -57,31 +57,33 @@ shortgen/
 
 ### Single content (run_pipeline)
 
-1. **Script** — Raw text → GPT-4o → `cache/{cacheKey}/script.md` (short script ~40–60s).
-2. **Chunker** — script.md → GPT-4o (structured) → `chunks.json` (scenes: text, imagery, section; image_path/voice_path filled later).
-3. **Images + Voice** — Run in parallel: image generator (OpenAI or Replicate) + ElevenLabs TTS → `images/`, `voice/`; chunks.json updated with paths.
-4. **Prepare** — Copy assets to `public/shortgen/{cacheKey}/`, run faster-whisper (word-level) → `manifest.json`, update `index.json`.
-5. **Render** — `npx remotion render ShortVideo --props '{"cacheKey":"..."}'` → `cache/{cacheKey}/short.mp4`.
+Requires `-c config.yaml`. Config defines model and system prompt for each LLM step (breakdown, script, chunk).
 
-**Cache key:** First 16 chars of `SHA256(raw_content)`. For hash mode (resume from cached script): `-H CACHE_KEY` runs from chunker onward.
+1. **Script** — Raw text → LLM (from config) → `cache/{configHash}/videos/{cacheKey}/script.md`
+2. **Chunker** — script.md → LLM (structured) → `chunks.json`
+3. **Images + Voice** — Run in parallel; chunks.json updated with paths.
+4. **Prepare** — Copy to `public/shortgen/{configHash}_{cacheKey}/`, Whisper captions → `manifest.json`
+5. **Render** — `npx remotion render` → `cache/{configHash}/videos/{cacheKey}/short.mp4`
+
+**Cache key:** First 16 chars of `SHA256(raw_content)`. Hash mode: `-H CACHE_KEY -c config.yaml` runs from chunker onward.
 
 ### Source breakdown (run_source_pipeline)
 
-- Input: one source file (e.g. book, transcript).
-- **Breakdown** — LLM → `cache/_breakdowns/{sourceHash}/breakdown.json` (nuggets: id, title, summary, source_ref, **cache_key**). Each nugget’s `cache_key` = first 16 chars of `SHA256(summary)`.
-- Then run the full pipeline once per nugget (summary = raw_content). Writes `videos.md` next to breakdown with links to `short.mp4`.
+- Input: one source file; `-c config.yaml` or `-c config1.yaml config2.yaml` for multiple configs.
+- **Breakdown** — LLM → `cache/_breakdown/{sourceHash}/breakdown.json` (shared across configs)
+- Run pipeline once per nugget per config. Multiple configs enable eval comparison of script quality.
 
 ---
 
 ## Data structures
 
-| Artifact | Location | Purpose |
-|----------|----------|---------|
-| **chunks.json** | `cache/{cacheKey}/` | Pipeline: scenes with text, imagery, section, image_path, voice_path; title, description. |
-| **manifest.json** | `public/shortgen/{cacheKey}/` | Remotion: cacheKey, fps, width, height, durationInFrames, scenes (imagePath, voicePath, durationInSeconds), captions (text, startMs, endMs, timestampMs). |
-| **index.json** | `public/shortgen/` | List of cacheKeys with manifests; Root.tsx uses it to register compositions. |
-| **breakdown.json** | `cache/_breakdowns/{sourceHash}/` | Nuggets with cache_key linking to per-nugget cache. |
-| **upload_state.json** | `cache/_breakdowns/{sourceHash}/` | Per-cache_key YouTube upload state (scheduled_at, video_id); used by `upload_youtube --breakdown-hash` to skip already-scheduled videos. |
+| Artifact              | Location                                      | Purpose                                                                                  |
+| --------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **chunks.json**       | `cache/{configHash}/videos/{cacheKey}/`       | Pipeline: scenes with text, imagery, section, image_path, voice_path.                    |
+| **manifest.json**     | `public/shortgen/{configHash}_{cacheKey}/`    | Remotion: composite cacheKey, scenes, captions.                                          |
+| **index.json**        | `public/shortgen/`                            | List of composite keys; Root.tsx uses it to register compositions.                       |
+| **breakdown.json**    | `cache/_breakdown/{sourceHash}/` | Shared nuggets; per-config: `cache/{configName}/breakdowns/{sourceHash}/` (videos.md, upload_state.json) |
+| **upload_state.json** | Same dir as breakdown.json                    | Per-cache_key YouTube upload state; used by `upload_youtube --breakdown-hash -c config`. |
 
 **Caption format:** `{ "text", "startMs", "endMs", "timestampMs", "confidence" }` (word-level from Whisper or scene-level fallback).
 
@@ -99,7 +101,8 @@ pip install -r generation/requirements.txt
 
 **Environment (`.env` in project root):**
 
-- `OPENAI_API_KEY` — Script, chunker, and (if using gpt image backend) images.
+- `OPENAI_API_KEY` — Script, chunker, images (when using gpt backend).
+- `ANTHROPIC_API_KEY` — Required when config uses Claude models (e.g. claude-sonnet).
 - `ELEVENLABS_API_KEY` (or `XI_API_KEY`) — TTS. Optional: `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL_ID`, `ELEVENLABS_CONCURRENCY`, `ELEVENLABS_STABILITY`, etc.
 - `REPLICATE_API_TOKEN` — If using Replicate for images (`image_generator/__init__.py`: `IMAGE_GENERATOR = "replicate"`). For OpenAI images use `IMAGE_GENERATOR = "gpt"`.
 - YouTube upload (optional): Google OAuth + API client; see `upload_youtube.py` for scopes and usage.
@@ -120,46 +123,42 @@ python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt
 ```
 
 ```bash
-# Single content — full pipeline (use run.py or set PYTHONPATH first)
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt
+# Config required: -c config.yaml (e.g. generation/configs/default.yaml or "default")
+# Single content — full pipeline
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt -c configs/default.yaml
 
-# Single content — run up to a step (invalidates that step and later)
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step script
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step chunker
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step image
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step prepare
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --step video
+# Run up to a step (invalidates that step and later)
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt -c default --step script
 
 # Limit scenes (testing)
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt --max-scenes 3
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt -c default --max-scenes 3
 
-# Resume from cache (no raw content; starts at chunker)
-python generation/scripts/run.py pipeline/run_pipeline.py -H 8d9dea719895c33a
+# Resume from cache (starts at chunker)
+python generation/scripts/run.py pipeline/run_pipeline.py -H 8d9dea719895c33a -c default
 
-# Source → many videos
-python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt
-python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt --max-nuggets 5 --max-scenes 4
-python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt --breakdown-only
+# Prototype mode: cheap text-to-image only (FLUX Schnell, no mascot, no transitions; requires IMAGE_GENERATOR=replicate)
+python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt -c default --prototype
 
-# Prepare only (after images+voice exist)
-python generation/scripts/run.py pipeline/prepare_remotion_assets.py CACHE_KEY
+# Source → many videos (one or more configs); writes eval-dataset.json for eval UI
+python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c default
+python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c claude-sonnet gpt4o --max-nuggets 5
 
-# Remotion Studio (pick composition by cacheKey in UI or set props)
+# Script-only eval (no images/voice/video): --break script
+python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c default claude-sonnet --break script
+
+# Remotion Studio (pick composition by composite cacheKey in UI)
 npx remotion studio
 
-# Render (or use render_video.py which runs this)
-npx remotion render ShortVideo --props '{"cacheKey":"8d9dea719895c33a"}' --codec h264 --output out/short.mp4
-
-# Upload to YouTube (optional)
-python generation/scripts/run.py upload/upload_youtube.py --cache-key 8d9dea719895c33a
-python generation/scripts/run.py upload/upload_youtube.py --breakdown-hash SOURCE_HASH
+# Upload to YouTube (requires -c)
+python generation/scripts/run.py upload/upload_youtube.py --cache-key CACHE_KEY -c default
+python generation/scripts/run.py upload/upload_youtube.py --breakdown-hash SOURCE_HASH -c default
 ```
 
 ---
 
 ## Conventions (for contributors and AI)
 
-- **Paths:** Use `path_utils` only; no hardcoded paths. Key: `cache_path(cache_key, ...)`, `video_public()`, `project_root()`, `breakdown_cache_path(source_hash)`, `mascot_path()`, `prompts_dir()`, `env_path()`.
+- **Paths:** Use `path_utils` only; no hardcoded paths. Key: `video_cache_path(cache_key, config_hash, ...)`, `breakdown_cache_path(source_hash, config_hash)`, `remotion_composite_key()`, `video_public()`, `project_root()`, `prompts_dir()`, `env_path()`.
 - **Logging:** Use `logger` (step_start, step_end, cache_hit, cache_miss, progress, info, warn, error) in pipeline scripts; see `.cursor/rules/logger.mdc`.
 - **Scripts:** Intended to be run from `generation/scripts/` (or project root with `generation/scripts/` on path); `path_utils` is relative to project root.
 - **Remotion:** Composition id for rendering is `ShortVideo`; it receives `cacheKey` in props and loads `public/shortgen/{cacheKey}/manifest.json` in `calculateMetadata`. Root registers one composition per entry in `index.json` for Studio.
@@ -168,15 +167,15 @@ python generation/scripts/run.py upload/upload_youtube.py --breakdown-hash SOURC
 
 ## APIs and backends
 
-| Step | Service | Notes |
-|------|---------|--------|
-| Script | OpenAI GPT-4o | `short-script-system-prompt.md` |
-| Chunker | OpenAI GPT-4o (structured) | `transcript-chunker-system-prompt.md`, ChunksOutput |
-| Breakdown | OpenAI GPT-4o (structured) | `source-breakdown-system-prompt.md`, BreakdownOutput |
-| Images | OpenAI (gpt) or Replicate | `image_generator`: IMAGE_GENERATOR, mascot ref, stick-figure style |
-| Voice | ElevenLabs | eleven_v3, voice Adam (or env); mp3_44100_128 |
-| Captions | faster-whisper | Word-level; fallback scene-level from chunk text |
-| Upload | YouTube Data API v3 | OAuth; title/description from chunks.json |
+| Step      | Service                                | Notes                                                                       |
+| --------- | -------------------------------------- | --------------------------------------------------------------------------- |
+| Script    | Config: gpt-4o, Claude, etc. (LiteLLM) | Config defines model + `short-script-system-prompt.md`                      |
+| Chunker   | Config (LiteLLM)                       | Config defines model + `transcript-chunker-system-prompt.md`, ChunksOutput  |
+| Breakdown | Config (LiteLLM)                       | Config defines model + `source-breakdown-system-prompt.md`, BreakdownOutput |
+| Images    | OpenAI (gpt) or Replicate              | `image_generator`: IMAGE_GENERATOR, mascot ref, stick-figure style; `--prototype` → Replicate FLUX Schnell text-to-image only |
+| Voice     | ElevenLabs                             | eleven_v3 (single full-script call + word-level split); audio tags from chunker; mp3_44100_128 |
+| Captions  | faster-whisper                         | Word-level; fallback scene-level from chunk text                            |
+| Upload    | YouTube Data API v3                    | OAuth; title/description from chunks.json                                   |
 
 ---
 

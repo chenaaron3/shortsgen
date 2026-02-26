@@ -131,7 +131,7 @@ def print_summary() -> None:
     ]
 
     if llm["calls"]:
-        lines.append("  OpenAI Text (LLM)")
+        lines.append("  OpenAI/Anthropic Text (LLM)")
         for u in trace["llm"]:
             lines.append(
                 f"    {u['step']}: {u['total_tokens']} tokens "

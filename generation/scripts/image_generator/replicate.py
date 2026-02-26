@@ -1,6 +1,7 @@
 """
 Replicate img2img via HTTP API (no SDK). Uses openai/gpt-image-1-mini by default.
 Env: REPLICATE_API_TOKEN, OPENAI_API_KEY (for openai/gpt-image-1-mini)
+     NSFW safety checker is always disabled (avoids false positives on benign mascot prompts).
 """
 
 import base64
@@ -29,6 +30,11 @@ def _image_to_data_uri(path: Path) -> str:
     return f"data:{mime};base64,{b64}"
 
 
+def _disable_safety_checker() -> bool:
+    """Always True to bypass NSFW filter (avoids false positives on benign mascot prompts)."""
+    return True
+
+
 def generate_image(
     mascot_path: Path,
     prompt: str,
@@ -36,29 +42,53 @@ def generate_image(
     api_token: str,
     model: str = DEFAULT_MODEL,
     input_fidelity: str = "low",
+    prototype: bool = False,
     **kwargs,
 ) -> bytes:
-    """Call Replicate HTTP API (img2img). Uses openai/gpt-image-1-mini by default."""
-    data_uri = _image_to_data_uri(mascot_path)
+    """Call Replicate HTTP API. When prototype, text-to-image only (no mascot). Otherwise img2img."""
+    disable_safety = _disable_safety_checker()
 
-    if "openai/gpt-image" in model:
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            raise RuntimeError("OPENAI_API_KEY required for openai/gpt-image-1-mini on Replicate")
+    if prototype:
+        # Text-to-image only (Hyper Flux 8Step)
         input_payload = {
-            "input_images": [data_uri],
             "prompt": prompt,
-            "input_fidelity": input_fidelity,
-            "output_format": "png",
+            "seed": 0,
+            "width": 256,
+            "height": 256,
+            "num_outputs": 1,
             "aspect_ratio": "1:1",
-            "background": "transparent",
-            "openai_api_key": api_key,
+            "output_format": "png",
+            "guidance_scale": 3.5,
+            "output_quality": 80,
+            "num_inference_steps": 8,
         }
+        if disable_safety:
+            input_payload["disable_safety_checker"] = True
     else:
-        input_payload = {
-            "image": data_uri,
-            "prompt": prompt,
-        }
+        data_uri = _image_to_data_uri(mascot_path)
+        if "openai/gpt-image" in model:
+            api_key = os.environ.get("OPENAI_API_KEY")
+            if not api_key:
+                raise RuntimeError("OPENAI_API_KEY required for openai/gpt-image-1-mini on Replicate")
+            input_payload = {
+                "input_images": [data_uri],
+                "prompt": prompt,
+                "input_fidelity": input_fidelity,
+                "output_format": "png",
+                "aspect_ratio": "1:1",
+                "background": "transparent",
+                "openai_api_key": api_key,
+            }
+            # gpt-image may pass through to models with Replicate safety checker
+            if disable_safety:
+                input_payload["disable_safety_checker"] = True
+        else:
+            input_payload = {
+                "image": data_uri,
+                "prompt": prompt,
+            }
+            if disable_safety:
+                input_payload["disable_safety_checker"] = True
 
     body = json.dumps({"version": model, "input": input_payload}).encode("utf-8")
     headers = {

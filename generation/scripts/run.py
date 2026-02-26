@@ -2,7 +2,6 @@
 """
 Run a script from generation/scripts with PYTHONPATH set.
 Usage: python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt
-       python generation/scripts/run.py eval/build_eval_dataset.py
 """
 import os
 import subprocess

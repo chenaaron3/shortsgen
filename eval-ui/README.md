@@ -5,9 +5,10 @@ Manual error analysis for `generate_script.py` output. Evaluate scripts against 
 ## Setup
 
 ```bash
-# Build eval dataset from breakdowns (run from project root)
-python3 generation/scripts/run.py eval/build_eval_dataset.py
-# Or: npm run eval:build
+# Eval dataset is written by run_source_pipeline (run from project root)
+python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c default claude-sonnet
+# Script-only eval (no images/voice/video): add --break script
+python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c default claude-sonnet --break script
 ```
 
 ## Run
@@ -25,14 +26,18 @@ Open http://localhost:5173 (or the port Vite reports).
 1. Select a trace from the sidebar (filter by All / Unreviewed / Reviewed)
 2. Review the input (raw content) and script (Hook, Body, Close)
 3. For each dimension, mark PASS or FAIL and add a critique
-4. Add optional open-ended notes
-5. Click Save to persist to `public/annotations.json`
-6. Use Export annotations to download the annotations file
+4. In Chunks, Images & Video: mark each image Good or Bad. Bad images require a note explaining the issue.
+5. Add optional open-ended notes
+6. Click Save to persist to `public/annotations.json`
+7. Use Export annotations to download the annotations file
+
+Exported `annotations.json` includes `imageAnnotations` with per-image good/bad markers and notes. Use this file with Cursor to iterate on image generation—filter entries where `imageAnnotations[].marker === "bad"` and use the `note` field for improvement feedback.
 
 ## Data
 
-- **Input**: `eval-dataset.json` — built from `generation/cache/_breakdowns/*/breakdown.json`
-- **Output**: `public/annotations.json` — human-reviewed PASS/FAIL judgments (gitignored)
+- **Input**: `eval-dataset.json` — written by `run_source_pipeline` when run with one or more configs
+- **Chunks, images, video**: When the pipeline runs past script (no `--break script`), `write_eval_dataset` copies chunks.json, images, and short.mp4 to `public/eval-assets/{traceId}/{configHash}/` for traces that have them
+- **Output**: `public/annotations.json` — human-reviewed PASS/FAIL judgments and image good/bad markers (gitignored)
 - **LLM first pass**: `public/llm-annotations.json` — agent-generated annotations used as defaults. Create via the `script-eval-llm-annotate` Cursor skill (e.g. "Generate LLM annotations for the eval dataset").
 
 The UI merges human and LLM annotations: human always overrides. Traces with only LLM annotations show an "AI first pass" badge; human-reviewed traces show "Reviewed".

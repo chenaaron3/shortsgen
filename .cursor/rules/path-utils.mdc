@@ -11,15 +11,17 @@ Use `path_utils` for all paths. Do not hardcode paths or construct them manually
 ## Imports
 
 ```python
-from path_utils import cache_path, video_public, project_root, prompts_dir, assets_dir, mascot_path, env_path, breakdown_cache_path
+from path_utils import video_cache_path, breakdown_cache_path, breakdown_output_dir, remotion_composite_key, video_public, project_root, prompts_dir, assets_dir, mascot_path, env_path
 ```
 
 ## Key Functions
 
 | Function | Returns |
 |----------|---------|
-| `cache_path(cache_key, *parts)` | `cache/{cache_key}/parts` — chunks.json, images/, voice/, captions/ |
-| `breakdown_cache_path(source_hash)` | `cache/_breakdowns/{hash}/breakdown.json` |
+| `video_cache_path(cache_key, config_key, *parts)` | `cache/{config_name}/videos/{cache_key}/parts` — config_key = sanitized config name |
+| `breakdown_cache_path(source_hash)` | `cache/_breakdown/{hash}/breakdown.json` (shared across configs) |
+| `breakdown_output_dir(source_hash, config_hash)` | `cache/{config_hash}/breakdowns/{hash}/` (videos.md, upload_state.json) |
+| `remotion_composite_key(config_hash, cache_key)` | `{config_hash}_{cache_key}` for public/shortgen/ and manifest.cacheKey |
 | `video_public()` | `public/` — Remotion static assets |
 | `project_root()` | Project root |
 | `prompts_dir()` | `generation/prompts/` |
@@ -29,6 +31,6 @@ from path_utils import cache_path, video_public, project_root, prompts_dir, asse
 
 ## Rules
 
-1. Cache assets live under `cache_path(cache_key, ...)` — e.g. `cache_path(cache_key, "chunks.json")`, `cache_path(cache_key, "images", "image_1.png")`.
-2. Remotion output goes under `video_public() / "shortgen" / cache_key` — manifests, images, voice.
+1. Cache assets live under `video_cache_path(cache_key, config_hash, ...)` — e.g. `video_cache_path(cache_key, config_hash, "chunks.json")`.
+2. Remotion output goes under `video_public() / "shortgen" / remotion_composite_key(config_hash, cache_key)` — manifests, images, voice.
 3. Scripts run from project root (e.g. `python generation/scripts/pipeline/run_pipeline.py`); path_utils resolves relative to project root.

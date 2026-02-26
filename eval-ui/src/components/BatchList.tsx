@@ -1,5 +1,4 @@
 import type { EvalTrace } from "../types";
-import type { AnnotationSource } from "../api/annotations";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +8,8 @@ import { Check, Sparkles } from "lucide-react";
 
 type BatchListProps = {
   traces: EvalTrace[];
-  sources: Record<string, AnnotationSource>;
+  traceReviewed: (trace: EvalTrace) => boolean;
+  traceHasLLM?: (trace: EvalTrace) => boolean;
   selectedId: string | null;
   filter: "all" | "reviewed" | "unreviewed";
   onSelect: (id: string) => void;
@@ -18,21 +18,19 @@ type BatchListProps = {
 
 export function BatchList({
   traces,
-  sources,
+  traceReviewed,
+  traceHasLLM = () => false,
   selectedId,
   filter,
   onSelect,
   onFilterChange,
 }: BatchListProps) {
-  const humanReviewed = (id: string) => sources[id] === "human";
-  const hasLLM = (id: string) => sources[id] === "llm";
-
   const filtered =
     filter === "all"
       ? traces
       : filter === "reviewed"
-        ? traces.filter((t) => humanReviewed(t.id))
-        : traces.filter((t) => !humanReviewed(t.id));
+        ? traces.filter((t) => traceReviewed(t))
+        : traces.filter((t) => !traceReviewed(t));
 
   return (
     <div className="flex h-full flex-col">
@@ -49,8 +47,8 @@ export function BatchList({
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-1 p-2">
           {filtered.map((trace) => {
-            const reviewed = humanReviewed(trace.id);
-            const fromLLM = hasLLM(trace.id);
+            const reviewed = traceReviewed(trace);
+            const fromLLM = traceHasLLM(trace);
             return (
               <Button
                 key={trace.id}

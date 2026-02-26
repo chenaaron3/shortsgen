@@ -24,7 +24,7 @@ The evaluation criteria are defined in the judge files. **Read the full content 
 
 1. **Ensure eval dataset exists**
    - Read `eval-ui/public/eval-dataset.json`
-   - If missing: run `python generation/scripts/run.py eval/build_eval_dataset.py` from project root
+   - If missing: run `python generation/scripts/run.py pipeline/run_source_pipeline.py -f SOURCE -c config1 config2` from project root (or add `--break script` for script-only)
 
 2. **Create temp dir and one file per script**
    - Run from project root:

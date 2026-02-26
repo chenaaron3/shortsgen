@@ -7,8 +7,8 @@ by checking videos.list for an existing video with the same title.
 
 Modes:
 - --cache-key / --video: upload one video.
-- --breakdown-hash: upload all videos from a source breakdown (cache/_breakdowns/{hash}/).
-  Skips videos already marked as scheduled in upload_state.json (same dir as breakdown.json).
+- --breakdown-hash: upload all videos from a source breakdown (cache/_breakdown/{hash}/).
+  Skips videos already marked as scheduled in upload_state.json (per config: cache/{config_hash}/breakdowns/{hash}/).
   Schedules uploads one day after another in nugget order.
 
 Keep separate from pipeline: user chooses which videos to upload.
@@ -23,7 +23,8 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 from models import BreakdownOutput, Chunks, UploadState, UploadStateEntry
-from path_utils import breakdown_cache_path, cache_path, generation_root, project_root
+from config_loader import load_config
+from path_utils import breakdown_cache_path, breakdown_output_dir, generation_root, project_root, video_cache_path
 from logger import error, info, progress, warn
 
 # Optional Google API imports (required for upload)
@@ -229,9 +230,9 @@ def parse_publish_at(s: str) -> datetime:
     raise ValueError(f"Cannot parse publish time: {s!r}")
 
 
-def load_metadata_from_chunks(cache_key: str) -> tuple[str, str]:
-    """Load title and description from cache/{cache_key}/chunks.json via Chunks model. Returns (title, description)."""
-    chunks_path = cache_path(cache_key, "chunks.json")
+def load_metadata_from_chunks(cache_key: str, config_hash: str) -> tuple[str, str]:
+    """Load title and description from cache/{config_hash}/videos/{cache_key}/chunks.json. Returns (title, description)."""
+    chunks_path = video_cache_path(cache_key, config_hash, "chunks.json")
     if not chunks_path.exists():
         return "", ""
     try:
@@ -271,29 +272,30 @@ def save_upload_state(breakdown_dir: Path, state: dict[str, UploadStateEntry]) -
 
 def get_breakdown_nuggets_to_upload(
     source_hash: str,
+    config_hash: str,
 ) -> tuple[list, Path, dict]:
     """
-    Load breakdown for source_hash; return (nuggets to upload, breakdown_dir, upload_state).
-    Nuggets to upload = have cache_key, short.mp4 exists, not already in upload_state.
+    Load breakdown for source_hash + config; return (nuggets to upload, output_dir, upload_state).
+    Breakdown is shared; upload_state is per config. Nuggets to upload = have cache_key, short.mp4 exists.
     """
     breakdown_path = breakdown_cache_path(source_hash)
     if not breakdown_path.exists():
         raise FileNotFoundError(f"Breakdown not found: {breakdown_path}")
     data = json.loads(breakdown_path.read_text(encoding="utf-8"))
     out = BreakdownOutput.model_validate(data)
-    breakdown_dir = breakdown_path.parent
-    state = load_upload_state(breakdown_dir)
+    output_dir = breakdown_output_dir(source_hash, config_hash)
+    state = load_upload_state(output_dir)
     already = set(state.keys())
     to_upload = []
     for n in out.nuggets:
         if not n.cache_key or n.cache_key in already:
             continue
-        video_path = cache_path(n.cache_key, "short.mp4")
+        video_path = video_cache_path(n.cache_key, config_hash, "short.mp4")
         if not video_path.exists():
             warn(f"Video missing for {n.cache_key} ({n.title}), skipping")
             continue
         to_upload.append(n)
-    return to_upload, breakdown_dir, state
+    return to_upload, output_dir, state
 
 
 def build_upload_list(args) -> tuple[list[UploadItem], str | None, tuple[Path, dict[str, UploadStateEntry]] | None]:
@@ -301,17 +303,20 @@ def build_upload_list(args) -> tuple[list[UploadItem], str | None, tuple[Path, d
     Build list of items to upload from args. Single mode = one item; breakdown = many.
     Returns (items, first_publish_at_str or None for --publish-at, persist_context or None).
     """
+    config_hash = getattr(args, "_config_hash", "")
     if args.breakdown_hash:
         try:
-            to_upload, breakdown_dir, upload_state = get_breakdown_nuggets_to_upload(args.breakdown_hash)
+            to_upload, breakdown_dir, upload_state = get_breakdown_nuggets_to_upload(
+                args.breakdown_hash, config_hash
+            )
         except FileNotFoundError as e:
             error(str(e))
             sys.exit(1)
         items = []
         for i, nugget in enumerate(to_upload, 1):
             ck = nugget.cache_key
-            video_path = cache_path(ck, "short.mp4")
-            title, description = load_metadata_from_chunks(ck)
+            video_path = video_cache_path(ck, config_hash, "short.mp4")
+            title, description = load_metadata_from_chunks(ck, config_hash)
             title = title or nugget.title or f"Short {i}"
             if args.title and len(to_upload) == 1:
                 title = args.title
@@ -321,11 +326,11 @@ def build_upload_list(args) -> tuple[list[UploadItem], str | None, tuple[Path, d
         return (items, None, (breakdown_dir, upload_state))
 
     if args.cache_key:
-        video_path = cache_path(args.cache_key, "short.mp4")
+        video_path = video_cache_path(args.cache_key, config_hash, "short.mp4")
         if not video_path.exists():
             error(f"Video not found: {video_path}")
             sys.exit(1)
-        title, description = load_metadata_from_chunks(args.cache_key)
+        title, description = load_metadata_from_chunks(args.cache_key, config_hash)
         if args.title:
             title = args.title
         if args.description:
@@ -388,12 +393,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Upload a short to YouTube (API v3). Use --cache-key, --video, or --breakdown-hash. Title/description from chunks.json or CLI."
     )
-    parser.add_argument("--cache-key", help="Cache key: video = cache/{key}/short.mp4, metadata from chunks.json")
+    parser.add_argument("-c", "--config", help="Config YAML (required for --cache-key and --breakdown-hash)")
+    parser.add_argument("--cache-key", help="Cache key: video from config cache, metadata from chunks.json")
     parser.add_argument("--video", help="Path to video file (alternative to --cache-key)")
     parser.add_argument(
         "--breakdown-hash",
         metavar="HASH",
-        help="Source hash: upload all videos from cache/_breakdowns/{hash}/. Skips already-scheduled (upload_state.json).",
+        help="Source hash: upload all videos from cache/_breakdown/{hash}/. Skips already-scheduled (upload_state.json).",
     )
     parser.add_argument("--title", help="Override title")
     parser.add_argument("--description", help="Override description")
@@ -407,6 +413,16 @@ def main() -> None:
     if args.check_token:
         ok = check_token_valid()
         sys.exit(0 if ok else 1)
+
+    if (args.cache_key or args.breakdown_hash) and not args.config:
+        error("--config is required for --cache-key and --breakdown-hash.")
+        sys.exit(1)
+
+    if args.config:
+        config = load_config(args.config)
+        args._config_hash = config.hash
+    else:
+        args._config_hash = ""
 
     if sum(1 for x in (args.cache_key, args.video, args.breakdown_hash) if x) != 1:
         error("Provide exactly one of: --cache-key, --video, or --breakdown-hash.")

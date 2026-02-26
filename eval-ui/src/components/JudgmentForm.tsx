@@ -16,8 +16,6 @@ type JudgmentFormProps = {
   notes: string;
   source?: AnnotationSource;
   onChange: (judgments: Record<Dimension, Judgment | undefined>, notes: string) => void;
-  onSave: (judgments: Record<Dimension, Judgment | undefined>, notes: string) => void;
-  saving: boolean;
 };
 
 export function JudgmentForm({
@@ -25,8 +23,6 @@ export function JudgmentForm({
   notes,
   source,
   onChange,
-  onSave,
-  saving,
 }: JudgmentFormProps) {
   function setJudgment(dim: Dimension, pass: boolean, critique: string) {
     const next = { ...judgments };
@@ -37,8 +33,6 @@ export function JudgmentForm({
   function setNotes(value: string) {
     onChange(judgments, value);
   }
-
-  const allSet = DIMENSIONS.every((d) => judgments[d] !== undefined);
 
   return (
     <Card className={source === "llm" ? "ring-1 ring-amber-200 dark:ring-amber-900/50" : undefined}>
@@ -113,12 +107,6 @@ export function JudgmentForm({
             className="resize-none"
           />
         </div>
-        <Button
-          onClick={() => onSave(judgments, notes)}
-          disabled={!allSet || saving}
-        >
-          {saving ? "Saving..." : "Save"}
-        </Button>
       </CardContent>
     </Card>
   );

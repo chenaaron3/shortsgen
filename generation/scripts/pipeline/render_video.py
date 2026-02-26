@@ -10,13 +10,20 @@ import subprocess
 import sys
 from pathlib import Path
 
-from path_utils import cache_path, project_root
+from path_utils import project_root, remotion_composite_key, video_cache_path
 from logger import cache_hit, info, step_end, step_start
 
-def run(cache_key: str, *, skip_cache: bool = False) -> Path:
+
+def run(
+    cache_key: str,
+    config_hash: str,
+    *,
+    skip_cache: bool = False,
+) -> Path:
     """Render the ShortVideo composition. Returns output path."""
     root = project_root()
-    output_path = cache_path(cache_key, "short.mp4")
+    composite_key = remotion_composite_key(config_hash, cache_key)
+    output_path = video_cache_path(cache_key, config_hash, "short.mp4")
     step_start("Render video")
     if not skip_cache and output_path.exists():
         cache_hit(output_path)
@@ -25,7 +32,7 @@ def run(cache_key: str, *, skip_cache: bool = False) -> Path:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     info(f"  Rendering to {output_path}...")
-    props = json.dumps({"cacheKey": cache_key})
+    props = json.dumps({"cacheKey": composite_key})
     cmd = [
         "npx",
         "remotion",

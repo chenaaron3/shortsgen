@@ -3,34 +3,43 @@
 Orchestrate source breakdown → pipeline runs.
 
 Break down source material (book, podcast transcript) into atomic idea nuggets,
-then run the full pipeline once per nugget. Each nugget's summary becomes the
-raw_content for run_pipeline.
+then run the full pipeline once per nugget. Supports one or more configs;
+each config writes to its own cache. With multiple configs, runs breakdown +
+pipeline for each, enabling eval comparison.
 
 Usage:
-  python generation/scripts/pipeline/run_source_pipeline.py -f book.txt
-  python generation/scripts/pipeline/run_source_pipeline.py -f book.txt --max-nuggets 3
+  python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c configs/default.yaml
+  python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c configs/claude.yaml configs/gpt4o.yaml
+  python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c default --max-nuggets 3
+  python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c default --step image
 """
 
 import argparse
 import json
 import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from path_utils import env_path, breakdown_cache_path, cache_path
-from logger import error, info, progress
+from config_loader import load_config
+from path_utils import env_path, breakdown_output_dir, video_cache_path
+from logger import error, info
 from usage_trace import print_summary, reset as usage_reset
 from pipeline.breakdown_source import run as run_breakdown, source_hash
-from pipeline.run_pipeline import run as run_pipeline
+from pipeline.run_pipeline import run_batch
+from pipeline.write_eval_dataset import write_eval_dataset
 
 load_dotenv(env_path())
 
 
-def write_videos_markdown(source_key: str, nuggets: list, source_name: str = "") -> Path:
-    """Write videos.md next to breakdown.json with links to generated videos."""
-    breakdown_dir = breakdown_cache_path(source_key).parent
+def write_videos_markdown(
+    source_key: str,
+    config_hash: str,
+    nuggets: list,
+    source_name: str = "",
+) -> Path:
+    """Write videos.md in per-config breakdown output dir with links to generated videos."""
+    breakdown_dir = breakdown_output_dir(source_key, config_hash)
     breakdown_dir.mkdir(parents=True, exist_ok=True)
     md_path = breakdown_dir / "videos.md"
 
@@ -47,8 +56,8 @@ def write_videos_markdown(source_key: str, nuggets: list, source_name: str = "")
         ck = getattr(n, "cache_key", None) or (n.get("cache_key") if isinstance(n, dict) else None)
         if not ck:
             continue
-        video_path = cache_path(ck, "short.mp4")
-        rel = f"../../{ck}/short.mp4"  # from cache/_breakdowns/X/ to cache/Y/short.mp4
+        video_path = video_cache_path(ck, config_hash, "short.mp4")
+        rel = f"../../videos/{ck}/short.mp4"
         title = getattr(n, "title", None) or (n.get("title") if isinstance(n, dict) else "?")
         link = f"[{title}]({rel})"
         flag = " *(missing)*" if not video_path.exists() else ""
@@ -63,6 +72,13 @@ def main():
         description="Break down source into nuggets, run pipeline once per nugget."
     )
     parser.add_argument("-f", "--file", required=True, help="Path to source file (book or transcript, markdown)")
+    parser.add_argument(
+        "-c",
+        "--config",
+        nargs="+",
+        required=True,
+        help="Config YAML path(s) (e.g. configs/default.yaml). Multiple configs run in sequence.",
+    )
     parser.add_argument(
         "--skip-breakdown-cache",
         action="store_true",
@@ -83,16 +99,31 @@ def main():
         help="Only process first N nuggets (for testing)",
     )
     parser.add_argument(
-        "--breakdown-only",
-        action="store_true",
-        help="Only run breakdown, skip downstream pipeline. Print nugget JSON to stdout.",
-    )
-    parser.add_argument(
         "--concurrency",
         type=int,
         default=2,
         metavar="N",
         help="Max nugget pipelines to run in parallel (default: 2)",
+    )
+    parser.add_argument(
+        "--break",
+        dest="break_at",
+        choices=["breakdown", "script", "chunker", "image", "voice", "prepare"],
+        default=None,
+        metavar="STEP",
+        help="Stop after this step (breakdown=breakdown only, script/chunker/...=per-nugget pipeline steps)",
+    )
+    parser.add_argument(
+        "--step",
+        choices=["script", "chunker", "image", "voice", "prepare", "video"],
+        default=None,
+        metavar="STEP",
+        help="Pass through to run_pipeline: invalidate cache for STEP and all subsequent steps",
+    )
+    parser.add_argument(
+        "--prototype",
+        action="store_true",
+        help="Pass through to run_pipeline: cheap text-to-image only (no mascot, no transitions)",
     )
     args = parser.parse_args()
 
@@ -106,61 +137,66 @@ def main():
         error("Error: Source file is empty.")
         sys.exit(1)
 
+    configs = [load_config(c) for c in args.config]
     usage_reset()
     source_key = source_hash(source_content)
     info(f"📚 Source: {source_path.name}")
     info(f"🔑 source_key: {source_key}")
+    info(f"📋 Configs: {[c.name for c in configs]}")
 
+    # Run breakdown once (shared across configs for fair comparison)
+    info("")
+    info("── Breakdown (shared) ──")
     nuggets = run_breakdown(
         source_content,
         source_key,
+        config=configs[0],
         skip_cache=args.skip_breakdown_cache,
-        max_nuggets=args.max_nuggets,
+        max_nuggets=10, # Can generate up to 10 nuggets, but just limit the actual pipeline
     )
-
     if args.max_nuggets:
         nuggets = nuggets[: args.max_nuggets]
         info(f"  Limiting to first {args.max_nuggets} nuggets")
 
-    md_path = write_videos_markdown(source_key, nuggets, source_path.name)
-    info(f"  📄 {md_path}")
-
-    if args.breakdown_only:
+    if args.break_at == "breakdown":
         out = {"nuggets": [n.model_dump() for n in nuggets]}
         print(json.dumps(out, indent=2))
-        return
+        print_summary()
+        info("")
+        info("✅ Done")
+        sys.exit(0)
 
-    total = len(nuggets)
-    info("")
-    info(f"▶ Running pipeline for {total} nugget(s) (concurrency={args.concurrency})")
-    info("─" * 50)
+    def on_config_enter(config, items):
+        md_path = write_videos_markdown(source_key, config.hash, items, source_path.name)
+        info(f"  📄 {md_path}")
 
-    def run_one(nugget):
-        run_pipeline(nugget.summary, max_scenes=args.max_scenes)
-        return nugget.id, None
+    def on_item_done(config, items):
+        write_videos_markdown(source_key, config.hash, items, source_path.name)
 
-    failed = []
-    done = 0
-    with ThreadPoolExecutor(max_workers=args.concurrency) as executor:
-        futures = {executor.submit(run_one, nugget): nugget for nugget in nuggets}
-        for future in as_completed(futures):
-            nugget = futures[future]
-            try:
-                nugget_id, _ = future.result()
-                done += 1
-                progress(done, total, f"{nugget_id} — {nugget.title}")
-            except Exception:
-                failed.append(nugget.id)
-                done += 1
-                progress(done, total, f"{nugget.id} — failed")
-            write_videos_markdown(source_key, nuggets, source_path.name)
+    run_batch(
+        nuggets,
+        configs,
+        concurrency=args.concurrency,
+        on_config_enter=on_config_enter,
+        on_item_done=on_item_done,
+        max_scenes=args.max_scenes,
+        step=args.step,
+        break_at=args.break_at,
+        prototype=args.prototype,
+    )
 
     print_summary()
     info("")
-    if failed:
-        info(f"⚠️ {len(failed)} nugget(s) failed: {failed}")
-        sys.exit(1)
-    info(f"✅ Done — {total} video(s) generated")
+
+    # Write eval dataset from cached scripts
+    eval_path = write_eval_dataset(configs=configs, source_hash_val=source_key)
+    info(f"   📋 Eval dataset: {eval_path}")
+
+    info("")
+    info("✅ Done")
+    total_nuggets = len(nuggets) if configs else 0
+    total_videos = total_nuggets * len(configs)
+    info(f"   {total_videos} video(s) across {len(configs)} config(s)")
 
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ except ImportError:
     WhisperModel = None
 
 
-from path_utils import cache_path, video_public
+from path_utils import remotion_composite_key, video_cache_path, video_public
 from logger import error, info, step_end, step_start, warn
 
 
@@ -95,16 +95,19 @@ def transcribe_audio_with_whisper(
 
 def prepare(
     cache_key: str,
-    video_public: Path,
+    config_hash: str,
+    video_public_dir: Path,
     use_whisper: bool = True,
     whisper_model: str = "base.en",
     skip_cache: bool = False,
 ) -> Path:
     """Copy assets to public and create manifest. Returns path to manifest.
     skip_cache: if True, regenerate Whisper captions even when cached (for --step 4 iteration).
+    Output: public/shortgen/{config_hash}_{cache_key}/manifest.json
     """
     step_start("Prepare Remotion assets")
-    chunks_path = cache_path(cache_key, "chunks.json")
+    composite_key = remotion_composite_key(config_hash, cache_key)
+    chunks_path = video_cache_path(cache_key, config_hash, "chunks.json")
     if not chunks_path.exists():
         raise FileNotFoundError(f"No chunks.json at {chunks_path}")
 
@@ -113,7 +116,7 @@ def prepare(
     if not scenes:
         raise ValueError("No scenes in manifest")
 
-    output_dir = video_public / "shortgen" / cache_key
+    output_dir = video_public_dir / "shortgen" / composite_key
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "images").mkdir(exist_ok=True)
     (output_dir / "voice").mkdir(exist_ok=True)
@@ -161,7 +164,7 @@ def prepare(
         )
 
     # Generate captions: Whisper word-level or scene-level fallback
-    captions_path = cache_path(cache_key, "captions", "captions.json")
+    captions_path = video_cache_path(cache_key, config_hash, "captions", "captions.json")
     captions_path.parent.mkdir(parents=True, exist_ok=True)
 
     if use_whisper and WhisperModel is not None:
@@ -200,7 +203,7 @@ def prepare(
     duration_in_frames = int(round(total_duration * fps))
 
     video_manifest = {
-        "cacheKey": cache_key,
+        "cacheKey": composite_key,
         "fps": fps,
         "width": width,
         "height": height,
@@ -213,7 +216,7 @@ def prepare(
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(video_manifest, f, indent=2)
 
-    _write_shortgen_index(video_public)
+    _write_shortgen_index(video_public_dir)
 
     step_end("Prepare Remotion assets", outputs=[manifest_path])
     return manifest_path

@@ -4,12 +4,16 @@ const ANNOTATIONS_URL = "/api/annotations";
 
 export type AnnotationSource = "human" | "llm";
 
+function annotationKey(a: Annotation): string {
+  return a.model ? `${a.traceId}::${a.model}` : `${a.traceId}::default`;
+}
+
 export async function loadHumanAnnotations(): Promise<Record<string, Annotation>> {
   try {
     const res = await fetch(ANNOTATIONS_URL);
     if (!res.ok) return {};
     const list: Annotation[] = await res.json();
-    return Object.fromEntries(list.map((a) => [a.traceId, a]));
+    return Object.fromEntries(list.map((a) => [annotationKey(a), a]));
   } catch {
     return {};
   }
@@ -20,13 +24,13 @@ export async function loadLLMAnnotations(): Promise<Record<string, Annotation>> 
     const res = await fetch("/llm-annotations.json");
     if (!res.ok) return {};
     const list: Annotation[] = await res.json();
-    return Object.fromEntries(list.map((a) => [a.traceId, a]));
+    return Object.fromEntries(list.map((a) => [annotationKey(a), a]));
   } catch {
     return {};
   }
 }
 
-/** Merge human (overrides) with llm (defaults). Human always wins. */
+/** Merge human (overrides) with llm (defaults). Human always wins. Keys: traceId::model */
 export async function loadMergedAnnotations(): Promise<{
   annotations: Record<string, Annotation>;
   sources: Record<string, AnnotationSource>;

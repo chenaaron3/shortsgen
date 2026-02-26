@@ -36,14 +36,24 @@ def cache_base() -> Path:
     return _GENERATION_ROOT / "cache"
 
 
-def cache_path(cache_key: str, *parts: str) -> Path:
-    """Path under cache/{cache_key}/."""
-    return cache_base() / cache_key / Path(*parts)
-
-
 def breakdown_cache_path(source_hash: str) -> Path:
-    """Path to breakdown cache: cache/_breakdowns/{hash}/breakdown.json."""
-    return cache_base() / "_breakdowns" / source_hash / "breakdown.json"
+    """Path to shared breakdown cache: cache/_breakdown/{source_hash}/breakdown.json. Shared across configs."""
+    return cache_base() / "_breakdown" / source_hash / "breakdown.json"
+
+
+def breakdown_output_dir(source_hash: str, config_hash: str) -> Path:
+    """Per-config output dir for breakdown: cache/{config_hash}/breakdowns/{source_hash}/. videos.md, upload_state.json."""
+    return cache_base() / config_hash / "breakdowns" / source_hash
+
+
+def video_cache_path(cache_key: str, config_hash: str, *parts: str) -> Path:
+    """Path under cache/{config_hash}/videos/{cache_key}/. Replaces old cache_path."""
+    return cache_base() / config_hash / "videos" / cache_key / Path(*parts)
+
+
+def remotion_composite_key(config_hash: str, cache_key: str) -> str:
+    """Composite key for Remotion: public/shortgen/{composite}/manifest.json."""
+    return f"{config_hash}_{cache_key}"
 
 
 def video_public() -> Path:

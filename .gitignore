@@ -16,3 +16,4 @@ token.json
 # Cache and generated assets
 generation/cache/
 public/shortgen/
+eval-ui/public/eval-assets/

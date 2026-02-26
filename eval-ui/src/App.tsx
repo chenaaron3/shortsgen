@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { EvalTrace, Annotation, Judgment } from "./types";
 import { DIMENSIONS } from "./types";
 import type { AnnotationSource } from "./api/annotations";
@@ -10,6 +10,10 @@ import { loadMergedAnnotations, saveAnnotations } from "./api/annotations";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+
+function annotationKey(traceId: string, model: string): string {
+  return model ? `${traceId}::${model}` : `${traceId}::default`;
+}
 
 function judgmentsFromAnnotation(a: Annotation | undefined): Record<string, Judgment | undefined> {
   const out: Record<string, Judgment | undefined> = {};
@@ -24,9 +28,12 @@ function App() {
   const [annotations, setAnnotations] = useState<Record<string, Annotation>>({});
   const [sources, setSources] = useState<Record<string, AnnotationSource>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState<string>("");
   const [filter, setFilter] = useState<"all" | "reviewed" | "unreviewed">("unreviewed");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [lastSaveError, setLastSaveError] = useState<Error | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     Promise.all([loadEvalDataset(), loadMergedAnnotations()])
@@ -35,7 +42,10 @@ function App() {
         setAnnotations(a);
         setSources(s);
         if (t.length > 0 && !selectedId) {
-          const unreviewed = t.find((x) => s[x.id] !== "human");
+          const unreviewed = t.find((tr) => {
+            const models = Object.keys(tr.script);
+            return !models.some((m) => s[annotationKey(tr.id, m)] === "human");
+          });
           setSelectedId(unreviewed ? unreviewed.id : t[0].id);
         }
       })
@@ -44,61 +54,153 @@ function App() {
   }, []);
 
   const selectedTrace = traces.find((t) => t.id === selectedId);
-  const selectedAnnotation = selectedId ? annotations[selectedId] : undefined;
-  const selectedSource = selectedId ? sources[selectedId] : undefined;
+  const models = selectedTrace ? Object.keys(selectedTrace.script) : [];
+  const effectiveModel = selectedModel || models[0] || "";
+  const annKey = selectedId && effectiveModel ? annotationKey(selectedId, effectiveModel) : "";
+  const selectedAnnotation = annKey ? annotations[annKey] : undefined;
+  const selectedSource = annKey ? sources[annKey] : undefined;
 
-  const handleSave = useCallback(
-    (judgments: Record<string, Judgment | undefined>, notes: string) => {
-      if (!selectedId) return;
-      const list = DIMENSIONS.map((d) => judgments[d]).filter(
-        (j): j is Judgment => j !== undefined
-      );
-      const next: Annotation = {
-        traceId: selectedId,
-        judgments: list,
-        notes: notes || undefined,
-        reviewedAt: new Date().toISOString(),
-      };
-      const updatedAnnotations = { ...annotations, [selectedId]: next };
-      const updatedSources = { ...sources, [selectedId]: "human" as AnnotationSource };
-      setAnnotations(updatedAnnotations);
-      setSources(updatedSources);
-      setSaving(true);
-      const humanOnly = Object.fromEntries(
-        Object.entries(updatedAnnotations).filter(([id]) => updatedSources[id] === "human")
-      );
-      saveAnnotations(humanOnly)
-        .then(() => setSaving(false))
-        .catch((err) => {
-          console.error(err);
-          setSaving(false);
-        });
-    },
-    [selectedId, annotations, sources]
+  useEffect(() => {
+    if (selectedTrace && models.length > 0 && !models.includes(selectedModel)) {
+      setSelectedModel(models[0]);
+    }
+  }, [selectedTrace, selectedModel, models]);
+
+  const hasBadImageWithoutNote = Boolean(
+    selectedAnnotation?.imageAnnotations?.some(
+      (a) =>
+        a.marker === "bad" &&
+        !(a.commonIssue && a.commonIssue !== "Other") &&
+        !(a.note && a.note.trim())
+    )
   );
+
+  const performSave = useCallback(async () => {
+    const humanOnly = Object.fromEntries(
+      Object.entries(annotations).filter(([k]) => sources[k] === "human")
+    );
+    if (Object.keys(humanOnly).length === 0) return;
+    setSaving(true);
+    setLastSaveError(null);
+    try {
+      await saveAnnotations(humanOnly);
+    } catch (err) {
+      setLastSaveError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setSaving(false);
+    }
+  }, [annotations, sources]);
+
+  useEffect(() => {
+    const hasHuman = Object.values(sources).some((s) => s === "human");
+    if (!hasHuman || hasBadImageWithoutNote) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      performSave();
+      saveTimeoutRef.current = null;
+    }, 600);
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [annotations, sources, performSave, hasBadImageWithoutNote]);
 
   const handleJudgmentChange = useCallback(
     (judgments: Record<string, Judgment | undefined>, notes: string) => {
-      if (!selectedId) return;
+      if (!selectedId || !effectiveModel) return;
       const list = DIMENSIONS.map((d) => judgments[d]).filter(
         (j): j is Judgment => j !== undefined
       );
-      const next: Annotation = {
-        traceId: selectedId,
-        judgments: list,
-        notes: notes || undefined,
-        reviewedAt: new Date().toISOString(),
-      };
-      setAnnotations((prev) => ({ ...prev, [selectedId]: next }));
+      const key = annotationKey(selectedId, effectiveModel);
+      setAnnotations((prev) => {
+        const current = prev[key];
+        return {
+          ...prev,
+          [key]: {
+            traceId: selectedId,
+            model: effectiveModel,
+            judgments: list,
+            notes: notes || undefined,
+            imageAnnotations: current?.imageAnnotations,
+            reviewedAt: new Date().toISOString(),
+          },
+        };
+      });
+      setSources((prev) => ({ ...prev, [key]: "human" as AnnotationSource }));
     },
-    [selectedId]
+    [selectedId, effectiveModel]
   );
+
+  const handleImageAnnotationChange = useCallback(
+    (
+      sceneIndex: number,
+      marker: "good" | "bad" | null,
+      note?: string,
+      commonIssue?: string
+    ) => {
+      if (!selectedId || !effectiveModel) return;
+      const key = annotationKey(selectedId, effectiveModel);
+      setSources((prev) => ({ ...prev, [key]: "human" as AnnotationSource }));
+      setAnnotations((prev) => {
+        const current = prev[key];
+        const existing = current?.imageAnnotations ?? [];
+        const filtered = existing.filter((a) => a.sceneIndex !== sceneIndex);
+        const updated: Annotation["imageAnnotations"] =
+          marker === null
+            ? (filtered.length > 0 ? filtered : undefined)
+            : marker === "good"
+              ? [...filtered, { sceneIndex, marker }]
+              : [
+                  ...filtered,
+                  {
+                    sceneIndex,
+                    marker,
+                    note: note ?? "",
+                    commonIssue: commonIssue && commonIssue !== "Other" ? commonIssue : undefined,
+                  },
+                ];
+        return {
+          ...prev,
+          [key]: {
+            ...current,
+            traceId: selectedId,
+            model: effectiveModel,
+            judgments: current?.judgments ?? [],
+            notes: current?.notes,
+            imageAnnotations: updated,
+            reviewedAt: new Date().toISOString(),
+          },
+        };
+      });
+    },
+    [selectedId, effectiveModel]
+  );
+
+  const saveStatusText =
+    saving
+      ? "Saving..."
+      : lastSaveError
+        ? "Save failed"
+        : hasBadImageWithoutNote
+          ? "Complete notes for bad images to save"
+          : "Saved";
 
   const handleExport = useCallback(() => {
     const humanOnly = Object.fromEntries(
-      Object.entries(annotations).filter(([id]) => sources[id] === "human")
+      Object.entries(annotations).filter(([k]) => sources[k] === "human")
     );
-    const list = Object.values(humanOnly);
+    const list = Object.values(humanOnly).map((a) => ({
+      ...a,
+      imageAnnotations: a.imageAnnotations?.map((img) => {
+        if (img.marker !== "bad") return img;
+        const fullNote =
+          img.commonIssue && img.commonIssue !== "Other"
+            ? img.note
+              ? `${img.commonIssue}: ${img.note}`
+              : img.commonIssue
+            : img.note ?? "";
+        return { ...img, note: fullNote, commonIssue: undefined };
+      }),
+    }));
     const blob = new Blob([JSON.stringify(list, null, 2)], {
       type: "application/json",
     });
@@ -109,21 +211,49 @@ function App() {
     URL.revokeObjectURL(a.href);
   }, [annotations, sources]);
 
+  const traceReviewed = useCallback(
+    (trace: EvalTrace) => {
+      return Object.keys(trace.script).some(
+        (m) => sources[annotationKey(trace.id, m)] === "human"
+      );
+    },
+    [sources]
+  );
+
+  const traceHasLLM = useCallback(
+    (trace: EvalTrace) => {
+      return Object.keys(trace.script).some(
+        (m) => sources[annotationKey(trace.id, m)] === "llm"
+      );
+    },
+    [sources]
+  );
+
   if (loading) return <div className="flex min-h-svh items-center justify-center">Loading...</div>;
 
   return (
     <div className="flex h-svh flex-col">
-      <header className="flex shrink-0 items-center justify-between border-b px-4 py-3">
+      <header className="flex shrink-0 items-center justify-between gap-4 border-b px-4 py-3">
         <h1 className="text-lg font-semibold">Script Eval</h1>
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          Export annotations
-        </Button>
+        <div className="flex items-center gap-3">
+          <span
+            className={`text-sm ${
+              saving ? "text-muted-foreground" : lastSaveError ? "text-destructive" : "text-muted-foreground"
+            }`}
+          >
+            {saveStatusText}
+          </span>
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            Export annotations
+          </Button>
+        </div>
       </header>
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-72 shrink-0 border-r bg-muted/30">
           <BatchList
             traces={traces}
-            sources={sources}
+            traceReviewed={traceReviewed}
+            traceHasLLM={traceHasLLM}
             selectedId={selectedId}
             filter={filter}
             onSelect={setSelectedId}
@@ -135,15 +265,19 @@ function App() {
             <div className="p-4 space-y-4">
               {selectedTrace ? (
                 <>
-                  <TraceViewer trace={selectedTrace} />
+                  <TraceViewer
+                    trace={selectedTrace}
+                    selectedModel={effectiveModel}
+                    onModelChange={setSelectedModel}
+                    imageAnnotations={selectedAnnotation?.imageAnnotations}
+                    onImageAnnotationChange={handleImageAnnotationChange}
+                  />
                   <Separator />
                   <JudgmentForm
                     judgments={judgmentsFromAnnotation(selectedAnnotation)}
                     notes={selectedAnnotation?.notes ?? ""}
                     source={selectedSource}
                     onChange={handleJudgmentChange}
-                    onSave={handleSave}
-                    saving={saving}
                   />
                 </>
               ) : (

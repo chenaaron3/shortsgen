@@ -11,6 +11,7 @@ type CaptionsOverlayProps = {
   fps: number;
   width: number;
   height: number;
+  durationInFrames: number;
 };
 
 function formatCaption(text: string): string {
@@ -22,6 +23,9 @@ function formatCaption(text: string): string {
 
 /** Word-by-word animation: each word appears as a separate caption. Use 800+ for grouped words. */
 const COMBINE_TOKENS_MS = 500;
+
+/** First ~1.5s of video: stronger caption bump for stop-scrolling hook */
+const FIRST_WORDS_BOOST_MS = 1500;
 
 const SENTENCE_END_PUNCTUATION = /[.!?,;]$/;
 
@@ -43,16 +47,71 @@ function splitCaptionsBySentence(captions: Caption[]): Caption[][] {
   return groups;
 }
 
+/** Token with merged display bounds—spans group segment, no overlap with other tokens. */
+type TokenWithDisplaySpan = { text: string; fromMs: number; toMs: number; displayStartMs: number; displayEndMs: number };
+
+/** Page with extended display bounds for merged interval coverage (no gaps). */
+type PageWithDisplayEnd = Omit<TikTokPage, "tokens"> & {
+  displayEndMs: number;
+  tokens: TokenWithDisplaySpan[];
+};
+
+/** Partition group interval into non-overlapping word segments. Words span start=>end of group. */
+function partitionTokenIntervals(tokens: TikTokPage["tokens"]): TokenWithDisplaySpan[] {
+  if (tokens.length === 0) return [];
+  const groupStart = tokens[0].fromMs;
+  const groupEnd = tokens[tokens.length - 1].toMs;
+  let groupSpan = Math.max(0, groupEnd - groupStart);
+  const totalDuration = tokens.reduce((s, t) => s + (t.toMs - t.fromMs), 0);
+  if (groupSpan <= 0) groupSpan = totalDuration > 0 ? totalDuration : 1;
+  if (totalDuration <= 0) {
+    const equalSpan = groupSpan / tokens.length;
+    return tokens.map((t, i) => ({
+      ...t,
+      displayStartMs: groupStart + i * equalSpan,
+      displayEndMs: groupStart + (i + 1) * equalSpan,
+    }));
+  }
+  let cumulative = 0;
+  return tokens.map((t) => {
+    const segDuration = ((t.toMs - t.fromMs) / totalDuration) * groupSpan;
+    const displayStartMs = groupStart + cumulative;
+    cumulative += segDuration;
+    const displayEndMs = groupStart + cumulative;
+    return { ...t, displayStartMs, displayEndMs };
+  });
+}
+
+/** Merge page intervals so display windows abut—no gaps from first word to last. */
+function mergePageIntervals(
+  pages: TikTokPage[],
+  videoDurationMs: number
+): PageWithDisplayEnd[] {
+  if (pages.length === 0) return [];
+  const sorted = [...pages].sort((a, b) => a.startMs - b.startMs);
+  return sorted.map((p, i) => {
+    const nativeEnd = p.startMs + p.durationMs;
+    const displayEndMs =
+      i + 1 < sorted.length
+        ? sorted[i + 1].startMs
+        : Math.max(nativeEnd, videoDurationMs);
+    const tokens = partitionTokenIntervals(p.tokens);
+    return { ...p, displayEndMs, tokens };
+  });
+}
+
 export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   captions,
   fps,
   width,
   height,
+  durationInFrames,
 }) => {
   const frame = useCurrentFrame();
   const timeMs = (frame / fps) * 1000;
+  const videoDurationMs = (durationInFrames / fps) * 1000;
 
-  const pages = useMemo(() => {
+  const pagesWithDisplayEnd = useMemo(() => {
     const sentenceGroups = splitCaptionsBySentence(captions);
     const allPages: TikTokPage[] = [];
     for (const group of sentenceGroups) {
@@ -62,21 +121,27 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
       });
       allPages.push(...groupPages);
     }
-    return allPages;
-  }, [captions]);
+    return mergePageIntervals(allPages, videoDurationMs);
+  }, [captions, videoDurationMs]);
 
-  const currentPage = pages.find(
-    (p: TikTokPage) => timeMs >= p.startMs && timeMs < p.startMs + p.durationMs
+  const currentPage = pagesWithDisplayEnd.find(
+    (p) => timeMs >= p.startMs && timeMs < p.displayEndMs
   );
 
   if (!currentPage) return null;
 
-  const pageProgress =
-    (timeMs - currentPage.startMs) / currentPage.durationMs;
+  const isFirstPage = pagesWithDisplayEnd[0] === currentPage;
+  const nativeEnd = currentPage.startMs + currentPage.durationMs;
+  const isInHoldRegion = timeMs >= nativeEnd;
+  const displaySpan = currentPage.displayEndMs - currentPage.startMs;
+  // Use display window for opacity so we don't fade out during hold—only fade when actually transitioning
+  const displayProgress =
+    displaySpan > 0
+      ? (timeMs - currentPage.startMs) / displaySpan
+      : 0.5;
 
-  // Fade in at start, hold, fade out at end
   const opacity = interpolate(
-    pageProgress,
+    displayProgress,
     [0, 0.15, 0.85, 1],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
@@ -116,17 +181,27 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
         }}
       >
         {currentPage.tokens.map((token, i) => {
-          const isActive = timeMs >= token.fromMs && timeMs < token.toMs;
-          const wordDuration = token.toMs - token.fromMs;
+          const isLastToken = i === currentPage.tokens.length - 1;
+          const isActive =
+            timeMs >= token.displayStartMs && timeMs < token.displayEndMs
+              ? true
+              : isInHoldRegion && isLastToken
+                ? true
+                : false;
+          const wordDuration = token.displayEndMs - token.displayStartMs;
           const wordProgress =
             wordDuration > 0
-              ? (timeMs - token.fromMs) / wordDuration
+              ? (timeMs - token.displayStartMs) / wordDuration
               : 0;
+          const isFirstWords =
+            isFirstPage &&
+            (i < 2 || token.displayStartMs < FIRST_WORDS_BOOST_MS);
+          const bumpPeak = isFirstWords ? 1.25 : 1.08;
           const bump = isActive
             ? interpolate(
               wordProgress,
               [0, 0.12, 0.2, 0.8, 0.88, 1],
-              [1, 1.08, 1.08, 1.08, 1.08, 1],
+              [1, bumpPeak, bumpPeak, bumpPeak, bumpPeak, 1],
               { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
             )
             : 1;

@@ -19,6 +19,12 @@ DEFAULT_MODEL = {
     "replicate": "openai/gpt-image-1-mini",
 }
 
+# input_fidelity="high" requires gpt-image-1 (mini does not support it)
+HIGH_FIDELITY_MODEL = {
+    "gpt": "gpt-image-1",
+    "replicate": "openai/gpt-image-1",
+}
+
 
 def _get_backend():
     b = IMAGE_GENERATOR
@@ -52,18 +58,27 @@ def generate_image(
     mascot_path: Path,
     prompt: str,
     *,
+    source_image: Path | None = None,
     model: str | None = None,
     input_fidelity: str = "low",
+    prototype: bool = False,
     **kwargs,
 ) -> bytes:
-    """Generate an image. Credentials and model config are resolved from env and backend defaults."""
+    """Generate an image. When source_image is set, use it as img2img input (for transitions); else use mascot_path. When prototype, use Replicate text-to-image only (no mascot)."""
+    if prototype:
+        # Prototype mode requires Replicate (text-to-image only)
+        if _get_backend() != "replicate":
+            raise RuntimeError("Prototype mode requires IMAGE_GENERATOR=replicate")
     backend = _get_backend()
     model_to_use = model or DEFAULT_MODEL[backend]
+    if input_fidelity == "high" and "mini" in model_to_use:
+        model_to_use = HIGH_FIDELITY_MODEL[backend]
     _validate_credentials(model=model_to_use)
+    input_path = source_image if source_image is not None else mascot_path
 
     if backend == "gpt":
         return gpt_generate_image(
-            mascot_path=mascot_path,
+            mascot_path=input_path,
             prompt=prompt,
             api_key=os.environ["OPENAI_API_KEY"],
             input_fidelity=input_fidelity,
@@ -72,10 +87,11 @@ def generate_image(
         )
     else:
         return replicate_generate_image(
-            mascot_path=mascot_path,
+            mascot_path=input_path,
             prompt=prompt,
             api_token=os.environ["REPLICATE_API_TOKEN"],
             model=model_to_use,
             input_fidelity=input_fidelity,
+            prototype=prototype,
             **kwargs,
         )

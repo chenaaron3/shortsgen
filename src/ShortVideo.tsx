@@ -1,10 +1,40 @@
 import React from 'react';
-import { AbsoluteFill, Audio, Composition, interpolate, Series, staticFile } from 'remotion';
+import {
+  AbsoluteFill,
+  Audio,
+  Composition,
+  interpolate,
+  Series,
+  staticFile,
+  useCurrentFrame,
+} from 'remotion';
 
 import { CaptionsOverlay } from './CaptionsOverlay';
 import { SceneSlide } from './SceneSlide';
 
 import type { VideoManifest } from "./types";
+
+/** Full-screen white flash at video open (frames 0–15) to grab attention. */
+const OpeningFlash: React.FC = () => {
+  const frame = useCurrentFrame();
+  const opacity = interpolate(
+    frame,
+    [0, 5, 12],
+    [0, 0.6, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+  );
+  if (opacity <= 0) return null;
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundColor: "#FFFFFF",
+        opacity,
+        pointerEvents: "none",
+        zIndex: 50,
+      }}
+    />
+  );
+};
 
 const FPS = 30;
 const WIDTH = 540;
@@ -40,6 +70,7 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
 
   return (
     <>
+      <OpeningFlash />
       <Audio
         src={staticFile("background_music.mp3")}
         volume={(f) =>
@@ -69,6 +100,7 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
                 imageSrc={imageSrc}
                 audioSrc={voiceSrc}
                 durationInFrames={durationInFrames}
+                isFirstScene={i === 0}
               />
             </Series.Sequence>
           );
@@ -79,6 +111,7 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
         fps={manifest.fps}
         width={manifest.width}
         height={manifest.height}
+        durationInFrames={durationInFrames}
       />
     </>
   );
@@ -91,7 +124,7 @@ type ShortVideoCompositionProps = {
 export const ShortVideoComposition: React.FC<ShortVideoCompositionProps> = ({
   cacheKey: cacheKeyProp = "",
 }) => {
-  const id = cacheKeyProp ? `ShortVideo-${cacheKeyProp}` : "ShortVideo";
+  const id = cacheKeyProp ? `ShortVideo-${cacheKeyProp.replace(/_/g, "-")}` : "ShortVideo";
 
   return (
     <Composition

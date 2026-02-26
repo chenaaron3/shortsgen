@@ -6,23 +6,25 @@ Calls into each module's run() function. Each layer handles its own caching.
 Image and voice generation run concurrently after chunking.
 
 Usage:
-  python generation/scripts/pipeline/run_pipeline.py -f content.txt
-  python generation/scripts/pipeline/run_pipeline.py -H 8d9dea719895c33a           # run for existing cache
-  python generation/scripts/pipeline/run_pipeline.py -f content.txt --step image  # invalidate image+ and run full pipeline
-  cat content.txt | python generation/scripts/pipeline/run_pipeline.py
+  python generation/scripts/pipeline/run_pipeline.py -f content.txt -c configs/default.yaml
+  python generation/scripts/pipeline/run_pipeline.py -f content.txt -c default claude-sonnet
+  python generation/scripts/pipeline/run_pipeline.py -H 8d9dea719895c33a -c configs/default.yaml
+  python generation/scripts/pipeline/run_pipeline.py -f content.txt -c configs/claude-sonnet.yaml --step image
 """
 
 import argparse
 import hashlib
 import json
 import sys
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from path_utils import cache_path, env_path, video_public
-from logger import error, info, set_step_context
+from config_loader import load_config
+from path_utils import env_path, video_cache_path, video_public
+from logger import error, info, progress, set_step_context
 from usage_trace import get_trace, print_summary, reset as usage_reset
 from pipeline.generate_images import run as run_images
 from pipeline.generate_script import run as run_script
@@ -30,6 +32,7 @@ from pipeline.generate_voice import run as run_voice
 from pipeline.prepare_remotion_assets import prepare
 from pipeline.render_video import run as run_render
 from pipeline.run_chunker import run as run_chunker
+from pipeline.write_eval_dataset import write_eval_dataset
 
 load_dotenv(env_path())
 
@@ -54,12 +57,29 @@ def _steps_from(step: str) -> frozenset[str]:
     return _STEPS_AFTER[step]
 
 
+def _finish_partial(cache_key: str, config_hash: str) -> None:
+    """Print summary and output paths when pipeline breaks early."""
+    out_dir = video_cache_path(cache_key, config_hash)
+    print_summary()
+    usage_path = video_cache_path(cache_key, config_hash, "usage.json")
+    if usage_path.parent.exists():
+        usage_path.write_text(json.dumps(get_trace(), indent=2), encoding="utf-8")
+        info(f"   📊 Usage trace: {usage_path}")
+    info("")
+    info("✅ Done (stopped early)")
+    info(f"   📁 Output: {out_dir}")
+
+
 def run(
     raw_content: str | None = None,
     *,
     cache_key: str | None = None,
+    config,
+    config_hash: str,
     max_scenes: int | None = None,
     step: str | None = None,
+    break_at: str | None = None,
+    prototype: bool = False,
 ) -> Path | None:
     """
     Run the full pipeline for raw content or an existing cache.
@@ -68,27 +88,32 @@ def run(
         raw_content: Raw text to turn into a short video. Not required when cache_key is provided.
         cache_key: Use this cache key instead of computing from content. When provided without
                    raw_content, runs from step 2 (chunker) using cached script.md.
+        config: Pipeline config (from config_loader).
+        config_hash: Hash of config for cache paths.
         max_scenes: Only generate first N scenes (for testing).
         step: Invalidate cache for STEP and all subsequent steps, then run full pipeline.
-              One of: script, chunker, image, voice, prepare, video.
+        break_at: Stop after completing this step (script, chunker, image, prepare, video).
+                  image covers both image and voice phase.
+        prototype: Use cheap text-to-image only (Replicate FLUX Schnell); no mascot, no img2img transitions.
 
     Returns:
         Path to output video when full pipeline completes, else None.
     """
     hash_mode = cache_key is not None and not raw_content
     if hash_mode:
-        if not (cache_path(cache_key) / "script.md").exists():
-            error(f"Cache {cache_key} has no script.md. Provide content with -f to run from step 1.")
+        script_path = video_cache_path(cache_key, config_hash, "script.md")
+        if not script_path.exists():
+            error(f"Cache {cache_key} has no script.md for this config. Provide content with -f to run from step 1.")
             raise ValueError("Cache missing script.md")
         if step == "script":
             error("Cannot run step 'script' in hash mode (no raw content). Use -f to provide content.")
             raise ValueError("Hash mode cannot run script step")
     else:
         if not raw_content or not raw_content.strip():
-            error("No content provided. Use -f file or --hash CACHE_KEY.")
+            error("No content provided. Use -f file or -H CACHE_KEY.")
             raise ValueError("No content or cache_key")
         cache_key = content_hash(raw_content)
-    info(f"🔑 cache_key: {cache_key}")
+    info(f"🔑 cache_key: {cache_key} | config: {config.name}")
 
     usage_reset()
     invalidate_steps = _steps_from(step) if step else frozenset()
@@ -97,16 +122,26 @@ def run(
 
     if hash_mode:
         info("  Hash mode: starting from chunker (using cached script.md)")
+    if prototype:
+        info("  Prototype mode: cheap text-to-image (no mascot) + free ttsvibes TTS")
 
     script: str
     if hash_mode:
-        script = (cache_path(cache_key) / "script.md").read_text(encoding="utf-8")
+        script = video_cache_path(cache_key, config_hash, "script.md").read_text(encoding="utf-8")
     else:
         set_step_context(1, 6)
-        script = run_script(raw_content, cache_key, skip_cache="script" in invalidate_steps)
+        script = run_script(raw_content, cache_key, config, config_hash, skip_cache="script" in invalidate_steps)
+
+    if break_at == "script":
+        _finish_partial(cache_key, config_hash)
+        return None
 
     set_step_context(2, 6)
-    chunks = run_chunker(script, cache_key, skip_cache="chunker" in invalidate_steps)
+    chunks = run_chunker(script, cache_key, config, config_hash, skip_cache="chunker" in invalidate_steps)
+
+    if break_at == "chunker":
+        _finish_partial(cache_key, config_hash)
+        return None
 
     set_step_context(3, 6)
     with ThreadPoolExecutor(max_workers=2) as executor:
@@ -114,23 +149,32 @@ def run(
             run_images,
             chunks,
             cache_key,
+            config_hash,
             max_scenes=max_scenes,
             skip_cache="image" in invalidate_steps,
+            prototype=prototype,
         )
         future_voice = executor.submit(
             run_voice,
             chunks,
             cache_key,
+            config_hash,
             max_scenes=max_scenes,
             skip_cache="voice" in invalidate_steps,
+            prototype=prototype,
         )
         for future in as_completed([future_images, future_voice]):
             future.result()
+
+    if break_at in ("image", "voice"):
+        _finish_partial(cache_key, config_hash)
+        return None
 
     set_step_context(4, 6)
     try:
         prepare(
             cache_key,
+            config_hash,
             video_public(),
             use_whisper=True,
             whisper_model="base.en",
@@ -140,16 +184,20 @@ def run(
         error(str(e))
         raise
 
+    if break_at == "prepare":
+        _finish_partial(cache_key, config_hash)
+        return None
+
     set_step_context(6, 6)
     try:
-        output_path = run_render(cache_key, skip_cache="video" in invalidate_steps)
+        output_path = run_render(cache_key, config_hash, skip_cache="video" in invalidate_steps)
     except Exception as e:
         error(str(e))
         raise
 
-    out_dir = cache_path(cache_key)
+    out_dir = video_cache_path(cache_key, config_hash)
     print_summary()
-    usage_path = cache_path(cache_key, "usage.json")
+    usage_path = video_cache_path(cache_key, config_hash, "usage.json")
     if usage_path.parent.exists():
         usage_path.write_text(json.dumps(get_trace(), indent=2), encoding="utf-8")
         info(f"   📊 Usage trace: {usage_path}")
@@ -164,6 +212,80 @@ def run(
     return output_path
 
 
+def run_batch(
+    items: list,
+    configs: list,
+    concurrency: int = 2,
+    on_config_enter: Callable[..., None] | None = None,
+    on_item_done: Callable[..., None] | None = None,
+    **run_kwargs,
+) -> None:
+    """
+    Run the pipeline for each (item, config) pair. Items need .summary and .cache_key (or computed).
+    Supports optional callbacks for source-pipeline features (e.g. write_videos_markdown).
+    """
+    for config in configs:
+        config_hash = config.hash
+        info("")
+        info(f"── Config: {config.name} ──")
+
+        if on_config_enter:
+            on_config_enter(config, items)
+
+        total = len(items)
+        if total > 1:
+            info(f"▶ Running pipeline for {total} item(s) (concurrency={concurrency})")
+            info("─" * 50)
+
+        failed = []
+        done = 0
+        with ThreadPoolExecutor(max_workers=concurrency) as executor:
+            futures = {
+                executor.submit(_run_one_item, item, config, config_hash, run_kwargs): item
+                for item in items
+            }
+            for future in as_completed(futures):
+                item = futures[future]
+                try:
+                    future.result()
+                    done += 1
+                    item_id = item.get("id") if isinstance(item, dict) else getattr(item, "id", "?")
+                    item_title = item.get("title") if isinstance(item, dict) else getattr(item, "title", "?")
+                    if total > 1:
+                        progress(done, total, f"{item_id} — {item_title}")
+                except Exception:
+                    item_id = item.get("id") if isinstance(item, dict) else getattr(item, "id", "?")
+                    failed.append(item_id)
+                    done += 1
+                    if total > 1:
+                        progress(done, total, f"{item_id} — failed")
+                if on_item_done:
+                    on_item_done(config, items)
+
+        if failed:
+            info(f"⚠️ Config {config.name}: {len(failed)} item(s) failed: {failed}")
+
+
+def _run_one_item(
+    item,
+    config,
+    config_hash: str,
+    run_kwargs: dict,
+) -> None:
+    """Run pipeline for a single item. Extracts summary/cache_key from item (dict or object)."""
+    raw = item.get("summary") if isinstance(item, dict) else getattr(item, "summary", None)
+    ck = item.get("cache_key") if isinstance(item, dict) else getattr(item, "cache_key", None)
+    raw_content = raw if raw else None
+    cache_key = ck if (ck and not raw) else None
+    run(
+        raw_content,
+        cache_key=cache_key,
+        config=config,
+        config_hash=config_hash,
+        **run_kwargs,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run full pipeline: script → chunker → images + voice → prepare → render."
@@ -171,10 +293,17 @@ def main():
     parser.add_argument("content", nargs="?", help="Raw text content")
     parser.add_argument("-f", "--file", help="Path to file containing raw content")
     parser.add_argument(
+        "-c",
+        "--config",
+        nargs="+",
+        required=True,
+        help="Config YAML path(s). Multiple configs run in sequence and write eval dataset.",
+    )
+    parser.add_argument(
         "-H",
         "--hash",
         metavar="CACHE_KEY",
-        help="Run pipeline for existing cache (e.g. 8d9dea719895c33a). Starts from chunker.",
+        help="Run pipeline for existing cache. Starts from chunker. Requires -c.",
     )
     parser.add_argument(
         "--max-scenes",
@@ -189,7 +318,22 @@ def main():
         metavar="STEP",
         help="Invalidate cache for STEP and all subsequent steps, then run full pipeline",
     )
+    parser.add_argument(
+        "--break",
+        dest="break_at",
+        choices=["script", "chunker", "image", "voice", "prepare"],
+        default=None,
+        metavar="STEP",
+        help="Stop after completing this step (script-only eval: --break script)",
+    )
+    parser.add_argument(
+        "--prototype",
+        action="store_true",
+        help="Use cheap text-to-image (Replicate FLUX Schnell) + free ttsvibes TTS; no mascot, no ElevenLabs",
+    )
     args = parser.parse_args()
+
+    configs = [load_config(c) for c in args.config]
 
     raw_content = ""
     if args.file:
@@ -203,19 +347,40 @@ def main():
         if raw_content.strip():
             error("Error: Cannot use -f/ content with --hash. Use one or the other.")
             sys.exit(1)
+        cache_key = args.hash
         raw_content = None
+        summary = ""
     elif not raw_content.strip():
         parser.print_help()
         error("Error: No content provided. Use -f file or -H CACHE_KEY.")
         sys.exit(1)
+    else:
+        cache_key = content_hash(raw_content)
+        summary = raw_content
+
+    title = Path(args.file).stem if args.file else "Untitled"
+    items = [
+        {
+            "summary": summary,
+            "cache_key": cache_key,
+            "id": cache_key,
+            "title": title,
+            "source_ref": None,
+        }
+    ]
+
+    run_kwargs = dict(
+        max_scenes=args.max_scenes,
+        step=args.step,
+        break_at=args.break_at,
+        prototype=args.prototype,
+    )
 
     try:
-        run(
-            raw_content if raw_content else None,
-            cache_key=args.hash,
-            max_scenes=args.max_scenes,
-            step=args.step,
-        )
+        run_batch(items, configs, concurrency=1, **run_kwargs)
+        if len(configs) > 1:
+            eval_path = write_eval_dataset(configs=configs, nuggets=items)
+            info(f"   📋 Eval dataset: {eval_path}")
     except Exception:
         sys.exit(1)
 

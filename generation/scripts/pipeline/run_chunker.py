@@ -1,59 +1,81 @@
 #!/usr/bin/env python3
 """
 Chunk a transcript into scenes for a faceless short (TTS + mascot images).
-Called by run_pipeline. Outputs to cache/{cache_key}/chunks.json.
+Called by run_pipeline. Outputs to cache/{config_hash}/videos/{cache_key}/chunks.json.
 """
 
 import json
-import os
+import re
 import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from litellm import completion
 
 from models import Chunks, ChunksOutput, Scene
+from schema_utils import schema_for_openai
 
-from path_utils import env_path, prompts_dir, cache_path
+from path_utils import env_path, prompts_dir, video_cache_path
 from logger import cache_hit, cache_miss, error, step_end, step_start
 from usage_trace import record_llm
 
 load_dotenv(env_path())
 
 
-def load_system_prompt() -> str:
+def _load_system_prompt(prompt_filename: str) -> str:
     """Load the chunker system prompt."""
-    prompt_path = prompts_dir() / "transcript-chunker-system-prompt.md"
-
+    prompt_path = prompts_dir() / prompt_filename
     if not prompt_path.exists():
         error(f"Error: System prompt not found at {prompt_path}")
         sys.exit(1)
-
     return prompt_path.read_text(encoding="utf-8")
 
 
-def chunk_transcript(client: OpenAI, transcript: str, model: str = "gpt-4o") -> Chunks:
+def _extract_transcript(script: str) -> str:
+    """Extract transcript from [HOOK] to end. Strips [PLANNING] or other prefatory content."""
+    match = re.search(r"\[HOOK\][\s\S]*", script, re.IGNORECASE)
+    return match.group(0).strip() if match else script
+
+
+def _extract_json(content: str) -> str:
+    """Extract JSON from response (handle markdown code blocks)."""
+    content = content.strip()
+    if content.startswith("```"):
+        match = re.search(r"```(?:json)?\s*([\s\S]*?)```", content)
+        if match:
+            return match.group(1).strip()
+    return content
+
+
+def _chunk_transcript(transcript: str, model: str, system_prompt: str) -> Chunks:
     """Call the LLM to chunk the transcript into scenes using structured output."""
-    system_prompt = load_system_prompt()
+    schema = ChunksOutput.model_json_schema()
+    schema = schema_for_openai(schema)
+    response_format = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": schema.get("title", "ChunksOutput"),
+            "strict": True,
+            "schema": schema,
+        },
+    }
 
     try:
-        completion = client.chat.completions.parse(
+        response = completion(
             model=model,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Chunk this transcript into scenes:\n\n{transcript}"},
+                {"role": "user", "content": f"Chunk this transcript into scenes. Respond with valid JSON only.\n\n{transcript}"},
             ],
-            response_format=ChunksOutput,
+            response_format=response_format,
             temperature=0.5,
         )
-        parsed = completion.choices[0].message.parsed
-        if parsed is None:
-            error("Error: LLM refused or returned empty response.")
-            sys.exit(1)
-        if getattr(completion, "usage", None):
-            u = completion.usage
+        content = (response.choices[0].message.content or "").strip()
+        content = _extract_json(content)
+        parsed = ChunksOutput.model_validate_json(content)
+        if getattr(response, "usage", None):
+            u = response.usage
             record_llm("Chunks", model, u.prompt_tokens, u.completion_tokens)
-        # Convert ChunksOutput to Chunks (add image_path, voice_path to each scene; pass title/description)
         return Chunks(
             title=parsed.title,
             description=parsed.description,
@@ -62,6 +84,7 @@ def chunk_transcript(client: OpenAI, transcript: str, model: str = "gpt-4o") -> 
                     text=s.text,
                     imagery=s.imagery,
                     section=s.section,
+                    transition_from_previous=s.transition_from_previous,
                     image_path=None,
                     voice_path=None,
                 )
@@ -76,16 +99,16 @@ def chunk_transcript(client: OpenAI, transcript: str, model: str = "gpt-4o") -> 
 def run(
     script: str,
     cache_key: str,
-    model: str = "gpt-4o",
+    config,
+    config_hash: str,
     skip_cache: bool = False,
 ) -> Chunks:
     """
     Chunk script into scenes. Uses cache if available.
-    cache_key = same as script (1:1). Output: cache/{cache_key}/chunks.json
-    skip_cache: if True, regenerate even when cached (for --step 2 iteration).
+    Output: cache/{config_hash}/videos/{cache_key}/chunks.json
     """
     step_start("Chunks")
-    chunks_path = cache_path(cache_key, "chunks.json")
+    chunks_path = video_cache_path(cache_key, config_hash, "chunks.json")
 
     if not skip_cache and chunks_path.exists():
         cache_hit(chunks_path)
@@ -93,12 +116,9 @@ def run(
         return Chunks.model_validate(json.loads(chunks_path.read_text(encoding="utf-8")))
 
     cache_miss("chunking...")
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY not found")
-    client = OpenAI(api_key=api_key)
-
-    chunks = chunk_transcript(client, script, model)
+    transcript = _extract_transcript(script)
+    system_prompt = _load_system_prompt(config.chunk.system_prompt)
+    chunks = _chunk_transcript(transcript, config.chunk.model, system_prompt)
     chunks_path.parent.mkdir(parents=True, exist_ok=True)
     chunks_path.write_text(chunks.model_dump_json(indent=2), encoding="utf-8")
     step_end("Chunks", outputs=[chunks_path], cache_hits=0, cache_misses=1)

@@ -13,6 +13,10 @@ class Scene(BaseModel):
     section: Literal["Hook", "Body", "Close"] = Field(
         ..., description="Section of the script"
     )
+    transition_from_previous: bool = Field(
+        default=False,
+        description="If true, generate from previous scene's image; imagery describes the modification only",
+    )
     image_path: str | None = Field(
         default=None,
         description="Path to generated image (set after generation)",
@@ -35,9 +39,17 @@ class SceneOutput(BaseModel):
     """LLM output for a single scene (text, imagery, section only)."""
 
     text: str = Field(..., description="Spoken words for this scene")
-    imagery: str = Field(..., description="Visual description for image generation")
+    imagery: str = Field(
+        ...,
+        max_length=200,
+        description="Visual description for image generation (max 200 chars)",
+    )
     section: Literal["Hook", "Body", "Close"] = Field(
         ..., description="Section of the script"
+    )
+    transition_from_previous: bool = Field(
+        default=False,
+        description="If true, generate from previous scene's image; imagery describes the modification only",
     )
 
 
