@@ -1,313 +1,5 @@
 [
   {
-    "traceId": "73a3c82600677c17",
-    "model": "default",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": "interesting take"
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": "\"enough\" isn't too little. It's about having what you need, not everything you want. Is too vague. "
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "I don't feel like I learned anything after"
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:29:17.016Z"
-  },
-  {
-    "traceId": "73a3c82600677c17",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "The hook is hard to reason about, too abstract."
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": "The hook is very confusing"
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "The goalpost analogy is overused, not explained well"
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:30:57.388Z"
-  },
-  {
-    "traceId": "edd0a2857f571de1",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "\"You can't build a habit-forming product\"\nToo long of a start. No one wakes up thinking that they want to build a habit-forming product"
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": "Clear steps and explanation"
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "the cat video analogy isn't useful"
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:34:05.749Z"
-  },
-  {
-    "traceId": "edd0a2857f571de1",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "Not relatable"
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": "They'll tell you they want to make cinema-quality home movies. But they actually watch cat videos. \nThis doesn't have high impact\n\nThe 5 why is too cluttered"
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "to cluttered"
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:36:05.969Z"
-  },
-  {
-    "traceId": "edd0a2857f571de1",
-    "model": "default",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "products don't become habits. doesn't make sense"
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": "easy to understand"
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:37:39.444Z"
-  },
-  {
-    "traceId": "35e3c50157472f49",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "Too repetitive"
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": "You can't see it or touch it—it just fires in your mind\nHard to understand"
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "nothing to learn here. depression is linked to technology use? Not very actionable"
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:41:18.612Z"
-  },
-  {
-    "traceId": "35e3c50157472f49",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "Bad intro"
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:42:02.633Z"
-  },
-  {
-    "traceId": "3decd1ef20935bc7",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:43:23.009Z"
-  },
-  {
-    "traceId": "5f1c42f2cf788081",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": "good explanation"
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:45:12.546Z"
-  },
-  {
-    "traceId": "5f1c42f2cf788081",
-    "model": "default",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "cringe, too abstract, not relatable"
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": "over-indexed on the analogy"
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "too confusing"
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:46:25.664Z"
-  },
-  {
-    "traceId": "5f1c42f2cf788081",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": "includes examples "
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:47:41.726Z"
-  },
-  {
-    "traceId": "9987c4adbd736675",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "too abstract"
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": "too many analogies, not concrete"
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "nothing actionable"
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:49:06.522Z"
-  },
-  {
-    "traceId": "3a2beb2061217d2c",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": "good reframe"
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": "easy to understand"
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T04:50:13.391Z"
-  },
-  {
-    "traceId": "0791637c9dcd2e2c",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "not actionable, too vague"
-      }
-    ],
-    "reviewedAt": "2026-02-27T20:57:19.319Z"
-  },
-  {
     "traceId": "c830e12285a329c5",
     "model": "mixed",
     "judgments": [
@@ -327,7 +19,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T19:34:57.074Z"
+    "reviewedAt": "2026-02-27T21:48:11.856Z"
   },
   {
     "traceId": "3157c0557bab30f0",
@@ -349,7 +41,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T19:36:31.726Z"
+    "reviewedAt": "2026-02-27T21:48:47.088Z"
   },
   {
     "traceId": "7ed00358367016a7",
@@ -358,20 +50,20 @@
       {
         "dimension": "engagement",
         "pass": true,
-        "critique": "universal struggle, common misconception"
+        "critique": ""
       },
       {
         "dimension": "clarity",
         "pass": true,
-        "critique": "good story, paints the picture of listening"
+        "critique": ""
       },
       {
         "dimension": "payoff",
         "pass": true,
-        "critique": "ending puts the key learning in memorable term"
+        "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T19:41:44.942Z"
+    "reviewedAt": "2026-02-27T21:49:46.038Z"
   },
   {
     "traceId": "1248488babf2b9dc",
@@ -379,21 +71,21 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
-        "critique": "not very engaging and natural. sounds insulting"
+        "pass": true,
+        "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
-        "critique": "too repetitive with the strategy one/two/three"
+        "pass": true,
+        "critique": ""
       },
       {
         "dimension": "payoff",
         "pass": true,
-        "critique": "clearly states 3 ways to remember names"
+        "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T19:45:19.379Z"
+    "reviewedAt": "2026-02-27T21:51:03.821Z"
   },
   {
     "traceId": "e4c3f64d18e501e8",
@@ -402,11 +94,11 @@
       {
         "dimension": "engagement",
         "pass": false,
-        "critique": "hook takes too long to deliver."
+        "critique": "hook is vague, why would the viewer care?"
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -415,7 +107,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T19:46:56.004Z"
+    "reviewedAt": "2026-02-27T21:52:21.506Z"
   },
   {
     "traceId": "0192bbbe7d528a70",
@@ -437,7 +129,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T19:48:35.103Z"
+    "reviewedAt": "2026-02-27T21:53:25.868Z"
   },
   {
     "traceId": "7d06754930c62957",
@@ -459,7 +151,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T19:49:48.985Z"
+    "reviewedAt": "2026-02-27T21:53:48.720Z"
   },
   {
     "traceId": "8fee76743768b90d",
@@ -481,7 +173,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T19:51:17.385Z"
+    "reviewedAt": "2026-02-27T21:55:12.194Z"
   },
   {
     "traceId": "a77da5c291f91c96",
@@ -494,204 +186,6 @@
       },
       {
         "dimension": "clarity",
-        "pass": false,
-        "critique": "jumps around too man topics"
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": "switch from judgement to understanding"
-      }
-    ],
-    "reviewedAt": "2026-02-27T19:53:29.375Z"
-  },
-  {
-    "traceId": "e49a03c71c7d6764",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T20:00:41.163Z"
-  },
-  {
-    "traceId": "f62b9165cf9b033d",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "vague"
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T20:49:37.616Z"
-  },
-  {
-    "traceId": "b1fd1e6fd2c7d3b0",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "too abstract"
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": "confusing"
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "confusing"
-      }
-    ],
-    "reviewedAt": "2026-02-27T20:01:58.617Z"
-  },
-  {
-    "traceId": "5f33e888b8d1feee",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T21:01:08.610Z"
-  },
-  {
-    "traceId": "42cf02d85c13f2da",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T20:04:26.017Z"
-  },
-  {
-    "traceId": "761a320ca7c78430",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "unclear of the definition of a power struggle "
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": "hard to understand"
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": "hard to understand"
-      }
-    ],
-    "reviewedAt": "2026-02-27T21:00:04.169Z"
-  },
-  {
-    "traceId": "79059bc7f97c2d3b",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T21:00:52.146Z"
-  },
-  {
-    "traceId": "5f53d528b3eeaf10",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T20:56:43.370Z"
-  },
-  {
-    "traceId": "273c8b53b8d8f6f7",
-    "model": "claude-sonnet",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
         "pass": true,
         "critique": ""
       },
@@ -701,6 +195,6 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T20:58:13.993Z"
+    "reviewedAt": "2026-02-27T22:04:27.186Z"
   }
 ]
