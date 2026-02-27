@@ -12,7 +12,7 @@ export type EvalTrace = {
   createdAt?: number;
 };
 
-export type Dimension = "hook" | "body" | "ending";
+export type Dimension = "engagement" | "clarity" | "payoff";
 
 export type Judgment = {
   dimension: Dimension;
@@ -47,16 +47,16 @@ export type Annotation = {
   reviewedAt: string;
 };
 
-export const DIMENSIONS: Dimension[] = ["hook", "body", "ending"];
+export const DIMENSIONS: Dimension[] = ["engagement", "clarity", "payoff"];
 
 export const DIMENSION_LABELS: Record<Dimension, string> = {
-  hook: "Hook",
-  body: "Body",
-  ending: "Ending",
+  engagement: "Engagement",
+  clarity: "Clarity",
+  payoff: "Payoff",
 };
 
 export const DIMENSION_QUESTIONS: Record<Dimension, string> = {
-  hook: "Does it capture the user's attention?",
-  body: "Does it provide value?",
-  ending: "Does it close the loop and make the user feel like they learned something?",
+  engagement: "Would a viewer keep watching?",
+  clarity: "Is the core idea understandable in one pass?",
+  payoff: "Does the viewer get something concrete?",
 };

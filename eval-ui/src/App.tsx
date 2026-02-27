@@ -5,11 +5,10 @@ import type { AnnotationSource } from "./api/annotations";
 import { TraceViewer } from "./components/TraceViewer";
 import { JudgmentForm } from "./components/JudgmentForm";
 import { BatchList } from "./components/BatchList";
-import { loadEvalDataset } from "./api/loadTraces";
+import { loadEvalDataset, deleteTrace } from "./api/loadTraces";
 import { loadMergedAnnotations, saveAnnotations } from "./api/annotations";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 
 function annotationKey(traceId: string, model: string): string {
   return model ? `${traceId}::${model}` : `${traceId}::default`;
@@ -229,6 +228,39 @@ function App() {
     [sources]
   );
 
+  const handleDeleteTrace = useCallback(
+    async (trace: EvalTrace) => {
+      if (!confirm(`Delete "${trace.title}" from the eval dataset?`)) return;
+      try {
+        await deleteTrace(trace.id);
+        setTraces((prev) => prev.filter((t) => t.id !== trace.id));
+        setAnnotations((prev) => {
+          const next = { ...prev };
+          for (const m of Object.keys(trace.script)) {
+            delete next[annotationKey(trace.id, m)];
+          }
+          return next;
+        });
+        setSources((prev) => {
+          const next = { ...prev };
+          for (const m of Object.keys(trace.script)) {
+            delete next[annotationKey(trace.id, m)];
+          }
+          return next;
+        });
+        if (selectedId === trace.id) {
+          const remaining = traces.filter((t) => t.id !== trace.id);
+          setSelectedId(remaining[0]?.id ?? null);
+          setSelectedModel("");
+        }
+      } catch (err) {
+        console.error(err);
+        alert(err instanceof Error ? err.message : "Failed to delete trace");
+      }
+    },
+    [selectedId, traces]
+  );
+
   if (loading) return <div className="flex min-h-svh items-center justify-center">Loading...</div>;
 
   return (
@@ -264,22 +296,22 @@ function App() {
           <ScrollArea className="h-full">
             <div className="p-4 space-y-4">
               {selectedTrace ? (
-                <>
-                  <TraceViewer
-                    trace={selectedTrace}
-                    selectedModel={effectiveModel}
-                    onModelChange={setSelectedModel}
-                    imageAnnotations={selectedAnnotation?.imageAnnotations}
-                    onImageAnnotationChange={handleImageAnnotationChange}
-                  />
-                  <Separator />
-                  <JudgmentForm
-                    judgments={judgmentsFromAnnotation(selectedAnnotation)}
-                    notes={selectedAnnotation?.notes ?? ""}
-                    source={selectedSource}
-                    onChange={handleJudgmentChange}
-                  />
-                </>
+                <TraceViewer
+                  trace={selectedTrace}
+                  selectedModel={effectiveModel}
+                  onModelChange={setSelectedModel}
+                  imageAnnotations={selectedAnnotation?.imageAnnotations}
+                  onImageAnnotationChange={handleImageAnnotationChange}
+                  onDelete={handleDeleteTrace}
+                  evaluationsSlot={
+                    <JudgmentForm
+                      judgments={judgmentsFromAnnotation(selectedAnnotation)}
+                      notes={selectedAnnotation?.notes ?? ""}
+                      source={selectedSource}
+                      onChange={handleJudgmentChange}
+                    />
+                  }
+                />
               ) : (
                 <p className="text-muted-foreground">Select a trace to evaluate.</p>
               )}

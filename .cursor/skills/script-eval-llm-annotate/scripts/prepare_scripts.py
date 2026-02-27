@@ -19,11 +19,15 @@ JUDGMENTS_DIR = OUTPUT_DIR / "judgments"
 
 
 def parse_script(script: str) -> dict[str, str]:
-    """Parse [HOOK], [BODY], [CLOSE] from script text. Matches eval-ui parseScript.ts."""
+    """Parse [PLANNING], [HOOK], [BODY], [CLOSE] from script text. Matches eval-ui parseScript.ts."""
     stripped = re.sub(r"^```\s*\n?|\n?```\s*$", "", script).strip()
+    planning = ""
     hook = ""
     body = ""
     close = ""
+    m = re.search(r"\[PLANNING\]\s*\n?([\s\S]*?)(?=\[HOOK\]|$)", stripped, re.I)
+    if m:
+        planning = m.group(1).strip()
     m = re.search(r"\[HOOK\]\s*\n?([\s\S]*?)(?=\[BODY\]|$)", stripped, re.I)
     if m:
         hook = m.group(1).strip()
@@ -33,7 +37,7 @@ def parse_script(script: str) -> dict[str, str]:
     m = re.search(r"\[CLOSE\]\s*\n?([\s\S]*)$", stripped, re.I)
     if m:
         close = m.group(1).strip()
-    return {"hook": hook, "body": body, "close": close}
+    return {"planning": planning, "hook": hook, "body": body, "close": close}
 
 
 def main() -> None:
@@ -55,19 +59,31 @@ def main() -> None:
     for t in traces:
         trace_id = t["id"]
         title = t.get("title", "")
-        script = t.get("script", "")
-        parsed = parse_script(script)
-        path = OUTPUT_DIR / f"{trace_id}.txt"
-        with open(path, "w") as f:
-            f.write(f"traceId: {trace_id}\n")
-            f.write(f"title: {title}\n\n")
-            f.write("--- HOOK ---\n")
-            f.write(parsed["hook"] or "(empty)\n")
-            f.write("\n--- BODY ---\n")
-            f.write(parsed["body"] or "(empty)\n")
-            f.write("\n--- CLOSE ---\n")
-            f.write(parsed["close"] or "(empty)\n")
-        print(path.relative_to(PROJECT_ROOT))
+        scripts = t.get("script", {})
+        if isinstance(scripts, dict):
+            script_items = list(scripts.items())
+        else:
+            script_items = [("", scripts)] if scripts else []
+
+        for model, script in script_items:
+            parsed = parse_script(script or "")
+            fname = f"{trace_id}__{model}.txt" if model else f"{trace_id}.txt"
+            path = OUTPUT_DIR / fname
+            with open(path, "w") as f:
+                f.write(f"traceId: {trace_id}\n")
+                if model:
+                    f.write(f"model: {model}\n")
+                f.write(f"title: {title}\n\n")
+                if parsed["planning"]:
+                    f.write("--- PLANNING ---\n")
+                    f.write(parsed["planning"] + "\n\n")
+                f.write("--- HOOK ---\n")
+                f.write(parsed["hook"] or "(empty)\n")
+                f.write("\n--- BODY ---\n")
+                f.write(parsed["body"] or "(empty)\n")
+                f.write("\n--- CLOSE ---\n")
+                f.write(parsed["close"] or "(empty)\n")
+            print(path.relative_to(PROJECT_ROOT))
 
     print(f"\nWrote {len(traces)} script files to {OUTPUT_DIR.relative_to(PROJECT_ROOT)}")
     print("Judgment output: one JSON file per trace in", JUDGMENTS_DIR.relative_to(PROJECT_ROOT))

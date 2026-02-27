@@ -21,7 +21,7 @@ def main() -> None:
     with open(path) as f:
         data = json.load(f)
 
-    dims = ("hook", "body", "ending")
+    dims = ("engagement", "clarity", "payoff")
     counts = {d: {"pass": 0, "fail": 0} for d in dims}
 
     for entry in data:

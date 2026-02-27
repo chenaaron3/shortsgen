@@ -1,15 +1,13 @@
 import type { Dimension, Judgment } from "../types";
 import type { AnnotationSource } from "../api/annotations";
-import {
-  DIMENSIONS,
-  DIMENSION_LABELS,
-  DIMENSION_QUESTIONS,
-} from "../types";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+
+import { DIMENSION_LABELS, DIMENSION_QUESTIONS, DIMENSIONS } from '../types';
 
 type JudgmentFormProps = {
   judgments: Record<Dimension, Judgment | undefined>;
@@ -53,47 +51,49 @@ export function JudgmentForm({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {DIMENSIONS.map((dim) => (
-          <div key={dim} className="space-y-2">
-            <div>
-              <span className="text-sm font-medium">{DIMENSION_LABELS[dim]}</span>
-              <p className="text-xs text-muted-foreground">
-                {DIMENSION_QUESTIONS[dim]}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={judgments[dim]?.pass === true ? "default" : "outline"}
-                size="sm"
-                onClick={() =>
-                  setJudgment(dim, true, judgments[dim]?.critique ?? "")
+        <div className="flex flex-row flex-wrap gap-4">
+          {DIMENSIONS.map((dim) => (
+            <div key={dim} className="space-y-2 min-w-[200px] flex-1 basis-0">
+              <div>
+                <span className="text-sm font-medium">{DIMENSION_LABELS[dim]}</span>
+                <p className="text-xs text-muted-foreground">
+                  {DIMENSION_QUESTIONS[dim]}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={judgments[dim]?.pass === true ? "default" : "outline"}
+                  size="sm"
+                  onClick={() =>
+                    setJudgment(dim, true, judgments[dim]?.critique ?? "")
+                  }
+                >
+                  PASS
+                </Button>
+                <Button
+                  type="button"
+                  variant={judgments[dim]?.pass === false ? "destructive" : "outline"}
+                  size="sm"
+                  onClick={() =>
+                    setJudgment(dim, false, judgments[dim]?.critique ?? "")
+                  }
+                >
+                  FAIL
+                </Button>
+              </div>
+              <Textarea
+                placeholder="Critique (required for FAIL, helpful for PASS)"
+                value={judgments[dim]?.critique ?? ""}
+                onChange={(e) =>
+                  setJudgment(dim, judgments[dim]?.pass ?? true, e.target.value)
                 }
-              >
-                PASS
-              </Button>
-              <Button
-                type="button"
-                variant={judgments[dim]?.pass === false ? "destructive" : "outline"}
-                size="sm"
-                onClick={() =>
-                  setJudgment(dim, false, judgments[dim]?.critique ?? "")
-                }
-              >
-                FAIL
-              </Button>
+                rows={2}
+                className="resize-none"
+              />
             </div>
-            <Textarea
-              placeholder="Critique (required for FAIL, helpful for PASS)"
-              value={judgments[dim]?.critique ?? ""}
-              onChange={(e) =>
-                setJudgment(dim, judgments[dim]?.pass ?? true, e.target.value)
-              }
-              rows={2}
-              className="resize-none"
-            />
-          </div>
-        ))}
+          ))}
+        </div>
         <div className="space-y-2">
           <label htmlFor="notes" className="text-sm font-medium">
             Open-ended notes

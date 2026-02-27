@@ -1,6 +1,6 @@
 # Script Eval UI
 
-Manual error analysis for `generate_script.py` output. Evaluate scripts against Hook, Body, and Ending dimensions.
+Manual error analysis for `generate_script.py` output. Evaluate scripts against Engagement, Clarity, and Payoff dimensions.
 
 ## Setup
 

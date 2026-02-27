@@ -1,4 +1,5 @@
-import { ChevronDown, ChevronRight, Film, List, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import type { ReactNode } from "react";
+import { ChevronDown, ChevronRight, Film, List, ThumbsDown, ThumbsUp, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +37,9 @@ type TraceViewerProps = {
     note?: string,
     commonIssue?: string
   ) => void;
+  /** Rendered to the right of the script (Hook/Body/Close) section */
+  evaluationsSlot?: ReactNode;
+  onDelete?: (trace: EvalTrace) => void;
 };
 
 function assetBase(traceId: string, assetHash: string): string {
@@ -46,7 +50,7 @@ function getImageAnnotation(imageAnnotations: ImageAnnotation[] | undefined, sce
   return imageAnnotations?.find((a) => a.sceneIndex === sceneIndex);
 }
 
-export function TraceViewer({ trace, selectedModel, onModelChange, imageAnnotations, onImageAnnotationChange }: TraceViewerProps) {
+export function TraceViewer({ trace, selectedModel, onModelChange, imageAnnotations, onImageAnnotationChange, evaluationsSlot, onDelete }: TraceViewerProps) {
   const [inputOpen, setInputOpen] = useState(false);
   const [assetsOpen, setAssetsOpen] = useState(true);
   const [chunks, setChunks] = useState<ChunksData | null>(null);
@@ -64,7 +68,7 @@ export function TraceViewer({ trace, selectedModel, onModelChange, imageAnnotati
 
   const models = Object.keys(trace.script);
   const scriptText = selectedModel ? trace.script[selectedModel] ?? "" : "";
-  const { hook, body, close } = parseScript(scriptText);
+  const { planning, hook, body, close } = parseScript(scriptText);
 
   const assetHash = selectedModel && trace.assets?.[selectedModel];
 
@@ -87,12 +91,48 @@ export function TraceViewer({ trace, selectedModel, onModelChange, imageAnnotati
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-base">{trace.title}</CardTitle>
-            {trace.sourceRef && (
-              <Badge variant="secondary" className="shrink-0">
-                {trace.sourceRef}
-              </Badge>
+            <div className="flex items-center gap-2 min-w-0">
+              <CardTitle className="text-base">{trace.title}</CardTitle>
+              {trace.sourceRef && (
+                <Badge variant="secondary" className="shrink-0">
+                  {trace.sourceRef}
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => onDelete(trace)}
+                aria-label="Delete trace"
+              >
+                <Trash2 className="size-4" />
+              </Button>
             )}
+            {models.length > 1 ? (
+              <Tabs
+                value={selectedModel || models[0]}
+                onValueChange={(v) => onModelChange(v)}
+                className="shrink-0"
+              >
+                <TabsList className="h-8">
+                  {models.map((m) => (
+                    <TabsTrigger key={m} value={m} className="text-xs">
+                      {m}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            ) : (
+              models[0] && (
+                <Badge variant="outline" className="text-xs shrink-0">
+                  {models[0]}
+                </Badge>
+              )
+            )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -118,30 +158,18 @@ export function TraceViewer({ trace, selectedModel, onModelChange, imageAnnotati
           </Collapsible>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold">Script</h3>
-              {models.length > 1 ? (
-                <Tabs
-                  value={selectedModel || models[0]}
-                  onValueChange={(v) => onModelChange(v)}
-                >
-                  <TabsList className="h-8">
-                    {models.map((m) => (
-                      <TabsTrigger key={m} value={m} className="text-xs">
-                        {m}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              ) : (
-                models[0] && (
-                  <Badge variant="outline" className="text-xs">
-                    {models[0]}
-                  </Badge>
-                )
-              )}
-            </div>
+            <h3 className="text-sm font-semibold">Script</h3>
             <div className="space-y-2">
+              {planning && (
+                <div className="rounded-lg border-l-4 border-violet-500 bg-violet-50 p-3 dark:bg-violet-950/30 dark:border-violet-600">
+                  <h4 className="mb-1 text-xs font-medium uppercase tracking-wide text-violet-800 dark:text-violet-200">
+                    Planning
+                  </h4>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {planning}
+                  </p>
+                </div>
+              )}
               <div className="rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 dark:bg-amber-950/30 dark:border-amber-600">
                 <h4 className="mb-1 text-xs font-medium uppercase tracking-wide text-amber-800 dark:text-amber-200">
                   Hook
@@ -167,6 +195,7 @@ export function TraceViewer({ trace, selectedModel, onModelChange, imageAnnotati
                 </p>
               </div>
             </div>
+            {evaluationsSlot && <div className="pt-2">{evaluationsSlot}</div>}
           </div>
 
           {assetHash && (

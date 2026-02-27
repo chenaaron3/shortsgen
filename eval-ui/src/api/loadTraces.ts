@@ -21,3 +21,11 @@ export async function loadEvalDataset(): Promise<EvalTrace[]> {
   traces.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
   return traces;
 }
+
+export async function deleteTrace(traceId: string): Promise<void> {
+  const res = await fetch(`/api/eval-dataset/${traceId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error ?? "Failed to delete trace");
+  }
+}

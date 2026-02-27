@@ -12,13 +12,11 @@ Generate first-pass annotations for the Script Eval UI. The agent evaluates each
 - User asks to generate LLM annotations, create llm-annotations.json, or run first-pass eval
 - User wants to annotate the eval dataset
 
-## Reference documents
+## Reference document
 
-The evaluation criteria are defined in the judge files. **Read the full content of these files when performing step 5** (evaluate one script at a time); use them as the authoritative source for criteria, diagnostics, pass/fail rules, and reference bars.
+The evaluation criteria are in a single judge file. **Read the full content when performing step 5** (evaluate one script at a time).
 
-- **Hook:** [generation/prompts/eval/judge-hook.md](generation/prompts/eval/judge-hook.md)
-- **Body:** [generation/prompts/eval/judge-body.md](generation/prompts/eval/judge-body.md)
-- **Ending:** [generation/prompts/eval/judge-ending.md](generation/prompts/eval/judge-ending.md)
+- **Judge:** [generation/prompts/eval/judge-script.md](generation/prompts/eval/judge-script.md) — three dimensions: Engagement, Clarity, Payoff
 
 ## Workflow
 
@@ -34,8 +32,8 @@ The evaluation criteria are defined in the judge files. **Read the full content 
    - Optional: limit to first N traces, e.g. `prepare_scripts.py 5`
    - This creates `eval-ui/.eval-scripts/` with one `.txt` file per trace (e.g. `a8bfef0c49a0c028.txt`). Each file contains traceId, title, and `--- HOOK ---` / `--- BODY ---` / `--- CLOSE ---` sections. Also creates `eval-ui/.eval-scripts/judgments/` for per-trace judgment output.
 
-3. **Load judge reference documents**
-   - Read the full content of the three judge files (see [Reference documents](#reference-documents) above) so their criteria, diagnostics, pass/fail rules, and reference bars are in context before creating todos and evaluating scripts.
+3. **Load judge reference document**
+   - Read the full content of [judge-script.md](generation/prompts/eval/judge-script.md) so Engagement, Clarity, and Payoff criteria are in context before creating todos and evaluating scripts.
 
 4. **Create one todo per script file**
    - Use TodoWrite: one todo per file in `eval-ui/.eval-scripts/*.txt` (one per trace). Label by trace id or title (e.g. "Evaluate a8bfef0c49a0c028: The Power of Small Improvements"). Do **not** create a single todo that batches multiple traces.
@@ -43,12 +41,9 @@ The evaluation criteria are defined in the judge files. **Read the full content 
 5. **Evaluate one script at a time (strict)**
    - For each todo, in sequence:
      - **Read exactly one file**: open `eval-ui/.eval-scripts/<traceId>.txt`. That file is the only script content you use for this step. Do not read other script files or the full eval-dataset.json in the same step.
-     - **Evaluate that single script** with chain of thought **driven by the judge files** in `generation/prompts/eval/`. For each dimension, use the full content of the corresponding judge file (criteria, diagnostic, pass/fail rules, reference bar, reject list) to reason stepwise; then output pass/fail and critique.
-       - **Hook:** Use `judge-hook.md`: run the Diagnostic, apply Strict criteria and Reference (gold standard / what to reject). Reason stepwise from that file → pass/fail and critique.
-       - **Body:** Use `judge-body.md`: evaluate against SUCCES per the file; run the Diagnostic; apply the Pass/fail rule and reference examples. Reason stepwise from that file; critique format per the judge’s Output section → pass/fail and critique.
-       - **Ending:** Use `judge-ending.md`: run the Diagnostic, apply Pass/fail rule and Reference (good vs reject). Reason stepwise from that file → pass/fail and critique.
-     - **Write one judgment file**: save to `eval-ui/.eval-scripts/judgments/<traceId>.json` with content:
-       `{ "traceId": "<id>", "judgments": [ { "dimension": "hook", "pass": bool, "critique": "..." }, { "dimension": "body", ... }, { "dimension": "ending", ... } ], "reviewedAt": "ISO8601" }`
+     - **Evaluate that single script** with chain of thought driven by `judge-script.md`. For each dimension (Engagement, Clarity, Payoff), apply the criteria, reason stepwise, then output pass/fail and critique.
+     - **Write one judgment file**: save to `eval-ui/.eval-scripts/judgments/<traceId>__<model>.json` (or `<traceId>.json` when model unknown) with content:
+       `{ "traceId": "<id>", "model": "<configName>", "judgments": [ { "dimension": "engagement", "pass": bool, "critique": "..." }, { "dimension": "clarity", ... }, { "dimension": "payoff", ... } ], "reviewedAt": "ISO8601" }`
      - Mark that todo complete. Then move to the next todo; again read only one file and write only one judgment file. Each script gets its own dedicated attention—no batching.
 
 6. **Merge judgments and output breakdown**
@@ -69,6 +64,6 @@ The evaluation criteria are defined in the judge files. **Read the full content 
 
 ## Output Schema
 
-Each judgment: `{ dimension: "hook" | "body" | "ending", pass: boolean, critique: string }`
+Each judgment: `{ dimension: "engagement" | "clarity" | "payoff", pass: boolean, critique: string }`
 
-All three dimensions (hook, body, ending) required per trace.
+All three dimensions (engagement, clarity, payoff) required per trace.

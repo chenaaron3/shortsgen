@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 
 const annotationsPath = path.join(__dirname, "public", "annotations.json");
+const evalDatasetPath = path.join(__dirname, "public", "eval-dataset.json");
 
 export default defineConfig({
   plugins: [
@@ -49,6 +50,46 @@ export default defineConfig({
             return;
           }
           next();
+        });
+      },
+    },
+    {
+      name: "eval-dataset-api",
+      configureServer(server) {
+        server.middlewares.use("/api/eval-dataset", (req, res, next) => {
+          if (req.method !== "DELETE" || !req.url) {
+            next();
+            return;
+          }
+          const traceId = req.url?.replace(/^\/api\/eval-dataset\/?/, "").trim().split("/")[0];
+          if (!traceId || !/^[a-f0-9]+$/i.test(traceId)) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "Missing or invalid traceId" }));
+            return;
+          }
+          try {
+            const data = existsSync(evalDatasetPath)
+              ? JSON.parse(readFileSync(evalDatasetPath, "utf-8"))
+              : [];
+            if (!Array.isArray(data)) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: "Invalid eval-dataset.json" }));
+              return;
+            }
+            const filtered = data.filter((t: { id?: string }) => t.id !== traceId);
+            if (filtered.length === data.length) {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ error: "Trace not found" }));
+              return;
+            }
+            writeFileSync(evalDatasetPath, JSON.stringify(filtered, null, 2));
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ ok: true, removed: traceId }));
+          } catch (err) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: String(err) }));
+          }
         });
       },
     },

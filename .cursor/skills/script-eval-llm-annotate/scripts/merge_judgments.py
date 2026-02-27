@@ -22,17 +22,37 @@ def main() -> None:
 
     with open(DATASET_PATH) as f:
         traces = json.load(f)
-    trace_ids = [t["id"] for t in traces]
 
     merged = []
-    for trace_id in trace_ids:
-        path = JUDGMENTS_DIR / f"{trace_id}.json"
-        if not path.exists():
-            print(f"Warning: missing {path.relative_to(PROJECT_ROOT)}", file=sys.stderr)
-            continue
-        with open(path) as f:
-            entry = json.load(f)
-        merged.append(entry)
+    seen = set()
+    for t in traces:
+        trace_id = t["id"]
+        scripts = t.get("script", {})
+        if isinstance(scripts, dict):
+            models = list(scripts.keys())
+        else:
+            models = [None]  # legacy: script is string, no model
+
+        for model in models:
+            if model:
+                path = JUDGMENTS_DIR / f"{trace_id}__{model}.json"
+                key = (trace_id, model)
+            else:
+                path = JUDGMENTS_DIR / f"{trace_id}.json"
+                key = (trace_id,)
+
+            if key in seen:
+                continue
+            if not path.exists():
+                if not model:
+                    print(f"Warning: missing {path.relative_to(PROJECT_ROOT)}", file=sys.stderr)
+                continue
+            seen.add(key)
+            with open(path) as f:
+                entry = json.load(f)
+            if model and "model" not in entry:
+                entry["model"] = model
+            merged.append(entry)
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:

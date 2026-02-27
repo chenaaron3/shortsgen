@@ -42,7 +42,7 @@ Return **only** valid JSON in this exact structure:
 
 - **title:** Short, YouTube-friendly title for the short. One line, under ~60 characters. Capture the main hook or takeaway.
 - **description:** 1–2 sentences for the short's description (used as YouTube description). Summarize the idea or outcome.
-- **text:** The spoken words for this scene. One complete phrase or sentence. TTS-ready (natural pause point, no mid-word cuts). Aim for 10–20 words per scene.
+- **text:** The spoken words for this scene. **Must be verbatim from the original script**—no paraphrasing, summarizing, or rewriting. One complete phrase or sentence. TTS-ready (natural pause point, no mid-word cuts). Aim for 10–20 words per scene.
 - **imagery:** Use the 4-component template (Shot Angle + Emotion/Pose + Object/Metaphor + Environment). See Imagery Rules below. Max 200 characters.
 - **section:** `"Hook"`, `"Body"`, or `"Close"`. First 1–2 = Hook, middle = Body, last 1–2 = Close.
 
@@ -50,15 +50,10 @@ Return **only** valid JSON in this exact structure:
 
 ## Chunking Rules
 
-1. **One idea per scene.** Don't cram multiple concepts into one image.
-2. **Respect natural breaks.** Split on sentence boundaries or clear clause pauses. Never cut mid-phrase.
-3. **Scene count:** 4–10 total. Shorter scripts = fewer scenes.
-4. **Pacing:** Hook = 1 short line each. Body = 1–2 sentences. Close = 1 strong line.
-
-## Literal vs. Metaphorical
-
-- **Abstract concepts** (habits, motivation, identity, willpower, relationships) → use **metaphorical** settings that embody the idea (journey, reflection, choice, growth, etc.).
-- **Concrete actions** (brush teeth, read book, place book on pillow) → **literal** settings OK: bathroom, book on pillow, bed.
+1. **Keep text verbatim.** Copy phrases from the script exactly. Do not paraphrase, summarize, or rewrite—the scene text must match the original word-for-word.
+2. **One idea per scene.** Don't cram multiple concepts into one image.
+3. **Respect natural breaks.** Split on sentence boundaries or clear clause pauses. Never cut mid-phrase.
+4. **Scene count:** 4–10 total. Shorter scripts = fewer scenes.
 
 ---
 

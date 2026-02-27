@@ -238,5 +238,147 @@
       "claude-sonnet": "claude-sonnet",
       "default": "default"
     }
+  },
+  {
+    "id": "73a3c82600677c17",
+    "nuggetId": "73a3c82600677c17",
+    "title": "source",
+    "rawContent": "There is never a reason to risk what you have and need for what you don't have and don't need. Social comparison often causes investors to look up to whoever has more than them and become so convinced that they need to have what they have that they take unnecessary risks that cause them to lose. If someone has enough to cover everything they need, they can avoid unnecessary risks by keeping four things in mind: 1) The hardest financial skill is to get the goalpost to stop moving. 2) Social comparison is the problem that causes unnecessary risk. 3) \"\"Enough\"\" is not too little. 4) Decide what is never worth risking.",
+    "script": {
+      "default": "[PLANNING]  \nHook: Stake the problem, then introduce the concept  \nWhy: Social comparison drives people to take unnecessary risks. The hook sets up the problem before offering a solution.\n\nBody skeleton: List  \nBody blocks: Tip 1 = Define + unpack, Tip 2 = Mechanism, Tip 3 = Concrete example, Tip 4 = Question + answer  \nWhy: The content offers four key ideas to focus on. A list structure makes it easy to digest, with varied delivery for engagement.\n\n[HOOK]  \nSocial comparison often drives us to take unnecessary risks. But how can we stop that?\n\n[BODY]  \nFirst, realize that the hardest financial skill is to stop moving the goalpost. If you're always chasing more, you'll never feel satisfied. Second, understand that social comparison is the root of unnecessary risk. When you see someone with more, it creates pressure to catch up. Third, remember that \"enough\" isn't too little. It's about having what you need, not everything you want. Finally, ask yourself: what is never worth risking? Knowing this keeps you grounded and helps avoid reckless decisions.\n\n[CLOSE]  \nFocus on these four points, and you'll make smarter, safer financial choices.",
+      "mixed": "```\n[PLANNING]\nHook: Stake the problem then introduce the concept\nWhy: The content is about the danger of social comparison in investing. Starting with the stakes (risking what you have) then introducing the core question (when is enough enough?) creates tension before unpacking the four principles.\n\nBody skeleton: List (4 principles)\nBody blocks: \n- Principle 1: Define + unpack (goalpost metaphor)\n- Principle 2: Mechanism (how comparison drives risk)\n- Principle 3: Question + answer (objection handled)\n- Principle 4: Concrete example (what to protect)\nWhy: Four discrete principles that build on each other. Each needs a different delivery mode to avoid repetition\u2014definition, mechanism, reframe, concrete stakes.\n\n[HOOK]\nYou'll never build wealth if you keep risking what you have for what you don't need. The question is: how do you know when enough is enough?\n\n[BODY]\nSee, there are four things to keep in mind. One: the hardest financial skill is getting the goalpost to stop moving. You hit your number, then you see someone with more, and suddenly your number isn't enough. Two: social comparison is what drives unnecessary risk. You look up at whoever has more and convince yourself you need what they have. Three: \"enough\" doesn't mean settling. It means you've covered everything you need\u2014so why gamble it? And four: decide what you'll never risk. Your house. Your kid's college fund. Your retirement. Write it down.\n\n[CLOSE]\nIf you've got enough to cover what matters, stop moving the goalpost.\n```"
+    },
+    "sourceRef": null,
+    "createdAt": 1772161534356,
+    "assets": {
+      "default": "default",
+      "mixed": "mixed"
+    }
+  },
+  {
+    "id": "a77da5c291f91c96",
+    "nuggetId": "fundamental-techniques-001",
+    "title": "Criticism Doesn't Work",
+    "rawContent": "Criticism often fails to produce change because it triggers defensiveness rather than reflection. Dale Carnegie illustrates this by referencing notorious criminals like Al Capone, who saw themselves as benefactors despite their actions. When criticized, people tend to rationalize their behavior, even if they are clearly wrong, because criticism wounds their pride. Instead of fostering improvement, it often creates silent hostility. Carnegie contrasts this with understanding and empathy, as demonstrated by Abraham Lincoln, who learned that condemnation rarely builds cooperation. The key takeaway is to replace judgment with curiosity and understanding, asking what pressures and motivations shape a person's actions. The chapter's core rule: don't criticize, condemn, or complain if you want cooperation and growth.",
+    "script": {
+      "mixed": "```\n[PLANNING]\nHook: Start in a moment\nWhy: Al Capone example is vivid and unexpected\u2014notorious criminal as entry point creates immediate tension before the lesson.\n\nBody skeleton: Story (parable + mechanism)\nBody blocks: Concrete example (Capone) + Mechanism (why criticism fails) + Comparative (Lincoln contrast)\nWhy: Capone story establishes the pattern, mechanism explains it, Lincoln shows the alternative. One continuous thread.\n\n[HOOK]\nAl Capone called himself a public benefactor. Not a gangster\u2014a benefactor. He genuinely believed he was helping people.\n\n[BODY]\nSee, when you criticize someone, even when they're clearly wrong, they don't think \"you're right.\" They think \"you're attacking me.\" So they defend. They rationalize. Because criticism wounds pride. It doesn't create change\u2014it creates silent hostility. Now, Abraham Lincoln figured this out. He used to condemn people publicly until he realized: condemnation never builds cooperation. So he stopped judging and started asking: what pressures made them act this way? What do they believe that I don't see?\n\n[CLOSE]\nDon't criticize, condemn, or complain. Replace judgment with curiosity. That's how you get people to actually change.\n```"
+    },
+    "sourceRef": "Ch 1 \u00b7 If You Want to Gather Honey, Don\u2019t Kick Over the Beehive",
+    "createdAt": 1772168422499,
+    "assets": {
+      "mixed": "mixed"
+    }
+  },
+  {
+    "id": "8fee76743768b90d",
+    "nuggetId": "fundamental-techniques-002",
+    "title": "The Power of Feeling Important",
+    "rawContent": "Dale Carnegie highlights a fundamental principle of human nature: the craving to feel important. This desire is universal and influences social behavior. Carnegie distinguishes between flattery and appreciation, noting that flattery is insincere and self-serving, while appreciation is genuine recognition of value. He uses Charles Schwab as an example; Schwab built a successful business by praising employees' strengths rather than criticizing their mistakes. Carnegie warns that neglecting this desire can lead to distorted behavior, as people seek significance in unhealthy ways. The practical lesson is to sincerely acknowledge strengths and efforts, as authentic recognition can transform morale and motivation. The principle is simple: make people feel genuinely important, and they will respond with loyalty and effort.",
+    "script": {
+      "mixed": "```\n[PLANNING]\nHook: Stake the problem then introduce the concept\nWhy: Universal struggle (feeling unimportant/unseen) \u2192 introduce Carnegie's distinction between flattery and appreciation. Creates tension before the payoff.\n\nBody skeleton: Single concept\nBody blocks: Define+unpack (flattery vs appreciation) \u2192 Concrete example (Schwab) \u2192 Mechanism (why it works)\nWhy: One core idea\u2014genuine appreciation. Definition sets it up, Schwab makes it real, mechanism explains the psychology.\n\n[HOOK]\nYou want people to care about you, but most attempts backfire. See, Dale Carnegie found that everyone craves feeling important\u2014but there's a right way and a wrong way to give it to them.\n\n[BODY]\nThe wrong way is flattery. That's when you compliment someone to get something back. They can smell it. The right way is appreciation\u2014genuine recognition of what they actually did. Charles Schwab built his business on this. When an employee messed up, he didn't criticize. He found what they did right and praised that instead. Why does this work? Because people starve for real acknowledgment. When you give it, they don't just feel good\u2014they want to earn more of it.\n\n[CLOSE]\nNext time someone does something well, name it. Be specific. Watch what happens.\n```"
+    },
+    "sourceRef": "Ch 2 \u00b7 The Big Secret of Dealing with People",
+    "createdAt": 1772168422805,
+    "assets": {
+      "mixed": "mixed"
+    }
+  },
+  {
+    "id": "7d06754930c62957",
+    "nuggetId": "fundamental-techniques-003",
+    "title": "Influence Through Others' Desires",
+    "rawContent": "To influence others, Dale Carnegie argues that you must speak in terms of what they want, not what you want. Humans are naturally self-interested, so focusing solely on your desires will fail to persuade. Carnegie illustrates this with a parenting example where he reframed healthy eating as a way for his child to grow strong enough to defeat a bully, aligning the action with the child's desires. The chapter emphasizes perspective-taking, urging readers to understand what matters to others before asking for cooperation. Carnegie summarizes the formula: arouse in the other person an eager want. This requires imagination and empathy, as well as stepping out of your own viewpoint. Consistently framing ideas in terms of others' desires leads to cooperation and influence.",
+    "script": {
+      "mixed": "[PLANNING]\nHook: Stake the problem then introduce the concept\nWhy: Universal struggle (getting people to cooperate), then introduces Carnegie's solution. Creates tension before the payoff.\n\nBody skeleton: Story (personal anecdote) + mechanism\nBody blocks: Concrete example (Carnegie's parenting story) + mechanism (why it works)\nWhy: The bully story is vivid and memorable. Following it with the \"why\" makes the principle stick.\n\n[HOOK]\nYou're not going to get people to cooperate if you only talk about what you want. Now the question is: how do you actually get someone to say yes?\n\n[BODY]\nDale Carnegie figured this out with his kid. His son wouldn't eat healthy food\u2014typical parent problem. So Carnegie stopped saying \"eat your vegetables because I said so.\" Instead he said: \"You know that bully at school? If you eat this, you'll grow strong enough to beat him up.\" The kid started eating. See, the food didn't change. What changed was Carnegie spoke in terms of what his son wanted\u2014not what he wanted. The formula is simple: arouse in the other person an eager want. That means you have to step out of your own viewpoint and ask: what does this person actually care about?\n\n[CLOSE]\nNext time you need cooperation, don't lead with your reason. Lead with theirs."
+    },
+    "sourceRef": "Ch 3 \u00b7 He Who Can Do This Has the Whole World With Him",
+    "createdAt": 1772169142193,
+    "assets": {
+      "mixed": "mixed"
+    }
+  },
+  {
+    "id": "0192bbbe7d528a70",
+    "nuggetId": "six-ways-001",
+    "title": "Genuine Interest in Others",
+    "rawContent": "Dale Carnegie introduces a simple yet powerful principle: become genuinely interested in other people. Most individuals are primarily focused on themselves, so showing authentic curiosity about others makes you stand out. Carnegie contrasts two approaches to making friends: trying to get others interested in you versus becoming interested in them. The latter is vastly more effective, as people respond warmly to those who make them feel seen and valued. He emphasizes the importance of genuine interest, as feigned curiosity is detectable and backfires. The chapter concludes with a practical rule: show real interest in others' hobbies, work, ambitions, and experiences. Ask questions, follow up, and remember details. Friendship, Carnegie argues, is won not by self-promotion but by curiosity.",
+    "script": {
+      "mixed": "```\n[PLANNING]\nHook: Stake the problem then introduce the concept\nWhy: Universal struggle (wanting connection) \u2192 introduces Carnegie's principle as the solution. Creates tension before payoff.\n\nBody skeleton: Single concept\nBody blocks: Comparative (two approaches) + Mechanism (why it works) + Concrete example (what to do)\nWhy: One core idea\u2014genuine interest. Contrast shows the shift, mechanism explains it, example makes it actionable.\n\n[HOOK]\nMost people walk into a room trying to get others interested in them. Dale Carnegie says that's backwards. The secret to making friends? Become genuinely interested in other people.\n\n[BODY]\nSee, everyone is focused on themselves. Their problems, their day, their ambitions. So when you show up curious about them, you stand out. Now, this only works if it's real. Fake interest gets sniffed out fast and backfires. So ask about their hobbies. Follow up on what they told you last week. Remember the name of their dog. That's how you make someone feel seen.\n\n[CLOSE]\nNext conversation: ask one real question about their life. Friendship isn't won by talking about yourself\u2014it's won by curiosity.\n```"
+    },
+    "sourceRef": "Ch 1 \u00b7 Do This and You\u2019ll Be Welcome Anywhere",
+    "createdAt": 1772169158349,
+    "assets": {
+      "mixed": "mixed"
+    }
+  },
+  {
+    "id": "e4c3f64d18e501e8",
+    "nuggetId": "six-ways-002",
+    "title": "The Power of a Smile",
+    "rawContent": "A genuine smile is a powerful tool for communication, conveying warmth and goodwill before words are even spoken. Dale Carnegie argues that a smile lowers barriers and invites cooperation, while a neutral or cold expression creates distance. He provides examples from business and everyday life, showing how a smile can influence outcomes and build rapport. The psychology behind it is simple: emotions are contagious, and when you smile, others often mirror it unconsciously, creating a positive emotional loop. Carnegie stresses that authenticity matters, as forced smiles are ineffective. Smiling also benefits the giver, as physical expression can shift mood and reduce tension. The chapter's core principle: Smile. It's one of the easiest, most immediate tools for building rapport and connection.",
+    "script": {
+      "mixed": "```\n[PLANNING]\nHook: Stake the problem then introduce the concept\nWhy: The problem is distance/barriers in connection. The concept (smile as tool) resolves it. Creates tension before payoff.\n\nBody skeleton: Single concept\nBody blocks: Define+unpack (what smile does) \u2192 Mechanism (emotional contagion) \u2192 Question+answer (authenticity caveat)\nWhy: One clear idea\u2014smile as rapport tool. Mechanism explains why it works. Q+A handles the objection about forced smiles.\n\n[HOOK]\nYou walk into a room with a neutral face, and people keep their distance. You smile, and suddenly they lean in. See, Dale Carnegie found that a smile is the fastest way to lower barriers before you even speak.\n\n[BODY]\nHere's why it works: emotions are contagious. When you smile, the other person's brain mirrors it unconsciously. They smile back, feel warmer, and now you're in a positive loop. But here's the thing\u2014it has to be real. A forced smile? People can tell. It creates the opposite effect. Now, smiling doesn't just help them. It helps you. The physical act of smiling shifts your mood, reduces tension. Your face tells your brain: \"We're good here.\"\n\n[CLOSE]\nNext time you meet someone, smile first. Watch how fast the barrier drops.\n```"
+    },
+    "sourceRef": "Ch 2 \u00b7 A Simple Way to Make a Good First Impression",
+    "createdAt": 1772171920368,
+    "assets": {
+      "mixed": "mixed"
+    }
+  },
+  {
+    "id": "1248488babf2b9dc",
+    "nuggetId": "six-ways-003",
+    "title": "The Importance of Names",
+    "rawContent": "Remembering and using a person's name is a foundational social skill, according to Dale Carnegie. A name is the sweetest sound to its owner, representing identity and individuality. Carnegie shares stories of prominent figures who made efforts to remember names, building loyalty because people felt recognized. Forgetting or misspelling names, on the other hand, signals indifference and can damage goodwill. He provides strategies for remembering names, such as repeating them in conversation and associating them with images. This applies across all status levels; respect should not be selective. The psychological underpinning is validation\u2014using someone's name acknowledges them as an individual. Mastery of names can significantly enhance influence and likability, turning routine interactions into personal connections.",
+    "script": {
+      "mixed": "[PLANNING]\nHook: Stake the problem then introduce the concept\nWhy: Universal struggle (forgetting names feels bad) \u2192 introduce Carnegie's insight that names = validation. Creates tension before the payoff.\n\nBody skeleton: List (3 strategies)\nBody blocks: Strategy 1 = Define+unpack (why names matter), Strategy 2 = Concrete example (repetition technique), Strategy 3 = Mechanism (association method)\nWhy: Discrete actionable techniques. Each gets a different delivery mode\u2014principle, then two practical methods.\n\n[HOOK]\nYou forget someone's name 10 seconds after they say it. Then you spend the whole conversation avoiding it. See, Dale Carnegie said a person's name is the sweetest sound to them. It's their identity. So when you forget it? You're telling them they don't matter.\n\n[BODY]\nHere's how to fix it. Strategy one: repeat their name immediately. \"Nice to meet you, Sarah.\" Say it out loud. That locks it in. Strategy two: use it three times in the first conversation. \"So Sarah, what do you do?\" \"That's interesting, Sarah.\" \"Great talking to you, Sarah.\" And strategy three: create a picture. Sarah has red hair? Think \"Sarah in the Sahara desert.\" Weird images stick.\n\n[CLOSE]\nNext time you meet someone, repeat their name out loud. That one move changes everything."
+    },
+    "sourceRef": "Ch 3 \u00b7 If You Don\u2019t Do This, You Are Headed for Trouble",
+    "createdAt": 1772171952119,
+    "assets": {
+      "mixed": "mixed"
+    }
+  },
+  {
+    "id": "7ed00358367016a7",
+    "nuggetId": "six-ways-004",
+    "title": "The Art of Listening",
+    "rawContent": "Good conversationalists are those who listen well, not those who speak well, according to Dale Carnegie. He describes a dinner party where he barely spoke yet was praised as fascinating because he encouraged others to talk about themselves. People crave the opportunity to share their experiences, and when someone listens attentively and shows engagement, the speaker feels valued. Carnegie emphasizes active listening: maintain eye contact, avoid interrupting, and respond with curiosity. He warns against dominating conversations with personal stories, as excessive self-reference signals insecurity. The deeper insight is emotional: listening is a form of respect. Carnegie summarizes the rule clearly: be a good listener. Encourage others to talk about themselves. If you want to be interesting, be interested.",
+    "script": {
+      "mixed": "```\n[PLANNING]\nHook: Stake the problem then introduce the concept\nWhy: Universal struggle (wanting to be interesting in conversation), then introduces Carnegie's counterintuitive insight (listening > speaking). Creates tension before the payoff.\n\nBody skeleton: Story (personal experience\u2014Carnegie's dinner party)\nBody blocks: Narrative with mechanism (why listening works) embedded\nWhy: Carnegie's anecdote is vivid and specific. The story carries the lesson naturally\u2014he barely spoke, yet was called fascinating. Mechanism comes through in the narrative.\n\n[HOOK]\nMost people think being interesting means talking more. Dale Carnegie found the opposite was true.\n\n[BODY]\nHe went to a dinner party once and barely said a word. The whole night, he just asked questions and let others talk about themselves. At the end, someone told him he was the most fascinating person there. See, people crave the chance to share their experiences. When you listen\u2014really listen\u2014they feel valued. Maintain eye contact. Don't interrupt. Respond with curiosity. Carnegie warns against dominating conversations with your own stories. Excessive self-reference signals insecurity.\n\n[CLOSE]\nIf you want to be interesting, be interested.\n```"
+    },
+    "sourceRef": "Ch 4 \u00b7 An Easy Way to Become a Good Conversationalist",
+    "createdAt": 1772172136282,
+    "assets": {
+      "mixed": "mixed"
+    }
+  },
+  {
+    "id": "3157c0557bab30f0",
+    "nuggetId": "six-ways-005",
+    "title": "Talk in Terms of Others' Interests",
+    "rawContent": "Conversations should center on the other person's interests, argues Dale Carnegie. Every individual has passions or expertise, and when you speak in terms of those interests, you create energy and engagement. Carnegie shares examples of individuals who researched their counterpart's interests before meetings, enabling instant rapport. He argues that most conversations fail because people talk about what interests them, not the listener. The strategy requires preparation and observation, noticing clues and asking about preferences. The psychological basis is motivation\u2014people become animated when discussing what matters to them. The principle is concise: talk in terms of the other person's interests. Engagement rises naturally, leading to more meaningful connections.",
+    "script": {
+      "mixed": "```\n[PLANNING]\nHook: Lead with what they'll get\nWhy: Teaching a specific conversational strategy\u2014clear promise upfront.\n\nBody skeleton: List (2 steps)\nBody blocks: Step 1 = Define+unpack with mechanism, Step 2 = Concrete example\nWhy: Two discrete actions (notice clues, ask about them). First explains why it works, second shows how to execute.\n\n[HOOK]\nI'm going to show you how to make any conversation instantly engaging.\n\n[BODY]\nStep one: before you meet someone, look for clues about what they care about. Check their desk, their social media, what they wear. Step two: ask about it. See, most conversations die because people talk about what interests them\u2014not the other person. But when you ask about their passion, they light up. Their energy changes. Carnegie researched people's interests before meetings. One guy loved rare books\u2014Carnegie asked about his collection. Instant rapport.\n\n[CLOSE]\nNext conversation: notice one thing they care about. Ask about it. Watch what happens.\n```"
+    },
+    "sourceRef": "Ch 5 \u00b7 How to Interest People",
+    "createdAt": 1772172163496,
+    "assets": {
+      "mixed": "mixed"
+    }
+  },
+  {
+    "id": "c830e12285a329c5",
+    "nuggetId": "six-ways-006",
+    "title": "Make Others Feel Important",
+    "rawContent": "Dale Carnegie concludes Part Two by emphasizing the importance of making others feel important, sincerely. He reiterates that humans crave recognition, and when treated with respect and dignity, they respond positively. Carnegie shares stories of leaders who acknowledged contributions at all levels, fostering loyalty. The key is sincerity; empty gestures are transparent, but genuine acknowledgment creates a connection. This principle is universal, applicable in business, family, friendships, and leadership. The summary rule is simple: make the other person feel important\u2014and do it sincerely. This approach not only enhances relationships but also builds influence and rapport.",
+    "script": {
+      "mixed": "```\n[PLANNING]\nHook: Stake the problem then introduce the concept\nWhy: Universal struggle\u2014people want to matter but feel unseen. Then introduce the principle that resolves it.\n\nBody skeleton: Single concept\nBody blocks: Define + unpack (what sincerity means) + mechanism (why it works) + comparative (empty vs genuine)\nWhy: One core idea\u2014sincere recognition. No list. Contrast shows what works vs what fails.\n\n[HOOK]\nEveryone wants to feel like they matter. But most people walk around feeling invisible. Dale Carnegie found the fix: make others feel important\u2014sincerely.\n\n[BODY]\nSee, humans crave recognition. When you acknowledge someone's contribution\u2014really acknowledge it\u2014they respond. Not \"good job\" while checking your phone. That's transparent. Sincere means you notice the specific thing they did and you tell them why it mattered. A manager who thanks the janitor by name for keeping the office clean. A parent who says \"I saw how patient you were with your sister\u2014that took real maturity.\" The difference is specificity and attention. Empty gestures feel like a script. Genuine acknowledgment creates a connection.\n\n[CLOSE]\nNext conversation: find one specific thing they did. Tell them you noticed. Watch what happens.\n```"
+    },
+    "sourceRef": "Ch 6 \u00b7 How to Make People Like You Instantly",
+    "createdAt": 1772172358939,
+    "assets": {
+      "mixed": "mixed"
+    }
   }
 ]
