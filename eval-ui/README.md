@@ -41,3 +41,19 @@ Exported `annotations.json` includes `imageAnnotations` with per-image good/bad 
 - **LLM first pass**: `public/llm-annotations.json` — agent-generated annotations used as defaults. Create via the `script-eval-llm-annotate` Cursor skill (e.g. "Generate LLM annotations for the eval dataset").
 
 The UI merges human and LLM annotations: human always overrides. Traces with only LLM annotations show an "AI first pass" badge; human-reviewed traces show "Reviewed".
+
+## Judge validation (Human vs LLM judge)
+
+To compare the script judge LLM against your human labels and inspect disagreements:
+
+1. Export a golden set (human-reviewed traces):
+   ```bash
+   python generation/scripts/run.py eval/export_golden_set.py
+   ```
+2. Run the judge on the golden set:
+   ```bash
+   python generation/scripts/run.py eval/validate_judges.py
+   ```
+   This reports agreement rates and writes `public/judge-results.json`.
+
+3. In the eval UI, use the **Disagreements** filter to see traces where the judge disagreed with you. Open a trace and switch model tabs to view the **Judge vs Human** comparison card, which shows a side-by-side table and the judge's critiques for disagreeing dimensions. Use this to decide whether to update your annotation (human error) or improve the judge prompt (LLM error).

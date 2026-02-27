@@ -66,7 +66,7 @@
     "rawContent": "Envision your life as a construction project where you're the architect designing your dream home. Having a clear vision of your goals is akin to a blueprint guiding the construction process. This analogy emphasizes the importance of defining your long-term objectives and values. By clarifying what success means to you, you can align your actions with that vision, ensuring that your daily efforts contribute towards building the life you desire.",
     "script": "[HOOK]\nToday I'm going to show you exactly how to build a life you actually want.\n\n[BODY]\nThink of your life like building a house. You're the architect. Now, most people skip the blueprint and just start hammering. They work hard every day but don't know what they're building. Then five years later they look around and think: wait, this isn't what I wanted. See, you need a blueprint first. That means sitting down and asking: what does success actually mean to me? Not your parents' version. Not what Instagram says. Your version. Maybe it's owning a business. Maybe it's having time for your kids. Maybe it's living in a different city. Write it down. Get specific. Because once you know what you're building, every action either moves you closer to that house or it doesn't.\n\n[CLOSE]\nSpend 20 minutes this week writing your blueprint. What does your dream house actually look like?",
     "expected": {
-      "engagement": true,
+      "engagement": false,
       "clarity": true,
       "payoff": true
     }
@@ -102,7 +102,7 @@
     "rawContent": "Everyone has feelings of inferiority, and they are not inherently bad. When we're born, we're helpless babies, and we all want to escape that helpless state\u2014this is the pursuit of superiority. The feeling of inferiority is the counterpart of this pursuit. Both can stimulate normal, healthy striving and growth. A healthy feeling of inferiority comes from comparing yourself to your ideal self, not to others. The key is to move forward on your own feet, not with a competitive mindset. However, people who lack the courage to change may develop an inferiority complex\u2014using their feelings as an excuse ('I am uneducated, so I can't succeed'). This can evolve into a superiority complex, where the person acts superior or attaches themselves to powerful people for reflected glory. Adler believed people boast only out of inferiority; truly confident people don't feel the need to boast. The healthy path is the 'courage to be normal'\u2014accepting that being normal isn't bad, because everybody is normal.",
     "script": "[HOOK]\nEveryone has feelings of inferiority. And that's not a bad thing. See, when you're born, you're a helpless baby. You can't feed yourself, can't walk, can't do anything. So your brain starts this lifelong pursuit: escape that helpless state. Become capable. That drive is what pushes you forward.\n\n[BODY]\nNow, a healthy feeling of inferiority comes from comparing yourself to your ideal self\u2014not to others. Like, \"I want to be able to run a marathon,\" not \"I need to beat that guy at the gym.\" The problem starts when you lack the courage to change. That's when inferiority turns into an excuse. You tell yourself: \"I'm uneducated, so I can't succeed.\" Or \"I'm not smart enough, so why try?\" And here's where it gets weird. Some people flip it into a superiority complex. They start bragging, name-dropping, attaching themselves to powerful people for reflected glory. Adler said people only boast out of inferiority. Truly confident people don't feel the need to prove anything.\n\n[CLOSE]\nThe healthy path? Accept that being normal isn't bad. Because everybody is normal. That's the courage to be normal.",
     "expected": {
-      "engagement": false,
+      "engagement": true,
       "clarity": false,
       "payoff": false
     }
@@ -138,7 +138,7 @@
     "rawContent": "When you praise or rebuke someone, you create a hierarchical (vertical) relationship, because praise involves a person of ability passing judgement on a person with no ability. For example, a parent praises a child for helping with dinner ('You're such a good helper!') but would thank an equal instead ('Thank you for helping'). Adlerian psychology is critical of reward-and-punishment in raising children because it manipulates them. If you derive joy from being praised, you are dependent on vertical relationships and living according to another person's values\u2014not your own. This is not freedom. Vertical relationships give rise to inferiority complexes. In contrast, horizontal relationships are 'equal but not the same.' The most important thing is to avoid judging others. Instead of praise or rebuke, offer assistance and express gratitude and respect. A 'thank you' has no judgement. When someone hears gratitude, they know they've made a contribution. Once you build one vertical relationship, you will treat all relationships as vertical. Horizontal relationships are the key to freedom.",
     "script": "[HOOK]\nIf you get a rush from being praised, you're not free. You're living by someone else's values.\n\n[BODY]\nSee, praise creates a hierarchy. When a parent tells a kid \"You're such a good helper,\" they're passing judgement\u2014person with ability to person without. But when you thank an equal, there's no judgement. Just \"Thank you for helping.\" Now here's the thing: if you need praise to feel good, you're dependent on that vertical relationship. You're chasing someone else's approval instead of your own values. And once you build one vertical relationship, you start treating everyone that way. Adlerian psychology says this is how inferiority complexes start. The alternative? Horizontal relationships. Equal, but not the same. No judgement. Just gratitude and respect.\n\n[CLOSE]\nNext time you want to say \"Good job,\" try \"Thank you\" instead. No hierarchy. Just contribution.",
     "expected": {
-      "engagement": false,
+      "engagement": true,
       "clarity": false,
       "payoff": false
     }
@@ -162,7 +162,7 @@
     "rawContent": "'Community feeling' is the sense of seeing other people as comrades and having a sense of belonging. It is the goal of interpersonal relationships. You acquire community feeling through your own efforts by switching from self-interest to concern for others (social interest). To do this, you need three things: self-acceptance (accepting yourself as you are, not lying to yourself with affirmations), confidence in others (unconditional belief without conditions, unlike trust which has conditions), and contribution to others (helping others without self-sacrifice). These three link together: when you accept yourself, you can have confidence in others without fear; when you have confidence in others, you can contribute to them; and when you contribute, you gain awareness that you are of use and accept yourself. When you feel beneficial to the community\u2014that you are of use to someone\u2014you find happiness and a true sense of your own worth. That sense of worth gives you courage. Contribution to others is a 'guiding star' that helps when you lose your way.",
     "script": "[HOOK]\nYou're not going to feel like you belong until you stop focusing on yourself. See, Adlerian psychology has this concept called community feeling\u2014it's the sense of seeing other people as comrades. And getting there requires three specific things.\n\n[BODY]\nFirst, self-acceptance. Not lying to yourself with affirmations like \"I'm amazing.\" Just accepting yourself as you actually are right now. Second, confidence in others. This is different from trust. Trust has conditions\u2014\"I'll trust you if you do this.\" Confidence is unconditional belief. And third, contribution to others. Helping people without sacrificing yourself. Now here's the thing: these three link together. When you accept yourself, you can have confidence in others without fear of being hurt. When you have confidence in others, you can actually contribute to them. And when you contribute, you gain this awareness that you're useful\u2014which makes you accept yourself even more. It's a cycle.\n\n[CLOSE]\nNext time you feel lost or worthless, ask yourself: who can I help today? That feeling of being useful to someone\u2014that's where your sense of worth actually comes from.",
     "expected": {
-      "engagement": false,
+      "engagement": true,
       "clarity": true,
       "payoff": true
     }
@@ -176,7 +176,7 @@
     "expected": {
       "engagement": true,
       "clarity": true,
-      "payoff": true
+      "payoff": false
     }
   },
   {
@@ -187,7 +187,7 @@
     "script": "[HOOK]\nAdlerian psychology says you chose your personality around age 10. Not consciously\u2014but you still chose it. And here's the thing: you can choose a different one right now.\n\n[BODY]\nSee, Adler doesn't call it personality. He calls it lifestyle. Because personality sounds permanent, like you're stuck with it. But lifestyle? That's something you can change. Now, changing requires courage. When you change, you feel anxious. When you stay the same and unhappy, you feel disappointed. Pick your pain. The past doesn't determine your future\u2014what matters is what you do with what you've got. If you change, your world changes. No one else can do it for you.\n\n[CLOSE]\nSo the real question is: do you have the courage to choose differently?",
     "expected": {
       "engagement": true,
-      "clarity": false,
+      "clarity": true,
       "payoff": false
     }
   },

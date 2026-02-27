@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
 Score a short-form script on Engagement, Clarity, and Payoff.
-Single LLM call, structured output. Used for script selection when --samples > 1.
+Three separate LLM calls (one per dimension). Used for script selection when --samples > 1.
 """
 
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -17,6 +18,8 @@ from schema_utils import schema_for_openai
 from usage_trace import record_llm
 
 load_dotenv(env_path())
+
+DIMENSIONS = ("engagement", "clarity", "payoff")
 
 
 class DimensionResult(BaseModel):
@@ -34,9 +37,9 @@ class JudgeScriptOutput(BaseModel):
     payoff: DimensionResult
 
 
-def _load_judge_prompt() -> str:
-    """Load the unified judge prompt."""
-    prompt_path = prompts_dir() / "eval" / "judge-script.md"
+def _load_judge_prompt(dim: str) -> str:
+    """Load the dimension-specific judge prompt."""
+    prompt_path = prompts_dir() / "eval" / f"judge-script-{dim}.md"
     if not prompt_path.exists():
         raise FileNotFoundError(f"Judge prompt not found at {prompt_path}")
     return prompt_path.read_text(encoding="utf-8")
@@ -52,45 +55,67 @@ def _extract_json(content: str) -> str:
     return content
 
 
-def judge_script(script: str, model: str = "gpt-4o-mini") -> JudgeScriptOutput:
+def judge_dimension(script: str, dim: str, model: str = "gpt-4o-mini") -> DimensionResult:
     """
-    Score a script on Engagement, Clarity, Payoff. One LLM call.
+    Score a script on a single dimension. One LLM call.
 
     Returns:
-        JudgeScriptOutput with pass/critique per dimension.
+        DimensionResult with passed/critique.
     """
-    system_prompt = _load_judge_prompt()
-    schema = JudgeScriptOutput.model_json_schema()
+    system_prompt = _load_judge_prompt(dim)
+    schema = DimensionResult.model_json_schema()
     schema = schema_for_openai(schema)
 
     response_format = {
         "type": "json_schema",
         "json_schema": {
-            "name": "JudgeScriptOutput",
+            "name": "DimensionResult",
             "strict": True,
             "schema": schema,
         },
     }
 
-    try:
-        response = completion(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Evaluate this script:\n\n{script}"},
-            ],
-            response_format=response_format,
-            temperature=0.0,
-        )
-        content = (response.choices[0].message.content or "").strip()
-        content = _extract_json(content)
-        parsed = JudgeScriptOutput.model_validate_json(content)
-        if getattr(response, "usage", None):
-            u = response.usage
-            record_llm("Judge", model, u.prompt_tokens, u.completion_tokens)
-        return parsed
-    except Exception as e:
-        raise RuntimeError(f"Script judge failed: {e}") from e
+    response = completion(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Evaluate this script on {dim}:\n\n{script}"},
+        ],
+        response_format=response_format,
+        temperature=0.0,
+    )
+    content = (response.choices[0].message.content or "").strip()
+    content = _extract_json(content)
+    parsed = DimensionResult.model_validate_json(content)
+    if getattr(response, "usage", None):
+        u = response.usage
+        record_llm(f"Judge-{dim}", model, u.prompt_tokens, u.completion_tokens)
+    return parsed
+
+
+def judge_script(script: str, model: str = "gpt-4o-mini") -> JudgeScriptOutput:
+    """
+    Score a script on Engagement, Clarity, Payoff. Three LLM calls in parallel.
+
+    Returns:
+        JudgeScriptOutput with pass/critique per dimension.
+    """
+    results: dict[str, DimensionResult] = {}
+
+    def _call(dim: str) -> tuple[str, DimensionResult]:
+        return dim, judge_dimension(script, dim, model=model)
+
+    with ThreadPoolExecutor(max_workers=3) as ex:
+        futures = {ex.submit(_call, d): d for d in DIMENSIONS}
+        for future in as_completed(futures):
+            dim, result = future.result()
+            results[dim] = result
+
+    return JudgeScriptOutput(
+        engagement=results["engagement"],
+        clarity=results["clarity"],
+        payoff=results["payoff"],
+    )
 
 
 def score_script(script: str, model: str = "gpt-4o-mini") -> dict:

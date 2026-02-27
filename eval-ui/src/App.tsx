@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { EvalTrace, Annotation, Judgment } from "./types";
+import type { EvalTrace, Annotation, Judgment, Dimension } from "./types";
 import { DIMENSIONS } from "./types";
 import type { AnnotationSource } from "./api/annotations";
 import { TraceViewer } from "./components/TraceViewer";
 import { JudgmentForm } from "./components/JudgmentForm";
+import { JudgeComparison } from "./components/JudgeComparison";
 import { BatchList } from "./components/BatchList";
+import type { TraceFilter } from "./components/BatchList";
 import { loadEvalDataset, deleteTrace } from "./api/loadTraces";
 import { loadMergedAnnotations, saveAnnotations } from "./api/annotations";
+import { loadJudgeResults, judgeResultKey } from "./api/loadJudgeResults";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -28,18 +31,20 @@ function App() {
   const [sources, setSources] = useState<Record<string, AnnotationSource>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("");
-  const [filter, setFilter] = useState<"all" | "reviewed" | "unreviewed">("unreviewed");
+  const [filter, setFilter] = useState<TraceFilter>("unreviewed");
+  const [judgeResults, setJudgeResults] = useState<Awaited<ReturnType<typeof loadJudgeResults>>>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaveError, setLastSaveError] = useState<Error | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    Promise.all([loadEvalDataset(), loadMergedAnnotations()])
-      .then(([t, { annotations: a, sources: s }]) => {
+    Promise.all([loadEvalDataset(), loadMergedAnnotations(), loadJudgeResults()])
+      .then(([t, { annotations: a, sources: s }, jr]) => {
         setTraces(t);
         setAnnotations(a);
         setSources(s);
+        setJudgeResults(jr);
         if (t.length > 0 && !selectedId) {
           const unreviewed = t.find((tr) => {
             const models = Object.keys(tr.script);
@@ -228,6 +233,27 @@ function App() {
     [sources]
   );
 
+  const traceHasDisagreement = useCallback(
+    (trace: EvalTrace) => {
+      if (!judgeResults?.entries) return false;
+      return Object.keys(trace.script).some((model) => {
+        const key = judgeResultKey(trace.id, model);
+        const entry = judgeResults.entries.find(
+          (e) => judgeResultKey(e.traceId, e.model ?? "") === key
+        );
+        return entry && entry.disagreements.length > 0;
+      });
+    },
+    [judgeResults]
+  );
+
+  const selectedJudgeResult =
+    selectedId &&
+    effectiveModel &&
+    judgeResults?.entries?.find(
+      (e) => judgeResultKey(e.traceId, e.model ?? "") === annotationKey(selectedId, effectiveModel)
+    );
+
   const handleDeleteTrace = useCallback(
     async (trace: EvalTrace) => {
       if (!confirm(`Delete "${trace.title}" from the eval dataset?`)) return;
@@ -286,6 +312,7 @@ function App() {
             traces={traces}
             traceReviewed={traceReviewed}
             traceHasLLM={traceHasLLM}
+            traceHasDisagreement={traceHasDisagreement}
             selectedId={selectedId}
             filter={filter}
             onSelect={setSelectedId}
@@ -304,12 +331,27 @@ function App() {
                   onImageAnnotationChange={handleImageAnnotationChange}
                   onDelete={handleDeleteTrace}
                   evaluationsSlot={
-                    <JudgmentForm
-                      judgments={judgmentsFromAnnotation(selectedAnnotation)}
-                      notes={selectedAnnotation?.notes ?? ""}
-                      source={selectedSource}
-                      onChange={handleJudgmentChange}
-                    />
+                    <div className="space-y-4">
+                      <JudgmentForm
+                        judgments={judgmentsFromAnnotation(selectedAnnotation)}
+                        notes={selectedAnnotation?.notes ?? ""}
+                        source={selectedSource}
+                        onChange={handleJudgmentChange}
+                      />
+                      {selectedJudgeResult && selectedAnnotation?.judgments && (
+                        <JudgeComparison
+                          judgeResult={selectedJudgeResult}
+                          humanJudgments={
+                            Object.fromEntries(
+                              DIMENSIONS.map((dim) => {
+                                const j = selectedAnnotation!.judgments!.find((x) => x.dimension === dim);
+                                return [dim, j ? { pass: j.pass, critique: j.critique } : undefined];
+                              })
+                            ) as Record<Dimension, { pass: boolean; critique: string } | undefined>
+                          }
+                        />
+                      )}
+                    </div>
                   }
                 />
               ) : (

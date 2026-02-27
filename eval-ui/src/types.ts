@@ -60,3 +60,19 @@ export const DIMENSION_QUESTIONS: Record<Dimension, string> = {
   clarity: "Is the core idea understandable in one pass?",
   payoff: "Does the viewer get something concrete?",
 };
+
+/** Judge result for one trace+model (from validate_judges --export) */
+export type JudgeResultEntry = {
+  traceId: string;
+  model: string | null;
+  title?: string;
+  expected: Record<Dimension, boolean>;
+  predicted: Record<Dimension, boolean>;
+  critiques: Record<Dimension, string>;
+  disagreements: Dimension[];
+};
+
+export type JudgeResults = {
+  generatedAt: string;
+  entries: JudgeResultEntry[];
+};

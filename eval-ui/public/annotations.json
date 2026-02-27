@@ -301,11 +301,11 @@
       },
       {
         "dimension": "payoff",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "not actionable, too vague"
       }
     ],
-    "reviewedAt": "2026-02-27T04:51:18.595Z"
+    "reviewedAt": "2026-02-27T20:57:19.319Z"
   },
   {
     "traceId": "c830e12285a329c5",
@@ -533,8 +533,8 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "vague"
       },
       {
         "dimension": "clarity",
@@ -547,7 +547,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T20:01:29.661Z"
+    "reviewedAt": "2026-02-27T20:49:37.616Z"
   },
   {
     "traceId": "b1fd1e6fd2c7d3b0",
@@ -577,7 +577,7 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -591,7 +591,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T20:03:03.269Z"
+    "reviewedAt": "2026-02-27T21:01:08.610Z"
   },
   {
     "traceId": "42cf02d85c13f2da",
@@ -622,7 +622,7 @@
       {
         "dimension": "engagement",
         "pass": false,
-        "critique": "hard to understand"
+        "critique": "unclear of the definition of a power struggle "
       },
       {
         "dimension": "clarity",
@@ -635,7 +635,7 @@
         "critique": "hard to understand"
       }
     ],
-    "reviewedAt": "2026-02-27T20:06:28.072Z"
+    "reviewedAt": "2026-02-27T21:00:04.169Z"
   },
   {
     "traceId": "79059bc7f97c2d3b",
@@ -643,8 +643,8 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
-        "critique": "hook is hard to understand"
+        "pass": true,
+        "critique": ""
       },
       {
         "dimension": "clarity",
@@ -657,7 +657,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T20:06:51.018Z"
+    "reviewedAt": "2026-02-27T21:00:52.146Z"
   },
   {
     "traceId": "5f53d528b3eeaf10",
@@ -665,8 +665,8 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
-        "critique": "until you stop focusing on yourself is vague, need a shorter hook"
+        "pass": true,
+        "critique": ""
       },
       {
         "dimension": "clarity",
@@ -679,7 +679,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T20:08:45.482Z"
+    "reviewedAt": "2026-02-27T20:56:43.370Z"
   },
   {
     "traceId": "273c8b53b8d8f6f7",
@@ -692,8 +692,8 @@
       },
       {
         "dimension": "clarity",
-        "pass": false,
-        "critique": "Pick your pain is confusing"
+        "pass": true,
+        "critique": ""
       },
       {
         "dimension": "payoff",
@@ -701,6 +701,6 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T20:10:24.466Z"
+    "reviewedAt": "2026-02-27T20:58:13.993Z"
   }
 ]
