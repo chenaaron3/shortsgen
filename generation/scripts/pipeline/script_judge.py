@@ -23,10 +23,12 @@ DIMENSIONS = ("engagement", "clarity", "payoff")
 
 
 class DimensionResult(BaseModel):
-    """Pass/fail and critique for one dimension."""
+    """Pass/fail, critique, suggestion, and reasoning for one dimension."""
 
     passed: bool = Field(..., description="Pass or fail")
     critique: str = Field(..., description="Brief rationale")
+    suggestion: str = Field(..., description="Concrete suggested improvement to the script")
+    suggestion_reasoning: str = Field(..., description="Why this suggestion would improve the script")
 
 
 class JudgeScriptOutput(BaseModel):
@@ -121,13 +123,28 @@ def judge_script(script: str, model: str = "gpt-4o-mini") -> JudgeScriptOutput:
 def score_script(script: str, model: str = "gpt-4o-mini") -> dict:
     """
     Judge a script and return a simple dict for selection logic.
-    Keys: engagement, clarity, payoff. Values: { "pass": bool, "critique": str }.
+    Keys: engagement, clarity, payoff. Values: { "pass", "critique", "suggestion", "suggestion_reasoning" }.
     """
     result = judge_script(script, model=model)
     return {
-        "engagement": {"pass": result.engagement.passed, "critique": result.engagement.critique},
-        "clarity": {"pass": result.clarity.passed, "critique": result.clarity.critique},
-        "payoff": {"pass": result.payoff.passed, "critique": result.payoff.critique},
+        "engagement": {
+            "pass": result.engagement.passed,
+            "critique": result.engagement.critique,
+            "suggestion": result.engagement.suggestion,
+            "suggestion_reasoning": result.engagement.suggestion_reasoning,
+        },
+        "clarity": {
+            "pass": result.clarity.passed,
+            "critique": result.clarity.critique,
+            "suggestion": result.clarity.suggestion,
+            "suggestion_reasoning": result.clarity.suggestion_reasoning,
+        },
+        "payoff": {
+            "pass": result.payoff.passed,
+            "critique": result.payoff.critique,
+            "suggestion": result.payoff.suggestion,
+            "suggestion_reasoning": result.payoff.suggestion_reasoning,
+        },
     }
 
 

@@ -6,12 +6,20 @@ import { createTikTokStyleCaptions } from '@remotion/captions';
 import type { TikTokPage } from '@remotion/captions';
 
 import type { Caption } from "./types";
+
+type PillBackgroundConfig = {
+  enabled: boolean;
+  color: string;
+  borderRadius: number;
+};
+
 type CaptionsOverlayProps = {
   captions: Caption[];
   fps: number;
   width: number;
   height: number;
   durationInFrames: number;
+  pillBackground?: PillBackgroundConfig;
 };
 
 function formatCaption(text: string): string {
@@ -106,6 +114,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   width,
   height,
   durationInFrames,
+  pillBackground,
 }) => {
   const frame = useCurrentFrame();
   const timeMs = (frame / fps) * 1000;
@@ -147,16 +156,23 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
 
+  const pillEnabled = pillBackground?.enabled ?? false;
+
   return (
-    <AbsoluteFill style={{ width: "100%", zIndex: 100 }}>
+    <AbsoluteFill
+      style={{
+        width: "100%",
+        zIndex: 100,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        paddingTop: "65%",
+      }}
+    >
       <div
         style={{
-          position: "relative",
-          left: "50%",
-          top: "72%",
-          transform: "translate(-50%, -50%)",
-          width: "100%",
-          padding: "16px 40px",
+          display: "inline-block",
+          padding: pillEnabled ? "8px 20px" : "16px 40px",
           maxWidth: width * 0.82,
           fontFamily: "system-ui, -apple-system, sans-serif",
           fontSize: Math.min(width * 0.09, 44),
@@ -165,6 +181,8 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
           whiteSpace: "pre-wrap" as const,
           wordSpacing: "0.1em",
           opacity,
+          backgroundColor: pillEnabled ? pillBackground.color : "transparent",
+          borderRadius: pillEnabled ? pillBackground.borderRadius : 0,
           textShadow: [
             "0 0 4px rgba(0,0,0,0.9)",
             "0 0 8px rgba(0,0,0,0.7)",

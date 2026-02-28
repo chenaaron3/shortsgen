@@ -11,13 +11,17 @@ function normalizeScript(script: unknown): Record<string, string> {
 export async function loadEvalDataset(): Promise<EvalTrace[]> {
   const res = await fetch("/eval-dataset.json");
   if (!res.ok) throw new Error("Failed to load eval dataset");
-  const raw: unknown[] = await res.json();
-  const traces = raw.map((t: Record<string, unknown>) => ({
-    ...t,
-    script: normalizeScript(t.script),
-    assets: (t.assets as Record<string, string> | undefined) ?? undefined,
-    createdAt: typeof t.createdAt === "number" ? t.createdAt : undefined,
-  })) as EvalTrace[];
+  const raw: unknown = await res.json();
+  const arr = Array.isArray(raw) ? raw : [];
+  const traces = arr.map((t) => {
+    const r = t as Record<string, unknown>;
+    return {
+      ...r,
+      script: normalizeScript(r.script),
+      assets: (r.assets as Record<string, string> | undefined) ?? undefined,
+      createdAt: typeof r.createdAt === "number" ? r.createdAt : undefined,
+    };
+  }) as EvalTrace[];
   traces.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
   return traces;
 }

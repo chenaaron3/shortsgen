@@ -69,6 +69,10 @@ export type JudgeResultEntry = {
   expected: Record<Dimension, boolean>;
   predicted: Record<Dimension, boolean>;
   critiques: Record<Dimension, string>;
+  /** Suggested improvement per dimension (from judge) */
+  suggestions?: Record<Dimension, string>;
+  /** Reasoning for why the suggestion is better */
+  suggestionReasons?: Record<Dimension, string>;
   disagreements: Dimension[];
 };
 

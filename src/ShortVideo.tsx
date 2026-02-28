@@ -6,35 +6,19 @@ import {
   interpolate,
   Series,
   staticFile,
-  useCurrentFrame,
 } from 'remotion';
 
 import { CaptionsOverlay } from './CaptionsOverlay';
+import {
+  ChromaticAberration,
+  LightLeak,
+  ProgressBar,
+  VignetteEffect,
+} from './effects';
+import { defaultEffectsConfig } from './effectsConfig';
 import { SceneSlide } from './SceneSlide';
 
 import type { VideoManifest } from "./types";
-
-/** Full-screen white flash at video open (frames 0–15) to grab attention. */
-const OpeningFlash: React.FC = () => {
-  const frame = useCurrentFrame();
-  const opacity = interpolate(
-    frame,
-    [0, 5, 12],
-    [0, 0.6, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-  );
-  if (opacity <= 0) return null;
-  return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: "#FFFFFF",
-        opacity,
-        pointerEvents: "none",
-        zIndex: 50,
-      }}
-    />
-  );
-};
 
 const FPS = 30;
 const WIDTH = 540;
@@ -45,6 +29,8 @@ type ShortVideoProps = {
 };
 
 export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
+  const effectsConfig = defaultEffectsConfig;
+
   if (!manifest || !manifest.scenes?.length) {
     return (
       <AbsoluteFill
@@ -70,7 +56,6 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
 
   return (
     <>
-      <OpeningFlash />
       <Audio
         src={staticFile("background_music.mp3")}
         volume={(f) =>
@@ -86,32 +71,55 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
         {manifest.scenes.map((scene, i) => {
           const imageSrc = staticFile(`${basePath}/${scene.imagePath}`);
           const voiceSrc = staticFile(`${basePath}/${scene.voicePath}`);
-          const durationInFrames = Math.ceil(
+          const sceneDurationInFrames = Math.ceil(
             scene.durationInSeconds * manifest.fps
           );
 
           return (
             <Series.Sequence
               key={i}
-              durationInFrames={durationInFrames}
+              durationInFrames={sceneDurationInFrames}
               name={`Scene ${i + 1}`}
             >
               <SceneSlide
                 imageSrc={imageSrc}
                 audioSrc={voiceSrc}
-                durationInFrames={durationInFrames}
+                durationInFrames={sceneDurationInFrames}
+                sceneIndex={i}
+                effectsConfig={effectsConfig}
                 isFirstScene={i === 0}
               />
             </Series.Sequence>
           );
         })}
       </Series>
+      <LightLeak
+        enabled={effectsConfig.lightLeak.enabled}
+        intensity={effectsConfig.lightLeak.intensity}
+        color={effectsConfig.lightLeak.color}
+      />
+      <ChromaticAberration
+        enabled={effectsConfig.chromaticAberration.enabled}
+        offset={effectsConfig.chromaticAberration.offset}
+      />
+      <VignetteEffect
+        enabled={effectsConfig.vignette.enabled}
+        intensity={effectsConfig.vignette.intensity}
+      />
+      <ProgressBar
+        enabled={effectsConfig.progressBar.enabled}
+        height={effectsConfig.progressBar.height}
+        color={effectsConfig.progressBar.color}
+        position={effectsConfig.progressBar.position}
+        durationInFrames={durationInFrames}
+      />
       <CaptionsOverlay
         captions={manifest.captions}
         fps={manifest.fps}
         width={manifest.width}
         height={manifest.height}
         durationInFrames={durationInFrames}
+        pillBackground={effectsConfig.captions.pillBackground}
       />
     </>
   );

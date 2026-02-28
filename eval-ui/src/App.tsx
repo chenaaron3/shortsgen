@@ -10,6 +10,12 @@ import type { TraceFilter } from "./components/BatchList";
 import { loadEvalDataset, deleteTrace } from "./api/loadTraces";
 import { loadMergedAnnotations, saveAnnotations } from "./api/annotations";
 import { loadJudgeResults, judgeResultKey } from "./api/loadJudgeResults";
+import {
+  loadGoldenSet,
+  addToGoldenSet,
+  removeFromGoldenSet,
+  type GoldenSetEntry,
+} from "./api/goldenSet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -33,18 +39,25 @@ function App() {
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [filter, setFilter] = useState<TraceFilter>("unreviewed");
   const [judgeResults, setJudgeResults] = useState<Awaited<ReturnType<typeof loadJudgeResults>>>(null);
+  const [goldenSet, setGoldenSet] = useState<GoldenSetEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaveError, setLastSaveError] = useState<Error | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    Promise.all([loadEvalDataset(), loadMergedAnnotations(), loadJudgeResults()])
-      .then(([t, { annotations: a, sources: s }, jr]) => {
+    Promise.all([
+      loadEvalDataset(),
+      loadMergedAnnotations(),
+      loadJudgeResults(),
+      loadGoldenSet(),
+    ])
+      .then(([t, { annotations: a, sources: s }, jr, gs]) => {
         setTraces(t);
         setAnnotations(a);
         setSources(s);
         setJudgeResults(jr);
+        setGoldenSet(gs);
         if (t.length > 0 && !selectedId) {
           const unreviewed = t.find((tr) => {
             const models = Object.keys(tr.script);
@@ -254,6 +267,66 @@ function App() {
       (e) => judgeResultKey(e.traceId, e.model ?? "") === annotationKey(selectedId, effectiveModel)
     );
 
+  const isInGoldenSet =
+    selectedId &&
+    effectiveModel &&
+    goldenSet.some(
+      (e) => (e.traceId ?? "") === selectedId && (e.model ?? "") === effectiveModel
+    );
+
+  const canAddToGoldenSet =
+    selectedSource === "human" &&
+    selectedAnnotation?.judgments &&
+    DIMENSIONS.every((d) =>
+      selectedAnnotation!.judgments!.some(
+        (j) => j.dimension === d && j.pass !== undefined
+      )
+    );
+
+  const buildGoldenEntry = useCallback((): GoldenSetEntry | null => {
+    if (!selectedTrace || !effectiveModel || !selectedAnnotation?.judgments) return null;
+    const judgmentsByDim = Object.fromEntries(
+      selectedAnnotation.judgments.map((j) => [j.dimension, j.pass])
+    );
+    const expected: Record<string, boolean> = {};
+    for (const d of DIMENSIONS) {
+      const v = judgmentsByDim[d];
+      if (v !== undefined) expected[d] = v;
+    }
+    if (Object.keys(expected).length < DIMENSIONS.length) return null;
+    const scriptText = selectedTrace.script[effectiveModel] ?? "";
+    return {
+      traceId: selectedTrace.id,
+      model: effectiveModel || null,
+      title: selectedTrace.title,
+      rawContent: selectedTrace.rawContent,
+      script: scriptText,
+      expected,
+    };
+  }, [selectedTrace, effectiveModel, selectedAnnotation]);
+
+  const handleStarToggle = useCallback(async () => {
+    if (!selectedId || !effectiveModel) return;
+    try {
+      if (isInGoldenSet) {
+        await removeFromGoldenSet(selectedId, effectiveModel);
+        setGoldenSet((prev) =>
+          prev.filter(
+            (e) => (e.traceId ?? "") !== selectedId || (e.model ?? "") !== effectiveModel
+          )
+        );
+      } else {
+        const entry = buildGoldenEntry();
+        if (!entry) return;
+        await addToGoldenSet(entry);
+        setGoldenSet((prev) => [...prev, entry]);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to update golden set");
+    }
+  }, [selectedId, effectiveModel, isInGoldenSet, buildGoldenEntry]);
+
   const handleDeleteTrace = useCallback(
     async (trace: EvalTrace) => {
       if (!confirm(`Delete "${trace.title}" from the eval dataset?`)) return;
@@ -274,6 +347,16 @@ function App() {
           }
           return next;
         });
+        // Remove from golden set (one entry per model)
+        const toRemove = goldenSet.filter((e) => (e.traceId ?? "") === trace.id);
+        for (const e of toRemove) {
+          try {
+            await removeFromGoldenSet(trace.id, e.model ?? "");
+          } catch {
+            // Ignore; trace is gone
+          }
+        }
+        setGoldenSet((prev) => prev.filter((e) => (e.traceId ?? "") !== trace.id));
         if (selectedId === trace.id) {
           const remaining = traces.filter((t) => t.id !== trace.id);
           setSelectedId(remaining[0]?.id ?? null);
@@ -284,7 +367,7 @@ function App() {
         alert(err instanceof Error ? err.message : "Failed to delete trace");
       }
     },
-    [selectedId, traces]
+    [selectedId, traces, goldenSet]
   );
 
   if (loading) return <div className="flex min-h-svh items-center justify-center">Loading...</div>;
@@ -337,6 +420,9 @@ function App() {
                         notes={selectedAnnotation?.notes ?? ""}
                         source={selectedSource}
                         onChange={handleJudgmentChange}
+                        isStarred={!!isInGoldenSet}
+                        onStarToggle={handleStarToggle}
+                        canStar={!!canAddToGoldenSet}
                       />
                       {selectedJudgeResult && selectedAnnotation?.judgments && (
                         <JudgeComparison

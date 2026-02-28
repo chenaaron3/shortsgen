@@ -5,7 +5,7 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -19,7 +19,13 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T23:45:57.864Z"
+    "imageAnnotations": [
+      {
+        "sceneIndex": 0,
+        "marker": "good"
+      }
+    ],
+    "reviewedAt": "2026-02-28T01:01:46.894Z"
   },
   {
     "traceId": "3157c0557bab30f0",
@@ -42,28 +48,6 @@
       }
     ],
     "reviewedAt": "2026-02-27T23:46:03.597Z"
-  },
-  {
-    "traceId": "1248488babf2b9dc",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T23:55:40.766Z"
   },
   {
     "traceId": "0192bbbe7d528a70",
@@ -110,28 +94,6 @@
     "reviewedAt": "2026-02-27T23:55:55.353Z"
   },
   {
-    "traceId": "a77da5c291f91c96",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T23:56:12.267Z"
-  },
-  {
     "traceId": "8fee76743768b90d",
     "model": "mixed",
     "judgments": [
@@ -154,27 +116,69 @@
     "reviewedAt": "2026-02-27T23:56:32.668Z"
   },
   {
-    "traceId": "7ed00358367016a7",
+    "traceId": "f62b9165cf9b033d",
     "model": "mixed",
     "judgments": [
       {
         "dimension": "engagement",
         "pass": true,
         "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-28T00:13:51.002Z"
+    "reviewedAt": "2026-02-28T00:57:07.543Z"
   },
   {
-    "traceId": "e4c3f64d18e501e8",
+    "traceId": "5f1c42f2cf788081",
+    "model": "mixed",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": "\"See, between what happens to you and how you respond, there's a gap. That gap is your power.\"\n\ntoo vague"
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-02-28T00:59:18.828Z"
+  },
+  {
+    "traceId": "e49a03c71c7d6764",
     "model": "mixed",
     "judgments": [
       {
         "dimension": "engagement",
         "pass": true,
         "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-28T00:13:53.071Z"
+    "reviewedAt": "2026-02-28T01:01:34.594Z"
   }
 ]

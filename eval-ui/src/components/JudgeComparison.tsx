@@ -93,15 +93,42 @@ export function JudgeComparison({ judgeResult, humanJudgments }: JudgeComparison
             </tbody>
           </table>
         </div>
-        {judgeResult.disagreements.length > 0 && (
-          <div className="space-y-2 rounded-md bg-muted/50 p-3">
-            <p className="text-xs font-medium text-muted-foreground">Judge&apos;s critiques (where it disagreed):</p>
-            {judgeResult.disagreements.map((dim) => (
-              <div key={dim} className="text-xs">
-                <span className="font-medium">{DIMENSION_LABELS[dim]}:</span>{" "}
-                {judgeResult.critiques[dim] || "(no critique)"}
+        {(judgeResult.disagreements.length > 0 ||
+          (judgeResult.suggestions && Object.values(judgeResult.suggestions).some(Boolean))) && (
+          <div className="space-y-3 rounded-md bg-muted/50 p-3">
+            {judgeResult.disagreements.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Judge&apos;s critiques (where it disagreed):
+                </p>
+                {judgeResult.disagreements.map((dim) => (
+                  <div key={dim} className="text-xs">
+                    <span className="font-medium">{DIMENSION_LABELS[dim]}:</span>{" "}
+                    {judgeResult.critiques[dim] || "(no critique)"}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+            {judgeResult.suggestions &&
+              judgeResult.suggestionReasons &&
+              dims.some((d) => judgeResult.suggestions?.[d] && judgeResult.suggestionReasons?.[d]) && (
+                <div className="space-y-2 border-t pt-3">
+                  <p className="text-xs font-medium text-muted-foreground">Judge&apos;s suggestions:</p>
+                  {dims.map(
+                    (dim) =>
+                      judgeResult.suggestions?.[dim] &&
+                      judgeResult.suggestionReasons?.[dim] && (
+                        <div key={dim} className="space-y-1 text-xs">
+                          <span className="font-medium">{DIMENSION_LABELS[dim]}:</span>
+                          <blockquote className="border-l-2 border-muted-foreground/30 pl-2 italic">
+                            {judgeResult.suggestions[dim]}
+                          </blockquote>
+                          <p className="text-muted-foreground">{judgeResult.suggestionReasons[dim]}</p>
+                        </div>
+                      )
+                  )}
+                </div>
+              )}
           </div>
         )}
       </CardContent>

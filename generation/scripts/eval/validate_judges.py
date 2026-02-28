@@ -61,20 +61,34 @@ def main() -> None:
 
         predicted = {d: result.get(d, {}).get("pass") for d in DIMS}
         critiques = {d: result.get(d, {}).get("critique", "") for d in DIMS}
+        # Only include suggestions for failed dimensions
+        suggestions = {
+            d: result.get(d, {}).get("suggestion", "")
+            for d in DIMS
+            if not predicted.get(d) and result.get(d, {}).get("suggestion")
+        }
+        suggestion_reasonings = {
+            d: result.get(d, {}).get("suggestion_reasoning", "")
+            for d in DIMS
+            if not predicted.get(d) and result.get(d, {}).get("suggestion_reasoning")
+        }
         disagreements = [d for d in DIMS if expected.get(d) is not None and predicted.get(d) != expected.get(d)]
 
-        return (i, {
-            "result": result,
-            "entry": {
-                "traceId": trace_id,
-                "model": model or None,
-                "title": title,
-                "expected": expected,
-                "predicted": {d: predicted[d] for d in DIMS if predicted.get(d) is not None},
-                "critiques": critiques,
-                "disagreements": disagreements,
-            },
-        }, None)
+        entry_data: dict = {
+            "traceId": trace_id,
+            "model": model or None,
+            "title": title,
+            "expected": expected,
+            "predicted": {d: predicted[d] for d in DIMS if predicted.get(d) is not None},
+            "critiques": critiques,
+            "disagreements": disagreements,
+        }
+        if suggestions:
+            entry_data["suggestions"] = suggestions
+        if suggestion_reasonings:
+            entry_data["suggestionReasons"] = suggestion_reasonings
+
+        return (i, {"result": result, "entry": entry_data}, None)
 
     items = list(enumerate(golden))
     with ThreadPoolExecutor(max_workers=min(32, len(items))) as ex:

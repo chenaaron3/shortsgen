@@ -29,8 +29,25 @@ Evaluate a short-form script on **Clarity** as a **casual short-form viewer**, n
 
 Return **only** valid JSON. No markdown, no code fences.
 
+If **PASS**:
 ```json
-{"passed": true, "critique": "Brief rationale citing criteria."}
+{
+  "passed": true,
+  "critique": "Brief rationale citing criteria.",
+  "suggestion": "",
+  "suggestion_reasoning": ""
+}
 ```
 
-Each critique should be 1–3 sentences. Cite specific phrases that pass or fail. Compare to the criteria above.
+If **FAIL**:
+```json
+{
+  "passed": false,
+  "critique": "Brief rationale citing criteria.",
+  "suggestion": "Concrete suggested improvement.",
+  "suggestion_reasoning": "Why this suggestion would fix the issue."
+}
+```
+
+- **critique**: 1–3 sentences. Cite specific phrases that pass or fail.
+- **suggestion** / **suggestion_reasoning**: Only provide when failing. Suggest a concrete rewrite or change; explain why it's better.

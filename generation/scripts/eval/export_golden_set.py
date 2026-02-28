@@ -3,6 +3,9 @@
 Export a golden set from eval-dataset.json and annotations.
 Includes all human-reviewed traces with their expected pass/fail per dimension.
 Use for judge validation and calibration.
+
+DEPRECATED: Prefer using the eval UI star button to add annotations to the golden set.
+This script is kept for one-off migrations or batch exports.
 Run from project root.
 """
 
