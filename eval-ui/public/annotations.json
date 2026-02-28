@@ -19,7 +19,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T21:48:11.856Z"
+    "reviewedAt": "2026-02-27T23:45:57.864Z"
   },
   {
     "traceId": "3157c0557bab30f0",
@@ -41,29 +41,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T21:48:47.088Z"
-  },
-  {
-    "traceId": "7ed00358367016a7",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T21:49:46.038Z"
+    "reviewedAt": "2026-02-27T23:46:03.597Z"
   },
   {
     "traceId": "1248488babf2b9dc",
@@ -85,29 +63,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T21:51:03.821Z"
-  },
-  {
-    "traceId": "e4c3f64d18e501e8",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": "hook is vague, why would the viewer care?"
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T21:52:21.506Z"
+    "reviewedAt": "2026-02-27T23:55:40.766Z"
   },
   {
     "traceId": "0192bbbe7d528a70",
@@ -129,7 +85,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T21:53:25.868Z"
+    "reviewedAt": "2026-02-27T23:55:48.084Z"
   },
   {
     "traceId": "7d06754930c62957",
@@ -151,7 +107,29 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T21:53:48.720Z"
+    "reviewedAt": "2026-02-27T23:55:55.353Z"
+  },
+  {
+    "traceId": "a77da5c291f91c96",
+    "model": "mixed",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-02-27T23:56:12.267Z"
   },
   {
     "traceId": "8fee76743768b90d",
@@ -173,28 +151,30 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T21:55:12.194Z"
+    "reviewedAt": "2026-02-27T23:56:32.668Z"
   },
   {
-    "traceId": "a77da5c291f91c96",
+    "traceId": "7ed00358367016a7",
     "model": "mixed",
     "judgments": [
       {
         "dimension": "engagement",
         "pass": true,
         "critique": ""
-      },
+      }
+    ],
+    "reviewedAt": "2026-02-28T00:13:51.002Z"
+  },
+  {
+    "traceId": "e4c3f64d18e501e8",
+    "model": "mixed",
+    "judgments": [
       {
-        "dimension": "clarity",
+        "dimension": "engagement",
         "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-02-27T22:04:27.186Z"
+    "reviewedAt": "2026-02-28T00:13:53.071Z"
   }
 ]
