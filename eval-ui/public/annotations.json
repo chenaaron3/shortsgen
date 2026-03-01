@@ -416,5 +416,775 @@
       }
     ],
     "reviewedAt": "2026-03-01T07:22:59.611Z"
+  },
+  {
+    "traceId": "b22cbf038b2f5400",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:52:55.449Z"
+  },
+  {
+    "traceId": "802dad466e62b018",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:52:59.083Z"
+  },
+  {
+    "traceId": "ef01707b5c25886a",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:02.182Z"
+  },
+  {
+    "traceId": "70649e7553d54bdc",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:05.483Z"
+  },
+  {
+    "traceId": "95bdb65f68a9187f",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:08.350Z"
+  },
+  {
+    "traceId": "3ac83a07eec67bc5",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:12.352Z"
+  },
+  {
+    "traceId": "b74a777a7adaf8d8",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:15.869Z"
+  },
+  {
+    "traceId": "dd2b6450a8ce9b20",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:19.449Z"
+  },
+  {
+    "traceId": "eea27c19e913f080",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:22.916Z"
+  },
+  {
+    "traceId": "2b794b89e5aea2f5",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:26.999Z"
+  },
+  {
+    "traceId": "1d2e306275140e4c",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:30.649Z"
+  },
+  {
+    "traceId": "72a59294efd4b19e",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:33.466Z"
+  },
+  {
+    "traceId": "e6c4e0be841ce1ba",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:37.266Z"
+  },
+  {
+    "traceId": "7494fde770bbe8d0",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:40.949Z"
+  },
+  {
+    "traceId": "4ad6d84285c5f7bd",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:53:44.549Z"
+  },
+  {
+    "traceId": "ed09dd5a22e79e94",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:04:37.098Z"
+  },
+  {
+    "traceId": "0491fe28405a9622",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:04:45.264Z"
+  },
+  {
+    "traceId": "5fc157677c3d4205",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:04:48.396Z"
+  },
+  {
+    "traceId": "a620da998280a030",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:04:51.614Z"
+  },
+  {
+    "traceId": "34eeaad6a2b2fe52",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:04:55.208Z"
+  },
+  {
+    "traceId": "ee4cee59087f6118",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:37:37.851Z"
+  },
+  {
+    "traceId": "ad820794f45a5eda",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:37:33.168Z"
+  },
+  {
+    "traceId": "a0d21e25073b02d9",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:37:42.701Z"
+  },
+  {
+    "traceId": "c5450f1003c8f38d",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:37:46.484Z"
+  },
+  {
+    "traceId": "0dc051062d139eab",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:37:54.618Z"
+  },
+  {
+    "traceId": "4838e72b417e1572",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:38:02.868Z"
+  },
+  {
+    "traceId": "0dbf41c097dd4335",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": "- Has no setup. why should the user care about the habit loop?"
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": "- Needs to provide more context about the habit loop first before diving into each step. "
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:48:49.731Z"
+  },
+  {
+    "traceId": "37f51a22555feb74",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:38:25.984Z"
+  },
+  {
+    "traceId": "ffcbf88a60b6d1e2",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:45:35.112Z"
+  },
+  {
+    "traceId": "21971f5d659c9f69",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:45:40.847Z"
+  },
+  {
+    "traceId": "6ef13c61c2f4e6ac",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:45:48.464Z"
+  },
+  {
+    "traceId": "eb1cc1212ae59acd",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:45:53.781Z"
+  },
+  {
+    "traceId": "560f35f2bb144a15",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:45:59.313Z"
+  },
+  {
+    "traceId": "e46fcbbe01b37532",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:46:02.481Z"
+  },
+  {
+    "traceId": "c4c3b5e5729d9808",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:46:05.379Z"
   }
 ]

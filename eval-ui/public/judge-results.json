@@ -1,40 +1,62 @@
 {
-  "generatedAt": "2026-03-01T07:46:08.701229+00:00",
+  "generatedAt": "2026-03-01T08:28:47.693014+00:00",
   "model": "gpt-4o-mini",
+  "golden": {
+    "engagement": {
+      "agree": 15,
+      "disagree": 2
+    },
+    "clarity": {
+      "agree": 13,
+      "disagree": 4
+    },
+    "payoff": {
+      "agree": 14,
+      "disagree": 3
+    }
+  },
+  "holdout": {
+    "engagement": {
+      "agree": 21,
+      "disagree": 7
+    },
+    "clarity": {
+      "agree": 14,
+      "disagree": 14
+    },
+    "payoff": {
+      "agree": 18,
+      "disagree": 10
+    }
+  },
   "entries": [
     {
       "traceId": "c4824f07e12873b2",
       "model": "default",
       "title": "Biology of Decision-Making",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": true,
         "payoff": true
       },
       "predicted": {
-        "engagement": false,
+        "engagement": true,
         "clarity": true,
         "payoff": true
       },
       "critiques": {
-        "engagement": "The hook, \"Why do some messages inspire us deeply, while others are easily ignored?\" is a contrast question but lacks a specific angle or promise that would compel viewers to keep watching. It does not clearly indicate what the viewer will learn or achieve, making it feel generic.",
-        "clarity": "The script presents a clear core idea: starting with 'why' enhances emotional resonance and builds loyalty and trust. It effectively explains the roles of the neocortex and limbic system in decision-making, providing a cohesive narrative that connects brain function to emotional engagement.",
-        "payoff": "The body effectively explains the neocortex and limbic system, detailing how starting with 'why' fosters emotional connections and loyalty. The close reinforces the actionable insight to lead with 'why' when trying to inspire, fulfilling the hook's promise."
+        "engagement": "The hook, \"Why do some messages inspire us deeply, while others are easily ignored?\" effectively poses a contrast question that implies a common struggle with communication and decision-making, creating curiosity about the answer. This sets the stage for the viewer to learn about the importance of starting with 'why' in messaging.",
+        "clarity": "The script clearly explains the concept of starting with 'why' in decision-making, using specific brain components and their functions to illustrate the idea.",
+        "payoff": "The script explains the mechanism of decision-making by detailing the roles of the neocortex and limbic system, providing insight into how emotional connections foster loyalty and trust."
       },
-      "disagreements": [
-        "engagement"
-      ],
-      "suggestions": {
-        "engagement": "Instead of the current hook, try: \"Ever wonder why some brands create loyal fans while others fade away? Today, I\u2019ll show you how starting with 'why' can transform your message and build deeper connections.\""
-      },
-      "suggestionReasons": {
-        "engagement": "This revised hook introduces a relatable problem (brand loyalty) and promises a specific outcome (transforming messages and building connections), which creates curiosity and encourages viewers to continue watching."
-      }
+      "disagreements": []
     },
     {
       "traceId": "0e4b22a2580afa6a",
       "model": "default",
       "title": "The Golden Circle Model",
+      "dataset": "golden",
       "expected": {
         "engagement": false,
         "clarity": false,
@@ -42,30 +64,31 @@
       },
       "predicted": {
         "engagement": false,
-        "clarity": false,
+        "clarity": true,
         "payoff": false
       },
       "critiques": {
-        "engagement": "The hook opens with an abstract definition of the Golden Circle model, stating it is a way for leaders to communicate. This lacks tension or a specific promise, making it feel generic and not engaging enough to compel viewers to keep watching.",
-        "clarity": "The script primarily consists of definitions and abstract principles about the Golden Circle without providing a concrete example or named case that illustrates its application. Phrases like \"leaders who start with 'Why' create a clear, emotional anchor\" are vague and lack a specific scenario to ground the concept.",
-        "payoff": "The body defines the Golden Circle but does not provide actionable steps or concrete examples for the viewer to implement. The close suggests starting with 'Why' but lacks specific mechanisms or detailed guidance on how to do this effectively, making it a vague directive."
+        "engagement": "The hook opens with an abstract definition of the Golden Circle model without creating any tension or curiosity. It lacks a relatable problem or a concrete promise that would engage the viewer, making it feel generic and uninspiring.",
+        "clarity": "The script clearly explains the Golden Circle model with specific definitions and a logical unpacking of its components, making the core idea understandable.",
+        "payoff": "The script explains the Golden Circle model but does not provide specific actionable steps for the viewer to implement the concept in their own communication or leadership practices."
       },
-      "disagreements": [],
+      "disagreements": [
+        "clarity"
+      ],
       "suggestions": {
-        "engagement": "\"Ever wonder why some leaders inspire action while others just inform? Today, we're diving into the Golden Circle model to uncover how starting with 'Why' can transform your communication and leadership style!\"",
-        "clarity": "Include a specific example of a leader or company that successfully applied the Golden Circle model, detailing how they defined their 'Why' and the impact it had on their communication and leadership.",
-        "payoff": "Include specific examples of how to identify and articulate your 'Why' in practice, such as asking yourself key questions or using a template to clarify your purpose."
+        "engagement": "\"Have you ever wondered why some leaders inspire action while others just manage tasks? Today, we're diving into the Golden Circle model, a powerful tool that reveals how starting with 'Why' can transform your communication and leadership style!\"",
+        "payoff": "Include specific actions or questions that viewers can use to identify their own 'Why' and apply the Golden Circle model."
       },
       "suggestionReasons": {
-        "engagement": "This suggestion poses a contrast question that creates curiosity about the effectiveness of different leadership styles, while also promising a specific outcome related to communication and leadership transformation.",
-        "clarity": "Providing a concrete example would clarify the core idea by demonstrating how the Golden Circle works in practice, making the abstract concepts more relatable and understandable for the viewer.",
-        "payoff": "Providing concrete steps or examples would give viewers actionable items to apply the concept of the Golden Circle, enhancing the script's value and making it more practical."
+        "engagement": "This suggestion introduces a relatable question that creates curiosity and sets up a clear promise of learning how to inspire others, making it more engaging for the viewer.",
+        "payoff": "Providing concrete steps or questions would give viewers a practical way to apply the insights from the Golden Circle, enhancing the script's value."
       }
     },
     {
       "traceId": "0134e17d39dadaae",
       "model": "default",
       "title": "The Core Claim: People Buy Why You Do It",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": false,
@@ -77,25 +100,26 @@
         "payoff": false
       },
       "critiques": {
-        "engagement": "The hook effectively poses a contrast question by asking why some companies inspire loyalty while others do not, creating curiosity about the underlying reasons. This sets up a clear promise of learning about the importance of purpose in communication, which encourages viewers to keep watching.",
-        "clarity": "The script presents a clear core idea: people are motivated by purpose rather than products, illustrated effectively through Simon Sinek's concept and the example of Apple. The structure is straightforward, moving from the hook to the body and closing with a call to action, making it easy to understand in one pass.",
-        "payoff": "The body presents a single illustrative example (Apple) without providing multiple actionable tips or concrete mechanisms for the viewer to apply. The close suggests starting with 'why' but lacks specific steps or details on how to implement this in practice, making it a vague directive."
+        "engagement": "The hook effectively poses a contrast question about why some companies inspire loyalty while others do not, creating curiosity about the underlying reasons. This sets up a clear promise of learning about the importance of purpose in communication, which is engaging for viewers.",
+        "clarity": "The script clearly presents a specific concept using a well-known example (Apple) and places the viewer in a relatable scenario about understanding purpose in communication.",
+        "payoff": "The script discusses the importance of communicating purpose but does not provide specific actions or steps for the viewer to take. The close suggests starting with 'why,' but this is vague and lacks concrete guidance."
       },
       "disagreements": [
         "clarity",
         "payoff"
       ],
       "suggestions": {
-        "payoff": "Include at least one more example of a company that effectively communicates its 'why' and provide specific steps on how to identify and articulate one's own 'why.'"
+        "payoff": "Include specific steps on how to identify and communicate your 'why' effectively."
       },
       "suggestionReasons": {
-        "payoff": "Adding another example and actionable steps would enhance the script by providing viewers with concrete methods to apply the concept, thus fulfilling the criteria for actionable content."
+        "payoff": "Providing actionable steps would enhance the script's value by giving viewers clear guidance on how to apply the concept in their own work."
       }
     },
     {
       "traceId": "1033debc65cbf1a1",
       "model": "default",
       "title": "3 Studying Tips You Haven't Heard Of",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": true,
@@ -107,9 +131,9 @@
         "payoff": true
       },
       "critiques": {
-        "engagement": "The hook effectively creates curiosity by stating that the viewer will learn studying tips that are likely unfamiliar, which encourages them to keep watching. Phrases like \"you probably haven't heard of\" and \"worth a shot to try these out\" suggest that the viewer will gain unique insights, making it engaging.",
-        "clarity": "The script presents a clear core idea: unconventional studying tips to enhance focus and memory retention. Each tip is distinct and includes a mechanism or method, such as using 40 Hz sounds, practicing overt visual focus, and utilizing adrenaline through cold showers, which supports the main theme effectively.",
-        "payoff": "The body provides three actionable tips: using 40 Hz sounds for focus, practicing overt visual focus by staring at an object for 30 seconds, and spiking adrenaline through a cold shower to improve memory retention. Each tip includes concrete details and mechanisms, fulfilling the criteria for actionable content."
+        "engagement": "The hook effectively creates curiosity by stating that the tips are unusual and encourages viewers to try them out, which implies a potential benefit. Phrases like \"studying tips that you probably haven't heard of\" and \"worth a shot to try these out\" suggest that viewers will learn something new and valuable.",
+        "clarity": "The script provides specific study tips with clear instructions and examples, making the core idea understandable and grounded in reality.",
+        "payoff": "The script provides specific actionable tips for studying, including using 40 Hz sounds, practicing overt visual focus, and utilizing adrenaline to enhance memory retention."
       },
       "disagreements": []
     },
@@ -117,6 +141,7 @@
       "traceId": "d171217cd8f792d1",
       "model": "default",
       "title": "How To Improve Your Communication Skills",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": true,
@@ -128,56 +153,47 @@
         "payoff": false
       },
       "critiques": {
-        "engagement": "The hook effectively promises to reveal a secret about improving social skills, which creates curiosity and a reason for viewers to keep watching. The phrase 'you were not born socially handicapped' adds a relatable element, suggesting that improvement is possible for everyone.",
-        "clarity": "The core idea is clear: improving social skills requires practice and observation. The body effectively illustrates this with the example of a baby learning to speak through observation, supporting the thesis that social skills can be developed over time with more interaction.",
-        "payoff": "The body provides a single illustrative example about a baby learning to speak through observation but lacks concrete actionable steps or mechanisms for the viewer to implement. The close is vague, simply stating to 'start talking to more people' without detailing how to do so effectively or what specific actions to take."
+        "engagement": "The hook effectively promises to reveal a secret about improving social skills, which creates a clear reason for viewers to keep watching. It addresses a relatable problem\u2014struggling with social interactions\u2014making it engaging for the audience.",
+        "clarity": "The script effectively uses a vivid scenario involving a baby learning to speak through observation, which grounds the idea in reality. It also explains the mechanism of how social skills develop through practice and observation, making the core idea understandable.",
+        "payoff": "The script emphasizes the importance of practice in social interactions but fails to provide specific actions or steps for the viewer to take. The advice to 'just go out there and start talking to more people' is too vague and lacks concrete guidance."
       },
       "disagreements": [
         "payoff"
       ],
       "suggestions": {
-        "payoff": "Include specific strategies for practicing social skills, such as joining a local club, attending networking events, or setting a goal to initiate conversations with a certain number of people each week."
+        "payoff": "Include specific strategies or tips for initiating conversations, such as asking open-ended questions or joining social groups."
       },
       "suggestionReasons": {
-        "payoff": "Providing concrete strategies would give viewers actionable steps to improve their social skills, fulfilling the criteria for a strong payoff."
+        "payoff": "Providing actionable steps would give viewers clear direction on how to practice their social skills effectively, enhancing the overall value of the script."
       }
     },
     {
       "traceId": "8a22cdad9fdafc4c",
       "model": "default",
       "title": "This Is How To Stay Motivated!",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": true,
         "payoff": true
       },
       "predicted": {
-        "engagement": false,
+        "engagement": true,
         "clarity": true,
-        "payoff": false
+        "payoff": true
       },
       "critiques": {
-        "engagement": "The hook opens with a question about adopting an internal locus of control, which is abstract and lacks a clear, relatable problem or specific outcome. It does not create enough tension or curiosity to engage the viewer effectively.",
-        "clarity": "The core idea is clear: adopting an internal locus of control can enhance motivation by recognizing personal agency in problem-solving. The example of improving sleep through specific actions effectively illustrates this concept, making it relatable and understandable.",
-        "payoff": "The body provides a single illustrative example of improving sleep with three actionable tips (sunlight, bed usage, blue light filter), but the close is vague and abstract, stating to build a belief without a concrete action. The close does not tie back to the specific actions taken in the body, which weakens the overall impact."
+        "engagement": "The hook presents a clear question about adopting an internal locus of control and promises a solution through personal problem-solving, which creates a reason for viewers to keep watching. It sets up a relatable problem (motivation) and hints at a specific outcome (feeling motivated all the time).",
+        "clarity": "The script provides a specific scenario about improving sleep, which is relatable and grounded in reality. It clearly explains the steps taken and the resulting improvement, making the core idea understandable.",
+        "payoff": "The script provides specific actionable steps for improving sleep, which directly ties to the concept of an internal locus of control."
       },
-      "disagreements": [
-        "engagement",
-        "payoff"
-      ],
-      "suggestions": {
-        "engagement": "Instead of asking how to adopt an internal locus of control, start with a statement like: \"Feeling unmotivated? Discover how taking control of small problems in your life can boost your motivation instantly!\"",
-        "payoff": "Add a specific action in the close, such as 'Next time you face a challenge, remember to apply these three tips and reflect on your success.'"
-      },
-      "suggestionReasons": {
-        "engagement": "This revised hook directly addresses a common struggle (lack of motivation) and promises a specific outcome (boosting motivation), which creates curiosity and encourages viewers to keep watching.",
-        "payoff": "This would create a clearer connection between the body and the close, reinforcing the actionable steps and encouraging the viewer to apply what they've learned."
-      }
+      "disagreements": []
     },
     {
       "traceId": "7d06754930c62957",
       "model": "default",
       "title": "Influence Through Others' Desires",
+      "dataset": "golden",
       "expected": {
         "engagement": false,
         "clarity": true,
@@ -189,24 +205,25 @@
         "payoff": false
       },
       "critiques": {
-        "engagement": "The hook, \"To truly influence someone, you need to arouse in them an eager want,\" is somewhat abstract and does not create a clear tension or specific promise for the viewer. It lacks a relatable problem or a concrete outcome that would compel the viewer to keep watching.",
-        "clarity": "The script presents a clear core idea: to influence others, you must align your message with their desires. The body effectively defines 'eager want' and illustrates it with a concrete example from parenting, demonstrating how to shift perspective to meet others' interests.",
-        "payoff": "The body provides a single illustrative example (the parenting story) without offering multiple actionable tips or concrete steps. The close is vague, suggesting a shift in pitch without detailing how to implement this change effectively."
+        "engagement": "The hook, \"To truly influence someone, you need to arouse in them an eager want,\" is an abstract definition that lacks a concrete problem or relatable context. It does not create immediate tension or curiosity for the viewer, making it less engaging.",
+        "clarity": "The script clearly defines a core idea and provides a vivid example that illustrates the concept effectively.",
+        "payoff": "The script provides a story but lacks specific actionable steps or insights on how to apply the concept of arousing an eager want in practical situations."
       },
       "disagreements": [],
       "suggestions": {
-        "engagement": "Instead of defining the term, try: \"Want to know the secret to truly influencing others? It starts with understanding what they really want.\"",
-        "payoff": "Include at least one more actionable tip or step that illustrates how to identify and align with others' desires in different contexts, such as in professional settings or negotiations."
+        "engagement": "Instead of defining the term, start with a relatable scenario: \"Have you ever tried to convince someone to do something, only to be met with resistance? What if you could turn that around by tapping into what they really want?\"",
+        "payoff": "Include specific actions or questions viewers can ask themselves to identify others' desires."
       },
       "suggestionReasons": {
-        "engagement": "This revised hook creates curiosity by promising a secret and directly addresses the viewer's desire to learn how to influence others, making it more engaging.",
-        "payoff": "Adding another concrete example or actionable step would provide viewers with more practical tools to apply the concept, enhancing the overall value of the script."
+        "engagement": "This revised hook presents a relatable problem and creates curiosity about how to influence others effectively, encouraging viewers to keep watching.",
+        "payoff": "Providing concrete steps would enhance the viewer's ability to apply the lesson in real-life scenarios, making the advice more actionable."
       }
     },
     {
       "traceId": "8fee76743768b90d",
       "model": "default",
       "title": "The Power of Feeling Important",
+      "dataset": "golden",
       "expected": {
         "engagement": false,
         "clarity": false,
@@ -218,56 +235,58 @@
         "payoff": false
       },
       "critiques": {
-        "engagement": "The hook effectively highlights a universal struggle by stating, \"Neglecting someone's need to feel important can lead to unexpected, even distorted behavior,\" which creates curiosity about the consequences of neglecting this need. This sets up the concept of authentic appreciation as a solution, encouraging viewers to keep watching.",
-        "clarity": "The script presents a clear core idea: authentic appreciation fulfills the universal need to feel important. It effectively defines the difference between flattery and genuine appreciation, using Charles Schwab as a concrete example to illustrate how appreciation can transform behavior.",
-        "payoff": "The body provides a single illustrative example of Charles Schwab's approach to appreciation without offering multiple actionable tips or mechanisms. The close suggests recognizing effort sincerely, but it lacks concrete steps or a detailed mechanism for how to implement this appreciation effectively."
+        "engagement": "The hook effectively highlights a universal struggle by stating, \"Neglecting someone's need to feel important can lead to unexpected, even distorted behavior,\" which creates curiosity about the consequences of neglecting this need. This sets up the concept of 'authentic appreciation' as a solution, encouraging viewers to keep watching to learn more about it.",
+        "clarity": "The script effectively uses a specific example (Charles Schwab) and describes a vivid scenario of appreciation versus flattery, making the core idea understandable and grounded in reality.",
+        "payoff": "The script discusses the importance of appreciation but fails to provide specific actions or steps for the viewer to take. The close suggests recognizing effort sincerely, which is vague and lacks concrete guidance."
       },
       "disagreements": [
         "engagement",
         "clarity"
       ],
       "suggestions": {
-        "payoff": "Include at least one more actionable tip on how to express authentic appreciation, such as specific phrases to use or situations to recognize effort."
+        "payoff": "Include specific actions the viewer can take to show authentic appreciation, such as 'send a thank-you note' or 'give specific feedback on a job well done.'"
       },
       "suggestionReasons": {
-        "payoff": "Adding another actionable item with concrete detail would provide viewers with more practical steps to apply the concept of authentic appreciation in their own lives."
+        "payoff": "Providing concrete actions would give the viewer clear steps to implement the concept of authentic appreciation in their own lives, enhancing the script's value."
       }
     },
     {
       "traceId": "a77da5c291f91c96",
       "model": "default",
       "title": "Criticism Doesn't Work",
+      "dataset": "golden",
       "expected": {
         "engagement": false,
         "clarity": false,
         "payoff": false
       },
       "predicted": {
-        "engagement": false,
-        "clarity": true,
+        "engagement": true,
+        "clarity": false,
         "payoff": false
       },
       "critiques": {
-        "engagement": "The hook, \"Why does criticism rarely change behavior?\" is a question that does not identify a specific contrast, gap, or struggle, making it feel generic. It lacks a clear promise or stake that would compel viewers to keep watching.",
-        "clarity": "The script presents a clear core idea: empathy is a more effective approach than criticism in influencing behavior. It defines the problem of criticism, provides a concrete example with Lincoln's approach, and concludes with a practical suggestion for the viewer.",
-        "payoff": "The body provides a single illustrative example of Lincoln's use of empathy but lacks multiple actionable tips or concrete steps for the viewer to implement. The close offers a vague directive to ask about pressures influencing actions, which does not provide a clear mechanism or actionable item."
+        "engagement": "The hook, \"Why does criticism rarely change behavior?\" poses a thought-provoking question that highlights a common struggle, creating curiosity about the topic. This sets the stage for the viewer to learn about the effectiveness of empathy over criticism, which is a valuable insight.",
+        "clarity": "The script discusses concepts like criticism and empathy in general terms without providing specific scenarios or examples that ground the ideas in reality.",
+        "payoff": "The script discusses the concept of empathy versus criticism but does not provide specific actions or steps for the viewer to take. The close suggests asking a question, but it lacks concrete guidance on how to implement empathy in practice."
       },
       "disagreements": [
-        "clarity"
+        "engagement"
       ],
       "suggestions": {
-        "engagement": "Consider rephrasing the hook to something like, \"Are you tired of seeing criticism fail to change people's behavior? Discover how empathy can be the game-changer you need!\"",
-        "payoff": "Include at least two specific strategies for practicing empathy in conversations, such as active listening techniques or specific questions to ask that demonstrate understanding."
+        "clarity": "Include a specific scenario where criticism fails and empathy succeeds, such as a workplace conflict or a personal relationship.",
+        "payoff": "Include specific actions the viewer can take to practice empathy, such as 'try to listen actively for five minutes before responding' or 'ask someone about their perspective before giving feedback.'"
       },
       "suggestionReasons": {
-        "engagement": "This revised hook introduces a relatable problem (the ineffectiveness of criticism) and promises a solution (empathy), creating curiosity and a reason for viewers to continue watching.",
-        "payoff": "Providing concrete strategies would enhance the script by giving viewers actionable steps they can take to apply the concept of empathy in their interactions, thus fulfilling the criteria for a strong payoff."
+        "clarity": "This would make the core idea more relatable and understandable by placing the viewer in a concrete situation, illustrating the effectiveness of empathy over criticism.",
+        "payoff": "Providing concrete steps would give the viewer actionable advice on how to apply the concept of empathy in their interactions, enhancing the script's value."
       }
     },
     {
       "traceId": "e49a03c71c7d6764",
       "model": "default",
       "title": "Principle of Ownership",
+      "dataset": "golden",
       "expected": {
         "engagement": false,
         "clarity": false,
@@ -275,30 +294,31 @@
       },
       "predicted": {
         "engagement": false,
-        "clarity": false,
+        "clarity": true,
         "payoff": false
       },
       "critiques": {
-        "engagement": "The hook, \"Ever feel like life's just happening to you, and you're standing by?\" uses a vague metaphor without a concrete promise or specific stakes, making it feel generic. It does not create a strong reason for viewers to keep watching, as it lacks a clear outcome or specific problem that will be addressed.",
-        "clarity": "The core message of proactivity is somewhat clear, but the body primarily consists of abstract definitions like 'seeking solutions' and 'planning ahead' without concrete examples or scenarios to illustrate how to be proactive. Phrases like 'owning your choices' are vague and do not provide a grounded application of the concept.",
-        "payoff": "The body defines proactivity but lacks concrete actionable steps or mechanisms for implementation. The close suggests picking an area to control and setting a goal, but this is vague and does not provide specific guidance on how to do so."
+        "engagement": "The hook, \"Ever feel like life's just happening to you, and you're standing by? It's time to become the captain of your ship,\" uses a vague metaphor without immediately linking to a specific, tangible real-world struggle. The phrase 'captain of your ship' does not provide a concrete problem or outcome, making it less engaging.",
+        "clarity": "The script effectively uses a vivid scenario and logical unpacking to convey the concept of proactivity clearly.",
+        "payoff": "The script emphasizes the importance of being proactive but fails to provide specific actions or steps for the viewer to take. The advice to 'set a goal' is vague and lacks concrete direction."
       },
-      "disagreements": [],
+      "disagreements": [
+        "clarity"
+      ],
       "suggestions": {
-        "engagement": "\"Do you often find yourself reacting to situations instead of taking charge? In this video, I'll show you how to become proactive and take control of your life starting today!\"",
-        "clarity": "Include a specific example of a situation where someone can apply proactivity, such as setting a goal to improve health by creating a weekly exercise plan.",
-        "payoff": "Include specific examples of areas to take control of and actionable steps to set and achieve a goal in those areas."
+        "engagement": "Instead of using a metaphor, try: \"Do you often feel stuck in your life, waiting for things to change? Let's talk about how being proactive can help you take control and create the life you want.\"",
+        "payoff": "Include specific actions the viewer can take to become proactive, such as 'write down three goals you want to achieve this month' or 'identify one area in your life where you can take immediate action.'"
       },
       "suggestionReasons": {
-        "engagement": "This revised hook directly addresses a common struggle (reacting vs. taking charge) and promises a specific outcome (learning how to be proactive), which creates curiosity and encourages viewers to keep watching.",
-        "clarity": "Providing a concrete example would clarify how to implement proactivity in real life, making the concept more relatable and actionable for the viewer.",
-        "payoff": "Providing concrete examples and steps would give viewers clear actions to take, enhancing the script's value and making it more actionable."
+        "engagement": "This suggestion directly addresses a relatable problem (feeling stuck) and clearly states the benefit of being proactive, which creates a stronger reason for viewers to keep watching.",
+        "payoff": "Providing specific actions would give the viewer clear steps to follow, making the advice actionable and practical, thus enhancing the overall value of the script."
       }
     },
     {
       "traceId": "5887a5bb117d2276",
       "model": "default",
       "title": "Improve Your Focus With These 3 Tips",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": true,
@@ -310,9 +330,9 @@
         "payoff": true
       },
       "critiques": {
-        "engagement": "The hook presents a relatable problem about technology's control over our lives and poses a question that creates curiosity about regaining control. This sets up a clear promise of learning strategies to achieve that control, which encourages viewers to keep watching.",
-        "clarity": "The core idea is clear: how to take control of technology instead of being controlled by it. The three strategies provided are distinct and practical, each illustrating a method to achieve this control, such as using specific apps, changing work environments, and implementing a reward system.",
-        "payoff": "The body provides three distinct actionable strategies: using the News Feed Eradicator extension, changing the physical work environment, and implementing a reward system for productivity. Each strategy includes concrete details that viewers can visualize and apply, fulfilling the criteria for actionable tips."
+        "engagement": "The hook presents a relatable problem about technology's control over our lives and poses a question that implies a solution, creating curiosity about how to regain control. This sets up a clear reason for viewers to keep watching as they want to learn how to make technology work for them instead of against them.",
+        "clarity": "The script presents clear strategies for managing technology use, with specific examples and scenarios that are relatable and actionable.",
+        "payoff": "The script provides specific actionable strategies for taking control of technology use, including using an extension to eliminate news feeds, changing work environments, and implementing a reward system."
       },
       "disagreements": []
     },
@@ -320,6 +340,7 @@
       "traceId": "0e4c5be709325c97",
       "model": "default",
       "title": "How To Ask Out Your Crush In 3 Simple Steps",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": true,
@@ -331,9 +352,9 @@
         "payoff": true
       },
       "critiques": {
-        "engagement": "The hook clearly outlines a specific process for asking out a crush, creating curiosity about the three steps involved. This gives viewers a concrete promise of learning a method to approach a common social situation, which is relatable and engaging.",
-        "clarity": "The core idea of a three-step process for asking out a crush is clear and understandable. Each step is distinct and provides concrete actions, such as getting attention, making a proposal, and handling the response. The inclusion of potential outcomes adds depth to the process without straying from the main theme.",
-        "payoff": "The body provides a clear three-step process for asking out a crush: 1) get their attention, 2) express your interest with a specific invitation, and 3) wait for their response. Each step is actionable and includes concrete details, such as what to say and how to respond to different outcomes, fulfilling the criteria for actionable tips."
+        "engagement": "The hook effectively outlines a clear, actionable process for asking out a crush, which creates a reason for viewers to keep watching. The promise of a simple three-step method implies that viewers will learn something valuable and practical.",
+        "clarity": "The script provides a clear, step-by-step process for asking out a crush, using specific actions and scenarios that viewers can relate to.",
+        "payoff": "The script provides a clear three-step process for asking out a crush, detailing specific actions to take in each step."
       },
       "disagreements": []
     },
@@ -341,6 +362,7 @@
       "traceId": "30c83c85861a67df",
       "model": "default",
       "title": "Top 3 Careers That Are In High Demand | Work From Home",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": true,
@@ -352,9 +374,9 @@
         "payoff": true
       },
       "critiques": {
-        "engagement": "The hook effectively outlines a specific promise by stating that the viewer will learn about the top three careers that are in high demand, do not require a college degree, and have good starting pay. This creates a clear reason for viewers to keep watching, as they are likely interested in career opportunities that fit these criteria.",
-        "clarity": "The script presents a clear core idea: it outlines three high-demand careers that do not require a college degree. Each career is explained with specific details about the nature of the work and potential salaries, which supports the main theme effectively.",
-        "payoff": "The body provides three distinct career paths: technology sales, IT, and digital marketing, each with specific details about potential salaries and growth opportunities. The mention of salary ranges (100 to 300,000 for IT and 40 to 50,000 for digital marketing) adds concrete detail, fulfilling the criteria for actionable items."
+        "engagement": "The hook clearly outlines what the viewer will learn: the top three careers that are in high demand, do not require a college degree, and can be done remotely. This creates a strong reason for viewers to keep watching, as it promises valuable information about career options.",
+        "clarity": "The script clearly outlines three specific careers that are in high demand, providing concrete details about each one, including potential salaries and job descriptions.",
+        "payoff": "The script provides a clear list of three specific careers, along with details about their potential salaries and growth opportunities, which offers concrete value to the viewer."
       },
       "disagreements": []
     },
@@ -362,6 +384,7 @@
       "traceId": "cc1fd1bea932a3af",
       "model": "default",
       "title": "What Are The Benefits of Mindfulness Breathing Meditation?",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": true,
@@ -370,25 +393,22 @@
       "predicted": {
         "engagement": true,
         "clarity": true,
-        "payoff": false
+        "payoff": true
       },
       "critiques": {
-        "engagement": "The hook effectively outlines what the viewer will learn by stating that it will cover the most common forms of meditation, their benefits, and who they are for. This creates a clear reason for viewers to keep watching, as they can expect specific information about meditation types.",
-        "clarity": "The script presents a clear core idea about mindfulness breathing meditation, explaining how it works, its benefits, and who it is suitable for. The structure is straightforward, moving from the explanation of the technique to its benefits, which supports the main theme effectively.",
-        "payoff": "The body provides a single example of mindfulness breathing meditation without offering multiple actionable tips or steps. The close is vague, simply encouraging viewers to follow for more tips without providing a specific action or takeaway related to the content."
+        "engagement": "The hook effectively announces a specific topic by stating that it will cover the most common forms of meditation, including their workings, benefits, and suitability for different individuals. This creates a clear reason for viewers to keep watching, as they can expect to learn valuable information about meditation.",
+        "clarity": "The script clearly explains mindfulness breathing meditation with specific details about how it works and its benefits, making it understandable and relatable.",
+        "payoff": "The script provides specific instructions on how to practice mindfulness breathing meditation, explaining the mechanism and benefits associated with it."
       },
-      "disagreements": [],
-      "suggestions": {
-        "payoff": "Include at least one more form of meditation with specific steps and benefits, such as loving-kindness meditation or body scan meditation, to provide viewers with multiple actionable items."
-      },
-      "suggestionReasons": {
-        "payoff": "Adding another meditation type with concrete details and mechanisms would fulfill the requirement for 2+ actionable items, enhancing the script's value and making it more informative."
-      }
+      "disagreements": [
+        "payoff"
+      ]
     },
     {
       "traceId": "4f3d497842d49227",
       "model": "default",
       "title": "How To Increase Your Testosterone - 3 Top Tips",
+      "dataset": "golden",
       "expected": {
         "engagement": true,
         "clarity": true,
@@ -400,9 +420,9 @@
         "payoff": true
       },
       "critiques": {
-        "engagement": "The hook effectively announces that the viewer will learn about the top three ways to boost testosterone, creating curiosity and a clear reason to keep watching. It sets up an outcome-focused expectation without giving away the details, which is engaging for the audience.",
-        "clarity": "The script presents a clear core idea: three ways to boost testosterone. Each method is distinct and supported by concrete examples, such as the impact of sleep, weightlifting, and social dynamics in the skateboard study, which illustrate the mechanisms effectively.",
-        "payoff": "The body provides three actionable tips: ensuring proper sleep for testosterone production, lifting heavy weights with compound exercises, and the impact of performing in front of potential mates. Each tip includes concrete details or mechanisms, such as the specific exercises and the study findings, which support the claims made."
+        "engagement": "The hook effectively announces a specific topic and promises to share actionable tips, which creates a clear reason for viewers to keep watching. By stating 'the top three ways you can boost your testosterone,' it sets up an expectation of valuable information that viewers may want to learn about.",
+        "clarity": "The script provides specific methods to boost testosterone, supported by studies and vivid scenarios, making the core idea understandable and grounded in reality.",
+        "payoff": "The script provides specific actions and insights on how to boost testosterone, including the importance of sleep, working out with heavy weights, and the influence of social situations on testosterone levels."
       },
       "disagreements": []
     },
@@ -410,6 +430,523 @@
       "traceId": "f95e8964161bc29d",
       "model": "default",
       "title": "How To INCREASE Your Productivity",
+      "dataset": "golden",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook effectively creates curiosity by promising to share five simple tricks to double productivity, which is a relatable and valuable outcome for viewers. It sets up a personal story that leads into actionable advice, encouraging viewers to keep watching for the specific tips.",
+        "clarity": "The script provides a specific scenario of moving to a local cafe for work, which is a concrete example of the advice given. It also explains the mechanism behind procrastination and how quick action can help overcome it, making the core idea understandable and relatable.",
+        "payoff": "The script provides specific actionable advice on improving productivity, including selecting a work location and taking quick action to avoid procrastination."
+      },
+      "disagreements": []
+    },
+    {
+      "traceId": "be0b3f71652b8e7d",
+      "model": "default",
+      "title": "This Is How You Can Fall Asleep Faster",
+      "dataset": "golden",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook clearly states a specific outcome: being able to fall asleep within 10 to 15 minutes, which creates a strong reason for viewers to keep watching. It addresses a common problem that many people face, making it relatable and engaging.",
+        "clarity": "The script provides clear, actionable advice with specific instructions and explanations about sleep hygiene.",
+        "payoff": "The script provides specific actionable steps to help the viewer fall asleep, including limiting caffeine, controlling lighting, and lowering body temperature."
+      },
+      "disagreements": []
+    },
+    {
+      "traceId": "5f1c42f2cf788081",
+      "model": "default",
+      "title": "Proactivity as a Blank Canvas",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook, \"What if your life was a blank canvas, waiting for you to paint your own masterpiece?\" uses a vague metaphor without immediately linking to a specific, tangible real-world struggle. It fails to create a clear tension or curiosity that would compel viewers to keep watching.",
+        "clarity": "The script relies heavily on a metaphor (life as a blank canvas) without providing a specific real-world application or scenario. It lacks concrete examples or a vivid situation that viewers can relate to.",
+        "payoff": "The script presents a metaphor about life as a canvas but fails to provide specific actions or steps for the viewer to take. The advice to 'start painting with intent' is vague and does not translate into concrete actions."
+      },
+      "disagreements": [],
+      "suggestions": {
+        "engagement": "Imagine feeling stuck in your daily routine\u2014what if you could transform your life into a vibrant masterpiece instead?",
+        "clarity": "Incorporate a specific scenario or example of someone making proactive choices in their life, such as a student deciding to study for an exam or a professional choosing to pursue a new career path.",
+        "payoff": "Include specific actions viewers can take to be proactive, such as setting daily goals or reflecting on their choices."
+      },
+      "suggestionReasons": {
+        "engagement": "This suggestion introduces a relatable problem (feeling stuck) and contrasts it with the potential for transformation, creating a stronger curiosity gap that encourages viewers to continue watching.",
+        "clarity": "Adding a concrete example would help ground the metaphor in reality, making the core idea more relatable and understandable for viewers.",
+        "payoff": "Providing actionable steps would give viewers clear guidance on how to apply the concept of being proactive in their lives, enhancing the script's value."
+      }
+    },
+    {
+      "traceId": "5f1c42f2cf788081",
+      "model": "gpt-0",
+      "title": "Proactivity as a Blank Canvas",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook, \"What if your life was a blank canvas, and you held the brush?\" uses a vague metaphor without immediately linking to a specific, tangible real-world struggle. It fails to create a clear tension or curiosity that would compel viewers to keep watching.",
+        "clarity": "The script relies heavily on a metaphor without providing a specific real-world application or scenario, making it abstract and less relatable.",
+        "payoff": "The script uses a metaphor to describe being proactive but does not provide specific actions or insights on how to be proactive. The advice remains abstract and lacks concrete steps."
+      },
+      "disagreements": [],
+      "suggestions": {
+        "engagement": "Imagine feeling stuck in your daily routine\u2014what if you could change that and create a life you truly love?",
+        "clarity": "Incorporate a specific example of a person taking proactive steps in their life, such as someone pursuing a career change or starting a new hobby.",
+        "payoff": "Include specific actions that viewers can take to be more proactive in their lives, such as setting daily goals or making a decision about a specific area of their life."
+      },
+      "suggestionReasons": {
+        "engagement": "This suggestion directly addresses a relatable problem (feeling stuck) and invites viewers to consider a transformative possibility, creating a stronger hook that encourages them to keep watching.",
+        "clarity": "Adding a concrete example would ground the metaphor in reality, making it easier for viewers to understand and relate to the concept of being proactive.",
+        "payoff": "Providing concrete steps would give viewers actionable advice, making the metaphor more practical and applicable to their lives."
+      }
+    },
+    {
+      "traceId": "5f1c42f2cf788081",
+      "model": "mixed",
+      "title": "Proactivity as a Blank Canvas",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook effectively identifies a common struggle\u2014feeling like life happens to you\u2014and contrasts it with the proactive approach, creating a clear reason for viewers to keep watching. It sets up the promise of learning how to take control of one's responses and outcomes, which is engaging and actionable.",
+        "clarity": "The script clearly presents the concept of proactivity with a specific scenario that illustrates the difference between reactive and proactive responses. It effectively uses a relatable situation to ground the idea in reality.",
+        "payoff": "The script effectively explains the concept of proactivity and provides a concrete example of how to apply it in a real-life scenario, illustrating the difference between reactive and proactive responses."
+      },
+      "disagreements": [
+        "engagement",
+        "clarity",
+        "payoff"
+      ]
+    },
+    {
+      "traceId": "e49a03c71c7d6764",
+      "model": "gpt-0",
+      "title": "Principle of Ownership",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": true,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook, \"Ever feel like life is just happening to you?\" is a vague metaphor that does not clearly identify a specific real-world problem or struggle. While it hints at a common feeling, it lacks a concrete promise or actionable insight that would engage the viewer effectively. Additionally, the phrase \"captain of your own ship\" is another vague metaphor that does not provide a tangible outcome.",
+        "clarity": "The script clearly presents the concept of being proactive with relatable scenarios and actionable advice.",
+        "payoff": "The script promotes a proactive mindset but lacks specific actionable steps on how to implement it. The advice to 'set one small goal' is vague and does not provide concrete actions."
+      },
+      "disagreements": [
+        "clarity"
+      ],
+      "suggestions": {
+        "engagement": "Instead of starting with a metaphor, try: \"Do you often feel like you're just going through the motions in life? Today, I'll show you how adopting a proactive mindset can help you take control and create the life you want.\"",
+        "payoff": "Include specific examples of small goals and actionable steps to take towards achieving them."
+      },
+      "suggestionReasons": {
+        "engagement": "This revised hook directly addresses a relatable problem and promises a specific outcome (taking control of one's life), which is more likely to engage viewers and encourage them to keep watching.",
+        "payoff": "Providing concrete examples and steps would enhance the viewer's understanding and ability to apply the concept of being proactive in their lives."
+      }
+    },
+    {
+      "traceId": "e49a03c71c7d6764",
+      "model": "mixed",
+      "title": "Principle of Ownership",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": true,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook opens with a vague metaphor, stating that 'most people wait for life to happen to them' without immediately linking it to a specific, tangible problem. The phrase 'it's called being proactive' does not create enough tension or curiosity to engage the viewer effectively.",
+        "clarity": "The script clearly presents the concept of proactivity through a vivid metaphor and specific examples, making it understandable and relatable.",
+        "payoff": "The script discusses proactivity and ownership but does not provide specific actions or steps for the viewer to take. It presents a concept without concrete advice on how to implement it."
+      },
+      "disagreements": [
+        "clarity"
+      ],
+      "suggestions": {
+        "engagement": "Instead of starting with 'Most people wait for life to happen to them,' try: 'Ever feel like life is just happening to you? What if I told you there's a way to take control and steer your own ship?'",
+        "payoff": "Include specific actions that viewers can take to become more proactive, such as setting daily goals or practicing mindfulness to recognize their reactions."
+      },
+      "suggestionReasons": {
+        "engagement": "This revised hook directly addresses a common struggle (feeling passive in life) and introduces the concept of proactivity as a solution, creating immediate interest and a reason to keep watching.",
+        "payoff": "Providing concrete steps would give viewers actionable advice, enhancing the script's value and making the concept of proactivity more applicable in their lives."
+      }
+    },
+    {
+      "traceId": "f62b9165cf9b033d",
+      "model": "default",
+      "title": "Vision as a Blueprint",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook, \"Imagine your life as a dream home you're building from scratch,\" uses a vague metaphor without immediately linking to a specific real-world problem or struggle. It lacks a concrete promise or tension that would compel viewers to keep watching.",
+        "clarity": "The script relies heavily on a metaphor of life as a construction project without providing specific examples or scenarios that ground the idea in reality. It lacks concrete entities or vivid situations that would help the viewer relate to the message.",
+        "payoff": "The script presents a metaphor about life as a construction project but fails to provide specific actions or steps for the viewer to take. The advice to 'define your blueprint' is vague and does not offer concrete methods for achieving this."
+      },
+      "disagreements": [],
+      "suggestions": {
+        "engagement": "Instead of a metaphor, start with a question like, \"Are you feeling lost in your life and unsure of how to achieve your dreams?\"",
+        "clarity": "Incorporate specific examples of goals or actions that align with the metaphor, such as 'Imagine you want to build a home office; your blueprint might include daily work hours and a dedicated workspace.'",
+        "payoff": "Include specific steps for defining a blueprint, such as writing down goals, breaking them into actionable tasks, or setting deadlines."
+      },
+      "suggestionReasons": {
+        "engagement": "This suggestion directly addresses a common struggle, creating immediate engagement and curiosity about how to overcome that feeling, which would encourage viewers to continue watching.",
+        "clarity": "Adding specific examples will make the metaphor more relatable and understandable, helping viewers visualize how to apply the concept to their own lives.",
+        "payoff": "Providing concrete actions would enhance the script's value by giving viewers clear guidance on how to apply the metaphor to their lives."
+      }
+    },
+    {
+      "traceId": "f62b9165cf9b033d",
+      "model": "gpt-0",
+      "title": "Vision as a Blueprint",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": true,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook, \"What if your life was a construction project, and you were the architect?\" uses a vague metaphor without immediately linking to a specific, tangible real-world struggle. It lacks a concrete promise or relatable problem that would engage viewers effectively.",
+        "clarity": "The script uses a vivid construction analogy to explain life goals, making the core idea understandable and relatable.",
+        "payoff": "The script presents a metaphor about life goals as a construction project but lacks specific actionable steps or mechanisms for the viewer to implement. It encourages defining a blueprint but does not explain how to do that or what specific actions to take."
+      },
+      "disagreements": [
+        "clarity"
+      ],
+      "suggestions": {
+        "engagement": "Imagine feeling lost in your life\u2014what if you could create a clear blueprint to guide you towards your goals?",
+        "payoff": "Include specific steps for defining goals and aligning actions, such as writing down values, setting measurable objectives, or creating a vision board."
+      },
+      "suggestionReasons": {
+        "engagement": "This suggestion directly addresses a common struggle (feeling lost) and introduces the concept of a blueprint as a solution, creating a more engaging hook that invites viewers to keep watching.",
+        "payoff": "Providing concrete actions would enhance the script's value by giving viewers clear guidance on how to apply the metaphor in their lives, making it more actionable and insightful."
+      }
+    },
+    {
+      "traceId": "f62b9165cf9b033d",
+      "model": "mixed",
+      "title": "Vision as a Blueprint",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook, \"Most people build their life without a blueprint,\" is a generic statement that lacks a specific angle or tension. It does not create a strong curiosity gap or indicate a concrete problem that viewers can relate to, making it less engaging.",
+        "clarity": "The script effectively uses a vivid scenario of constructing a house to illustrate the importance of having a clear vision in life. It places the viewer in a relatable situation and logically unpacks the metaphor, making the core idea understandable and grounded in reality.",
+        "payoff": "The script provides a clear metaphor and actionable advice, guiding the viewer to create a vision for their life."
+      },
+      "disagreements": [
+        "clarity",
+        "payoff"
+      ],
+      "suggestions": {
+        "engagement": "\"Are you building your life without a clear vision? Let's explore how having a blueprint can transform your goals into reality!\""
+      },
+      "suggestionReasons": {
+        "engagement": "This revised hook poses a direct question that identifies a common struggle (lack of clarity in life goals) and promises to explore a solution, creating a stronger reason for viewers to keep watching."
+      }
+    },
+    {
+      "traceId": "b22cbf038b2f5400",
+      "model": "default",
+      "title": "How You Can Max Out Parkinson's Law",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook opens with an abstract definition of Parkinson's Law without establishing a clear tension or specific stakes for the viewer. It fails to create a relatable problem or a concrete promise that would encourage viewers to keep watching.",
+        "clarity": "The script discusses Parkinson's Law but lacks specific examples or scenarios that ground the concept in reality. It also relies on vague generalizations about dreams and ambitions without concrete applications.",
+        "payoff": "The script discusses Parkinson's Law and shares a personal story, but it does not provide specific actionable steps or insights on how to apply this concept effectively. The takeaway is vague and lacks concrete advice."
+      },
+      "disagreements": [
+        "engagement",
+        "clarity",
+        "payoff"
+      ],
+      "suggestions": {
+        "engagement": "Instead of starting with the definition, try: \"Are you tired of procrastinating until the last minute? I found a way to beat Parkinson's Law and get more done in less time!\"",
+        "clarity": "Incorporate a specific example of a project or task that illustrates how Parkinson's Law can be applied effectively.",
+        "payoff": "Include specific strategies for managing time and projects to avoid the pitfalls of Parkinson's Law, such as setting shorter deadlines or breaking projects into smaller tasks."
+      },
+      "suggestionReasons": {
+        "engagement": "This revised hook directly addresses a common struggle (procrastination) and promises a solution, which creates immediate interest and encourages viewers to continue watching.",
+        "clarity": "Providing a concrete scenario would help viewers better understand how to apply Parkinson's Law in their own lives, making the concept more relatable and actionable.",
+        "payoff": "Providing concrete actions would give viewers practical tools to apply the concept of Parkinson's Law in their own lives, enhancing the script's value."
+      }
+    },
+    {
+      "traceId": "802dad466e62b018",
+      "model": "default",
+      "title": "A Glass Of Water - Short Inspirational Stories",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook presents a relatable scenario that sets up a lesson about stress management, creating curiosity about the psychologist's point. The question about the weight of the glass implies a deeper insight into handling stress, which encourages viewers to keep watching for the resolution.",
+        "clarity": "The script uses a vivid scenario involving a psychologist and a relatable metaphor about holding a glass of water to illustrate stress management, making the core idea understandable and grounded in reality.",
+        "payoff": "The script uses a metaphor to illustrate the impact of holding onto stress, providing a clear lesson about managing worries."
+      },
+      "disagreements": []
+    },
+    {
+      "traceId": "ef01707b5c25886a",
+      "model": "default",
+      "title": "How To Escape The Rat Race in 3 Steps",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook effectively promises to share a feasible method for escaping the rat race, which is a relatable and high-value topic for many viewers. It sets up a clear expectation for the viewer about what they will learn, making it engaging and likely to keep them watching.",
+        "clarity": "The script lacks specific examples or scenarios that would ground the advice in reality. It uses vague terms like 'the system' and 'the rat race' without defining them or providing relatable situations.",
+        "payoff": "The script provides some steps but lacks specific actionable advice on how to implement them. For example, 'increase your income stream' is vague and does not specify how to do that. Similarly, 'take asymmetrical bets' is abstract without concrete examples or methods."
+      },
+      "disagreements": [
+        "clarity",
+        "payoff"
+      ],
+      "suggestions": {
+        "clarity": "Incorporate specific examples of income streams or scenarios where someone might escape the rat race, such as starting a side business or investing in stocks.",
+        "payoff": "Include specific actions or examples for increasing income streams and taking asymmetrical bets."
+      },
+      "suggestionReasons": {
+        "clarity": "Providing concrete examples will help viewers better understand the advice and visualize how they can apply it to their own lives.",
+        "payoff": "Providing concrete steps or examples would give viewers clear guidance on how to apply the advice, enhancing the script's value."
+      }
+    },
+    {
+      "traceId": "70649e7553d54bdc",
+      "model": "default",
+      "title": "How To Develop The Formula For Happiness | Ikigai",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": true,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook opens with a generic statement about happiness and lacks a specific angle or tension. Phrases like \"the majority of us have no idea what to do\" and \"easier said than done\" do not create a compelling reason to keep watching. The mention of ikigai is interesting, but it doesn't provide a clear promise or outcome for the viewer.",
+        "clarity": "The script clearly explains the concept of ikigai and its four components, providing a vivid scenario for the viewer to understand their own life situation.",
+        "payoff": "The script discusses the concept of ikigai and its components but does not provide specific actions or steps for the viewer to take in order to achieve ikigai. It presents a framework without actionable advice."
+      },
+      "disagreements": [
+        "engagement",
+        "payoff"
+      ],
+      "suggestions": {
+        "engagement": "Instead of starting with a broad statement about happiness, try: \"Are you feeling unfulfilled in life? Discover how the Japanese concept of ikigai can help you find your true purpose and happiness by checking off four essential components.\"",
+        "payoff": "Include specific steps or questions viewers can ask themselves to identify their ikigai components."
+      },
+      "suggestionReasons": {
+        "engagement": "This revised hook directly addresses a common struggle (feeling unfulfilled) and promises a specific outcome (finding true purpose and happiness), which is more likely to engage viewers and encourage them to keep watching.",
+        "payoff": "Providing concrete actions or reflective questions would give viewers a clear path to apply the concept of ikigai in their own lives, enhancing the script's value."
+      }
+    },
+    {
+      "traceId": "95bdb65f68a9187f",
+      "model": "default",
+      "title": "How To Trick Your Brain into Doing ANYTHING!",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook introduces the concept of the 'showtime trick' and hints at practical routines that can help the viewer enter a productive state of mind. This creates curiosity about what these routines might be and how they can be applied, encouraging viewers to keep watching.",
+        "clarity": "The script effectively uses specific examples and scenarios to illustrate the core idea of the 'showtime trick'.",
+        "payoff": "The script provides a specific actionable step by suggesting the viewer create a new ritual and perform it consistently after the first three times. It also explains the mechanism behind why rituals can help enter a certain state of mind."
+      },
+      "disagreements": []
+    },
+    {
+      "traceId": "3ac83a07eec67bc5",
+      "model": "default",
+      "title": "What Are the Benefits of Metta Meditation?",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook effectively announces a specific topic and promises to cover the common forms of meditation, including their workings, benefits, and suitability for different individuals. This creates a clear reason for viewers to keep watching, as they will learn valuable information about meditation practices.",
+        "clarity": "The script clearly explains metta meditation with specific details about the practice, its benefits, and who it is for, making it understandable and grounded in reality.",
+        "payoff": "The script provides specific instructions on how to practice metta meditation, detailing the steps involved and the intended outcomes."
+      },
+      "disagreements": []
+    },
+    {
+      "traceId": "b74a777a7adaf8d8",
+      "model": "default",
+      "title": "The Secret to Believing in Yourself!",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook, \"The secret to believing in yourself,\" creates curiosity and promises valuable insights on self-belief. It sets up a clear expectation for the viewer about what they will learn, which is reinforced by the structured steps that follow in the body.",
+        "clarity": "The script provides a clear, step-by-step process for building self-belief, using specific examples and scenarios that are relatable.",
+        "payoff": "The script provides specific actionable steps for the viewer to follow in order to build self-belief, including identifying negative thoughts, creating positive affirmations, and reinforcing them with proof."
+      },
+      "disagreements": []
+    },
+    {
+      "traceId": "dd2b6450a8ce9b20",
+      "model": "default",
+      "title": "Tips for Getting People To Open Up",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook clearly states a specific outcome: learning how to get people to open up, which creates a reason for viewers to keep watching. It sets up a relatable problem of social interaction and the fear of judgment, making it engaging.",
+        "clarity": "The script discusses concepts in general terms without providing specific examples or scenarios, making it less relatable and clear.",
+        "payoff": "The script discusses the concept of reducing one's filter to encourage openness in conversation but does not provide specific actions or steps for the viewer to take. It remains abstract and lacks concrete advice."
+      },
+      "disagreements": [
+        "clarity",
+        "payoff"
+      ],
+      "suggestions": {
+        "clarity": "Incorporate a specific scenario where someone successfully reduces their filter in a conversation.",
+        "payoff": "Include specific actions viewers can take to reduce their filter, such as examples of questions to ask or ways to express themselves more openly."
+      },
+      "suggestionReasons": {
+        "clarity": "Adding a concrete example would help illustrate the concept and make it more understandable for viewers.",
+        "payoff": "Providing actionable steps would give viewers clear guidance on how to implement the concept of reducing their filter in real-life conversations, enhancing the script's value."
+      }
+    },
+    {
+      "traceId": "eea27c19e913f080",
+      "model": "default",
+      "title": "3 Ways To Create More Happiness",
+      "dataset": "holdout",
       "expected": {
         "engagement": true,
         "clarity": true,
@@ -421,24 +958,58 @@
         "payoff": false
       },
       "critiques": {
-        "engagement": "The hook effectively creates curiosity by stating that the speaker doubled their productivity through five simple tricks, which promises specific actionable content. This outcome-focused approach encourages viewers to keep watching to learn these tricks.",
-        "clarity": "The core idea is clear: implementing specific tricks can double productivity. The body provides concrete examples, such as moving to a local cafe and taking quick action to avoid procrastination, which supports the main thesis effectively.",
-        "payoff": "The body provides only two actionable tips: choosing an exclusive location and taking quick action to avoid procrastination. However, the second tip lacks concrete detail on how to implement it effectively, and the close is vague, simply asking viewers to follow for more tips without offering a specific action or takeaway."
+        "engagement": "The hook effectively promises to reveal the 'top three ways to create more happiness', which creates curiosity and a clear reason for viewers to keep watching. It sets up an outcome-focused expectation that viewers will learn actionable strategies for increasing happiness.",
+        "clarity": "The script provides specific strategies for creating happiness, including fixing the ratio of positive to negative thoughts and building social bonds, which are grounded in relatable scenarios.",
+        "payoff": "The script discusses concepts related to happiness but does not provide specific actions or steps for the viewer to take. It mentions fixing the ratio of thoughts and building social bonds without detailing how to achieve these."
       },
       "disagreements": [
         "payoff"
       ],
       "suggestions": {
-        "payoff": "Add more concrete steps for the second tip, such as specific actions to take when feeling procrastination, and provide a more actionable close that summarizes the key points."
+        "payoff": "Include specific actions viewers can take to fix their thought ratios and build social bonds, such as daily gratitude journaling or scheduling regular social activities."
       },
       "suggestionReasons": {
-        "payoff": "By detailing how to take quick action and providing a clear, actionable close, the script would deliver more value and fulfill the criteria for a strong payoff."
+        "payoff": "Providing concrete steps would give viewers actionable advice, enhancing the script's value and making it more practical for achieving happiness."
       }
     },
     {
-      "traceId": "be0b3f71652b8e7d",
+      "traceId": "2b794b89e5aea2f5",
       "model": "default",
-      "title": "This Is How You Can Fall Asleep Faster",
+      "title": "This Is How You Can Get Motivated With Wu Wei",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook effectively sets up a personal story about the speaker's journey into investing, creating relatability and curiosity. The mention of 'blood on the street' adds a sense of urgency and intrigue, prompting viewers to keep watching to learn more about the speaker's insights and experiences.",
+        "clarity": "The script contains vague generalizations and abstract concepts without specific examples or scenarios that ground the ideas in reality.",
+        "payoff": "The script discusses a concept (Wu Wei) but does not provide specific actionable steps or insights on how to apply it in the context of investing or personal finance."
+      },
+      "disagreements": [
+        "clarity",
+        "payoff"
+      ],
+      "suggestions": {
+        "clarity": "Include a specific example of how Wu Wei can be applied in a real-life investing scenario.",
+        "payoff": "Include specific actions or tips on how to apply the concept of Wu Wei in investing or managing finances."
+      },
+      "suggestionReasons": {
+        "clarity": "Providing a concrete example would help the viewer understand the concept of Wu Wei in a practical context, making the overall message clearer and more relatable.",
+        "payoff": "Providing concrete steps or examples of how to implement Wu Wei in practical scenarios would enhance the viewer's understanding and give them actionable advice."
+      }
+    },
+    {
+      "traceId": "1d2e306275140e4c",
+      "model": "default",
+      "title": "How Does Guided Meditation Work?",
+      "dataset": "holdout",
       "expected": {
         "engagement": true,
         "clarity": true,
@@ -450,11 +1021,270 @@
         "payoff": true
       },
       "critiques": {
-        "engagement": "The hook clearly states a specific outcome: falling asleep within 10 to 15 minutes, which creates a strong reason for viewers to keep watching. It promises a concrete result that many people struggle with, making it relatable and engaging.",
-        "clarity": "The core idea is clear: following specific steps can help you fall asleep within 10 to 15 minutes. The body provides three distinct tips\u2014limiting caffeine, controlling lighting, and lowering body temperature\u2014each with a clear mechanism and practical advice, making it easy to understand in one pass.",
-        "payoff": "The body provides three actionable tips: limit caffeine to before noon, control lighting with blue light-free bulbs, and lower body temperature through a fan or evening shower. Each tip includes concrete details and mechanisms, fulfilling the promise of the hook without needing a close."
+        "engagement": "The hook effectively announces a specific topic and promises to cover multiple aspects of meditation, including how it works, its benefits, and who it's for. This creates a clear reason for viewers to keep watching, as they can expect to learn valuable information about different forms of meditation.",
+        "clarity": "The script clearly explains guided meditation, detailing how it works, its benefits, and who it is suitable for, making it understandable and relatable.",
+        "payoff": "The script provides a clear explanation of guided meditation, detailing how it works and its benefits, which offers specific insights to the viewer."
       },
       "disagreements": []
+    },
+    {
+      "traceId": "72a59294efd4b19e",
+      "model": "default",
+      "title": "Watch This If You Want To DOUBLE Your Productivity!",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook effectively creates curiosity by promising to share five simple tricks for doubling productivity, which is a relatable and valuable topic for viewers. It sets up a clear expectation of learning actionable tips, encouraging viewers to keep watching.",
+        "clarity": "The script contains vague generalizations and lacks specific examples or scenarios that would ground the advice in reality.",
+        "payoff": "The script provides vague advice about productivity without specific actions or mechanisms. It mentions concepts like lowering the bar for success and rewarding oneself, but does not explain how to implement these ideas concretely."
+      },
+      "disagreements": [
+        "clarity",
+        "payoff"
+      ],
+      "suggestions": {
+        "clarity": "Incorporate specific examples of distractions and scenarios where the tricks can be applied, such as 'turn off your phone notifications' or 'set a timer for 25 minutes to focus on a task.'",
+        "payoff": "Include specific actions for lowering the bar for success and examples of rewards to implement."
+      },
+      "suggestionReasons": {
+        "clarity": "Providing concrete examples will make the advice more relatable and actionable for viewers, enhancing their understanding of how to implement the tips in real life.",
+        "payoff": "Providing concrete steps would give viewers actionable advice they can apply immediately, enhancing the script's value."
+      }
+    },
+    {
+      "traceId": "e6c4e0be841ce1ba",
+      "model": "default",
+      "title": "The Easy Way to Learn and Remember",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook effectively promises to share a specific note-taking mini habit that has helped the speaker retain key lessons from audiobooks. This creates curiosity about the method and its benefits, encouraging viewers to keep watching.",
+        "clarity": "The script provides a specific scenario involving a named book and a personal experience, making the core idea clear and relatable.",
+        "payoff": "The script provides a specific action for note-taking that enhances retention of lessons from audiobooks."
+      },
+      "disagreements": []
+    },
+    {
+      "traceId": "7494fde770bbe8d0",
+      "model": "default",
+      "title": "Who Is Focused Attention Meditation For?",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook effectively announces a specific topic and promises to cover the common forms of meditation, their workings, benefits, and suitability for different individuals. This creates a clear reason for viewers to keep watching, as they will learn valuable information about meditation.",
+        "clarity": "The script clearly explains focused attention meditation with specific details about its mechanism and benefits, making it understandable and relatable.",
+        "payoff": "The script provides specific insights into focused attention meditation, explaining how it works and its benefits, which offers concrete understanding to the viewer."
+      },
+      "disagreements": []
+    },
+    {
+      "traceId": "4ad6d84285c5f7bd",
+      "model": "default",
+      "title": "This Is How You Can Escape The Rat Race",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": false,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook effectively promises to share a feasible method for escaping the rat race, which is a relatable and high-value topic for many viewers. It sets up curiosity about the specific steps involved, encouraging viewers to keep watching for practical advice.",
+        "clarity": "The script contains vague generalizations about financial advice without specific examples or scenarios. It discusses concepts like 'risk management' and 'diversification' but does not provide concrete situations or entities to ground these ideas in reality.",
+        "payoff": "The script provides specific actionable advice on risk management and diversification in betting, which offers concrete insights for viewers."
+      },
+      "disagreements": [
+        "clarity"
+      ],
+      "suggestions": {
+        "clarity": "Include a specific example of a financial scenario, such as investing in stocks or real estate, to illustrate the concepts of risk management and diversification."
+      },
+      "suggestionReasons": {
+        "clarity": "Providing a concrete example will help viewers better understand the advice being given and how to apply it in real-life situations."
+      }
+    },
+    {
+      "traceId": "34eeaad6a2b2fe52",
+      "model": "default",
+      "title": "Leadership and Movements",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": true
+      },
+      "critiques": {
+        "engagement": "The hook, \"Why do some leaders inspire while others just dictate?\" effectively sets up a contrast between inspiring leadership and mere authority, creating curiosity about the underlying reasons. This question implies a common struggle and invites viewers to learn about the qualities that differentiate effective leaders from ineffective ones, which encourages them to keep watching.",
+        "clarity": "The script effectively uses specific examples and a vivid scenario to convey its core idea about leadership driven by purpose.",
+        "payoff": "The script provides a clear mechanism by explaining how leaders inspire through shared beliefs and purpose, using concrete examples like the Wright brothers and Martin Luther King Jr."
+      },
+      "disagreements": [
+        "engagement",
+        "clarity",
+        "payoff"
+      ]
+    },
+    {
+      "traceId": "a620da998280a030",
+      "model": "default",
+      "title": "Trust Through Clarity, Discipline, Consistency",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook effectively highlights a common struggle with trust and poses a question that invites viewers to think about how to achieve it, creating a reason to keep watching. The promise of learning a framework to build trust adds value and specificity.",
+        "clarity": "The script clearly outlines a specific problem and provides a structured solution using Sinek's framework, with a concrete example of Southwest Airlines to illustrate the concepts.",
+        "payoff": "The script discusses the importance of clarity, discipline, and consistency in building trust but does not provide specific actions or steps for the viewer to take. The advice to 'nail down your why' is vague and lacks concrete guidance."
+      },
+      "disagreements": [
+        "engagement",
+        "clarity"
+      ],
+      "suggestions": {
+        "payoff": "Include specific actions the viewer can take to clarify their 'why' and apply the principles of clarity, discipline, and consistency in their daily lives."
+      },
+      "suggestionReasons": {
+        "payoff": "Providing actionable steps would enhance the script's value by giving viewers clear directions on how to implement the concepts discussed, making the advice more practical and applicable."
+      }
+    },
+    {
+      "traceId": "5fc157677c3d4205",
+      "model": "default",
+      "title": "Diffusion of Innovation Theory",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook, \"The Law of Diffusion can be your secret weapon for spreading ideas,\" is somewhat engaging but lacks a clear, relatable problem or outcome that viewers can grasp immediately. It opens with a definition of a concept without establishing tension or curiosity, which makes it less compelling to keep watching.",
+        "clarity": "The script primarily discusses the Law of Diffusion without providing specific examples or scenarios that ground the concept in reality. It lacks a vivid scenario or a specific entity that would help the viewer understand the application of the idea.",
+        "payoff": "The script explains the Law of Diffusion and its mechanism but does not provide specific actionable steps for the viewer to implement this knowledge. The close suggests finding early adopters, but it lacks concrete actions on how to do that."
+      },
+      "disagreements": [],
+      "suggestions": {
+        "engagement": "Instead of starting with the definition, try: \"Are you struggling to get your ideas noticed? The Law of Diffusion can help you identify the key people who will champion your message and spread it for you!\"",
+        "clarity": "Include a specific example of a product or idea that successfully used the Law of Diffusion to spread, such as the adoption of smartphones or social media platforms.",
+        "payoff": "Include specific steps on how to identify and engage early adopters."
+      },
+      "suggestionReasons": {
+        "engagement": "This revised hook poses a relatable problem (struggling to get ideas noticed) and promises a solution (identifying key people), which creates immediate interest and encourages viewers to keep watching.",
+        "clarity": "Providing a concrete example would help illustrate how the Law of Diffusion works in practice, making the concept more relatable and understandable for the viewer.",
+        "payoff": "Providing actionable steps would enhance the viewer's ability to apply the concept of the Law of Diffusion in a practical way, making the content more valuable."
+      }
+    },
+    {
+      "traceId": "0491fe28405a9622",
+      "model": "default",
+      "title": "When 'Why' Gets Lost",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": false,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook, \"Ever wonder why companies lose their mojo once they hit it big?\" effectively poses a relatable question that implies a common struggle for organizations, creating curiosity about the content that follows. This sets the stage for the viewer to learn about the importance of rediscovering a company's core purpose.",
+        "clarity": "The script discusses companies in general terms without naming specific entities or providing concrete scenarios, making it vague.",
+        "payoff": "The script discusses the importance of rediscovering a company's 'why' but does not provide specific actions or steps on how to do this. The advice to 'ask: what's our "
+      },
+      "disagreements": [
+        "engagement"
+      ],
+      "suggestions": {
+        "clarity": "Incorporate a specific company example that lost its direction and how it could have rediscovered its 'why.'",
+        "payoff": "Include specific steps or actions that companies can take to rediscover their 'why', such as conducting team workshops or revisiting the company's founding story."
+      },
+      "suggestionReasons": {
+        "clarity": "Using a specific company would ground the discussion in reality, making the core idea more relatable and understandable for viewers.",
+        "payoff": "Providing concrete actions would give viewers specific value and a clear path to follow, enhancing the overall effectiveness of the message."
+      }
+    },
+    {
+      "traceId": "ed09dd5a22e79e94",
+      "model": "default",
+      "title": "Finding and Communicating Your Why",
+      "dataset": "holdout",
+      "expected": {
+        "engagement": false,
+        "clarity": false,
+        "payoff": false
+      },
+      "predicted": {
+        "engagement": true,
+        "clarity": true,
+        "payoff": false
+      },
+      "critiques": {
+        "engagement": "The hook effectively addresses a relatable problem: struggling with motivation and alignment in career or business goals. It creates a clear reason for viewers to keep watching by suggesting that the lack of clarity in their 'why' is the root cause of their struggles.",
+        "clarity": "The script effectively uses a vivid scenario and logical unpacking to convey its core idea about defining one's 'why' in personal and professional contexts.",
+        "payoff": "The script discusses the importance of defining your 'Why' but does not provide specific actions or steps for the viewer to take. It remains abstract and does not translate the concept into concrete advice."
+      },
+      "disagreements": [
+        "engagement",
+        "clarity"
+      ],
+      "suggestions": {
+        "payoff": "Include specific steps for identifying one's 'Why', such as writing down personal values or reflecting on past experiences that shaped their beliefs."
+      },
+      "suggestionReasons": {
+        "payoff": "Providing actionable steps would give viewers a clear method to apply the concept of 'Start with Why', making the advice more practical and valuable."
+      }
     }
   ]
 }

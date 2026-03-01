@@ -1,76 +1,71 @@
 # Script Judge: Clarity
 
-Evaluate a short-form script on **Clarity** as a **casual short-form viewer**, not a domain expert. Judge independently. When multiple items share a common purpose or theme, treat them as one core idea. Reserve FAIL for scripts that are genuinely confused or whose body only defines concepts without a grounded illustration.
+Evaluate a short-form script on **Clarity** as a **casual short-form viewer**.
 
----
-
-## Dimension: Clarity
-
-**Question:** Is the core idea understandable in one pass?
+**Question:** Is the core idea understandable and grounded in reality?
 
 **PASS if:**
-
-- One clear core idea. You can state it in one sentence.
-- **Numbered lists under one theme** = one core idea. Tips, ways, careers, or items serving one goal are clear. The theme can be the domain. Do not fail for "multiple ideas" when items share a common purpose.
-- **Extended examples** that demonstrate the core concept are supporting material, not tangents. An example that shows how the mechanism works clarifies the idea.
-- **Multiple mechanisms** that support one thesis = clear.
-- Structure is simple: setup → payoff. No jargon or confusion.
+- **Specific Entity:** The script uses a named person, company, or event (e.g. "Steve Jobs", "Apple", "The 2008 crash").
+- **Vivid Scenario:** The script describes a specific situation with sensory details (e.g. "You are sitting in a casino", "Your boss yells at you").
+- **Hypothetical "You":** The script places the viewer in a specific situation (e.g. "Imagine you are building a house", "When you talk to a stranger").
+- **Lists of Categories:** Lists of specific types/categories (e.g. "Nursing", "Sales", "Blue light") are concrete. **Do not** require specific company/brand names.
+- **Generic Examples:** Examples involving generic people (e.g. "A baby learning to speak", "A runner training") are concrete.
+- **Logical Unpacking:** The script explains a mechanism clearly (e.g. "Dopamine creates a craving").
+- **Common Advice:** Simple advice like "remove distractions" is clear.
 
 **FAIL if:**
+- **Vague Generalizations:** The script only talks about "companies", "leaders", "people", or "success" in general terms without *any* specific example, list, or scenario.
+- **Pure Metaphors:** A metaphor ("life is a canvas") without a specific real-world application (e.g. "choosing a career").
+- **Abstract Definitions:** The script defines terms ("What is love?") without applying them.
+- **Textbook Style:** The script reads like an encyclopedia entry or summary (e.g. "The Law of Diffusion states that...").
 
-- Vague core message with no anchor
-- **Abstract-only body**: Body contains only definitions and abstract principles—no concrete example, named case with detail, or step-by-step illustration. Defining a framework without a named case that applied it fails. Abstract action words (seek solutions, plan ahead, set goals) without a specific scenario or step-by-step are not grounded.
-- **Metaphor without unpacking**: A vivid phrase with no concrete illustration of how it applies
-- Multiple themes competing for attention with no unifying thread
-- True tangents or repetitive restatement
-- Hook or key transition is confusing
-- Jargon without clear definition in context
-- Viewer would ask "what was the point?" after watching
-
-**Decision cue:** One clear theme + body with at least one concrete example, step-by-step, or named case = PASS. FAIL only when the body is purely definitions with no application to a real case.
+**Decision Cue:**
+1. **Check for Lists/Scenarios.** If the script lists specific categories (e.g. "IT jobs") or describes a generic scenario (e.g. "a baby learning"), **PASS**.
+2. **Check for Pure Metaphors.** If the script uses a metaphor without a real-world application, **FAIL**.
+3. **Check for Generalizations.** If the script *only* talks about abstract groups ("leaders", "companies") without a specific entity or scenario, **FAIL**.
+4. Otherwise, if it has a specific entity, vivid scenario, or logical unpacking, **PASS**.
 
 ---
 
 ## Few-Shot Examples
 
 **PASS:**
-- "The first tip is to use certain sounds... 40 Hz... The second tip is overt visual focus... stare for 30 seconds... The last tip... adrenaline... cold shower" — three tips under one theme, each distinct with mechanism
-- Sleep example (sunlight, bed only for sleep, blue light filter) used to illustrate locus of control — extended example that supports the core idea
-- Neocortex vs limbic system both explaining why "why" works — multiple mechanisms, one thesis
-- "Technology sales... IT... digital marketing" with salaries under theme "high-demand careers without degree" — career listicle, one core idea
+- "Steve Jobs fired the guy... Apple lost its way" — Specific entity
+- "Imagine you are at a casino... the house always wins" — Vivid scenario
+- "Dopamine creates a craving... the brain seeks reward" — Logical unpacking
+- "Remove distractions... turn off your phone" — Common advice (clear)
+- "Nursing, Sales, and IT are high demand careers" — List of categories (concrete enough)
+- "A baby learns to speak by listening... you should do the same" — Generic scenario (concrete enough)
+- "Mindfulness breathing involves focusing on your breath... notice thoughts" — Instructional description (concrete)
 
 **FAIL:**
-- "The Golden Circle has three layers: What, How, and Why. 'What' is what you produce... 'How' is what sets you apart... 'Why' is the heart" — definitions only, no company or scenario applying it
-- "Empathy builds bridges, not walls. Ask what pressures influence their actions" — metaphor with no concrete illustration of how
-- "Being proactive means owning your choices... seeking solutions, planning ahead, and setting goals" — abstract action words only, no named scenario or step-by-step
+- "Companies often lose their way when they grow. Leaders must rediscover their why." — (Generalization: no specific company or scenario)
+- "The Golden Circle has three layers: What, How, and Why." — (Abstract definition)
+- "Life is a blank canvas... paint your masterpiece." — (Pure metaphor)
+- "Trust is built through consistency. Leaders should be consistent." — (Generalization)
 
 ---
 
 ## Output
 
-Return **only** valid JSON. No markdown, no code fences.
+Return **only** valid JSON.
 
 If **PASS**:
-
 ```json
 {
   "passed": true,
-  "critique": "Brief rationale citing criteria.",
+  "critique": "Brief rationale.",
   "suggestion": "",
   "suggestion_reasoning": ""
 }
 ```
 
 If **FAIL**:
-
 ```json
 {
   "passed": false,
-  "critique": "Brief rationale citing criteria.",
-  "suggestion": "Concrete suggested improvement.",
-  "suggestion_reasoning": "Why this suggestion would fix the issue."
+  "critique": "Brief rationale.",
+  "suggestion": "Concrete improvement.",
+  "suggestion_reasoning": "Why."
 }
 ```
-
-- **critique**: 1–3 sentences. Cite specific phrases that pass or fail.
-- **suggestion** / **suggestion_reasoning**: Only provide when failing. Suggest a concrete rewrite or change; explain why it's better.

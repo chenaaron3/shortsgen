@@ -140,6 +140,7 @@ def write_eval_dataset(
             "rawContent": nugget.get("original_text", ""),
             "script": script_map,
             "sourceRef": _format_source_ref(src),
+            "sourceType": "ai",
             "createdAt": int(latest_mtime * 1000),
         }
         if assets_map:

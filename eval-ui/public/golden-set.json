@@ -202,5 +202,41 @@
       "clarity": true,
       "payoff": true
     }
+  },
+  {
+    "traceId": "0dbf41c097dd4335",
+    "model": "default",
+    "title": "Building Habits in 4 Steps",
+    "rawContent": "Habits are formed when behaviors lead to satisfying consequences and are less likely to be repeated if they result in unpleasant outcomes.\nRecognizing patterns in similar situations allows for mental shortcuts, streamlining decision-making based on past experiences.\nSimplifying daily tasks creates mental freedom for creative thinking, as constant decision-making consumes cognitive resources.\nChanging behavior involves making habits obvious, attractive, easy, and satisfying by addressing cues, cravings, responses, and rewards.",
+    "script": "```\n[PLANNING]\nHook: Define the term first\nWhy: The \"habit loop\" concept needs a clear definition to lay the groundwork for discussing how habits form. \n\nBody skeleton: Single concept\nBody blocks: Define + mechanism\nWhy: The key is to explain the process of habit formation by breaking it into the habit loop components, allowing the viewer to understand how habits work.\n\n[HOOK]\nLet's break down the habit loop: cue, craving, response, and reward.\n\n[BODY]\nThis loop is the foundation of every habit. It starts with a cue, something that triggers a craving—the desire to change your state. That craving leads to a response, which is the action you take. Finally, you have the reward, the end result making the whole loop worth repeating. The more satisfying the reward, the stronger the habit becomes.\n\n[CLOSE]\nWhen you're looking to build a new habit, focus on making each part of this loop work for you. Tweak your cues, cravings, responses, and rewards.\n```",
+    "expected": {
+      "engagement": false,
+      "clarity": false,
+      "payoff": false
+    }
+  },
+  {
+    "traceId": "f62b9165cf9b033d",
+    "model": "default",
+    "title": "Vision as a Blueprint",
+    "rawContent": "Envision your life as a construction project where you're the architect designing your dream home. Having a clear vision of your goals is akin to a blueprint guiding the construction process. This analogy emphasizes the importance of defining your long-term objectives and values. By clarifying what success means to you, you can align your actions with that vision, ensuring that your daily efforts contribute towards building the life you desire.",
+    "script": "[PLANNING]\nHook: Start in a moment\nWhy: Using a vivid analogy of life as a construction project immediately captivates the viewer, setting up a clear comparison for the lesson.\n\nBody skeleton: Single concept\nBody blocks: Define + unpack (analog of the blueprint) and Mechanism (how aligning actions contributes to goals)\nWhy: This is one single analogy that’s unpacked thoroughly, and the mechanism shows cause and effect clearly.\n\n[HOOK]\nImagine your life as a dream home you're building from scratch.\n\n[BODY]\nJust like an architect needs a blueprint, you need a clear vision of your goals. Think of it as defining what success truly means to you—your own blueprint. This isn't just about big dreams; it’s about aligning your daily actions with that vision. Every step you take should bring you closer to your dream home.\n\n[CLOSE]\nDefine your blueprint today. Make sure every action helps build the life you really want.",
+    "expected": {
+      "engagement": false,
+      "clarity": false,
+      "payoff": false
+    }
+  },
+  {
+    "traceId": "5f1c42f2cf788081",
+    "model": "default",
+    "title": "Proactivity as a Blank Canvas",
+    "rawContent": "Imagine your life as a blank canvas where you have the power to paint your own masterpiece. Being proactive means taking charge of your actions and decisions to shape your destiny, much like an artist controls their brush to create art. This concept emphasizes that you have the ability to steer your life in the direction you desire by making intentional choices and taking responsibility for the outcomes, whether positive or negative.",
+    "script": "[PLANNING]\nHook: Create a curiosity gap\nWhy: Using an intriguing visual analogy—painting your life—prompts viewers to want the deeper meaning behind being proactive.\n\nBody skeleton: Single concept\nBody blocks: Define + unpack (life as a blank canvas, proactive control)\nWhy: The idea is singular and visual, lending itself well to a definition and deeper explanation of controlling one’s destiny.\n\n[HOOK]\nWhat if your life was a blank canvas, waiting for you to paint your own masterpiece?\n\n[BODY]\nSee, being proactive is like being the artist of your life. You hold the brush. This means you control your actions and decisions, much like an artist chooses each stroke. It’s about making intentional choices—deciding the colors and patterns that shape your destiny. And when you accept responsibility for those choices, you steer your life exactly where you want it to go.\n\n[CLOSE]\nSo today, start painting with intent and see where your masterpiece takes you.",
+    "expected": {
+      "engagement": false,
+      "clarity": false,
+      "payoff": false
+    }
   }
 ]

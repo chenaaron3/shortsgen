@@ -11,6 +11,7 @@ Usage:
   python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c configs/default.yaml
   python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c configs/claude.yaml configs/gpt4o.yaml
   python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c default --max-nuggets 3
+  python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c default --step breakdown
   python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c default --step image
 """
 
@@ -115,10 +116,10 @@ def main():
     )
     parser.add_argument(
         "--step",
-        choices=["script", "chunker", "image", "voice", "prepare", "video"],
+        choices=["breakdown", "script", "chunker", "image", "voice", "prepare", "video"],
         default=None,
         metavar="STEP",
-        help="Pass through to run_pipeline: invalidate cache for STEP and all subsequent steps",
+        help="Invalidate cache for STEP and all subsequent (breakdown=shared breakdown; script/...=per-nugget)",
     )
     parser.add_argument(
         "--prototype",
@@ -145,13 +146,16 @@ def main():
     info(f"📋 Configs: {[c.name for c in configs]}")
 
     # Run breakdown once (shared across configs for fair comparison)
+    skip_breakdown_cache = args.skip_breakdown_cache or (args.step == "breakdown")
+    if skip_breakdown_cache:
+        info("  Invalidating breakdown cache")
     info("")
     info("── Breakdown (shared) ──")
     nuggets = run_breakdown(
         source_content,
         source_key,
         config=configs[0],
-        skip_cache=args.skip_breakdown_cache,
+        skip_cache=skip_breakdown_cache,
         max_nuggets=10, # Can generate up to 10 nuggets, but just limit the actual pipeline
     )
     if args.max_nuggets:
@@ -173,6 +177,8 @@ def main():
     def on_item_done(config, items):
         write_videos_markdown(source_key, config.hash, items, source_path.name)
 
+    # Pass step to run_batch only for per-nugget steps (run_pipeline doesn't know breakdown)
+    per_nugget_step = None if args.step == "breakdown" else args.step
     run_batch(
         nuggets,
         configs,
@@ -180,7 +186,7 @@ def main():
         on_config_enter=on_config_enter,
         on_item_done=on_item_done,
         max_scenes=args.max_scenes,
-        step=args.step,
+        step=per_nugget_step,
         break_at=args.break_at,
         prototype=args.prototype,
     )

@@ -8,6 +8,8 @@ export type EvalTrace = {
   /** Map of config name -> config hash. When present, chunks/images/video exist at eval-assets/{id}/{hash}/ */
   assets?: Record<string, string>;
   sourceRef?: string;
+  /** youtube = Improvement Pill etc; ai = pipeline-generated. Drives holdout expected labels. */
+  sourceType?: "youtube" | "ai";
   /** Creation time (ms since epoch). Used for sorting (newer first). */
   createdAt?: number;
 };
@@ -61,11 +63,19 @@ export const DIMENSION_QUESTIONS: Record<Dimension, string> = {
   payoff: "Does the viewer get something concrete?",
 };
 
-/** Judge result for one trace+model (from validate_judges --export) */
+/** Per-dimension agreement stats (from validate_judges) */
+export type JudgeDatasetStats = Record<
+  Dimension,
+  { agree: number; disagree: number }
+>;
+
+/** Judge result for one trace+model (from validate_judges) */
 export type JudgeResultEntry = {
   traceId: string;
   model: string | null;
   title?: string;
+  /** golden = starred/human labels; holdout = non-starred, YouTube=pass AI=fail */
+  dataset?: "golden" | "holdout";
   expected: Record<Dimension, boolean>;
   predicted: Record<Dimension, boolean>;
   critiques: Record<Dimension, string>;
@@ -78,5 +88,10 @@ export type JudgeResultEntry = {
 
 export type JudgeResults = {
   generatedAt: string;
+  model?: string;
+  /** Per-dimension agreement for golden set (when validate_judges ran on both) */
+  golden?: JudgeDatasetStats;
+  /** Per-dimension agreement for holdout set */
+  holdout?: JudgeDatasetStats;
   entries: JudgeResultEntry[];
 };

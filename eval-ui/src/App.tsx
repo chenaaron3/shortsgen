@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { EvalTrace, Annotation, Judgment, Dimension } from "./types";
+import type { EvalTrace, Annotation, Judgment, Dimension, JudgeDatasetStats } from "./types";
 import { DIMENSIONS } from "./types";
 import type { AnnotationSource } from "./api/annotations";
 import { TraceViewer } from "./components/TraceViewer";
 import { JudgmentForm } from "./components/JudgmentForm";
 import { JudgeComparison } from "./components/JudgeComparison";
-import { BatchList } from "./components/BatchList";
+import { BatchList, type DatasetFilter } from "./components/BatchList";
 import { loadEvalDataset, deleteTrace } from "./api/loadTraces";
 import { loadMergedAnnotations, saveAnnotations } from "./api/annotations";
 import { loadJudgeResults, judgeResultKey } from "./api/loadJudgeResults";
@@ -38,6 +38,7 @@ function App() {
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [judgeResults, setJudgeResults] = useState<Awaited<ReturnType<typeof loadJudgeResults>>>(null);
   const [goldenSet, setGoldenSet] = useState<GoldenSetEntry[]>([]);
+  const [datasetFilter, setDatasetFilter] = useState<DatasetFilter>("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaveError, setLastSaveError] = useState<Error | null>(null);
@@ -242,6 +243,19 @@ function App() {
     [goldenSet]
   );
 
+  const filteredTraces = traces.filter((trace) => {
+    const inGolden = traceInGoldenSet(trace);
+    if (datasetFilter === "all") return true;
+    if (datasetFilter === "golden") return inGolden;
+    return !inGolden; // holdout
+  });
+
+  useEffect(() => {
+    if (selectedId && !filteredTraces.some((t) => t.id === selectedId)) {
+      setSelectedId(filteredTraces[0]?.id ?? null);
+    }
+  }, [datasetFilter, filteredTraces, selectedId]);
+
   const traceHasDisagreement = useCallback(
     (trace: EvalTrace) => {
       if (!judgeResults?.entries) return false;
@@ -366,13 +380,29 @@ function App() {
     [selectedId, traces, goldenSet]
   );
 
+  const formatStats = (stats: JudgeDatasetStats | undefined) => {
+    if (!stats) return null;
+    return DIMENSIONS.map(
+      (d) => `${d}: ${Math.round((100 * stats[d].agree) / (stats[d].agree + stats[d].disagree || 1))}%`
+    ).join(", ");
+  };
+  const judgeSummary =
+    judgeResults?.golden && judgeResults?.holdout
+      ? `Golden (${formatStats(judgeResults.golden)}) | Holdout (${formatStats(judgeResults.holdout)})`
+      : null;
+
   if (loading) return <div className="flex min-h-svh items-center justify-center">Loading...</div>;
 
   return (
     <div className="flex h-svh flex-col">
       <header className="flex shrink-0 items-center justify-between gap-4 border-b px-4 py-3">
-        <h1 className="text-lg font-semibold">Script Eval</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-1 flex-col gap-1 min-w-0">
+          <h1 className="text-lg font-semibold">Script Eval</h1>
+          {judgeSummary && (
+            <span className="text-xs text-muted-foreground font-mono truncate">{judgeSummary}</span>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
           <span
             className={`text-sm ${
               saving ? "text-muted-foreground" : lastSaveError ? "text-destructive" : "text-muted-foreground"
@@ -388,12 +418,14 @@ function App() {
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-72 shrink-0 border-r bg-muted/30">
           <BatchList
-            traces={traces}
+            traces={filteredTraces}
             traceReviewed={traceReviewed}
             traceHasDisagreement={traceHasDisagreement}
             traceInGoldenSet={traceInGoldenSet}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            datasetFilter={datasetFilter}
+            onDatasetFilterChange={setDatasetFilter}
           />
         </aside>
         <main className="flex-1 overflow-y-auto">

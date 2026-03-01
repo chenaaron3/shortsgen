@@ -1,0 +1,56 @@
+---
+description: Judge calibration workflow—align LLM judges to golden labels without overfitting.
+globs:
+  - "generation/prompts/eval/**"
+  - "generation/scripts/eval/**"
+  - "eval-ui/public/judge-results.json"
+  - "eval-ui/public/golden-set.json"
+alwaysApply: false
+---
+
+# Quality Hill Climbing: Judge Calibration
+
+## Setup
+
+**3 LLM judges** (gpt-4o-mini), one criterion each:
+- **Engagement**: Would a viewer keep watching?
+- **Clarity**: Is the core idea understandable in one pass?
+- **Payoff**: Does the viewer get something concrete?
+
+**Datasets:**
+- **Golden**: Manually labeled; source of truth. Starred traces in eval UI.
+- **Holdout**: Synthetic labels (sourceType youtube=pass, ai=fail); detects overfitting.
+
+## Goal
+
+Calibrate judge system prompts so they match golden labels while remaining generalizable.
+
+## Constraints
+
+- **Golden set is correct**; adjust prompts to match.
+- **No overfitting**: Rules must be generic enough for both golden and holdout.
+- **75%+ agreement** on both datasets.
+- Rules stay **generic**; no script- or wording-specific hacks.
+- Few-shot examples allowed only in a dedicated section; no quoted examples in sub-criteria.
+
+## Workflow (Agentic Loop)
+
+1. **Run** `python generation/scripts/run.py eval/validate_judges.py --model gpt-4o-mini`
+2. **Analyze disagreements** (golden and holdout tables)
+3. **Understand scripts** behind each disagreement
+4. **Update judge prompts** in `generation/prompts/eval/judge-script-{engagement,clarity,payoff}.md`
+5. **Re-run** validate_judges
+6. **Stop** when all three criteria ≥75% on both datasets
+
+## Overfitting Signal
+
+If golden improves but holdout drops → likely overfitting. Revert or soften prompts.
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `generation/prompts/eval/judge-script-*.md` | Judge system prompts |
+| `generation/scripts/eval/validate_judges.py` | Runs judge, reports golden + holdout agreement |
+| `eval-ui/public/golden-set.json` | Human labels (starred traces) |
+| `eval-ui/public/eval-dataset.json` | Full dataset; `sourceType` drives holdout labels |
