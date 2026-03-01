@@ -1186,5 +1186,115 @@
       }
     ],
     "reviewedAt": "2026-03-01T08:46:05.379Z"
+  },
+  {
+    "traceId": "88914f13e8cbb3a8",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:51:23.176Z"
+  },
+  {
+    "traceId": "2cf1f45bbece5044",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:51:39.826Z"
+  },
+  {
+    "traceId": "45ddb545cbd6ac24",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:51:46.802Z"
+  },
+  {
+    "traceId": "d4b36ffd8ba28d5e",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:51:51.526Z"
+  },
+  {
+    "traceId": "8d0d6ad9715f4068",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-01T08:51:57.210Z"
   }
 ]

@@ -30,8 +30,8 @@ def main():
         data = json.load(f)
     videos = data["ImprovementPill"]["videos"]
 
-    # Videos 11-25 (indices 10-24)
-    target = videos[10:25]
+    # Videos 11-30 (indices 10-29) — includes ranks 26-30 for holdout
+    target = videos[10:30]
 
     entries = []
     for v in target:
@@ -70,7 +70,7 @@ def main():
 
     merged = existing + new_entries
     out_path.write_text(json.dumps(merged, indent=2), encoding="utf-8")
-    print(f"Added {len(new_entries)} Improvement Pill entries (ranks 11-25)")
+    print(f"Added {len(new_entries)} Improvement Pill entries (ranks 11-30)")
 
 
 if __name__ == "__main__":

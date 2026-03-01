@@ -80,11 +80,7 @@ def main():
         required=True,
         help="Config YAML path(s) (e.g. configs/default.yaml). Multiple configs run in sequence.",
     )
-    parser.add_argument(
-        "--skip-breakdown-cache",
-        action="store_true",
-        help="Regenerate breakdown even when cached",
-    )
+
     parser.add_argument(
         "--max-scenes",
         type=int,
@@ -146,7 +142,7 @@ def main():
     info(f"📋 Configs: {[c.name for c in configs]}")
 
     # Run breakdown once (shared across configs for fair comparison)
-    skip_breakdown_cache = args.skip_breakdown_cache or (args.step == "breakdown")
+    skip_breakdown_cache = args.step == "breakdown"
     if skip_breakdown_cache:
         info("  Invalidating breakdown cache")
     info("")
