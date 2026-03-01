@@ -238,5 +238,17 @@
       "clarity": false,
       "payoff": false
     }
+  },
+  {
+    "traceId": "5fc157677c3d4205",
+    "model": "default",
+    "title": "Diffusion of Innovation Theory",
+    "rawContent": "## 6) How ideas spread: the “law of diffusion,” early adopters, and the tipping point\n\nTo explain how “why” scales, Sinek borrows from diffusion-of-innovation theory: the market is not one uniform group. There are innovators, early adopters, early majority, late majority, and laggards. The most important insight: you don’t win by convincing everyone at once. You win by resonating deeply with a smaller group first—especially **early adopters** who care about meaning and identity, not just price.\n\nIn Sinek’s framing, “why” speaks especially strongly to these groups because early adopters are comfortable taking a leap based on belief. They like being part of something new that reflects who they are. Once they adopt and advocate, they create social proof that helps the early majority cross the trust gap.\n\nThis connects to why some products fail despite being “better.” If a product is marketed mainly with “what” (features) to a broad audience, it may not build the passionate base needed for word-of-mouth momentum. Sinek sometimes cites examples like TiVo (a product many loved, but struggled to cross into mass adoption) to show that “best product” doesn’t automatically win; **clarity of why and how it’s communicated** affects the adoption curve.\n\nThe practical use of this concept is strategic patience. Leaders who start with why aren’t trying to be for everyone. They’re trying to be unmistakably for someone. If you aim for broad appeal too early, you often sand off the sharp edges that make people care.\n\nThere’s also a warning here: if you only chase the early majority with rational messaging (“look at these features”), you’ll attract buyers who are easy to poach. If you build from why, you build advocates—people who recruit others for you.\n\nSo this section turns “why” into a growth model: **inspire the believers first**, let them validate the message socially, then scale.",
+    "script": "[PLANNING]  \nHook: Define the term first  \nWhy: The focus is on an important concept—the Law of Diffusion—and how it relates to spreading ideas. Starting with the term sets up the explanation.\n\nBody skeleton: Single concept  \nBody blocks: Define + Mechanism  \nWhy: The content revolves around the diffusion principle and why it's effective. Define the concept, then explain how it works in practice.\n\n[HOOK]  \nThe Law of Diffusion can be your secret weapon for spreading ideas.\n\n[BODY]  \nThis principle states that ideas spread through different groups: innovators, early adopters, early majority, late majority, and laggards. The magic happens with early adopters. They're the ones who care about meaning and identity, not just price. They’ll take a leap based on belief, and their passion creates the social proof that draws in the early majority. If you focus on these believers first, you build a base of advocates who spread your message for you.\n\n[CLOSE]  \nInstead of trying to please everyone, find your early adopters. They’ll help you tip the scale.",
+    "expected": {
+      "engagement": false,
+      "clarity": false,
+      "payoff": false
+    }
   }
 ]

@@ -5,10 +5,10 @@ Evaluate a short-form script on **Payoff** as a **casual short-form viewer**.
 **Question:** Does the viewer get **SPECIFIC** value (concrete advice, insight, or understanding)?
 
 **PASS if:**
-- **Specific Action:** The script tells the viewer to do something **concrete** (e.g., "turn off notifications", "ask this question", "stand up straight").
+- **Specific Action or Simple Directive:** The script tells the viewer to do something concrete (e.g., "turn off notifications", "just go out there and start talking to more people"). If the viewer can act on it, **PASS**.
 - **Instructional:** The script describes *how* to do a practice (e.g., meditation steps, exercise form).
-- **Mechanism/Insight:** The script explains *how* something works (e.g., "dopamine causes addiction", "the system is broken"). Understanding the mechanism *is* the payoff.
-- **Lists:** The script lists tips, ways, or items (e.g., "3 careers", "3 tips").
+- **Mechanism/Insight:** The script explains *how* something works (e.g., "dopamine causes addiction", "the system is broken"). Understanding the mechanism *is* the payoff. Frameworks that help self-assess (e.g. ikigai's four areas) = insight = **PASS**.
+- **Lists:** The script lists tips, ways, or items with some detail (e.g., "3 careers", "3 tips", "fix thought ratio, build social bonds"). Brief explanation per item = **PASS**. Do not require step-by-step for every item.
 - **Story with Lesson:** The script tells a story that illustrates a principle (e.g., "LeBron throws chalk to get in the zone"). The lesson *is* the payoff.
 - **Body-as-Payoff:** If the body delivers any of the above, **PASS**. **IGNORE THE CLOSE.** A weak close does not invalidate a good body.
 
@@ -20,7 +20,7 @@ Evaluate a short-form script on **Payoff** as a **casual short-form viewer**.
 
 **Decision Cue:**
 1. **Check for Vague Goals.** If the advice is "be X" or "find Y" (e.g. "be proactive", "find your why") without a specific step, **FAIL**.
-2. **Check for Specific Actions.** If the advice is "do X" (e.g. "write this down", "turn this off"), **PASS**.
+2. **Check for Specific Actions or Simple Directives.** If the advice is "do X" (e.g. "write this down", "go talk to people", "just go out there and start talking"), **PASS**.
 3. Otherwise, if it explains a mechanism or tells a story with a lesson, **PASS**.
 
 ---

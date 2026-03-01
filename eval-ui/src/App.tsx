@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { EvalTrace, Annotation, Judgment, Dimension, JudgeDatasetStats } from "./types";
+import type { EvalTrace, Annotation, Judgment, Dimension, JudgeDatasetStats, JudgeResultEntry } from "./types";
 import { DIMENSIONS } from "./types";
 import type { AnnotationSource } from "./api/annotations";
 import { TraceViewer } from "./components/TraceViewer";
@@ -256,18 +256,50 @@ function App() {
     }
   }, [datasetFilter, filteredTraces, selectedId]);
 
-  const traceHasDisagreement = useCallback(
-    (trace: EvalTrace) => {
-      if (!judgeResults?.entries) return false;
-      return Object.keys(trace.script).some((model) => {
-        const key = judgeResultKey(trace.id, model);
-        const entry = judgeResults.entries.find(
-          (e) => judgeResultKey(e.traceId, e.model ?? "") === key
-        );
-        return entry && entry.disagreements.length > 0;
-      });
+  const getJudgeEntry = useCallback(
+    (trace: EvalTrace): JudgeResultEntry | undefined => {
+      if (!judgeResults?.entries) return undefined;
+      const models = Object.keys(trace.script);
+      const model = models.includes("default") ? "default" : models[0];
+      if (!model) return undefined;
+      const key = judgeResultKey(trace.id, model);
+      return judgeResults.entries.find(
+        (e) => judgeResultKey(e.traceId, e.model ?? "") === key
+      );
     },
     [judgeResults]
+  );
+
+  /** Human labels (annotations) when source is human. Used as ground truth for mismatch. */
+  const getHumanLabelData = useCallback(
+    (trace: EvalTrace): Record<Dimension, boolean> | undefined => {
+      const models = Object.keys(trace.script);
+      const model = models.includes("default") ? "default" : models[0];
+      if (!model) return undefined;
+      const key = annotationKey(trace.id, model);
+      if (sources[key] !== "human") return undefined;
+      const ann = annotations[key];
+      if (!ann?.judgments?.length) return undefined;
+      const byDim = Object.fromEntries(
+        ann.judgments.map((j) => [j.dimension, j.pass])
+      ) as Partial<Record<Dimension, boolean>>;
+      if (!DIMENSIONS.every((d) => byDim[d] !== undefined)) return undefined;
+      return byDim as Record<Dimension, boolean>;
+    },
+    [annotations, sources]
+  );
+
+  const traceHasDisagreement = useCallback(
+    (trace: EvalTrace) => {
+      const humanLabels = getHumanLabelData(trace);
+      const judgeEntry = getJudgeEntry(trace);
+      if (!judgeEntry) return false;
+      if (humanLabels) {
+        return DIMENSIONS.some((d) => humanLabels[d] !== judgeEntry.predicted[d]);
+      }
+      return judgeEntry.disagreements.length > 0;
+    },
+    [getHumanLabelData, getJudgeEntry]
   );
 
   const selectedJudgeResult =
@@ -386,9 +418,29 @@ function App() {
       (d) => `${d}: ${Math.round((100 * stats[d].agree) / (stats[d].agree + stats[d].disagree || 1))}%`
     ).join(", ");
   };
+
+  const { lenientCount, strictCount } = (() => {
+    if (!judgeResults?.entries?.length) return { lenientCount: 0, strictCount: 0 };
+    let lenient = 0;
+    let strict = 0;
+    for (const e of judgeResults.entries) {
+      for (const d of DIMENSIONS) {
+        if (e.expected[d] !== e.predicted[d]) {
+          if (e.expected[d] && !e.predicted[d]) strict++;
+          else lenient++;
+        }
+      }
+    }
+    return { lenientCount: lenient, strictCount: strict };
+  })();
+
   const judgeSummary =
     judgeResults?.golden && judgeResults?.holdout
       ? `Golden (${formatStats(judgeResults.golden)}) | Holdout (${formatStats(judgeResults.holdout)})`
+      : null;
+  const agreementNote =
+    lenientCount > 0 || strictCount > 0
+      ? `↗ ${lenientCount} lenient | ↘ ${strictCount} strict`
       : null;
 
   if (loading) return <div className="flex min-h-svh items-center justify-center">Loading...</div>;
@@ -396,10 +448,15 @@ function App() {
   return (
     <div className="flex h-svh flex-col">
       <header className="flex shrink-0 items-center justify-between gap-4 border-b px-4 py-3">
-        <div className="flex flex-1 flex-col gap-1 min-w-0">
+        <div className="flex flex-1 flex-col gap-0.5 min-w-0">
           <h1 className="text-lg font-semibold">Script Eval</h1>
           {judgeSummary && (
             <span className="text-xs text-muted-foreground font-mono truncate">{judgeSummary}</span>
+          )}
+          {agreementNote && (
+            <span className="text-[10px] text-amber-600 dark:text-amber-500" title="Lenient = judge passed when expected fail. Strict = judge failed when expected pass.">
+              {agreementNote}
+            </span>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-3">
@@ -422,6 +479,8 @@ function App() {
             traceReviewed={traceReviewed}
             traceHasDisagreement={traceHasDisagreement}
             traceInGoldenSet={traceInGoldenSet}
+            getHumanLabelData={getHumanLabelData}
+            getJudgeEntry={getJudgeEntry}
             selectedId={selectedId}
             onSelect={setSelectedId}
             datasetFilter={datasetFilter}

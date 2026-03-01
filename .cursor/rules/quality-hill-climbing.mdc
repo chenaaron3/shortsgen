@@ -13,11 +13,13 @@ alwaysApply: false
 ## Setup
 
 **3 LLM judges** (gpt-4o-mini), one criterion each:
+
 - **Engagement**: Would a viewer keep watching?
-- **Clarity**: Is the core idea understandable in one pass?
-- **Payoff**: Does the viewer get something concrete?
+- **Clarity**: Is the core idea understandable and grounded in reality?
+- **Payoff**: Does the viewer get specific value (advice, insight, or understanding)?
 
 **Datasets:**
+
 - **Golden**: Manually labeled; source of truth. Starred traces in eval UI.
 - **Holdout**: Synthetic labels (sourceType youtube=pass, ai=fail); detects overfitting.
 
@@ -35,22 +37,45 @@ Calibrate judge system prompts so they match golden labels while remaining gener
 
 ## Workflow (Agentic Loop)
 
-1. **Run** `python generation/scripts/run.py eval/validate_judges.py --model gpt-4o-mini`
-2. **Analyze disagreements** (golden and holdout tables)
-3. **Understand scripts** behind each disagreement
-4. **Update judge prompts** in `generation/prompts/eval/judge-script-{engagement,clarity,payoff}.md`
-5. **Re-run** validate_judges
-6. **Stop** when all three criteria ≥75% on both datasets
+1. **Activate venv** (from project root): `source .venv/bin/activate`. If `.venv` does not exist, create it: `python -m venv .venv && source .venv/bin/activate && pip install -r generation/requirements.txt`
+2. **Run** from project root: `python generation/scripts/run.py eval/validate_judges.py --model gpt-4o-mini`
+3. **Analyze disagreements** (golden and holdout tables in output; also `eval-ui/public/judge-results.json`)
+4. **Understand scripts** behind each disagreement (view in eval UI)
+5. **Aggregate gaps → identify common patterns → apply generalized rules** to judge prompts. If you notice apparent mislabels (e.g. golden PASS that looks bad, holdout YouTube that looks bad, or AI that looks good), surface 2–5 with traceId, title, dimension, rationale—do not auto-correct.
+6. **Update** `generation/prompts/eval/judge-script-{engagement,clarity,payoff}.md`
+7. **Re-run** validate_judges (with venv active)
+8. **Stop** when all three criteria ≥75% on both datasets
+
+**Do not overcomplicate.** Prefer simple, generalized rules over many edge-case tweaks.
+
+## Common Disagreement Patterns (reference for calibration)
+
+| Dimension | Judge too lenient (→ stricter) | Judge too strict (→ looser) |
+|-----------|-------------------------------|-----------------------------|
+| **Engagement** | Textbook-style "Why does X rarely Y?"; clinical/diagnostic phrasing ("can lead to distorted behavior") | — |
+| **Clarity** | Framework-only (What/How/Why) without scenario; namedrop + abstract remainder; metaphor unpacked in abstract only | Lists of strategies with domain terms ("rat race", "the system") |
+| **Payoff** | Incomplete delivery (promised N, delivered 1 + CTA); vague goals ("be proactive", "find your why") | Simple directives ("just go talk to people"); frameworks that help self-assess (ikigai); lists with brief explanation |
+
+## Execution Note
+
+Activate the venv before running: `source .venv/bin/activate`. `validate_judges.py` must have `if __name__ == "__main__": main()` at bottom. Run via `run.py` (sets PYTHONPATH) or directly: `PYTHONPATH=generation/scripts python -u generation/scripts/eval/validate_judges.py --model gpt-4o-mini` (`-u` for unbuffered output).
 
 ## Overfitting Signal
 
-If golden improves but holdout drops → likely overfitting. Revert or soften prompts.
+If golden improves but holdout drops → likely overfitting. Revert or soften prompts. Warning prints when avg_golden - avg_holdout > 15%.
+
+## Calibration Tradeoffs
+
+- **Stricter rules** (e.g. textbook-style FAIL, framework-without-application FAIL) → improve golden, often **hurt holdout** (judge fails YouTube scripts that pass).
+- **Looser rules** (e.g. lists with domain terms PASS, simple directives PASS) → improve holdout, can **hurt golden** (judge passes scripts humans labeled FAIL).
+- When both need improvement: prefer **small, targeted loosening** over tightening. Golden often reaches 75% first; holdout typically lags. Test each change on both datasets.
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `generation/prompts/eval/judge-script-*.md` | Judge system prompts |
-| `generation/scripts/eval/validate_judges.py` | Runs judge, reports golden + holdout agreement |
-| `eval-ui/public/golden-set.json` | Human labels (starred traces) |
-| `eval-ui/public/eval-dataset.json` | Full dataset; `sourceType` drives holdout labels |
+| File                                         | Purpose                                                    |
+| -------------------------------------------- | ---------------------------------------------------------- |
+| `generation/prompts/eval/judge-script-*.md`  | Judge system prompts                                       |
+| `generation/scripts/eval/validate_judges.py` | Runs judge, reports golden + holdout agreement             |
+| `eval-ui/public/golden-set.json`             | Human labels (starred traces)                              |
+| `eval-ui/public/eval-dataset.json`           | Full dataset; `sourceType` drives holdout labels           |
+| `eval-ui/public/judge-results.json`          | Latest judge output; per-entry critiques and disagreements |

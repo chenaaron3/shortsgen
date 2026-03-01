@@ -208,8 +208,8 @@
       },
       {
         "dimension": "clarity",
-        "pass": false,
-        "critique": "- \"captain of your ship\" analogy is offputting\n- each statement can flow into each other more smoothly"
+        "pass": true,
+        "critique": "- clear steps"
       },
       {
         "dimension": "payoff",
@@ -217,7 +217,7 @@
         "critique": "- set a goal for your life is very vague"
       }
     ],
-    "reviewedAt": "2026-03-01T07:06:24.564Z"
+    "reviewedAt": "2026-03-01T09:19:07.841Z"
   },
   {
     "traceId": "5887a5bb117d2276",
@@ -301,11 +301,11 @@
       },
       {
         "dimension": "payoff",
-        "pass": false,
-        "critique": "- \"Follow us for more helpful tips\" is not helpful"
+        "pass": true,
+        "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:15:24.709Z"
+    "reviewedAt": "2026-03-01T09:16:18.883Z"
   },
   {
     "traceId": "4f3d497842d49227",
@@ -349,7 +349,7 @@
         "critique": "each step is actionable on its own"
       }
     ],
-    "reviewedAt": "2026-03-01T07:19:26.334Z"
+    "reviewedAt": "2026-03-01T09:17:35.294Z"
   },
   {
     "traceId": "be0b3f71652b8e7d",
@@ -798,20 +798,20 @@
       {
         "dimension": "engagement",
         "pass": false,
-        "critique": ""
+        "critique": "- has no definition for law of diffusion"
       },
       {
         "dimension": "clarity",
         "pass": false,
-        "critique": ""
+        "critique": "- makes no sense"
       },
       {
         "dimension": "payoff",
         "pass": false,
-        "critique": ""
+        "critique": "- no action"
       }
     ],
-    "reviewedAt": "2026-03-01T08:04:48.396Z"
+    "reviewedAt": "2026-03-01T09:29:45.953Z"
   },
   {
     "traceId": "a620da998280a030",
@@ -885,21 +885,21 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": false,
+        "pass": true,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:37:33.168Z"
+    "reviewedAt": "2026-03-01T09:21:32.643Z"
   },
   {
     "traceId": "a0d21e25073b02d9",
@@ -907,21 +907,21 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": false,
+        "pass": true,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:37:42.701Z"
+    "reviewedAt": "2026-03-01T09:23:09.133Z"
   },
   {
     "traceId": "c5450f1003c8f38d",
@@ -1039,21 +1039,21 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": false,
+        "pass": true,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:45:35.112Z"
+    "reviewedAt": "2026-03-01T09:25:22.718Z"
   },
   {
     "traceId": "21971f5d659c9f69",
@@ -1061,7 +1061,7 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -1075,7 +1075,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:45:40.847Z"
+    "reviewedAt": "2026-03-01T09:30:08.538Z"
   },
   {
     "traceId": "6ef13c61c2f4e6ac",
