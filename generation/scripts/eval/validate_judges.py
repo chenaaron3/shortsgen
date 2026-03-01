@@ -4,7 +4,7 @@ Run script judge on golden set and report agreement with human labels.
 Writes judge-results.json for the eval UI to show disagreements.
 
 Run from project root: PYTHONPATH=generation/scripts python generation/scripts/eval/validate_judges.py
-  validate_judges.py --model gpt-4o   # use stronger model (default: gpt-4o-mini)
+  validate_judges.py --model gpt-4o   # use stronger model for 75%%+ alignment (default: gpt-4o-mini)
 """
 
 import argparse
@@ -26,7 +26,7 @@ DIMS = ("engagement", "clarity", "payoff")
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Validate script judge against golden set")
-    parser.add_argument("--model", default="gpt-4o-mini", help="LLM model for judge (default: gpt-4o-mini)")
+    parser.add_argument("--model", default="gpt-4o-mini", help="LLM model for judge (default: gpt-4o-mini; use --model gpt-4o for 75%%+ alignment)")
     args = parser.parse_args()
 
     if not GOLDEN_PATH.exists():

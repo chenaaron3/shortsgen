@@ -1,184 +1,420 @@
 [
   {
-    "traceId": "c830e12285a329c5",
-    "model": "mixed",
+    "traceId": "c4824f07e12873b2",
+    "model": "default",
     "judgments": [
       {
         "dimension": "engagement",
         "pass": false,
-        "critique": ""
+        "critique": "not an important hook. I don't care about it"
       },
       {
         "dimension": "clarity",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "jumps all over the place. uses terms like neocortex/limbic without explanation.\nSentences don't lead into one another, they seem unrelated.\n"
       },
       {
         "dimension": "payoff",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "\"It speaks to how we truly decide\" is vague and not easily understandable"
       }
     ],
-    "imageAnnotations": [
-      {
-        "sceneIndex": 0,
-        "marker": "good"
-      }
-    ],
-    "reviewedAt": "2026-02-28T01:01:46.894Z"
+    "reviewedAt": "2026-03-01T06:24:03.075Z"
   },
   {
-    "traceId": "3157c0557bab30f0",
-    "model": "mixed",
+    "traceId": "0e4b22a2580afa6a",
+    "model": "default",
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "\"communicate from the inside out\" is meaningless"
       },
       {
         "dimension": "clarity",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "Its just listing individual statements, they don't support each other. There is no flow and viewer gets lost"
       },
       {
         "dimension": "payoff",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "\"Make it real, let it guide you.\" adds no value"
       }
     ],
-    "reviewedAt": "2026-02-27T23:46:03.597Z"
+    "reviewedAt": "2026-03-01T06:27:47.364Z"
   },
   {
-    "traceId": "0192bbbe7d528a70",
-    "model": "mixed",
+    "traceId": "0134e17d39dadaae",
+    "model": "default",
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "- has curiosity gap but could be more casual\n\"Why do people stay loyal to some brands even when better products exist?”"
       },
       {
         "dimension": "clarity",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "The main point is confusing \" people don’t buy **what** you do, they buy **why** you do it.\", instantly click away. It needs to be introduced in a clear manner.\n\n"
       },
       {
         "dimension": "payoff",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "not very actionable"
       }
     ],
-    "reviewedAt": "2026-02-27T23:55:48.084Z"
+    "reviewedAt": "2026-03-01T07:02:11.844Z"
   },
   {
     "traceId": "7d06754930c62957",
-    "model": "mixed",
+    "model": "default",
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "\"you need to arouse in them an eager want.\" wording is not clear"
       },
       {
         "dimension": "clarity",
         "pass": true,
-        "critique": ""
+        "critique": "- easy to understand story\n- focus on other people's incentives\n- could be improved by having more setup, more conversational tone"
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": "\"Shift your pitch, not just your words.\" is a cheesy ending"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:03:39.336Z"
+  },
+  {
+    "traceId": "1033debc65cbf1a1",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": "- people want to be more efficient/effective in studying\n- creates knowledge gap\n- adds suspense by saying they sound strange"
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": "- clear 3 step structure\n- concept => explanation is very clear\n- question => answer is a good transition"
       },
       {
         "dimension": "payoff",
         "pass": true,
-        "critique": ""
+        "critique": "- uses concrete statistics\n- \" Studies have found\" is good"
       }
     ],
-    "reviewedAt": "2026-02-27T23:55:55.353Z"
+    "reviewedAt": "2026-03-01T06:41:16.103Z"
+  },
+  {
+    "traceId": "d171217cd8f792d1",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": "- \"Today I want to reveal to you the secret to getting better at talking to people.\" people want to be more social\n- \"you were not born socially handicapped\": creates curiosity gap"
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": "- \"you can take a baby and put him or her in a room full of people\" clear example to debunk hook, good setup\n-  \"The reason your social skills aren't that great is simply because\": identify problem, giving insight"
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": "- \"The secret to getting better at talking to people or learning any language is to simply get more practic\" is actionable advice"
+      }
+    ],
+    "reviewedAt": "2026-03-01T06:45:22.564Z"
+  },
+  {
+    "traceId": "8a22cdad9fdafc4c",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": "- \" can start feeling motivated all of the time\" people want to feel motivated, common problem. No need to explicitly state it, this implicitly makes the audience care\n- \"they found that the best way to do so is by simply solving problems in your own life\": easy to understand, insightful"
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": "- \"I'll give you an example just to make things more clear.\" setup for a clear example\n- conflict => explore => action => resolution => learning\n- easy to follow storyline"
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": "- \"Build up that belief that you are in control of your destiny\" good way to wrap it up, makes user feel like they have agency"
+      }
+    ],
+    "reviewedAt": "2026-03-01T06:49:27.494Z"
   },
   {
     "traceId": "8fee76743768b90d",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-27T23:56:32.668Z"
-  },
-  {
-    "traceId": "f62b9165cf9b033d",
-    "model": "mixed",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": true,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": true,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-02-28T00:57:07.543Z"
-  },
-  {
-    "traceId": "5f1c42f2cf788081",
-    "model": "mixed",
+    "model": "default",
     "judgments": [
       {
         "dimension": "engagement",
         "pass": false,
-        "critique": ""
+        "critique": "- not interesting"
       },
       {
         "dimension": "clarity",
         "pass": false,
-        "critique": "\"See, between what happens to you and how you respond, there's a gap. That gap is your power.\"\n\ntoo vague"
+        "critique": "- \"distorted behavior\" is awkward phrasing\n- how does flattery and appreciation link to being valued? The way it was introduced is not smooth\n- Charles Schwab story came out of nowhere with no good setup\n- No storytelling arc, jumps from action to solution. there is no conflict/struggle/learning"
       },
       {
         "dimension": "payoff",
-        "pass": true,
-        "critique": ""
+        "pass": false,
+        "critique": "not actionable"
       }
     ],
-    "reviewedAt": "2026-02-28T00:59:18.828Z"
+    "reviewedAt": "2026-03-01T06:54:19.862Z"
+  },
+  {
+    "traceId": "a77da5c291f91c96",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": "- too short\n- not relatable, takes too long to think of a situation\n- An improvement would be: “Why do people repeat the same mistakes even after you criticize them?\""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": "- The story of al capone has no setup, its completely unrelated to being defensive. Doesn't add value\n- Makes statements, but doesn't explain how/why it works. Empty statements with no explanation"
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": "\"Empathy builds bridges, not walls.\" this adds no value. too abstract and cheesy"
+      }
+    ],
+    "reviewedAt": "2026-03-01T06:59:47.075Z"
   },
   {
     "traceId": "e49a03c71c7d6764",
-    "model": "mixed",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": "\"It's time to become the captain of your ship\": analogy is too sudden, instant cheese and cringe"
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": "- \"captain of your ship\" analogy is offputting\n- each statement can flow into each other more smoothly"
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": "- set a goal for your life is very vague"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:06:24.564Z"
+  },
+  {
+    "traceId": "5887a5bb117d2276",
+    "model": "default",
     "judgments": [
       {
         "dimension": "engagement",
         "pass": true,
-        "critique": ""
+        "critique": "- \"You're not going to be successful in life if you become a slave of these technologies\" strong statement\n- \"how does one take back control and make these machines into your slaves instead of the other way around?\" invokes thought and curiosity\n- people are always scrolling, this targets insecurity and need to be more productive"
       },
       {
         "dimension": "clarity",
         "pass": true,
-        "critique": ""
+        "critique": "- \"There's basically three things that you can do.\" clear 3 step process\n- States a tip and follows up with explanation"
       },
       {
         "dimension": "payoff",
         "pass": true,
-        "critique": ""
+        "critique": "- has clear actionable items in each step"
       }
     ],
-    "reviewedAt": "2026-02-28T01:01:34.594Z"
+    "reviewedAt": "2026-03-01T07:08:56.036Z"
+  },
+  {
+    "traceId": "0e4c5be709325c97",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": "- \"Asking out your crush is best done with a simple three-step process\" targets emotion of rejection and love\n- simplify daunting process in 3 steps"
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": "- clear 3 step framework\n- Great transition between each step \" Once you have their attention, you can then move on to step number two\". Conversational and easy to follow along"
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": "- actionable steps you can take in real life and follow\n- \"Pain lights a fire within you so you start taking action\" inspiring"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:11:14.565Z"
+  },
+  {
+    "traceId": "30c83c85861a67df",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": "- people want money with low barrier of entry, low effort"
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": "- \"The first career on my list is\": clear list\n- starts with position and explains what it does. Concept => explanation pattern\n- Casual and conversational tone makes it easy to understand"
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": "- provides information for users to get jobs. 3 real positions"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:13:33.366Z"
+  },
+  {
+    "traceId": "cc1fd1bea932a3af",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": "- \"I want to go over the most common forms of meditation\": everyone knows meditation is beneficial"
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": "- \"How does it work? Well, basically you focus on the sensation of breathing\": beginner friendly, easy to understand\n- \"What sort of benefits does this form of meditation bring?\" Natural transition into the next topic"
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": "- \"Follow us for more helpful tips\" is not helpful"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:15:24.709Z"
+  },
+  {
+    "traceId": "4f3d497842d49227",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": "\"top three ways you can boost your testosterone\": people want energy"
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": "- clear 3 concept structure\n- \"REM stage of sleep. This means that anything\" great example of stating concept and immediately explaning\n- \"A study conducted in 1983 found that testosterone levels of men increased by 21%\" clear evidence that supports the hook promise"
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": "- each step is actionable"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:18:04.802Z"
+  },
+  {
+    "traceId": "f95e8964161bc29d",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": "- \"double my productivity\" people want to be productive\n- \"And I was able to do this by implementing five simple, proven tricks\": research backed promise"
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": "- easy to understand structure\n- states tip and follows up with why/how it works"
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": "each step is actionable on its own"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:19:26.334Z"
+  },
+  {
+    "traceId": "be0b3f71652b8e7d",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": "- \" fall asleep within 10 to 15 minutes of going to bed.\" people want to fall asleep fast, good health"
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": "- clear steps to follow: first, second, third\n- \"producing melatonin. It's basically tricking our body into thinking that it's still the morning\" follows up concept with explanation"
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": "- each step is actionable"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:21:10.003Z"
+  },
+  {
+    "traceId": "5f1c42f2cf788081",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": "- vague/abstract, not interesting, no value or promise provided"
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": "- too abstract, art has no concrete example to life"
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": "- no clear action user can take"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:22:23.302Z"
+  },
+  {
+    "traceId": "f62b9165cf9b033d",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": "- vague/abstract, not interesting, no value or promise provided"
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": "- too abstract, building a house has no concrete example to life, hard to relate"
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": "- no clear action user can take"
+      }
+    ],
+    "reviewedAt": "2026-03-01T07:22:59.611Z"
   }
 ]

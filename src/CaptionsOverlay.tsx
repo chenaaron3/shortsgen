@@ -166,7 +166,9 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        paddingTop: "65%",
+        paddingTop: "75%",
+        paddingLeft: "20%",
+        paddingRight: "20%",
       }}
     >
       <div
@@ -175,7 +177,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
           padding: pillEnabled ? "8px 20px" : "16px 40px",
           maxWidth: width * 0.82,
           fontFamily: "system-ui, -apple-system, sans-serif",
-          fontSize: Math.min(width * 0.09, 44),
+          fontSize: Math.min(width * 0.055, 56),
           fontWeight: 800,
           textAlign: "center",
           whiteSpace: "pre-wrap" as const,
@@ -185,10 +187,9 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
           opacity,
           backgroundColor: pillEnabled ? pillBackground.color : "transparent",
           borderRadius: pillEnabled ? pillBackground.borderRadius : 0,
+          WebkitFontSmoothing: "antialiased",
+          textRendering: "geometricPrecision",
           textShadow: [
-            "0 0 4px rgba(0,0,0,0.9)",
-            "0 0 8px rgba(0,0,0,0.7)",
-            "0 4px 8px rgba(0,0,0,0.6)",
             "4px 4px 0 #000",
             "-4px -4px 0 #000",
             "4px -4px 0 #000",
@@ -231,7 +232,8 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
               style={{
                 color: isActive ? "#FFE135" : "#FFFFFF",
                 display: "inline-block",
-                transform: `scale(${bump})`,
+                transform: `scale3d(${bump}, ${bump}, 1)`,
+                willChange: "transform",
               }}
             >
               {formatCaption(token.text)}

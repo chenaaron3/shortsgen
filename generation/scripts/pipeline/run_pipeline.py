@@ -177,7 +177,7 @@ def run(
             config_hash,
             video_public(),
             use_whisper=True,
-            whisper_model="distil-large-v3",
+            whisper_model="base" if prototype else "distil-large-v3",
             skip_cache="prepare" in invalidate_steps,
         )
     except Exception as e:
@@ -190,7 +190,7 @@ def run(
 
     set_step_context(6, 6)
     try:
-        output_path = run_render(cache_key, config_hash, skip_cache="video" in invalidate_steps)
+        output_path = run_render(cache_key, config_hash, skip_cache="video" in invalidate_steps, prototype=prototype)
     except Exception as e:
         error(str(e))
         raise
@@ -221,7 +221,7 @@ def run_batch(
     **run_kwargs,
 ) -> None:
     """
-    Run the pipeline for each (item, config) pair. Items need .summary and .cache_key (or computed).
+    Run the pipeline for each (item, config) pair. Items need .original_text and .cache_key (or computed).
     Supports optional callbacks for source-pipeline features (e.g. write_videos_markdown).
     """
     for config in configs:
@@ -272,8 +272,8 @@ def _run_one_item(
     config_hash: str,
     run_kwargs: dict,
 ) -> None:
-    """Run pipeline for a single item. Extracts summary/cache_key from item (dict or object)."""
-    raw = item.get("summary") if isinstance(item, dict) else getattr(item, "summary", None)
+    """Run pipeline for a single item. Extracts original_text/cache_key from item (dict or object)."""
+    raw = item.get("original_text") if isinstance(item, dict) else getattr(item, "original_text", None)
     ck = item.get("cache_key") if isinstance(item, dict) else getattr(item, "cache_key", None)
     raw_content = raw if raw else None
     cache_key = ck if (ck and not raw) else None
@@ -361,7 +361,7 @@ def main():
     title = Path(args.file).stem if args.file else "Untitled"
     items = [
         {
-            "summary": summary,
+            "original_text": summary,
             "cache_key": cache_key,
             "id": cache_key,
             "title": title,

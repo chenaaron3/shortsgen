@@ -75,7 +75,7 @@ Cache key = first 16 chars of SHA256(raw_content). Config hash = first 16 chars 
 
 **chunks.json** (pipeline): `{ "scenes": [{ "text", "imagery", "section", "image_path", "voice_path" }] }`
 
-**manifest.json** (Remotion): `{ "cacheKey", "fps": 30, "width": 540, "height": 960, "durationInFrames", "scenes": [{ "text", "imagePath", "voicePath", "durationInSeconds" }], "captions": [{ "text", "startMs", "endMs", "timestampMs", "confidence" }] }`
+**manifest.json** (Remotion): `{ "cacheKey", "fps": 60, "width": 1080, "height": 1920, "durationInFrames", "scenes": [{ "text", "imagePath", "voicePath", "durationInSeconds" }], "captions": [{ "text", "startMs", "endMs", "timestampMs", "confidence" }] }`
 
 **index.json** (`public/shortgen/index.json`): `{ "cacheKeys": [...] }` — written by prepare for Remotion Studio discovery.
 

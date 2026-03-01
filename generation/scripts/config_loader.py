@@ -19,6 +19,7 @@ class StepConfig(BaseModel):
 
     model: str = Field(..., description="LLM model identifier (e.g. gpt-4o, claude-sonnet-4-5-20250929)")
     system_prompt: str = Field(..., description="Prompt filename under prompts/ (e.g. short-script-system-prompt.md)")
+    temperature: float | None = Field(default=None, description="LLM temperature (0=deterministic, 1+=creative)")
 
 
 class Config(BaseModel):

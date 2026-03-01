@@ -65,7 +65,7 @@ export const defaultEffectsConfig: EffectsConfig = {
   transitions: {
     zoomPunch: {
       enabled: true,
-      scale: 1.12,
+      scale: 1.04,
       durationFrames: 6,
     },
     flash: {
@@ -90,17 +90,18 @@ export const defaultEffectsConfig: EffectsConfig = {
   },
   progressBar: {
     enabled: true,
-    height: 12,
+    height: 42,
     color: "#FFE135",
     position: "top",
   },
+  // Adds color fringing to the edges of the image
   chromaticAberration: {
-    enabled: true,
-    offset: 10,
+    enabled: false,
+    offset: 2,
   },
   captions: {
     pillBackground: {
-      enabled: true,
+      enabled: false,
       color: "rgba(0,0,0,0.4)",
       borderRadius: 8,
     },

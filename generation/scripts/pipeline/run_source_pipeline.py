@@ -101,7 +101,7 @@ def main():
     parser.add_argument(
         "--concurrency",
         type=int,
-        default=2,
+        default=3,
         metavar="N",
         help="Max nugget pipelines to run in parallel (default: 2)",
     )

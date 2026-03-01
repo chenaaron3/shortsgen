@@ -20,9 +20,9 @@ import { SceneSlide } from './SceneSlide';
 
 import type { VideoManifest } from "./types";
 
-const FPS = 30;
-const WIDTH = 540;
-const HEIGHT = 960;
+const FPS = 60;
+const WIDTH = 1080;
+const HEIGHT = 1920;
 
 type ShortVideoProps = {
   manifest: VideoManifest;

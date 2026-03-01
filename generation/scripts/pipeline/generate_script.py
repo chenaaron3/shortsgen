@@ -26,7 +26,7 @@ def _load_system_prompt(prompt_filename: str) -> str:
     return prompt_path.read_text(encoding="utf-8")
 
 
-def _generate_script(raw_content: str, model: str, system_prompt: str) -> str:
+def _generate_script(raw_content: str, model: str, system_prompt: str, temperature: float = 0.7) -> str:
     """Call the LLM to generate the script."""
     try:
         response = completion(
@@ -35,7 +35,7 @@ def _generate_script(raw_content: str, model: str, system_prompt: str) -> str:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Here is the raw content to adapt:\n\n{raw_content}"},
             ],
-            temperature=0.7,
+            temperature=temperature,
         )
         if getattr(response, "usage", None):
             u = response.usage
@@ -67,7 +67,8 @@ def run(
 
     cache_miss("generating...")
     system_prompt = _load_system_prompt(config.script.system_prompt)
-    script = _generate_script(raw_content, config.script.model, system_prompt)
+    temperature = config.script.temperature if config.script.temperature is not None else 0.7
+    script = _generate_script(raw_content, config.script.model, system_prompt, temperature)
     script_path.parent.mkdir(parents=True, exist_ok=True)
     script_path.write_text(script, encoding="utf-8")
     step_end("Script", outputs=[script_path], cache_hits=0, cache_misses=1)

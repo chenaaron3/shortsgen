@@ -1,14 +1,24 @@
-import path from "path";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import { readFileSync, writeFileSync, existsSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import path from 'path';
+import { defineConfig } from 'vite';
+
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
 
 const annotationsPath = path.join(__dirname, "public", "annotations.json");
 const evalDatasetPath = path.join(__dirname, "public", "eval-dataset.json");
 const goldenSetPath = path.join(__dirname, "public", "golden-set.json");
 
 export default defineConfig({
+  server: {
+    watch: {
+      ignored: [
+        "**/annotations.json",
+        "**/golden-set.json",
+        "**/eval-dataset.json",
+      ],
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -81,7 +91,9 @@ export default defineConfig({
               res.end(JSON.stringify({ error: "Invalid eval-dataset.json" }));
               return;
             }
-            const filtered = data.filter((t: { id?: string }) => t.id !== traceId);
+            const filtered = data.filter(
+              (t: { id?: string }) => t.id !== traceId,
+            );
             if (filtered.length === data.length) {
               res.statusCode = 404;
               res.end(JSON.stringify({ error: "Trace not found" }));
@@ -124,12 +136,17 @@ export default defineConfig({
                 const entry = parsed?.entry;
                 if (!entry || typeof entry.traceId !== "string") {
                   res.statusCode = 400;
-                  res.end(JSON.stringify({ error: "Expected { entry: { traceId, model, ... } }" }));
+                  res.end(
+                    JSON.stringify({
+                      error: "Expected { entry: { traceId, model, ... } }",
+                    }),
+                  );
                   return;
                 }
-                const existing: { traceId?: string; model?: string }[] = existsSync(goldenSetPath)
-                  ? JSON.parse(readFileSync(goldenSetPath, "utf-8"))
-                  : [];
+                const existing: { traceId?: string; model?: string }[] =
+                  existsSync(goldenSetPath)
+                    ? JSON.parse(readFileSync(goldenSetPath, "utf-8"))
+                    : [];
                 if (!Array.isArray(existing)) {
                   res.statusCode = 500;
                   res.end(JSON.stringify({ error: "Invalid golden-set.json" }));
@@ -161,9 +178,10 @@ export default defineConfig({
               return;
             }
             try {
-              const existing: { traceId?: string; model?: string }[] = existsSync(goldenSetPath)
-                ? JSON.parse(readFileSync(goldenSetPath, "utf-8"))
-                : [];
+              const existing: { traceId?: string; model?: string }[] =
+                existsSync(goldenSetPath)
+                  ? JSON.parse(readFileSync(goldenSetPath, "utf-8"))
+                  : [];
               if (!Array.isArray(existing)) {
                 res.statusCode = 500;
                 res.end(JSON.stringify({ error: "Invalid golden-set.json" }));
@@ -171,7 +189,7 @@ export default defineConfig({
               }
               const filtered = existing.filter(
                 (e) =>
-                  (e.traceId ?? "") !== traceId || (e.model ?? "") !== model
+                  (e.traceId ?? "") !== traceId || (e.model ?? "") !== model,
               );
               writeFileSync(goldenSetPath, JSON.stringify(filtered, null, 2));
               res.setHeader("Content-Type", "application/json");

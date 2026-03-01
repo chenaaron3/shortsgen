@@ -28,9 +28,22 @@ def source_hash(source_content: str) -> str:
     return hashlib.sha256(source_content.encode("utf-8")).hexdigest()[:16]
 
 
-def _summary_cache_key(summary: str) -> str:
+def _content_cache_key(text: str) -> str:
     """Pipeline cache key for a nugget (same as run_pipeline.content_hash)."""
-    return hashlib.sha256(summary.encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
+def _add_line_numbers(content: str) -> str:
+    """Prefix each line with its 1-indexed line number."""
+    lines = content.splitlines()
+    return "\n".join(f"{i + 1}|{line}" for i, line in enumerate(lines))
+
+
+def _extract_lines(content: str, start_line: int, end_line: int) -> str:
+    """Extract lines from content (1-indexed, inclusive)."""
+    lines = content.splitlines()
+    selected = lines[start_line - 1 : end_line]
+    return "\n".join(selected)
 
 
 def _load_system_prompt(prompt_filename: str) -> str:
@@ -58,11 +71,12 @@ def _break_down_source(
     system_prompt: str,
     max_nuggets: int | None = None,
 ) -> BreakdownOutput:
-    """Call the LLM to break down source into atomic nuggets."""
-    user_content = "Break down this source into atomic idea nuggets."
+    """Call the LLM to break down source into atomic nuggets (line ranges)."""
+    numbered_source = _add_line_numbers(source_content)
+    user_content = "Break down this source into atomic idea nuggets. Output start_line and end_line for each."
     if max_nuggets is not None:
         user_content += f"\n\nOutput at most {max_nuggets} nugget(s). Prioritize the most important or representative ideas."
-    user_content += f"\n\n{source_content}"
+    user_content += f"\n\n{numbered_source}"
 
     schema = BreakdownOutput.model_json_schema()
     if max_nuggets is not None:
@@ -125,7 +139,8 @@ def run(
     system_prompt = _load_system_prompt(config.breakdown.system_prompt)
     result = _break_down_source(source_content, config.breakdown.model, system_prompt, max_nuggets)
     for n in result.nuggets:
-        n.cache_key = _summary_cache_key(n.summary)
+        n.original_text = _extract_lines(source_content, n.start_line, n.end_line)
+        n.cache_key = _content_cache_key(n.original_text)
     breakdown_path.parent.mkdir(parents=True, exist_ok=True)
     breakdown_path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
     step_end("Breakdown", outputs=[breakdown_path], cache_hits=0, cache_misses=1)

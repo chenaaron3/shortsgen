@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Audio, Img, interpolate, useCurrentFrame } from 'remotion';
 
 import { GlitchEffect, SceneFlash } from './effects';
+
 import type { EffectsConfig } from './effectsConfig';
 
 const FADE_FRAMES = 8; // ~0.27s subtle image fade at 30fps
@@ -49,21 +50,21 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
   const glitchIntensity =
     glitch.enabled && isFirstScene
       ? interpolate(
-          frame,
-          [0, 5, 12, glitch.durationFrames],
-          [0, 1, 1, 0],
-          clampOpts
-        )
+        frame,
+        [0, 5, 12, glitch.durationFrames],
+        [0, 1, 1, 0],
+        clampOpts
+      )
       : 0;
 
   // Ken Burns: zoom (only if enabled)
   const kenBurnsScale = kenBurns.enabled
     ? interpolate(
-        frame,
-        [0, durationInFrames],
-        [1, 1 + kenBurns.zoomAmount],
-        clampOpts
-      )
+      frame,
+      [0, durationInFrames],
+      [1, 1 + kenBurns.zoomAmount],
+      clampOpts
+    )
     : 1;
 
   // Ken Burns: pan direction (only if both kenBurns and panEnabled)
@@ -71,30 +72,30 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
   const panX =
     kenBurns.enabled && kenBurns.panEnabled
       ? interpolate(
-          frame,
-          [0, durationInFrames],
-          [0, dir.x * kenBurns.panAmount],
-          clampOpts
-        )
+        frame,
+        [0, durationInFrames],
+        [0, dir.x * kenBurns.panAmount],
+        clampOpts
+      )
       : 0;
   const panY =
     kenBurns.enabled && kenBurns.panEnabled
       ? interpolate(
-          frame,
-          [0, durationInFrames],
-          [0, dir.y * kenBurns.panAmount],
-          clampOpts
-        )
+        frame,
+        [0, durationInFrames],
+        [0, dir.y * kenBurns.panAmount],
+        clampOpts
+      )
       : 0;
 
   // Zoom punch: quick scale-down animation on scene entry
   const punchScale = transitions.zoomPunch.enabled
     ? interpolate(
-        frame,
-        [0, transitions.zoomPunch.durationFrames],
-        [transitions.zoomPunch.scale, 1],
-        clampOpts
-      )
+      frame,
+      [0, transitions.zoomPunch.durationFrames],
+      [transitions.zoomPunch.scale, 1],
+      clampOpts
+    )
     : 1;
 
   // Shake effect: position jitter synced with zoom punch timing
@@ -114,9 +115,9 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
 
   const imageWrapperStyle = {
     position: "absolute" as const,
-    top: "10%",
-    left: 0,
-    width: "100%",
+    top: "20%",
+    left: "10%",
+    width: "80%",
     height: "auto" as const,
     zIndex: 1,
     transform: `scale(${finalScale}) translate(calc(${panX}% + ${shakeX}px), calc(${panY}% + ${shakeY}px))`,

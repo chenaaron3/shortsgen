@@ -123,9 +123,9 @@ def prepare(
     (output_dir / "images").mkdir(exist_ok=True)
     (output_dir / "voice").mkdir(exist_ok=True)
 
-    fps = 30
-    width = 540
-    height = 960
+    fps = 60
+    width = 1080
+    height = 1920
 
     total_duration = 0.0
     scene_inputs = []

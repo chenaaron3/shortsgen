@@ -74,9 +74,11 @@ class Nugget(BaseModel):
 
     id: str = Field(..., description="Unique slug, e.g. atomic-habits-001")
     title: str = Field(..., description="Short descriptive title for the idea")
-    summary: str = Field(..., description="150-300 word self-contained summary, fed to script generator")
+    start_line: int = Field(..., description="Start line number (1-indexed, inclusive)")
+    end_line: int = Field(..., description="End line number (1-indexed, inclusive)")
     source_ref: SourceRef | None = Field(default=None, description="Location in source")
-    cache_key: str | None = Field(default=None, description="Pipeline cache key: first 16 chars of SHA256(summary); set when writing breakdown.json")
+    original_text: str | None = Field(default=None, description="Extracted text from source (populated after LLM output)")
+    cache_key: str | None = Field(default=None, description="Pipeline cache key: first 16 chars of SHA256(original_text); set when writing breakdown.json")
 
 
 class BreakdownOutput(BaseModel):

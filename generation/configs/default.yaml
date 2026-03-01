@@ -5,6 +5,7 @@ breakdown:
 script:
   model: gpt-4o
   system_prompt: short-script-system-prompt.md
+  temperature: 1.0  # 0=focused, 1+=creative
 chunk:
   model: gpt-4o
   system_prompt: transcript-chunker-system-prompt.md

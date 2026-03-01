@@ -6,7 +6,6 @@ import { TraceViewer } from "./components/TraceViewer";
 import { JudgmentForm } from "./components/JudgmentForm";
 import { JudgeComparison } from "./components/JudgeComparison";
 import { BatchList } from "./components/BatchList";
-import type { TraceFilter } from "./components/BatchList";
 import { loadEvalDataset, deleteTrace } from "./api/loadTraces";
 import { loadMergedAnnotations, saveAnnotations } from "./api/annotations";
 import { loadJudgeResults, judgeResultKey } from "./api/loadJudgeResults";
@@ -37,7 +36,6 @@ function App() {
   const [sources, setSources] = useState<Record<string, AnnotationSource>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("");
-  const [filter, setFilter] = useState<TraceFilter>("unreviewed");
   const [judgeResults, setJudgeResults] = useState<Awaited<ReturnType<typeof loadJudgeResults>>>(null);
   const [goldenSet, setGoldenSet] = useState<GoldenSetEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -237,13 +235,11 @@ function App() {
     [sources]
   );
 
-  const traceHasLLM = useCallback(
+  const traceInGoldenSet = useCallback(
     (trace: EvalTrace) => {
-      return Object.keys(trace.script).some(
-        (m) => sources[annotationKey(trace.id, m)] === "llm"
-      );
+      return goldenSet.some((e) => (e.traceId ?? "") === trace.id);
     },
-    [sources]
+    [goldenSet]
   );
 
   const traceHasDisagreement = useCallback(
@@ -394,12 +390,10 @@ function App() {
           <BatchList
             traces={traces}
             traceReviewed={traceReviewed}
-            traceHasLLM={traceHasLLM}
             traceHasDisagreement={traceHasDisagreement}
+            traceInGoldenSet={traceInGoldenSet}
             selectedId={selectedId}
-            filter={filter}
             onSelect={setSelectedId}
-            onFilterChange={setFilter}
           />
         </aside>
         <main className="flex-1 overflow-y-auto">

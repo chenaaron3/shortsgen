@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { ChevronDown, ChevronRight, Film, List, ThumbsDown, ThumbsUp, Trash2, X } from 'lucide-react';
+import {
+    ChevronDown, ChevronRight, Film, List, ThumbsDown, ThumbsUp, Trash2, X
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -100,38 +102,38 @@ export function TraceViewer({ trace, selectedModel, onModelChange, imageAnnotati
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => onDelete(trace)}
-                aria-label="Delete trace"
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            )}
-            {models.length > 1 ? (
-              <Tabs
-                value={selectedModel || models[0]}
-                onValueChange={(v) => onModelChange(v)}
-                className="shrink-0"
-              >
-                <TabsList className="h-8">
-                  {models.map((m) => (
-                    <TabsTrigger key={m} value={m} className="text-xs">
-                      {m}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            ) : (
-              models[0] && (
-                <Badge variant="outline" className="text-xs shrink-0">
-                  {models[0]}
-                </Badge>
-              )
-            )}
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => onDelete(trace)}
+                  aria-label="Delete trace"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+              {models.length > 1 ? (
+                <Tabs
+                  value={selectedModel || models[0]}
+                  onValueChange={(v) => onModelChange(v)}
+                  className="shrink-0"
+                >
+                  <TabsList className="h-8">
+                    {models.map((m) => (
+                      <TabsTrigger key={m} value={m} className="text-xs">
+                        {m}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+              ) : (
+                models[0] && (
+                  <Badge variant="outline" className="text-xs shrink-0">
+                    {models[0]}
+                  </Badge>
+                )
+              )}
             </div>
           </div>
         </CardHeader>

@@ -1,11 +1,11 @@
-name: mixed
+name: gpt-0
 breakdown:
   model: gpt-4o
   system_prompt: source-breakdown-system-prompt.md
 script:
-  model: claude-sonnet-4-5-20250929
+  model: gpt-4o
   system_prompt: short-script-system-prompt.md
-  temperature: 1.0
+  temperature: 0.0  # 0=focused, 1+=creative
 chunk:
   model: gpt-4o
   system_prompt: transcript-chunker-system-prompt.md

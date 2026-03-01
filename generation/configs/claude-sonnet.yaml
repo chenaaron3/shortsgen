@@ -5,6 +5,7 @@ breakdown:
 script:
   model: claude-sonnet-4-5-20250929
   system_prompt: short-script-system-prompt.md
+  temperature: 1.0
 chunk:
   model: claude-sonnet-4-5-20250929
   system_prompt: transcript-chunker-system-prompt.md

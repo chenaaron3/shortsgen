@@ -19,6 +19,7 @@ def run(
     config_hash: str,
     *,
     skip_cache: bool = False,
+    prototype: bool = False,
 ) -> Path:
     """Render the ShortVideo composition. Returns output path."""
     root = project_root()
@@ -45,6 +46,8 @@ def run(
         "--output",
         str(output_path),
     ]
+    # if prototype:
+    #     cmd.extend(["--scale", "0.5", "--crf", "28"])
     result = subprocess.run(cmd, cwd=root)
     if result.returncode != 0:
         sys.exit(result.returncode)
