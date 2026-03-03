@@ -393,9 +393,11 @@ function App() {
 
   const formatStats = (stats: JudgeDatasetStats | undefined) => {
     if (!stats) return null;
-    return DIMENSIONS.map(
-      (d) => `${d}: ${Math.round((100 * stats[d].agree) / (stats[d].agree + stats[d].disagree || 1))}%`
-    ).join(", ");
+    return DIMENSIONS.filter((d) => stats[d])
+      .map(
+        (d) => `${d}: ${Math.round((100 * stats[d].agree) / (stats[d].agree + stats[d].disagree || 1))}%`
+      )
+      .join(", ");
   };
 
   const { lenientCount, strictCount } = (() => {

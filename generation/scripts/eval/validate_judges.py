@@ -5,6 +5,7 @@ Golden = starred traces with human labels. Holdout = non-starred; expected from
 annotations when available, else synthetic (YouTube=pass, AI=fail).
 
 Run from project root: python generation/scripts/run.py eval/validate_judges.py --model gpt-4o-mini
+Optional: --criteria engagement|clarity|payoff to validate a single criterion only.
 """
 
 import argparse
@@ -45,7 +46,14 @@ def _normalize_script(script: object) -> dict[str, str]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Validate script judge against golden and holdout sets")
     parser.add_argument("--model", default="gpt-4o-mini", help="LLM model for judge")
+    parser.add_argument(
+        "--criteria",
+        choices=DIMS,
+        help="Run validation for a single criterion only (engagement, clarity, or payoff)",
+    )
     args = parser.parse_args()
+
+    dims = (args.criteria,) if args.criteria else DIMS
 
     if not ANNOTATIONS_PATH.exists():
         print(f"Error: {ANNOTATIONS_PATH} not found.", file=sys.stderr)
@@ -73,7 +81,8 @@ def main() -> None:
             script_obj = trace.get("script") or {}
             scripts = _normalize_script(script_obj)
             is_youtube = _is_youtube_script(trace)
-            synthetic_expected = {d: is_youtube for d in DIMS}
+            synthetic_expected = {d: is_youtube for d in dims}
+            synthetic_full = {d: is_youtube for d in DIMS}
             for model, script_text in scripts.items():
                 key = f"{trace_id}::{model or 'default'}"
                 ann = annotations_by_key.get(key)
@@ -81,17 +90,27 @@ def main() -> None:
                 judgments = ann.get("judgments", []) if ann else []
                 expected_from_ann = {
                     d: next((j["pass"] for j in judgments if j.get("dimension") == d), None)
+                    for d in dims
+                }
+                expected_from_ann_full = {
+                    d: next((j["pass"] for j in judgments if j.get("dimension") == d), None)
                     for d in DIMS
                 }
-                has_complete = all(expected_from_ann.get(d) is not None for d in DIMS)
+                has_complete = all(expected_from_ann.get(d) is not None for d in dims)
                 if is_golden and not has_complete:
                     print(f"Warning: skipping {trace_id}::{model} - incomplete judgments", file=sys.stderr)
                     continue
-                expected = (
-                    {d: expected_from_ann[d] for d in DIMS}
-                    if has_complete
-                    else synthetic_expected
-                )
+                if args.criteria:
+                    expected = {
+                        d: expected_from_ann_full[d] if expected_from_ann_full[d] is not None else synthetic_full[d]
+                        for d in DIMS
+                    }
+                else:
+                    expected = (
+                        {d: expected_from_ann[d] for d in dims}
+                        if has_complete
+                        else synthetic_expected
+                    )
                 entry = {
                     "traceId": trace_id,
                     "model": model or None,
@@ -111,8 +130,8 @@ def main() -> None:
     for e in holdout_entries:
         all_entries.append((e, "holdout"))
 
-    golden_stats = {d: {"agree": 0, "disagree": 0} for d in DIMS}
-    holdout_stats = {d: {"agree": 0, "disagree": 0} for d in DIMS}
+    golden_stats = {d: {"agree": 0, "disagree": 0} for d in dims}
+    holdout_stats = {d: {"agree": 0, "disagree": 0} for d in dims}
     errors: list[str] = []
     results: list[dict] = []
 
@@ -125,23 +144,29 @@ def main() -> None:
         title = entry.get("title", "")
 
         try:
-            result = score_script(script, model=args.model)
+            result = score_script(script, model=args.model, dimensions=dims if args.criteria else None)
         except Exception as e:
             return (i, None, f"{trace_id} ({model}): {e}")
 
-        predicted = {d: result.get(d, {}).get("pass") for d in DIMS}
-        critiques = {d: result.get(d, {}).get("critique", "") for d in DIMS}
+        predicted = {d: result.get(d, {}).get("pass") for d in dims}
+        critiques = {d: result.get(d, {}).get("critique", "") for d in dims}
         suggestions = {
             d: result.get(d, {}).get("suggestion", "")
-            for d in DIMS
+            for d in dims
             if not predicted.get(d) and result.get(d, {}).get("suggestion")
         }
         suggestion_reasonings = {
             d: result.get(d, {}).get("suggestion_reasoning", "")
-            for d in DIMS
+            for d in dims
             if not predicted.get(d) and result.get(d, {}).get("suggestion_reasoning")
         }
-        disagreements = [d for d in DIMS if expected.get(d) is not None and predicted.get(d) != expected.get(d)]
+        disagreements = [d for d in dims if expected.get(d) is not None and predicted.get(d) != expected.get(d)]
+
+        predicted_output = {d: predicted[d] for d in dims if predicted.get(d) is not None}
+        if args.criteria:
+            for d in DIMS:
+                if d not in dims:
+                    predicted_output[d] = expected.get(d)
 
         entry_data: dict = {
             "traceId": trace_id,
@@ -149,7 +174,7 @@ def main() -> None:
             "title": title,
             "dataset": dataset,
             "expected": expected,
-            "predicted": {d: predicted[d] for d in DIMS if predicted.get(d) is not None},
+            "predicted": predicted_output,
             "critiques": critiques,
             "disagreements": disagreements,
         }
@@ -182,7 +207,7 @@ def main() -> None:
         results.append(entry_data)
         stats = golden_stats if dataset == "golden" else holdout_stats
 
-        for dim in DIMS:
+        for dim in dims:
             exp = expected.get(dim)
             if exp is None:
                 continue
@@ -196,7 +221,7 @@ def main() -> None:
         print(f"\n{label}:")
         print("| Dimension  | Agree | Disagree | Agreement % |")
         print("|------------|-------|----------|-------------|")
-        for dim in DIMS:
+        for dim in dims:
             a, d = st[dim]["agree"], st[dim]["disagree"]
             total = a + d
             pct = round(100 * a / total) if total else 0
@@ -207,17 +232,18 @@ def main() -> None:
     if holdout_entries:
         print_table("Holdout (expected from annotations or YouTube=pass AI=fail)", holdout_stats)
 
-        # Overfitting warning
+        # Overfitting warning (only when all dimensions)
         golden_pcts = {
             d: round(100 * golden_stats[d]["agree"] / (golden_stats[d]["agree"] + golden_stats[d]["disagree"] or 1))
-            for d in DIMS
+            for d in dims
         }
         holdout_pcts = {
             d: round(100 * holdout_stats[d]["agree"] / (holdout_stats[d]["agree"] + holdout_stats[d]["disagree"] or 1))
-            for d in DIMS
+            for d in dims
         }
-        avg_golden = sum(golden_pcts.values()) / 3
-        avg_holdout = sum(holdout_pcts.values()) / 3
+        n_dims = len(dims)
+        avg_golden = sum(golden_pcts.values()) / n_dims
+        avg_holdout = sum(holdout_pcts.values()) / n_dims
         if avg_golden - avg_holdout > 15:
             print("\nWarning: Golden agreement much higher than holdout - possible overfitting to golden set.")
 
@@ -230,7 +256,7 @@ def main() -> None:
 
     if results:
         def dim_stats(st: dict) -> dict:
-            return {d: {"agree": st[d]["agree"], "disagree": st[d]["disagree"]} for d in DIMS}
+            return {d: {"agree": st[d]["agree"], "disagree": st[d]["disagree"]} for d in dims}
 
         output: dict = {
             "generatedAt": datetime.now(timezone.utc).isoformat(),

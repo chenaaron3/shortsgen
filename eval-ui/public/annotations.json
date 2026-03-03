@@ -56,7 +56,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": "- leads with concept, follows with example\n"
       },
       {
@@ -65,7 +65,7 @@
         "critique": "not very actionable"
       }
     ],
-    "reviewedAt": "2026-03-01T23:38:54.551Z",
+    "reviewedAt": "2026-03-03T05:15:09.835Z",
     "is_golden": true
   },
   {
@@ -111,7 +111,7 @@
         "critique": "- uses concrete statistics\n- \" Studies have found\" is good"
       }
     ],
-    "reviewedAt": "2026-03-01T06:41:16.103Z",
+    "reviewedAt": "2026-03-03T04:29:08.119Z",
     "is_golden": true
   },
   {
@@ -125,7 +125,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": "- \"you can take a baby and put him or her in a room full of people\" clear example to debunk hook, good setup\n-  \"The reason your social skills aren't that great is simply because\": identify problem, giving insight"
       },
       {
@@ -134,7 +134,7 @@
         "critique": "- \"The secret to getting better at talking to people or learning any language is to simply get more practic\" is actionable advice"
       }
     ],
-    "reviewedAt": "2026-03-01T06:45:22.564Z",
+    "reviewedAt": "2026-03-03T05:32:37.447Z",
     "is_golden": true
   },
   {
@@ -171,7 +171,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": "- states core concept and follows with story"
       },
       {
@@ -180,7 +180,7 @@
         "critique": "not actionable"
       }
     ],
-    "reviewedAt": "2026-03-03T04:02:52.680Z",
+    "reviewedAt": "2026-03-03T05:36:20.279Z",
     "is_golden": true
   },
   {
@@ -217,7 +217,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": "- clear steps"
       },
       {
@@ -226,7 +226,7 @@
         "critique": "- set a goal for your life is very vague"
       }
     ],
-    "reviewedAt": "2026-03-01T09:19:07.841Z",
+    "reviewedAt": "2026-03-03T05:15:24.202Z",
     "is_golden": true
   },
   {
@@ -249,7 +249,7 @@
         "critique": "- has clear actionable items in each step"
       }
     ],
-    "reviewedAt": "2026-03-01T07:08:56.036Z",
+    "reviewedAt": "2026-03-03T04:29:10.019Z",
     "is_golden": true
   },
   {
@@ -272,7 +272,7 @@
         "critique": "- actionable steps you can take in real life and follow\n- \"Pain lights a fire within you so you start taking action\" inspiring"
       }
     ],
-    "reviewedAt": "2026-03-01T07:11:14.565Z",
+    "reviewedAt": "2026-03-03T04:29:11.470Z",
     "is_golden": true
   },
   {
@@ -295,7 +295,7 @@
         "critique": "- provides information for users to get jobs. 3 real positions"
       }
     ],
-    "reviewedAt": "2026-03-03T03:59:57.852Z",
+    "reviewedAt": "2026-03-03T04:29:13.571Z",
     "is_golden": true
   },
   {
@@ -309,7 +309,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": "- \"How does it work? Well, basically you focus on the sensation of breathing\": beginner friendly, easy to understand\n- \"What sort of benefits does this form of meditation bring?\" Natural transition into the next topic"
       },
       {
@@ -318,7 +318,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T09:16:18.883Z",
+    "reviewedAt": "2026-03-03T05:32:45.545Z",
     "is_golden": true
   },
   {
@@ -341,7 +341,7 @@
         "critique": "- each step is actionable"
       }
     ],
-    "reviewedAt": "2026-03-01T07:18:04.802Z",
+    "reviewedAt": "2026-03-03T04:29:17.452Z",
     "is_golden": true
   },
   {
@@ -364,7 +364,7 @@
         "critique": "each step is actionable on its own"
       }
     ],
-    "reviewedAt": "2026-03-01T09:17:35.294Z",
+    "reviewedAt": "2026-03-03T04:29:18.970Z",
     "is_golden": true
   },
   {
@@ -387,7 +387,7 @@
         "critique": "- each step is actionable"
       }
     ],
-    "reviewedAt": "2026-03-01T07:21:10.003Z",
+    "reviewedAt": "2026-03-03T04:29:00.502Z",
     "is_golden": true
   },
   {
@@ -433,7 +433,7 @@
         "critique": "- no clear action user can take"
       }
     ],
-    "reviewedAt": "2026-03-01T07:22:59.611Z",
+    "reviewedAt": "2026-03-03T05:15:28.618Z",
     "is_golden": true
   },
   {
@@ -500,7 +500,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T02:45:15.342Z"
+    "reviewedAt": "2026-03-03T04:53:11.123Z"
   },
   {
     "traceId": "70649e7553d54bdc",
@@ -513,7 +513,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -522,7 +522,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T02:45:17.942Z"
+    "reviewedAt": "2026-03-03T04:53:13.557Z"
   },
   {
     "traceId": "95bdb65f68a9187f",
@@ -610,7 +610,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T02:45:21.293Z"
+    "reviewedAt": "2026-03-03T04:53:17.705Z"
   },
   {
     "traceId": "eea27c19e913f080",
@@ -632,7 +632,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T02:45:23.770Z"
+    "reviewedAt": "2026-03-03T04:53:21.706Z"
   },
   {
     "traceId": "2b794b89e5aea2f5",
@@ -654,7 +654,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:01:11.164Z"
+    "reviewedAt": "2026-03-03T05:33:30.695Z"
   },
   {
     "traceId": "1d2e306275140e4c",
@@ -698,7 +698,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:01:25.230Z"
+    "reviewedAt": "2026-03-03T04:53:24.387Z"
   },
   {
     "traceId": "e6c4e0be841ce1ba",
@@ -742,7 +742,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:53:40.949Z"
+    "reviewedAt": "2026-03-03T05:36:06.746Z"
   },
   {
     "traceId": "4ad6d84285c5f7bd",
@@ -764,7 +764,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:01:40.564Z"
+    "reviewedAt": "2026-03-03T04:53:26.254Z"
   },
   {
     "traceId": "ed09dd5a22e79e94",
@@ -777,7 +777,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -786,7 +786,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T03:13:27.719Z"
+    "reviewedAt": "2026-03-03T05:34:14.745Z"
   },
   {
     "traceId": "0491fe28405a9622",
@@ -808,7 +808,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:03:36.513Z",
+    "reviewedAt": "2026-03-03T05:15:06.735Z",
     "is_golden": true
   },
   {
@@ -867,7 +867,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -876,7 +876,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:03:24.481Z"
+    "reviewedAt": "2026-03-03T04:25:33.954Z"
   },
   {
     "traceId": "ee4cee59087f6118",
@@ -933,7 +933,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -942,7 +942,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:03:51.349Z"
+    "reviewedAt": "2026-03-03T04:54:15.806Z"
   },
   {
     "traceId": "c5450f1003c8f38d",
@@ -1008,7 +1008,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:03:45.730Z",
+    "reviewedAt": "2026-03-03T05:15:03.135Z",
     "is_golden": true
   },
   {
@@ -1031,7 +1031,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T17:51:37.590Z",
+    "reviewedAt": "2026-03-03T05:34:20.845Z",
     "is_golden": true
   },
   {
@@ -1045,7 +1045,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -1054,7 +1054,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T03:13:26.202Z"
+    "reviewedAt": "2026-03-03T04:26:02.705Z"
   },
   {
     "traceId": "ffcbf88a60b6d1e2",
@@ -1076,7 +1076,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T02:46:00.942Z"
+    "reviewedAt": "2026-03-03T04:53:54.754Z"
   },
   {
     "traceId": "21971f5d659c9f69",
@@ -1112,7 +1112,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -1121,7 +1121,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:02:07.280Z"
+    "reviewedAt": "2026-03-03T05:34:49.662Z"
   },
   {
     "traceId": "eb1cc1212ae59acd",
@@ -1165,7 +1165,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:04:25.029Z"
+    "reviewedAt": "2026-03-03T05:34:41.895Z"
   },
   {
     "traceId": "e46fcbbe01b37532",
@@ -1232,7 +1232,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:01:46.064Z"
+    "reviewedAt": "2026-03-03T04:28:29.687Z"
   },
   {
     "traceId": "2cf1f45bbece5044",
@@ -1298,7 +1298,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T04:01:59.697Z"
+    "reviewedAt": "2026-03-03T05:33:52.128Z"
   },
   {
     "traceId": "8d0d6ad9715f4068",
@@ -1320,7 +1320,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-03T02:45:39.876Z"
+    "reviewedAt": "2026-03-03T05:33:54.894Z"
   },
   {
     "traceId": "5f1c42f2cf788081",

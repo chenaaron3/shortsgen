@@ -95,23 +95,43 @@ def judge_dimension(script: str, dim: str, model: str = "gpt-4o-mini") -> Dimens
     return parsed
 
 
-def judge_script(script: str, model: str = "gpt-4o-mini") -> JudgeScriptOutput:
+def judge_script(
+    script: str,
+    model: str = "gpt-4o-mini",
+    dimensions: tuple[str, ...] | None = None,
+) -> JudgeScriptOutput:
     """
-    Score a script on Engagement, Clarity, Payoff. Three LLM calls in parallel.
+    Score a script on Engagement, Clarity, Payoff. LLM calls in parallel.
+
+    Args:
+        script: Script text to evaluate.
+        model: LLM model for judge.
+        dimensions: If provided, only score these dimensions. Else all DIMENSIONS.
 
     Returns:
         JudgeScriptOutput with pass/critique per dimension.
     """
+    dims = dimensions if dimensions is not None else DIMENSIONS
     results: dict[str, DimensionResult] = {}
 
     def _call(dim: str) -> tuple[str, DimensionResult]:
         return dim, judge_dimension(script, dim, model=model)
 
     with ThreadPoolExecutor(max_workers=3) as ex:
-        futures = {ex.submit(_call, d): d for d in DIMENSIONS}
+        futures = {ex.submit(_call, d): d for d in dims}
         for future in as_completed(futures):
             dim, result = future.result()
             results[dim] = result
+
+    # Fill in any missing dimensions (when dimensions filter was used) with stub
+    for d in DIMENSIONS:
+        if d not in results:
+            results[d] = DimensionResult(
+                passed=False,
+                critique="",
+                suggestion="",
+                suggestion_reasoning="",
+            )
 
     return JudgeScriptOutput(
         engagement=results["engagement"],
@@ -120,13 +140,18 @@ def judge_script(script: str, model: str = "gpt-4o-mini") -> JudgeScriptOutput:
     )
 
 
-def score_script(script: str, model: str = "gpt-4o-mini") -> dict:
+def score_script(
+    script: str,
+    model: str = "gpt-4o-mini",
+    dimensions: tuple[str, ...] | None = None,
+) -> dict:
     """
     Judge a script and return a simple dict for selection logic.
-    Keys: engagement, clarity, payoff. Values: { "pass", "critique", "suggestion", "suggestion_reasoning" }.
+    Keys: engagement, clarity, payoff (or subset if dimensions specified).
+    Values: { "pass", "critique", "suggestion", "suggestion_reasoning" }.
     """
-    result = judge_script(script, model=model)
-    return {
+    result = judge_script(script, model=model, dimensions=dimensions)
+    out = {
         "engagement": {
             "pass": result.engagement.passed,
             "critique": result.engagement.critique,
@@ -146,6 +171,9 @@ def score_script(script: str, model: str = "gpt-4o-mini") -> dict:
             "suggestion_reasoning": result.payoff.suggestion_reasoning,
         },
     }
+    if dimensions is not None:
+        return {d: out[d] for d in dimensions}
+    return out
 
 
 def select_best(scores: list[dict]) -> int:
