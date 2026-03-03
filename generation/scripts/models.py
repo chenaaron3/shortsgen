@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, RootModel
 
 
 class Scene(BaseModel):
@@ -99,3 +99,48 @@ class UploadStateEntry(BaseModel):
 
 class UploadState(RootModel[dict[str, UploadStateEntry]]):
     """Upload state for a breakdown: cache_key -> entry. Persisted as upload_state.json (flat dict)."""
+
+
+# Script judge results (engagement, clarity, payoff)
+# JSON uses "pass" as key; Python attribute is passed_
+
+
+class DimensionScore(BaseModel):
+    """Judge result for one dimension: pass/fail with critique and suggestion."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    passed: bool = Field(
+        validation_alias=AliasChoices("pass", "passed"),
+        serialization_alias="pass",
+        description="Pass or fail",
+    )
+    critique: str = Field(default="", description="Brief rationale")
+    suggestion: str = Field(default="", description="Concrete suggested improvement")
+    suggestion_reasoning: str = Field(default="", description="Why this suggestion would help")
+
+
+class JudgeScore(BaseModel):
+    """Judge scores for all three dimensions."""
+
+    engagement: DimensionScore
+    clarity: DimensionScore
+    payoff: DimensionScore
+
+
+class JudgeAttempt(BaseModel):
+    """One script generation attempt with its judge result."""
+
+    script: str
+    judge: JudgeScore
+
+
+class ScriptJudgeResults(BaseModel):
+    """Full script-judge-results.json output."""
+
+    generatedAt: str = Field(..., description="ISO timestamp")
+    judgeModel: str = Field(..., description="Model used for judge")
+    judge: JudgeScore = Field(..., description="Selected or sole judge result")
+    allPass: bool = Field(..., description="Whether all dimensions passed")
+    attempts: list[JudgeAttempt] | None = Field(default=None, description="All attempts when judge_gate")
+    selectedIndex: int | None = Field(default=None, description="Index of selected attempt when judge_gate")

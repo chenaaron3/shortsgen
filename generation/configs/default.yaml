@@ -5,7 +5,9 @@ breakdown:
 script:
   model: gpt-4o
   system_prompt: short-script-system-prompt.md
-  temperature: 1.0  # 0=focused, 1+=creative
+  temperature: 1.0
+  judge_gate: true
+  judge_max_retries: 2
 chunk:
   model: gpt-4o
   system_prompt: transcript-chunker-system-prompt.md

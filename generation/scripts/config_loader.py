@@ -20,6 +20,9 @@ class StepConfig(BaseModel):
     model: str = Field(..., description="LLM model identifier (e.g. gpt-4o, claude-sonnet-4-5-20250929)")
     system_prompt: str = Field(..., description="Prompt filename under prompts/ (e.g. short-script-system-prompt.md)")
     temperature: float | None = Field(default=None, description="LLM temperature (0=deterministic, 1+=creative)")
+    judge_model: str | None = Field(default=None, description="Model for script judge (engagement/clarity/payoff). Default: gpt-4o-mini.")
+    judge_gate: bool = Field(default=False, description="If true, retry script generation until all judge dimensions pass or max_retries.")
+    judge_max_retries: int = Field(default=2, description="Max retries when judge_gate is enabled.")
 
 
 class Config(BaseModel):

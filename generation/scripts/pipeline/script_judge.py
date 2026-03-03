@@ -4,15 +4,14 @@ Score a short-form script on Engagement, Clarity, and Payoff.
 Three separate LLM calls (one per dimension). Used for script selection when --samples > 1.
 """
 
-import json
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from dotenv import load_dotenv
 from litellm import completion
-from pydantic import BaseModel, Field
 
+from models import DimensionScore, JudgeScore
 from path_utils import env_path, prompts_dir
 from schema_utils import schema_for_openai
 from usage_trace import record_llm
@@ -20,23 +19,6 @@ from usage_trace import record_llm
 load_dotenv(env_path())
 
 DIMENSIONS = ("engagement", "clarity", "payoff")
-
-
-class DimensionResult(BaseModel):
-    """Pass/fail, critique, suggestion, and reasoning for one dimension."""
-
-    passed: bool = Field(..., description="Pass or fail")
-    critique: str = Field(..., description="Brief rationale")
-    suggestion: str = Field(..., description="Concrete suggested improvement to the script")
-    suggestion_reasoning: str = Field(..., description="Why this suggestion would improve the script")
-
-
-class JudgeScriptOutput(BaseModel):
-    """Structured output from script judge: all three dimensions."""
-
-    engagement: DimensionResult
-    clarity: DimensionResult
-    payoff: DimensionResult
 
 
 def _load_judge_prompt(dim: str) -> str:
@@ -57,21 +39,21 @@ def _extract_json(content: str) -> str:
     return content
 
 
-def judge_dimension(script: str, dim: str, model: str = "gpt-4o-mini") -> DimensionResult:
+def judge_dimension(script: str, dim: str, model: str = "gpt-4o-mini") -> DimensionScore:
     """
     Score a script on a single dimension. One LLM call.
 
     Returns:
-        DimensionResult with passed/critique.
+        DimensionScore with passed/critique/suggestion.
     """
     system_prompt = _load_judge_prompt(dim)
-    schema = DimensionResult.model_json_schema()
+    schema = DimensionScore.model_json_schema()
     schema = schema_for_openai(schema)
 
     response_format = {
         "type": "json_schema",
         "json_schema": {
-            "name": "DimensionResult",
+            "name": "DimensionScore",
             "strict": True,
             "schema": schema,
         },
@@ -88,7 +70,7 @@ def judge_dimension(script: str, dim: str, model: str = "gpt-4o-mini") -> Dimens
     )
     content = (response.choices[0].message.content or "").strip()
     content = _extract_json(content)
-    parsed = DimensionResult.model_validate_json(content)
+    parsed = DimensionScore.model_validate_json(content)
     if getattr(response, "usage", None):
         u = response.usage
         record_llm(f"Judge-{dim}", model, u.prompt_tokens, u.completion_tokens)
@@ -99,7 +81,7 @@ def judge_script(
     script: str,
     model: str = "gpt-4o-mini",
     dimensions: tuple[str, ...] | None = None,
-) -> JudgeScriptOutput:
+) -> JudgeScore:
     """
     Score a script on Engagement, Clarity, Payoff. LLM calls in parallel.
 
@@ -109,12 +91,12 @@ def judge_script(
         dimensions: If provided, only score these dimensions. Else all DIMENSIONS.
 
     Returns:
-        JudgeScriptOutput with pass/critique per dimension.
+        JudgeScore with pass/critique per dimension.
     """
     dims = dimensions if dimensions is not None else DIMENSIONS
-    results: dict[str, DimensionResult] = {}
+    results: dict[str, DimensionScore] = {}
 
-    def _call(dim: str) -> tuple[str, DimensionResult]:
+    def _call(dim: str) -> tuple[str, DimensionScore]:
         return dim, judge_dimension(script, dim, model=model)
 
     with ThreadPoolExecutor(max_workers=3) as ex:
@@ -124,16 +106,12 @@ def judge_script(
             results[dim] = result
 
     # Fill in any missing dimensions (when dimensions filter was used) with stub
+    stub = DimensionScore(passed=False, critique="", suggestion="", suggestion_reasoning="")
     for d in DIMENSIONS:
         if d not in results:
-            results[d] = DimensionResult(
-                passed=False,
-                critique="",
-                suggestion="",
-                suggestion_reasoning="",
-            )
+            results[d] = stub
 
-    return JudgeScriptOutput(
+    return JudgeScore(
         engagement=results["engagement"],
         clarity=results["clarity"],
         payoff=results["payoff"],
@@ -144,49 +122,37 @@ def score_script(
     script: str,
     model: str = "gpt-4o-mini",
     dimensions: tuple[str, ...] | None = None,
-) -> dict:
+) -> JudgeScore:
     """
-    Judge a script and return a simple dict for selection logic.
-    Keys: engagement, clarity, payoff (or subset if dimensions specified).
-    Values: { "pass", "critique", "suggestion", "suggestion_reasoning" }.
+    Judge a script and return JudgeScore (engagement, clarity, payoff).
     """
     result = judge_script(script, model=model, dimensions=dimensions)
-    out = {
-        "engagement": {
-            "pass": result.engagement.passed,
-            "critique": result.engagement.critique,
-            "suggestion": result.engagement.suggestion,
-            "suggestion_reasoning": result.engagement.suggestion_reasoning,
-        },
-        "clarity": {
-            "pass": result.clarity.passed,
-            "critique": result.clarity.critique,
-            "suggestion": result.clarity.suggestion,
-            "suggestion_reasoning": result.clarity.suggestion_reasoning,
-        },
-        "payoff": {
-            "pass": result.payoff.passed,
-            "critique": result.payoff.critique,
-            "suggestion": result.payoff.suggestion,
-            "suggestion_reasoning": result.payoff.suggestion_reasoning,
-        },
-    }
-    if dimensions is not None:
-        return {d: out[d] for d in dimensions}
-    return out
+    if dimensions is not None and set(dimensions) != set(DIMENSIONS):
+        # Return subset; build minimal JudgeScore with only requested dims
+        stub = DimensionScore(passed=False, critique="", suggestion="", suggestion_reasoning="")
+        return JudgeScore(
+            engagement=result.engagement if "engagement" in dimensions else stub,
+            clarity=result.clarity if "clarity" in dimensions else stub,
+            payoff=result.payoff if "payoff" in dimensions else stub,
+        )
+    return result
 
 
-def select_best(scores: list[dict]) -> int:
+def select_best(scores: list[JudgeScore]) -> int:
     """
-    Given a list of score dicts (one per sample), return index of best.
+    Given a list of JudgeScores (one per sample), return index of best.
     Tie-break: most passes wins; then first sample.
     """
     if not scores:
         raise ValueError("No scores to select from")
+
+    def _pass_count(s: JudgeScore) -> int:
+        return sum(1 for d in (s.engagement, s.clarity, s.payoff) if d.passed)
+
     best_idx = 0
-    best_passes = sum(1 for v in scores[0].values() if v.get("pass"))
+    best_passes = _pass_count(scores[0])
     for i, s in enumerate(scores[1:], 1):
-        passes = sum(1 for v in s.values() if v.get("pass"))
+        passes = _pass_count(s)
         if passes > best_passes:
             best_passes = passes
             best_idx = i

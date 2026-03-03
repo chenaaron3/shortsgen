@@ -148,17 +148,20 @@ def main() -> None:
         except Exception as e:
             return (i, None, f"{trace_id} ({model}): {e}")
 
-        predicted = {d: result.get(d, {}).get("pass") for d in dims}
-        critiques = {d: result.get(d, {}).get("critique", "") for d in dims}
+        def _dim(d: str):
+            return getattr(result, d)
+
+        predicted = {d: _dim(d).passed for d in dims}
+        critiques = {d: _dim(d).critique for d in dims}
         suggestions = {
-            d: result.get(d, {}).get("suggestion", "")
+            d: _dim(d).suggestion
             for d in dims
-            if not predicted.get(d) and result.get(d, {}).get("suggestion")
+            if not predicted.get(d) and _dim(d).suggestion
         }
         suggestion_reasonings = {
-            d: result.get(d, {}).get("suggestion_reasoning", "")
+            d: _dim(d).suggestion_reasoning
             for d in dims
-            if not predicted.get(d) and result.get(d, {}).get("suggestion_reasoning")
+            if not predicted.get(d) and _dim(d).suggestion_reasoning
         }
         disagreements = [d for d in dims if expected.get(d) is not None and predicted.get(d) != expected.get(d)]
 
@@ -211,7 +214,7 @@ def main() -> None:
             exp = expected.get(dim)
             if exp is None:
                 continue
-            got = result.get(dim, {}).get("pass")
+            got = getattr(result, dim).passed
             if got == exp:
                 stats[dim]["agree"] += 1
             else:
