@@ -47,6 +47,8 @@ export type Annotation = {
   /** Per-image good/bad markers. Bad images require a note. */
   imageAnnotations?: ImageAnnotation[];
   reviewedAt: string;
+  /** When true, this annotation is in the golden set (used by validate_judges). */
+  is_golden?: boolean;
 };
 
 export const DIMENSIONS: Dimension[] = ["engagement", "clarity", "payoff"];

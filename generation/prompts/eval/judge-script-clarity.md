@@ -5,6 +5,7 @@ Evaluate a short-form script on **Clarity** as a **casual short-form viewer**.
 **Question:** Is the core idea understandable and grounded in reality?
 
 **PASS if:**
+
 - **Specific Entity:** The script uses a named person, company, or event (e.g. "Steve Jobs", "Apple", "The 2008 crash").
 - **Vivid Scenario:** The script describes a specific situation with sensory details (e.g. "You are sitting in a casino", "Your boss yells at you").
 - **Hypothetical "You":** The script places the viewer in a specific situation (e.g. "Imagine you are building a house", "When you talk to a stranger").
@@ -14,15 +15,17 @@ Evaluate a short-form script on **Clarity** as a **casual short-form viewer**.
 - **Common Advice:** Simple advice like "remove distractions" is clear.
 
 **FAIL if:**
-- **Vague Generalizations:** The script only talks about "companies", "leaders", "people", or "success" in general terms without *any* specific example, list, or scenario.
+
+- **Vague Generalizations:** The script only talks about "companies", "leaders", "people", or "success" in general terms without _any_ specific example, list, or scenario.
 - **Pure Metaphors:** A metaphor ("life is a canvas") without a specific real-world application (e.g. "choosing a career").
 - **Abstract Definitions:** The script defines terms ("What is love?") without applying them.
 - **Textbook Style:** The script reads like an encyclopedia entry or summary (e.g. "The Law of Diffusion states that...").
 
 **Decision Cue:**
+
 1. **Check for Lists/Scenarios.** If the script lists specific categories (e.g. "IT jobs") or describes a generic scenario (e.g. "a baby learning"), **PASS**.
 2. **Check for Pure Metaphors.** If the script uses a metaphor without a real-world application, **FAIL**.
-3. **Check for Generalizations.** If the script *only* talks about abstract groups ("leaders", "companies") without a specific entity or scenario, **FAIL**.
+3. **Check for Generalizations.** If the script _only_ talks about abstract groups ("leaders", "companies") without a specific entity or scenario, **FAIL**.
 4. Otherwise, if it has a specific entity, vivid scenario, or logical unpacking, **PASS**.
 
 ---
@@ -30,6 +33,7 @@ Evaluate a short-form script on **Clarity** as a **casual short-form viewer**.
 ## Few-Shot Examples
 
 **PASS:**
+
 - "Steve Jobs fired the guy... Apple lost its way" — Specific entity
 - "Imagine you are at a casino... the house always wins" — Vivid scenario
 - "Dopamine creates a craving... the brain seeks reward" — Logical unpacking
@@ -39,6 +43,7 @@ Evaluate a short-form script on **Clarity** as a **casual short-form viewer**.
 - "Mindfulness breathing involves focusing on your breath... notice thoughts" — Instructional description (concrete)
 
 **FAIL:**
+
 - "Companies often lose their way when they grow. Leaders must rediscover their why." — (Generalization: no specific company or scenario)
 - "The Golden Circle has three layers: What, How, and Why." — (Abstract definition)
 - "Life is a blank canvas... paint your masterpiece." — (Pure metaphor)
@@ -51,6 +56,7 @@ Evaluate a short-form script on **Clarity** as a **casual short-form viewer**.
 Return **only** valid JSON.
 
 If **PASS**:
+
 ```json
 {
   "passed": true,
@@ -61,6 +67,7 @@ If **PASS**:
 ```
 
 If **FAIL**:
+
 ```json
 {
   "passed": false,

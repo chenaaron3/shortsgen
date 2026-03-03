@@ -46,7 +46,7 @@ The UI merges human and LLM annotations: human always overrides. Traces with onl
 
 To compare the script judge LLM against your human labels and inspect disagreements:
 
-1. Add annotations to the golden set: In the eval UI, complete all dimension judgments for a trace+model, then click the **star** (★) button next to Evaluations. Starred annotations appear in `public/golden-set.json`. (The old `export_golden_set.py` script is deprecated.)
+1. Add annotations to the golden set: In the eval UI, complete all dimension judgments for a trace+model, then click the **star** (★) button next to Evaluations. Starred annotations get `is_golden: true` in `public/annotations.json`.
 2. Run the judge on the golden set:
    ```bash
    python generation/scripts/run.py eval/validate_judges.py

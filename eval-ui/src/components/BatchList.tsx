@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Check, X, Star } from "lucide-react";
+import { Check, Star } from "lucide-react";
 
 const DIM_SHORT: Record<Dimension, string> = {
   engagement: "E",
@@ -27,65 +27,81 @@ function SourceBreakdown({ traces }: { traces: EvalTrace[] }) {
   );
 }
 
-/** Per-criterion pass/fail icons. Uses annotations (latest labels) when available, else judge. Shows ✗✗✗ when all fail. */
-function CriteriaIcons({ labelData }: { labelData: Record<Dimension, boolean> }) {
-  const allFail = DIMENSIONS.every((d) => !labelData[d]);
+/** Pass/fail counts per dimension from judge predictions. */
+function DimensionPassFailBreakdown({
+  traces,
+  getJudgeEntry,
+}: {
+  traces: EvalTrace[];
+  getJudgeEntry?: (trace: EvalTrace) => JudgeResultEntry | undefined;
+}) {
+  if (!getJudgeEntry) return null;
+  const counts: Record<Dimension, { pass: number; fail: number }> = {
+    engagement: { pass: 0, fail: 0 },
+    clarity: { pass: 0, fail: 0 },
+    payoff: { pass: 0, fail: 0 },
+  };
+  for (const t of traces) {
+    const entry = getJudgeEntry(t);
+    if (!entry?.predicted) continue;
+    for (const d of DIMENSIONS) {
+      if (entry.predicted[d]) counts[d].pass++;
+      else counts[d].fail++;
+    }
+  }
+  const total = traces.filter((t) => getJudgeEntry(t)?.predicted).length;
+  if (total === 0) return null;
   return (
-    <div
-      className="flex items-center gap-0.5 shrink-0"
-      title={DIMENSIONS.map((d) => `${DIMENSION_LABELS[d]}: ${labelData[d] ? "pass" : "fail"}`).join(", ")}
-    >
-      {allFail ? (
-        <span className="text-red-500 font-semibold text-xs" title="All criteria failed">
-          ✗✗✗
-        </span>
-      ) : (
-        DIMENSIONS.map((d) => (
-          <span key={d} title={`${DIMENSION_LABELS[d]}: ${labelData[d] ? "pass" : "fail"}`}>
-            {labelData[d] ? (
-              <Check className="size-3 text-emerald-600" />
-            ) : (
-              <X className="size-3 text-red-500" />
-            )}
-          </span>
-        ))
-      )}
+    <div className="text-xs text-muted-foreground space-y-0.5">
+      {DIMENSIONS.map((d) => (
+        <p key={d}>
+          {DIMENSION_LABELS[d]}: {counts[d].pass} pass, {counts[d].fail} fail
+        </p>
+      ))}
     </div>
   );
 }
 
-/** Lenient = human fail, judge pass. Strict = human pass, judge fail. Uses humanLabels when available, else entry.expected. */
-function MismatchBadge({
-  entry,
-  humanLabels,
+/** Per-dimension badges: green if pass, red if fail. Yellow ring on disagreed dimensions. */
+function CriteriaBadges({
+  labelData,
+  disagreedDimensions = [],
 }: {
-  entry: JudgeResultEntry;
-  humanLabels: Record<Dimension, boolean> | undefined;
+  labelData: Record<Dimension, boolean> | undefined;
+  disagreedDimensions?: Dimension[];
 }) {
-  const groundTruth = humanLabels ?? entry.expected;
-  const strict: Dimension[] = [];
-  const lenient: Dimension[] = [];
-  for (const d of DIMENSIONS) {
-    if (groundTruth[d] !== entry.predicted[d]) {
-      if (groundTruth[d] && !entry.predicted[d]) strict.push(d);
-      else lenient.push(d);
-    }
-  }
-  if (strict.length === 0 && lenient.length === 0) return null;
-  const parts: string[] = [];
-  if (lenient.length > 0) parts.push(`↗ ${lenient.map((d) => DIM_SHORT[d]).join(",")}`);
-  if (strict.length > 0) parts.push(`↘ ${strict.map((d) => DIM_SHORT[d]).join(",")}`);
-  const labelSrc = humanLabels ? "Human" : "Expected";
-  const title = [
-    lenient.length > 0 && `Lenient (judge passed, ${labelSrc} fail): ${lenient.map((d) => DIMENSION_LABELS[d]).join(", ")}`,
-    strict.length > 0 && `Strict (judge failed, ${labelSrc} pass): ${strict.map((d) => DIMENSION_LABELS[d]).join(", ")}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
   return (
-    <span className="text-[10px] text-amber-600 dark:text-amber-500" title={title}>
-      {parts.join(" | ")}
-    </span>
+    <div className="flex items-center gap-0.5 shrink-0">
+      {DIMENSIONS.map((d) => {
+        const pass = labelData?.[d];
+        const hasData = pass !== undefined;
+        const hasDisagreement = disagreedDimensions.includes(d);
+        return (
+          <Badge
+            key={d}
+            variant="secondary"
+            className={cn(
+              "text-[10px] px-1 py-0 w-5 justify-center font-medium",
+              hasData
+                ? pass
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                  : "bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                : "bg-muted text-muted-foreground",
+              hasDisagreement && "ring-2 ring-yellow-500 ring-inset"
+            )}
+            title={
+              hasDisagreement
+                ? `${DIMENSION_LABELS[d]}: judge disagrees with expected`
+                : hasData
+                  ? `${DIMENSION_LABELS[d]}: ${pass ? "pass" : "fail"}`
+                  : `${DIMENSION_LABELS[d]}: no evaluation`
+            }
+          >
+            {DIM_SHORT[d]}
+          </Badge>
+        );
+      })}
+    </div>
   );
 }
 
@@ -96,9 +112,11 @@ type BatchListProps = {
   traceReviewed: (trace: EvalTrace) => boolean;
   traceHasDisagreement?: (trace: EvalTrace) => boolean;
   traceInGoldenSet?: (trace: EvalTrace) => boolean;
-  /** Human labels when source is human. Used for criteria icons and mismatch badge. Falls back to judge predicted for icons. */
-  getHumanLabelData?: (trace: EvalTrace) => Record<Dimension, boolean> | undefined;
-  /** Judge result for mismatch badge (lenient/strict). */
+  /** Best available labels for E/C/P badges: human > judge > annotations. */
+  getLabelData?: (trace: EvalTrace) => Record<Dimension, boolean> | undefined;
+  /** Dimensions where judge disagrees with expected (for per-badge yellow ring). */
+  getDisagreedDimensions?: (trace: EvalTrace) => Dimension[];
+  /** Judge result for DimensionPassFailBreakdown. */
   getJudgeEntry?: (trace: EvalTrace) => JudgeResultEntry | undefined;
   selectedId: string | null;
   onSelect: (id: string) => void;
@@ -111,7 +129,8 @@ export function BatchList({
   traceReviewed,
   traceHasDisagreement = () => false,
   traceInGoldenSet = () => false,
-  getHumanLabelData,
+  getLabelData,
+  getDisagreedDimensions,
   getJudgeEntry,
   selectedId,
   onSelect,
@@ -138,6 +157,9 @@ export function BatchList({
       <div className="shrink-0 p-3 space-y-1">
         <h3 className="text-sm font-semibold">Traces ({traces.length})</h3>
         {traces.length > 0 && <SourceBreakdown traces={traces} />}
+        {traces.length > 0 && (
+          <DimensionPassFailBreakdown traces={traces} getJudgeEntry={getJudgeEntry} />
+        )}
       </div>
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-1 p-2">
@@ -146,8 +168,8 @@ export function BatchList({
             const hasDisagreement = traceHasDisagreement(trace);
             const inGoldenSet = traceInGoldenSet(trace);
             const source = trace.sourceType ?? "ai";
-            const judgeEntry = getJudgeEntry?.(trace);
-            const labelData = getHumanLabelData?.(trace) ?? getJudgeEntry?.(trace)?.predicted;
+            const labelData = getLabelData?.(trace);
+            const disagreedDimensions = getDisagreedDimensions?.(trace) ?? [];
             return (
               <Button
                 key={trace.id}
@@ -178,33 +200,21 @@ export function BatchList({
                     >
                       {source === "youtube" ? "YouTube" : "AI"}
                     </Badge>
-                    {judgeEntry &&
-                      (() => {
-                        const humanLabels = getHumanLabelData?.(trace);
-                        const groundTruth = humanLabels ?? judgeEntry.expected;
-                        const hasMismatch = DIMENSIONS.some(
-                          (d) => groundTruth[d] !== judgeEntry.predicted[d]
-                        );
-                        return hasMismatch ? (
-                          <MismatchBadge entry={judgeEntry} humanLabels={humanLabels} />
-                        ) : null;
-                      })()}
+                    <CriteriaBadges
+                      labelData={labelData}
+                      disagreedDimensions={disagreedDimensions}
+                    />
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {labelData && <CriteriaIcons labelData={labelData} />}
                   {inGoldenSet && (
                     <Star className="size-3.5 text-amber-500 fill-amber-500" />
                   )}
-                  {hasDisagreement ? (
-                    <span title="Judge disagrees with expected">
-                      <X className="size-3.5 text-red-500" />
-                    </span>
-                  ) : reviewed ? (
+                  {!hasDisagreement && reviewed && (
                     <span title="Human reviewed">
                       <Check className="size-3.5 text-emerald-500" />
                     </span>
-                  ) : null}
+                  )}
                 </div>
               </Button>
             );

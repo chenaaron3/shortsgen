@@ -4,7 +4,7 @@ globs:
   - "generation/prompts/eval/**"
   - "generation/scripts/eval/**"
   - "eval-ui/public/judge-results.json"
-  - "eval-ui/public/golden-set.json"
+  - "eval-ui/public/annotations.json"
 alwaysApply: false
 ---
 
@@ -76,6 +76,6 @@ If golden improves but holdout drops → likely overfitting. Revert or soften pr
 | -------------------------------------------- | ---------------------------------------------------------- |
 | `generation/prompts/eval/judge-script-*.md`  | Judge system prompts                                       |
 | `generation/scripts/eval/validate_judges.py` | Runs judge, reports golden + holdout agreement             |
-| `eval-ui/public/golden-set.json`             | Human labels (starred traces)                              |
+| `eval-ui/public/annotations.json`           | Human labels; `is_golden` marks starred traces             |
 | `eval-ui/public/eval-dataset.json`           | Full dataset; `sourceType` drives holdout labels           |
 | `eval-ui/public/judge-results.json`          | Latest judge output; per-entry critiques and disagreements |

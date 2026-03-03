@@ -5,13 +5,13 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": "not an important hook. I don't care about it"
       },
       {
         "dimension": "clarity",
         "pass": false,
-        "critique": "jumps all over the place. uses terms like neocortex/limbic without explanation.\nSentences don't lead into one another, they seem unrelated.\n"
+        "critique": "jumps all over the place. Sentences don't lead into one another, they seem unrelated.\n"
       },
       {
         "dimension": "payoff",
@@ -19,7 +19,8 @@
         "critique": "\"It speaks to how we truly decide\" is vague and not easily understandable"
       }
     ],
-    "reviewedAt": "2026-03-01T06:24:03.075Z"
+    "reviewedAt": "2026-03-01T23:42:12.469Z",
+    "is_golden": true
   },
   {
     "traceId": "0e4b22a2580afa6a",
@@ -41,7 +42,8 @@
         "critique": "\"Make it real, let it guide you.\" adds no value"
       }
     ],
-    "reviewedAt": "2026-03-01T06:27:47.364Z"
+    "reviewedAt": "2026-03-01T06:27:47.364Z",
+    "is_golden": true
   },
   {
     "traceId": "0134e17d39dadaae",
@@ -49,13 +51,13 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
-        "critique": "- has curiosity gap but could be more casual\n\"Why do people stay loyal to some brands even when better products exist?”"
+        "pass": true,
+        "critique": "- creates curiosity gap"
       },
       {
         "dimension": "clarity",
-        "pass": false,
-        "critique": "The main point is confusing \" people don’t buy **what** you do, they buy **why** you do it.\", instantly click away. It needs to be introduced in a clear manner.\n\n"
+        "pass": true,
+        "critique": "- leads with concept, follows with example\n"
       },
       {
         "dimension": "payoff",
@@ -63,7 +65,8 @@
         "critique": "not very actionable"
       }
     ],
-    "reviewedAt": "2026-03-01T07:02:11.844Z"
+    "reviewedAt": "2026-03-01T23:38:54.551Z",
+    "is_golden": true
   },
   {
     "traceId": "7d06754930c62957",
@@ -85,7 +88,8 @@
         "critique": "\"Shift your pitch, not just your words.\" is a cheesy ending"
       }
     ],
-    "reviewedAt": "2026-03-01T07:03:39.336Z"
+    "reviewedAt": "2026-03-01T07:03:39.336Z",
+    "is_golden": true
   },
   {
     "traceId": "1033debc65cbf1a1",
@@ -107,7 +111,8 @@
         "critique": "- uses concrete statistics\n- \" Studies have found\" is good"
       }
     ],
-    "reviewedAt": "2026-03-01T06:41:16.103Z"
+    "reviewedAt": "2026-03-01T06:41:16.103Z",
+    "is_golden": true
   },
   {
     "traceId": "d171217cd8f792d1",
@@ -129,7 +134,8 @@
         "critique": "- \"The secret to getting better at talking to people or learning any language is to simply get more practic\" is actionable advice"
       }
     ],
-    "reviewedAt": "2026-03-01T06:45:22.564Z"
+    "reviewedAt": "2026-03-01T06:45:22.564Z",
+    "is_golden": true
   },
   {
     "traceId": "8a22cdad9fdafc4c",
@@ -151,7 +157,8 @@
         "critique": "- \"Build up that belief that you are in control of your destiny\" good way to wrap it up, makes user feel like they have agency"
       }
     ],
-    "reviewedAt": "2026-03-01T06:49:27.494Z"
+    "reviewedAt": "2026-03-01T06:49:27.494Z",
+    "is_golden": true
   },
   {
     "traceId": "8fee76743768b90d",
@@ -159,13 +166,13 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
-        "critique": "- not interesting"
+        "pass": true,
+        "critique": "- gets the viewer wondering whats next"
       },
       {
         "dimension": "clarity",
-        "pass": false,
-        "critique": "- \"distorted behavior\" is awkward phrasing\n- how does flattery and appreciation link to being valued? The way it was introduced is not smooth\n- Charles Schwab story came out of nowhere with no good setup\n- No storytelling arc, jumps from action to solution. there is no conflict/struggle/learning"
+        "pass": true,
+        "critique": "- states core concept and follows with story"
       },
       {
         "dimension": "payoff",
@@ -173,7 +180,8 @@
         "critique": "not actionable"
       }
     ],
-    "reviewedAt": "2026-03-01T06:54:19.862Z"
+    "reviewedAt": "2026-03-01T23:40:16.764Z",
+    "is_golden": true
   },
   {
     "traceId": "a77da5c291f91c96",
@@ -181,13 +189,13 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
-        "critique": "- too short\n- not relatable, takes too long to think of a situation\n- An improvement would be: “Why do people repeat the same mistakes even after you criticize them?\""
+        "pass": true,
+        "critique": "- An improvement would be: “Why do people repeat the same mistakes even after you criticize them?\""
       },
       {
         "dimension": "clarity",
         "pass": false,
-        "critique": "- The story of al capone has no setup, its completely unrelated to being defensive. Doesn't add value\n- Makes statements, but doesn't explain how/why it works. Empty statements with no explanation"
+        "critique": "- The story of al capone has no setup, it seems unrelated to being defensive. How does being misunderstood tie into being criticized? Need to make sure each point ties back to the thesis\n- Makes statements, but doesn't explain how/why it works. Empty statements with no explanation"
       },
       {
         "dimension": "payoff",
@@ -195,7 +203,8 @@
         "critique": "\"Empathy builds bridges, not walls.\" this adds no value. too abstract and cheesy"
       }
     ],
-    "reviewedAt": "2026-03-01T06:59:47.075Z"
+    "reviewedAt": "2026-03-01T23:43:04.448Z",
+    "is_golden": true
   },
   {
     "traceId": "e49a03c71c7d6764",
@@ -217,7 +226,8 @@
         "critique": "- set a goal for your life is very vague"
       }
     ],
-    "reviewedAt": "2026-03-01T09:19:07.841Z"
+    "reviewedAt": "2026-03-01T09:19:07.841Z",
+    "is_golden": true
   },
   {
     "traceId": "5887a5bb117d2276",
@@ -239,7 +249,8 @@
         "critique": "- has clear actionable items in each step"
       }
     ],
-    "reviewedAt": "2026-03-01T07:08:56.036Z"
+    "reviewedAt": "2026-03-01T07:08:56.036Z",
+    "is_golden": true
   },
   {
     "traceId": "0e4c5be709325c97",
@@ -261,7 +272,8 @@
         "critique": "- actionable steps you can take in real life and follow\n- \"Pain lights a fire within you so you start taking action\" inspiring"
       }
     ],
-    "reviewedAt": "2026-03-01T07:11:14.565Z"
+    "reviewedAt": "2026-03-01T07:11:14.565Z",
+    "is_golden": true
   },
   {
     "traceId": "30c83c85861a67df",
@@ -283,7 +295,8 @@
         "critique": "- provides information for users to get jobs. 3 real positions"
       }
     ],
-    "reviewedAt": "2026-03-01T07:13:33.366Z"
+    "reviewedAt": "2026-03-01T07:13:33.366Z",
+    "is_golden": true
   },
   {
     "traceId": "cc1fd1bea932a3af",
@@ -305,7 +318,8 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T09:16:18.883Z"
+    "reviewedAt": "2026-03-01T09:16:18.883Z",
+    "is_golden": true
   },
   {
     "traceId": "4f3d497842d49227",
@@ -327,7 +341,8 @@
         "critique": "- each step is actionable"
       }
     ],
-    "reviewedAt": "2026-03-01T07:18:04.802Z"
+    "reviewedAt": "2026-03-01T07:18:04.802Z",
+    "is_golden": true
   },
   {
     "traceId": "f95e8964161bc29d",
@@ -349,7 +364,8 @@
         "critique": "each step is actionable on its own"
       }
     ],
-    "reviewedAt": "2026-03-01T09:17:35.294Z"
+    "reviewedAt": "2026-03-01T09:17:35.294Z",
+    "is_golden": true
   },
   {
     "traceId": "be0b3f71652b8e7d",
@@ -371,7 +387,8 @@
         "critique": "- each step is actionable"
       }
     ],
-    "reviewedAt": "2026-03-01T07:21:10.003Z"
+    "reviewedAt": "2026-03-01T07:21:10.003Z",
+    "is_golden": true
   },
   {
     "traceId": "5f1c42f2cf788081",
@@ -393,7 +410,8 @@
         "critique": "- no clear action user can take"
       }
     ],
-    "reviewedAt": "2026-03-01T07:22:23.302Z"
+    "reviewedAt": "2026-03-01T07:22:23.302Z",
+    "is_golden": true
   },
   {
     "traceId": "f62b9165cf9b033d",
@@ -415,7 +433,8 @@
         "critique": "- no clear action user can take"
       }
     ],
-    "reviewedAt": "2026-03-01T07:22:59.611Z"
+    "reviewedAt": "2026-03-01T07:22:59.611Z",
+    "is_golden": true
   },
   {
     "traceId": "b22cbf038b2f5400",
@@ -423,21 +442,21 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": true,
+        "pass": false,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:52:55.449Z"
+    "reviewedAt": "2026-03-03T02:45:12.777Z"
   },
   {
     "traceId": "802dad466e62b018",
@@ -459,7 +478,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:52:59.083Z"
+    "reviewedAt": "2026-03-02T00:29:54.732Z"
   },
   {
     "traceId": "ef01707b5c25886a",
@@ -472,16 +491,16 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": true,
+        "pass": false,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:53:02.182Z"
+    "reviewedAt": "2026-03-03T02:45:15.342Z"
   },
   {
     "traceId": "70649e7553d54bdc",
@@ -489,7 +508,7 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -499,11 +518,11 @@
       },
       {
         "dimension": "payoff",
-        "pass": true,
+        "pass": false,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:53:05.483Z"
+    "reviewedAt": "2026-03-03T02:45:17.942Z"
   },
   {
     "traceId": "95bdb65f68a9187f",
@@ -582,16 +601,16 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": true,
+        "pass": false,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:53:19.449Z"
+    "reviewedAt": "2026-03-03T02:45:21.293Z"
   },
   {
     "traceId": "eea27c19e913f080",
@@ -604,16 +623,16 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": true,
+        "pass": false,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:53:22.916Z"
+    "reviewedAt": "2026-03-03T02:45:23.770Z"
   },
   {
     "traceId": "2b794b89e5aea2f5",
@@ -626,16 +645,16 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": true,
+        "pass": false,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:53:26.999Z"
+    "reviewedAt": "2026-03-03T02:45:28.043Z"
   },
   {
     "traceId": "1d2e306275140e4c",
@@ -670,16 +689,16 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": true,
+        "pass": false,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:53:33.466Z"
+    "reviewedAt": "2026-03-03T02:45:30.258Z"
   },
   {
     "traceId": "e6c4e0be841ce1ba",
@@ -736,7 +755,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -745,7 +764,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T07:53:44.549Z"
+    "reviewedAt": "2026-03-03T02:45:35.426Z"
   },
   {
     "traceId": "ed09dd5a22e79e94",
@@ -753,12 +772,12 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -767,7 +786,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:04:37.098Z"
+    "reviewedAt": "2026-03-03T02:46:50.157Z"
   },
   {
     "traceId": "0491fe28405a9622",
@@ -775,7 +794,7 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -789,7 +808,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:04:45.264Z"
+    "reviewedAt": "2026-03-03T02:46:51.524Z"
   },
   {
     "traceId": "5fc157677c3d4205",
@@ -811,7 +830,8 @@
         "critique": "- no action"
       }
     ],
-    "reviewedAt": "2026-03-01T09:29:45.953Z"
+    "reviewedAt": "2026-03-01T09:29:45.953Z",
+    "is_golden": true
   },
   {
     "traceId": "a620da998280a030",
@@ -819,12 +839,12 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -833,7 +853,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:04:51.614Z"
+    "reviewedAt": "2026-03-03T02:46:54.075Z"
   },
   {
     "traceId": "34eeaad6a2b2fe52",
@@ -841,12 +861,12 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -855,7 +875,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:04:55.208Z"
+    "reviewedAt": "2026-03-03T02:46:56.091Z"
   },
   {
     "traceId": "ee4cee59087f6118",
@@ -863,12 +883,12 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -877,7 +897,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:37:37.851Z"
+    "reviewedAt": "2026-03-03T02:46:24.492Z"
   },
   {
     "traceId": "ad820794f45a5eda",
@@ -899,7 +919,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T09:21:32.643Z"
+    "reviewedAt": "2026-03-03T02:46:32.644Z"
   },
   {
     "traceId": "a0d21e25073b02d9",
@@ -921,54 +941,10 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T09:23:09.133Z"
+    "reviewedAt": "2026-03-03T02:46:37.359Z"
   },
   {
     "traceId": "c5450f1003c8f38d",
-    "model": "default",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-03-01T08:37:46.484Z"
-  },
-  {
-    "traceId": "0dc051062d139eab",
-    "model": "default",
-    "judgments": [
-      {
-        "dimension": "engagement",
-        "pass": false,
-        "critique": ""
-      },
-      {
-        "dimension": "clarity",
-        "pass": false,
-        "critique": ""
-      },
-      {
-        "dimension": "payoff",
-        "pass": false,
-        "critique": ""
-      }
-    ],
-    "reviewedAt": "2026-03-01T08:37:54.618Z"
-  },
-  {
-    "traceId": "4838e72b417e1572",
     "model": "default",
     "judgments": [
       {
@@ -978,6 +954,50 @@
       },
       {
         "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-03T02:46:40.375Z"
+  },
+  {
+    "traceId": "0dc051062d139eab",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-03T02:46:43.126Z"
+  },
+  {
+    "traceId": "4838e72b417e1572",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
         "pass": false,
         "critique": ""
       },
@@ -987,7 +1007,8 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:38:02.868Z"
+    "reviewedAt": "2026-03-02T00:29:29.668Z",
+    "is_golden": true
   },
   {
     "traceId": "0dbf41c097dd4335",
@@ -1000,16 +1021,17 @@
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": "- Needs to provide more context about the habit loop first before diving into each step. "
       },
       {
         "dimension": "payoff",
-        "pass": false,
+        "pass": true,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:48:49.731Z"
+    "reviewedAt": "2026-03-01T17:51:37.590Z",
+    "is_golden": true
   },
   {
     "traceId": "37f51a22555feb74",
@@ -1017,12 +1039,12 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -1031,7 +1053,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:38:25.984Z"
+    "reviewedAt": "2026-03-03T02:46:47.691Z"
   },
   {
     "traceId": "ffcbf88a60b6d1e2",
@@ -1053,7 +1075,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T09:25:22.718Z"
+    "reviewedAt": "2026-03-03T02:46:00.942Z"
   },
   {
     "traceId": "21971f5d659c9f69",
@@ -1075,7 +1097,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T09:30:08.538Z"
+    "reviewedAt": "2026-03-03T02:46:06.158Z"
   },
   {
     "traceId": "6ef13c61c2f4e6ac",
@@ -1083,21 +1105,21 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": false,
+        "pass": true,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:45:48.464Z"
+    "reviewedAt": "2026-03-03T02:46:09.859Z"
   },
   {
     "traceId": "eb1cc1212ae59acd",
@@ -1105,21 +1127,21 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": false,
+        "pass": true,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:45:53.781Z"
+    "reviewedAt": "2026-03-03T02:46:13.482Z"
   },
   {
     "traceId": "560f35f2bb144a15",
@@ -1127,7 +1149,7 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
@@ -1137,11 +1159,11 @@
       },
       {
         "dimension": "payoff",
-        "pass": false,
+        "pass": true,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:45:59.313Z"
+    "reviewedAt": "2026-03-03T02:46:15.926Z"
   },
   {
     "traceId": "e46fcbbe01b37532",
@@ -1149,21 +1171,21 @@
     "judgments": [
       {
         "dimension": "engagement",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "clarity",
-        "pass": false,
+        "pass": true,
         "critique": ""
       },
       {
         "dimension": "payoff",
-        "pass": false,
+        "pass": true,
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:46:02.481Z"
+    "reviewedAt": "2026-03-03T02:46:18.675Z"
   },
   {
     "traceId": "c4c3b5e5729d9808",
@@ -1172,20 +1194,21 @@
       {
         "dimension": "engagement",
         "pass": false,
-        "critique": ""
+        "critique": "- uninteresting hook"
       },
       {
         "dimension": "clarity",
         "pass": false,
-        "critique": ""
+        "critique": "- vague explanation"
       },
       {
         "dimension": "payoff",
         "pass": false,
-        "critique": ""
+        "critique": "- not actionable"
       }
     ],
-    "reviewedAt": "2026-03-01T08:46:05.379Z"
+    "reviewedAt": "2026-03-01T17:33:47.197Z",
+    "is_golden": true
   },
   {
     "traceId": "88914f13e8cbb3a8",
@@ -1264,7 +1287,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -1273,7 +1296,7 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:51:51.526Z"
+    "reviewedAt": "2026-03-03T02:45:38.110Z"
   },
   {
     "traceId": "8d0d6ad9715f4068",
@@ -1286,7 +1309,7 @@
       },
       {
         "dimension": "clarity",
-        "pass": true,
+        "pass": false,
         "critique": ""
       },
       {
@@ -1295,6 +1318,138 @@
         "critique": ""
       }
     ],
-    "reviewedAt": "2026-03-01T08:51:57.210Z"
+    "reviewedAt": "2026-03-03T02:45:39.876Z"
+  },
+  {
+    "traceId": "5f1c42f2cf788081",
+    "model": "gpt-0",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-03T02:34:59.313815+00:00"
+  },
+  {
+    "traceId": "5f1c42f2cf788081",
+    "model": "mixed",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-03T02:34:59.313824+00:00"
+  },
+  {
+    "traceId": "e49a03c71c7d6764",
+    "model": "gpt-0",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-03T02:34:59.313829+00:00"
+  },
+  {
+    "traceId": "e49a03c71c7d6764",
+    "model": "mixed",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-03T02:34:59.313832+00:00"
+  },
+  {
+    "traceId": "f62b9165cf9b033d",
+    "model": "gpt-0",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-03T02:34:59.313835+00:00"
+  },
+  {
+    "traceId": "f62b9165cf9b033d",
+    "model": "mixed",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": false,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": false,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-03T02:34:59.313838+00:00"
   }
 ]

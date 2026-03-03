@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Run script judge on golden set and holdout set; report agreement.
-Golden = starred traces with human labels. Holdout = non-starred with synthetic
-labels (YouTube=pass, AI=fail). Compares both to detect overfitting.
+Golden = starred traces with human labels. Holdout = non-starred; expected from
+annotations when available, else synthetic (YouTube=pass, AI=fail).
 
 Run from project root: python generation/scripts/run.py eval/validate_judges.py --model gpt-4o-mini
 """
@@ -19,7 +19,7 @@ from path_utils import project_root
 # Import script judge (requires pipeline to be on path)
 from pipeline.script_judge import score_script
 
-GOLDEN_PATH = project_root() / "eval-ui" / "public" / "golden-set.json"
+ANNOTATIONS_PATH = project_root() / "eval-ui" / "public" / "annotations.json"
 EVAL_DATASET_PATH = project_root() / "eval-ui" / "public" / "eval-dataset.json"
 JUDGE_RESULTS_PATH = project_root() / "eval-ui" / "public" / "judge-results.json"
 DIMS = ("engagement", "clarity", "payoff")
@@ -47,20 +47,23 @@ def main() -> None:
     parser.add_argument("--model", default="gpt-4o-mini", help="LLM model for judge")
     args = parser.parse_args()
 
-    if not GOLDEN_PATH.exists():
-        print(f"Error: {GOLDEN_PATH} not found. Run export_golden_set.py or star traces in eval UI.", file=sys.stderr)
+    if not ANNOTATIONS_PATH.exists():
+        print(f"Error: {ANNOTATIONS_PATH} not found.", file=sys.stderr)
         sys.exit(1)
 
-    with open(GOLDEN_PATH) as f:
-        golden_list = json.load(f)
+    with open(ANNOTATIONS_PATH) as f:
+        annotations_raw = json.load(f)
+    annotations_list = annotations_raw if isinstance(annotations_raw, list) else []
+    annotations_by_key = {
+        _golden_key(a): a for a in annotations_list if isinstance(a, dict)
+    }
 
-    if not golden_list:
-        print("Golden set is empty.", file=sys.stderr)
+    if not any(a.get("is_golden") for a in annotations_list if isinstance(a, dict)):
+        print("Golden set is empty (no annotations with is_golden). Star traces in eval UI.", file=sys.stderr)
         sys.exit(1)
 
-    golden_keys = {_golden_key(e) for e in golden_list}
-
-    # Build holdout: (traceId, model) from eval-dataset not in golden
+    # Build all entries from eval-dataset; expected from annotations, fallback to synthetic for holdout.
+    golden_list: list[dict] = []
     holdout_entries: list[dict] = []
     if EVAL_DATASET_PATH.exists():
         with open(EVAL_DATASET_PATH) as f:
@@ -70,19 +73,37 @@ def main() -> None:
             script_obj = trace.get("script") or {}
             scripts = _normalize_script(script_obj)
             is_youtube = _is_youtube_script(trace)
-            expected = {d: is_youtube for d in DIMS}
+            synthetic_expected = {d: is_youtube for d in DIMS}
             for model, script_text in scripts.items():
                 key = f"{trace_id}::{model or 'default'}"
-                if key in golden_keys:
+                ann = annotations_by_key.get(key)
+                is_golden = ann.get("is_golden") if ann else False
+                judgments = ann.get("judgments", []) if ann else []
+                expected_from_ann = {
+                    d: next((j["pass"] for j in judgments if j.get("dimension") == d), None)
+                    for d in DIMS
+                }
+                has_complete = all(expected_from_ann.get(d) is not None for d in DIMS)
+                if is_golden and not has_complete:
+                    print(f"Warning: skipping {trace_id}::{model} - incomplete judgments", file=sys.stderr)
                     continue
-                holdout_entries.append({
+                expected = (
+                    {d: expected_from_ann[d] for d in DIMS}
+                    if has_complete
+                    else synthetic_expected
+                )
+                entry = {
                     "traceId": trace_id,
                     "model": model or None,
                     "title": trace.get("title", ""),
                     "rawContent": trace.get("rawContent", ""),
                     "script": script_text,
                     "expected": expected,
-                })
+                }
+                if is_golden:
+                    golden_list.append(entry)
+                else:
+                    holdout_entries.append(entry)
 
     all_entries: list[tuple[dict, str]] = []  # (entry, dataset)
     for e in golden_list:
@@ -184,7 +205,7 @@ def main() -> None:
     print("Judge vs human agreement:")
     print_table("Golden (starred, human labels)", golden_stats)
     if holdout_entries:
-        print_table("Holdout (non-starred, YouTube=pass AI=fail)", holdout_stats)
+        print_table("Holdout (expected from annotations or YouTube=pass AI=fail)", holdout_stats)
 
         # Overfitting warning
         golden_pcts = {

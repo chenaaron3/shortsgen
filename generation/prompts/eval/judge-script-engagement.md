@@ -12,7 +12,7 @@ Evaluate a short-form script on **Engagement** as a **casual short-form viewer**
 
 - Hook creates _some_ reason to keep watching. The bar is: **either** a relatable problem/stake **or** a concrete promise. Both are not required.
 - **Outcome-focused hooks** pass: stating a specific result the viewer will achieve
-- **Topic-driven hooks** pass when the topic itself implies high value (e.g., "how to escape the rat race", "how to get motivated"). Explicit tension/contrast is not required if the promise of learning is clear.
+- **Topic-driven hooks** pass when the topic itself implies high value (e.g., "how to get motivated"). Explicit tension/contrast is not required if the promise of learning is clear.
 - **Personal story hooks** pass when they set up a lesson or insight (e.g., "I realized I should figure out what to do with this money").
 - **Meta-intros** pass when they announce a specific topic or value (e.g., "Today I want to share one of the only feasible methods..."). Do not fail for phrases like "I want to go over" if the rest of the sentence is specific.
 - **Format announcements** pass when they announce N tips, steps, or ways. Promising to reveal a secret, share tips, or go over a list creates curiosity.
@@ -33,6 +33,7 @@ Evaluate a short-form script on **Engagement** as a **casual short-form viewer**
 - Hook is abstract or hard to parse; viewer would not grasp the stakes
 
 **Decision cue:**
+
 1. **Check for Vague Metaphors first.** If the hook uses a metaphor like "blank canvas", "captain of your ship", or "architect of your life" without immediately naming a specific real-world problem (e.g. "debt", "breakup"), **FAIL**. Do not credit it for "curiosity" or "visual analogy".
 2. **Check for Platitudes.** If the hook is a generic statement ("Success is hard"), **FAIL**.
 3. Otherwise, if it reveals a secret, asks a contrast question, announces tips/steps, or shares a relevant personal story, **PASS**.
@@ -42,6 +43,7 @@ Evaluate a short-form script on **Engagement** as a **casual short-form viewer**
 ## Few-Shot Examples
 
 **PASS:**
+
 - "Why do some messages inspire us deeply, while others are easily ignored?" — contrast question with implicit stakes
 - "Today I'm going to go over the top three careers that are currently in high demand..." — stacked promises, format announcement
 - "Today I want to reveal to you the secret to getting better at talking to people" — secret reveal with clear domain
@@ -50,6 +52,7 @@ Evaluate a short-form script on **Engagement** as a **casual short-form viewer**
 - "I never cared much about investing... I realized I should figure out what to do with this money" — personal story leading to a topic/insight
 
 **FAIL:**
+
 - "The Golden Circle model: it's a way inspiring leaders communicate from the inside out" — opens with abstract definition, no tension or stake
 - "Ever feel like life's just happening to you, and you're standing by? It's time to become the captain of your ship" — vague metaphor with no concrete promise
 - "Parkinson's Law states that work expands to fill the time available" — definition only, no hook
@@ -66,6 +69,7 @@ Evaluate a short-form script on **Engagement** as a **casual short-form viewer**
 Return **only** valid JSON. No markdown, no code fences.
 
 If **PASS**:
+
 ```json
 {
   "passed": true,
@@ -76,6 +80,7 @@ If **PASS**:
 ```
 
 If **FAIL**:
+
 ```json
 {
   "passed": false,
