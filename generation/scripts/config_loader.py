@@ -23,6 +23,7 @@ class StepConfig(BaseModel):
     judge_model: str | None = Field(default=None, description="Model for script judge (engagement/clarity/payoff). Default: gpt-4o-mini.")
     judge_gate: bool = Field(default=False, description="If true, retry script generation until all judge dimensions pass or max_retries.")
     judge_max_retries: int = Field(default=2, description="Max retries when judge_gate is enabled.")
+    judge_samples: int = Field(default=1, description="When >1, generate N scripts in parallel and pick best (no iteration). Used when judge_gate=true.")
 
 
 class Config(BaseModel):

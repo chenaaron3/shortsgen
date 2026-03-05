@@ -97,3 +97,25 @@ export type JudgeResults = {
   holdout?: JudgeDatasetStats;
   entries: JudgeResultEntry[];
 };
+
+/** One attempt from script-judge-results.json (generation-time judge gate) */
+export type ScriptJudgeAttempt = {
+  script: string;
+  judge: Record<
+    Dimension,
+    {
+      pass: boolean;
+      critique?: string;
+      suggestion?: string;
+      suggestion_reasoning?: string;
+    }
+  >;
+};
+
+/** Full script-judge-results.json (when judge_gate was on during generation) */
+export type ScriptJudgeResults = {
+  attempts?: ScriptJudgeAttempt[];
+  selectedIndex?: number;
+  allPass?: boolean;
+  judgeModel?: string;
+};

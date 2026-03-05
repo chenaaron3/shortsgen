@@ -77,13 +77,13 @@ Requires `-c config.yaml`. Config defines model and system prompt for each LLM s
 
 ## Data structures
 
-| Artifact              | Location                                      | Purpose                                                                                  |
-| --------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **chunks.json**       | `cache/{configHash}/videos/{cacheKey}/`       | Pipeline: scenes with text, imagery, section, image_path, voice_path.                    |
-| **manifest.json**     | `public/shortgen/{configHash}_{cacheKey}/`    | Remotion: composite cacheKey, scenes, captions.                                          |
-| **index.json**        | `public/shortgen/`                            | List of composite keys; Root.tsx uses it to register compositions.                       |
-| **breakdown.json**    | `cache/_breakdown/{sourceHash}/` | Shared nuggets; per-config: `cache/{configName}/breakdowns/{sourceHash}/` (videos.md, upload_state.json) |
-| **upload_state.json** | Same dir as breakdown.json                    | Per-cache_key YouTube upload state; used by `upload_youtube --breakdown-hash -c config`. |
+| Artifact              | Location                                   | Purpose                                                                                                  |
+| --------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **chunks.json**       | `cache/{configHash}/videos/{cacheKey}/`    | Pipeline: scenes with text, imagery, section, image_path, voice_path.                                    |
+| **manifest.json**     | `public/shortgen/{configHash}_{cacheKey}/` | Remotion: composite cacheKey, scenes, captions.                                                          |
+| **index.json**        | `public/shortgen/`                         | List of composite keys; Root.tsx uses it to register compositions.                                       |
+| **breakdown.json**    | `cache/_breakdown/{sourceHash}/`           | Shared nuggets; per-config: `cache/{configName}/breakdowns/{sourceHash}/` (videos.md, upload_state.json) |
+| **upload_state.json** | Same dir as breakdown.json                 | Per-cache_key YouTube upload state; used by `upload_youtube --breakdown-hash -c config`.                 |
 
 **Caption format:** `{ "text", "startMs", "endMs", "timestampMs", "confidence" }` (word-level from Whisper or scene-level fallback).
 
@@ -167,15 +167,15 @@ python generation/scripts/run.py upload/upload_youtube.py --breakdown-hash SOURC
 
 ## APIs and backends
 
-| Step      | Service                                | Notes                                                                       |
-| --------- | -------------------------------------- | --------------------------------------------------------------------------- |
-| Script    | Config: gpt-4o, Claude, etc. (LiteLLM) | Config defines model + `short-script-system-prompt.md`                      |
-| Chunker   | Config (LiteLLM)                       | Config defines model + `transcript-chunker-system-prompt.md`, ChunksOutput  |
-| Breakdown | Config (LiteLLM)                       | Config defines model + `source-breakdown-system-prompt.md`, BreakdownOutput |
+| Step      | Service                                | Notes                                                                                                                         |
+| --------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Script    | Config: gpt-4o, Claude, etc. (LiteLLM) | Config defines model + `short-script-system-prompt.md`                                                                        |
+| Chunker   | Config (LiteLLM)                       | Config defines model + `transcript-chunker-system-prompt.md`, ChunksOutput                                                    |
+| Breakdown | Config (LiteLLM)                       | Config defines model + `source-breakdown-system-prompt.md`, BreakdownOutput                                                   |
 | Images    | OpenAI (gpt) or Replicate              | `image_generator`: IMAGE_GENERATOR, mascot ref, stick-figure style; `--prototype` → Replicate FLUX Schnell text-to-image only |
-| Voice     | ElevenLabs                             | eleven_v3 (single full-script call + word-level split); audio tags from chunker; mp3_44100_128 |
-| Captions  | faster-whisper                         | Word-level; fallback scene-level from chunk text                            |
-| Upload    | YouTube Data API v3                    | OAuth; title/description from chunks.json                                   |
+| Voice     | ElevenLabs                             | eleven_v3 (single full-script call + word-level split); audio tags from chunker; mp3_44100_128                                |
+| Captions  | faster-whisper                         | Word-level; fallback scene-level from chunk text                                                                              |
+| Upload    | YouTube Data API v3                    | OAuth; title/description from chunks.json                                                                                     |
 
 ---
 

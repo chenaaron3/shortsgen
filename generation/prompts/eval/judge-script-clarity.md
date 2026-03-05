@@ -34,6 +34,14 @@ This allows scripts that are “clear enough” even if they aren’t maximally 
    - A concrete example that shows what the concept looks like in real life.
    - Example: “If you want to be healthier, you plan your meals on Sunday…”
 
+3. **Research story / experiment (narrative)**
+   - A study/history story with a concrete setup + observable result + clear takeaway (everyday relatability not required).
+   - Example: “Mice kept pressing a lever instead of eating—researchers realized it was anticipation driving them.”
+
+4. **Quick demo / thought experiment**
+   - A simple “try this / imagine this” the viewer can picture, with an expected outcome.
+   - Example: “Put your phone face-down for 10 minutes—notice how often your hand reaches for it anyway.”
+
 **ADEQUATE anchors (pass A even without a story):**
 
 3. **Concrete list (categories/tips)**

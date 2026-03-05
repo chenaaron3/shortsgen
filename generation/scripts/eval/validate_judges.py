@@ -6,6 +6,7 @@ annotations when available, else synthetic (YouTube=pass, AI=fail).
 
 Run from project root: python generation/scripts/run.py eval/validate_judges.py --model gpt-4o-mini
 Optional: --criteria engagement|clarity|payoff to validate a single criterion only.
+Optional: --trace TRACE_ID to run on a single trace (id from eval-dataset).
 """
 
 import argparse
@@ -50,6 +51,11 @@ def main() -> None:
         "--criteria",
         choices=DIMS,
         help="Run validation for a single criterion only (engagement, clarity, or payoff)",
+    )
+    parser.add_argument(
+        "--trace",
+        metavar="TRACE_ID",
+        help="Run validation for a single trace only (id from eval-dataset)",
     )
     args = parser.parse_args()
 
@@ -129,6 +135,13 @@ def main() -> None:
         all_entries.append((e, "golden"))
     for e in holdout_entries:
         all_entries.append((e, "holdout"))
+
+    if args.trace:
+        all_entries = [(e, ds) for e, ds in all_entries if e.get("traceId") == args.trace]
+        if not all_entries:
+            print(f"Error: No trace found with id '{args.trace}'", file=sys.stderr)
+            sys.exit(1)
+        print(f"Running on single trace: {args.trace} ({len(all_entries)} model(s))")
 
     golden_stats = {d: {"agree": 0, "disagree": 0} for d in dims}
     holdout_stats = {d: {"agree": 0, "disagree": 0} for d in dims}

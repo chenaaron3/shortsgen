@@ -378,9 +378,8 @@ def main():
 
     try:
         run_batch(items, configs, concurrency=1, **run_kwargs)
-        if len(configs) > 1:
-            eval_path = write_eval_dataset(configs=configs, nuggets=items)
-            info(f"   📋 Eval dataset: {eval_path}")
+        eval_path = write_eval_dataset(configs=configs, nuggets=items)
+        info(f"   📋 Eval dataset: {eval_path}")
     except Exception:
         sys.exit(1)
 

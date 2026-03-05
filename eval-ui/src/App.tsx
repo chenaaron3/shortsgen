@@ -5,6 +5,7 @@ import type { AnnotationSource } from "./api/annotations";
 import { TraceViewer } from "./components/TraceViewer";
 import { JudgmentForm } from "./components/JudgmentForm";
 import { JudgeComparison } from "./components/JudgeComparison";
+import { JudgeGateAttempts } from "./components/JudgeGateAttempts";
 import { BatchList, type DatasetFilter } from "./components/BatchList";
 import { loadEvalDataset, deleteTrace } from "./api/loadTraces";
 import { loadMergedAnnotations, saveAnnotations } from "./api/annotations";
@@ -502,6 +503,12 @@ function App() {
                               })
                             ) as Record<Dimension, { pass: boolean; critique: string } | undefined>
                           }
+                        />
+                      )}
+                      {selectedTrace.assets?.[effectiveModel] && (
+                        <JudgeGateAttempts
+                          traceId={selectedTrace.id}
+                          assetHash={selectedTrace.assets[effectiveModel]}
                         />
                       )}
                     </div>

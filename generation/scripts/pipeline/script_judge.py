@@ -141,19 +141,17 @@ def score_script(
 def select_best(scores: list[JudgeScore]) -> int:
     """
     Given a list of JudgeScores (one per sample), return index of best.
-    Tie-break: most passes wins; then first sample.
+    Primary: most passes wins.
+    Tie-break: engagement > clarity > payoff (per DIMENSIONS order), then first sample.
     """
     if not scores:
         raise ValueError("No scores to select from")
 
-    def _pass_count(s: JudgeScore) -> int:
-        return sum(1 for d in (s.engagement, s.clarity, s.payoff) if d.passed)
+    def _sort_key(i: int) -> tuple:
+        s = scores[i]
+        pass_count = sum(1 for d in DIMENSIONS if getattr(s, d).passed)
+        dim_passes = tuple(getattr(s, d).passed for d in DIMENSIONS)
+        # Final tie-break: prefer first sample (-i so smaller index wins)
+        return (pass_count, *dim_passes, -i)
 
-    best_idx = 0
-    best_passes = _pass_count(scores[0])
-    for i, s in enumerate(scores[1:], 1):
-        passes = _pass_count(s)
-        if passes > best_passes:
-            best_passes = passes
-            best_idx = i
-    return best_idx
+    return max(range(len(scores)), key=_sort_key)

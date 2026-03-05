@@ -21,7 +21,7 @@ def _format_source_ref(src) -> str | None:
 
 
 def _copy_assets(cache_key: str, config, assets_base: Path) -> bool:
-    """Copy chunks, images, and video for a trace+config. Returns True if any assets were copied."""
+    """Copy chunks, images, video, and script-judge-results for a trace+config. Returns True if any assets were copied."""
     src_dir = video_cache_path(cache_key, config.hash, "")
     dst_dir = assets_base / cache_key / config.hash
     copied = False
@@ -48,6 +48,12 @@ def _copy_assets(cache_key: str, config, assets_base: Path) -> bool:
     if video_src.exists():
         dst_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(video_src, dst_dir / "short.mp4")
+        copied = True
+
+    judge_src = src_dir / "script-judge-results.json"
+    if judge_src.exists():
+        dst_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(judge_src, dst_dir / "script-judge-results.json")
         copied = True
 
     return copied

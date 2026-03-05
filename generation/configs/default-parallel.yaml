@@ -1,0 +1,13 @@
+name: default-parallel
+breakdown:
+  model: gpt-4o
+  system_prompt: source-breakdown-system-prompt.md
+script:
+  model: gpt-4o
+  system_prompt: short-script-system-prompt.md
+  temperature: 1.0
+  judge_gate: true
+  judge_samples: 3
+chunk:
+  model: gpt-4o
+  system_prompt: transcript-chunker-system-prompt.md
