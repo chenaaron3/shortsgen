@@ -11,6 +11,9 @@ export type SceneInput = {
   imagePath: string;
   voicePath: string;
   durationInSeconds: number;
+  /** Image dimensions; when height > width (tall), scene uses full-bleed layout */
+  imageWidth?: number;
+  imageHeight?: number;
 };
 
 export type VideoManifest = {

@@ -11,3 +11,5 @@ script:
 chunk:
   model: gpt-4o
   system_prompt: transcript-chunker-system-prompt.md
+image:
+  model: gemini-flash

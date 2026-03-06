@@ -16,6 +16,18 @@ from logger import info, warn
 
 DEFAULT_MODEL = "openai/gpt-image-1-mini"
 API_BASE = "https://api.replicate.com/v1"
+
+# Alias → full Replicate model ID. Params are hardcoded per model below.
+REPLICATE_MODEL_ALIASES = {
+    "gpt-image-mini": "openai/gpt-image-1-mini",
+    "gpt-image": "openai/gpt-image-1",
+    "gemini-flash": "google/gemini-2.5-flash-image",
+}
+
+
+def _resolve_model(model: str) -> str:
+    """Resolve alias to full Replicate model ID."""
+    return REPLICATE_MODEL_ALIASES.get(model, model)
 WAIT_SECONDS = 60  # Max for Prefer: wait
 MAX_RETRIES = 10
 DEFAULT_RETRY_AFTER = 60
@@ -46,6 +58,7 @@ def generate_image(
     **kwargs,
 ) -> bytes:
     """Call Replicate HTTP API. When prototype, text-to-image only (no mascot). Otherwise img2img."""
+    model = _resolve_model(model)
     disable_safety = _disable_safety_checker()
 
     if prototype:
@@ -82,6 +95,14 @@ def generate_image(
             # gpt-image may pass through to models with Replicate safety checker
             if disable_safety:
                 input_payload["disable_safety_checker"] = True
+        elif "google/gemini" in model or "gemini-2.5-flash-image" in model:
+            # Gemini 2.5 Flash image: image_input, aspect_ratio, output_format (hardcoded)
+            input_payload = {
+                "prompt": prompt,
+                "image_input": [data_uri],
+                "aspect_ratio": "match_input_image",
+                "output_format": "jpg",
+            }
         else:
             input_payload = {
                 "image": data_uri,

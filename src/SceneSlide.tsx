@@ -23,6 +23,8 @@ type SceneSlideProps = {
   sceneIndex: number;
   effectsConfig: EffectsConfig;
   isFirstScene?: boolean;
+  imageWidth?: number;
+  imageHeight?: number;
 };
 
 export const SceneSlide: React.FC<SceneSlideProps> = ({
@@ -32,6 +34,8 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
   sceneIndex,
   effectsConfig,
   isFirstScene = false,
+  imageWidth,
+  imageHeight,
 }) => {
   const frame = useCurrentFrame();
   const fadeOutStart = Math.max(FADE_FRAMES, durationInFrames - FADE_FRAMES);
@@ -113,24 +117,46 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
   // Combined scale = Ken Burns * zoom punch
   const finalScale = kenBurnsScale * punchScale;
 
-  const imageWrapperStyle = {
-    position: "absolute" as const,
-    top: "20%",
-    left: "10%",
-    width: "80%",
-    height: "auto" as const,
-    zIndex: 1,
-    transform: `scale(${finalScale}) translate(calc(${panX}% + ${shakeX}px), calc(${panY}% + ${shakeY}px))`,
-    transformOrigin: "center center",
-  };
+  // Tall images (portrait) span the entire screen; square/landscape use contained layout
+  const isTall = imageWidth != null && imageHeight != null && imageHeight > imageWidth;
 
-  const baseImageStyle = {
-    width: "100%",
-    height: "auto" as const,
-    objectFit: "contain" as const,
-    opacity: imageOpacity,
-    display: "block" as const,
-  };
+  const imageWrapperStyle: React.CSSProperties = isTall
+    ? {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1,
+        transform: `scale(${finalScale}) translate(calc(${panX}% + ${shakeX}px), calc(${panY}% + ${shakeY}px))`,
+        transformOrigin: "center center",
+      }
+    : {
+        position: "absolute",
+        top: "20%",
+        left: "10%",
+        width: "80%",
+        height: "auto",
+        zIndex: 1,
+        transform: `scale(${finalScale}) translate(calc(${panX}% + ${shakeX}px), calc(${panY}% + ${shakeY}px))`,
+        transformOrigin: "center center",
+      };
+
+  const baseImageStyle: React.CSSProperties = isTall
+    ? {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        opacity: imageOpacity,
+        display: "block",
+      }
+    : {
+        width: "100%",
+        height: "auto",
+        objectFit: "contain",
+        opacity: imageOpacity,
+        display: "block",
+      };
 
   return (
     <AbsoluteFill
@@ -149,7 +175,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
       />
       {/* Image wrapper: base image + glitch overlay */}
       <div style={imageWrapperStyle}>
-        <div style={{ position: "relative" as const }}>
+        <div style={isTall ? { position: "relative" as const, width: "100%", height: "100%" } : { position: "relative" as const }}>
           <Img src={imageSrc} style={baseImageStyle} />
           <GlitchEffect
             imageSrc={imageSrc}

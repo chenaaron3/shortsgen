@@ -20,6 +20,8 @@ type CaptionsOverlayProps = {
   height: number;
   durationInFrames: number;
   pillBackground?: PillBackgroundConfig;
+  /** When true, force pill background on (e.g. for compositions with tall images) */
+  forcePillBackground?: boolean;
 };
 
 function formatCaption(text: string): string {
@@ -115,6 +117,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
   height,
   durationInFrames,
   pillBackground,
+  forcePillBackground = false,
 }) => {
   const frame = useCurrentFrame();
   const timeMs = (frame / fps) * 1000;
@@ -156,7 +159,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
 
-  const pillEnabled = pillBackground?.enabled ?? false;
+  const pillEnabled = forcePillBackground || (pillBackground?.enabled ?? false);
 
   return (
     <AbsoluteFill
@@ -166,7 +169,7 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        paddingTop: "75%",
+        paddingTop: forcePillBackground ? "50%" : "75%",
         paddingLeft: "20%",
         paddingRight: "20%",
       }}
@@ -185,8 +188,8 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
           letterSpacing: "0.05em",
           lineHeight: 1.3,
           opacity,
-          backgroundColor: pillEnabled ? pillBackground.color : "transparent",
-          borderRadius: pillEnabled ? pillBackground.borderRadius : 0,
+          backgroundColor: pillEnabled ? pillBackground!.color : "transparent",
+          borderRadius: pillEnabled ? pillBackground!.borderRadius : 0,
           WebkitFontSmoothing: "antialiased",
           textRendering: "geometricPrecision",
           textShadow: [

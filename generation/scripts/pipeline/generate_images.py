@@ -22,6 +22,7 @@ load_dotenv(env_path())
 
 DEFAULT_CONCURRENCY = 10
 
+
 STYLE_PROMPT = (
     "Hand-drawn stick figure style. Black line art on transparent background. "
     "Crisp, clean linework. Thin solid black outlines only. "
@@ -32,6 +33,11 @@ STYLE_PROMPT = (
     "A single accent color may highlight one focal prop if it supports the scene. "
     "Use the reference for character design; place in the described scene. "
     "Result must look like crisp pen or chalk drawing, not rendered or shaded."
+)
+STYLE_PROMPT = (
+    "The scene exists in a whimsical seaside town inspired by the atmosphere of Studio Ghibli’s Kiki’s Delivery Service. "
+    "The world features warm Mediterranean-style architecture, red clay rooftops, ivy-covered stone houses, narrow cobblestone streets, flower boxes, and a view of the blue ocean in the distance. "
+    "Soft golden sunlight, pastel skies, gentle sea breeze, and a cozy European village feeling. "
 )
 
 

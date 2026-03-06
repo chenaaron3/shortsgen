@@ -9,6 +9,8 @@ import shutil
 import sys
 from pathlib import Path
 
+from PIL import Image
+
 # Optional: mutagen for MP3 duration (pip install mutagen)
 try:
     from mutagen.mp3 import MP3
@@ -24,6 +26,12 @@ except ImportError:
 
 from path_utils import remotion_composite_key, video_cache_path, video_public
 from logger import error, info, step_end, step_start, warn
+
+
+def get_image_dimensions(path: Path) -> tuple[int, int]:
+    """Read image width/height. Returns (width, height)."""
+    with Image.open(path) as img:
+        return img.size
 
 
 def get_audio_duration_seconds(path: Path) -> float:
@@ -156,12 +164,15 @@ def prepare(
         shutil.copy2(image_path_resolved, out_image)
         voice_paths_for_whisper.append(voice_path_resolved)
 
+        w, h = get_image_dimensions(out_image)
         scene_inputs.append(
             {
                 "text": text,
                 "imagePath": f"images/image_{len(scene_inputs) + 1}.png",
                 "voicePath": f"voice/voice_{len(scene_inputs) + 1}.mp3",
                 "durationInSeconds": duration,
+                "imageWidth": w,
+                "imageHeight": h,
             }
         )
 

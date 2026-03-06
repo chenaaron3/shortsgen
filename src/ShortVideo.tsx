@@ -52,6 +52,12 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
   const basePath = `shortgen/${manifest.cacheKey}`;
   const { durationInFrames, fps } = manifest;
   const fadeFrames = Math.round(1.5 * fps); // 1.5s fade in/out
+  const hasTallImages = manifest.scenes.some(
+    (s) =>
+      s.imageWidth != null &&
+      s.imageHeight != null &&
+      s.imageHeight > s.imageWidth
+  );
   const fadeOutStart = Math.max(fadeFrames, durationInFrames - fadeFrames);
 
   return (
@@ -88,6 +94,8 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
                 sceneIndex={i}
                 effectsConfig={effectsConfig}
                 isFirstScene={i === 0}
+                imageWidth={scene.imageWidth}
+                imageHeight={scene.imageHeight}
               />
             </Series.Sequence>
           );
@@ -120,6 +128,7 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ manifest }) => {
         height={manifest.height}
         durationInFrames={durationInFrames}
         pillBackground={effectsConfig.captions.pillBackground}
+        forcePillBackground={hasTallImages}
       />
     </>
   );

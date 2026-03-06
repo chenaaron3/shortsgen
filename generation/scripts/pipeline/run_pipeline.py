@@ -153,6 +153,7 @@ def run(
             max_scenes=max_scenes,
             skip_cache="image" in invalidate_steps,
             prototype=prototype,
+            model=config.image.model if config.image else None,
         )
         future_voice = executor.submit(
             run_voice,

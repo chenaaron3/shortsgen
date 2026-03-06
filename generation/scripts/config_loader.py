@@ -26,6 +26,12 @@ class StepConfig(BaseModel):
     judge_samples: int = Field(default=1, description="When >1, generate N scripts in parallel and pick best (no iteration). Used when judge_gate=true.")
 
 
+class ImageConfig(BaseModel):
+    """Image generation: model alias (params are hardcoded per model in replicate.py)."""
+
+    model: str = Field(..., description="Model alias (e.g. gpt-image-mini, gemini-flash)")
+
+
 class Config(BaseModel):
     """Pipeline config: model and system prompt per LLM step."""
 
@@ -33,6 +39,7 @@ class Config(BaseModel):
     breakdown: StepConfig = Field(..., description="Breakdown step (source → nuggets)")
     script: StepConfig = Field(..., description="Script step (raw content → short script)")
     chunk: StepConfig = Field(..., description="Chunk step (script → scenes)")
+    image: ImageConfig | None = Field(default=None, description="Image model alias; if absent, use backend default")
 
     @computed_field
     @property
