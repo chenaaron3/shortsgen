@@ -34,11 +34,11 @@ STYLE_PROMPT = (
     "Use the reference for character design; place in the described scene. "
     "Result must look like crisp pen or chalk drawing, not rendered or shaded."
 )
-STYLE_PROMPT = (
-    "The scene exists in a whimsical seaside town inspired by the atmosphere of Studio Ghibli’s Kiki’s Delivery Service. "
-    "The world features warm Mediterranean-style architecture, red clay rooftops, ivy-covered stone houses, narrow cobblestone streets, flower boxes, and a view of the blue ocean in the distance. "
-    "Soft golden sunlight, pastel skies, gentle sea breeze, and a cozy European village feeling. "
-)
+# STYLE_PROMPT = (
+#     "The scene exists in a whimsical seaside town inspired by the atmosphere of Studio Ghibli’s Kiki’s Delivery Service. "
+#     "The world features warm Mediterranean-style architecture, red clay rooftops, ivy-covered stone houses, narrow cobblestone streets, flower boxes, and a view of the blue ocean in the distance. "
+#     "Soft golden sunlight, pastel skies, gentle sea breeze, and a cozy European village feeling. "
+# )
 
 
 def _update_chunks_json(cache_key: str, config_hash: str, chunks: Chunks, field: str) -> None:

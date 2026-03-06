@@ -52,7 +52,7 @@ def _format_judge_score(judge: JudgeScore) -> str:
 
 
 def _format_judge_feedback(judge: JudgeScore) -> str:
-    """Format failed dimensions' critique and suggestion for use in revision prompt."""
+    """Format failed dimensions' critique (primary) and suggestion (secondary) for use in revision prompt."""
     parts: list[str] = []
     for dim, data in [(d, getattr(judge, d)) for d in DIMENSIONS]:
         if data.passed:
@@ -61,7 +61,7 @@ def _format_judge_feedback(judge: JudgeScore) -> str:
         if data.critique:
             lines.append(f"Critique: {data.critique}")
         if data.suggestion:
-            lines.append(f"Suggestion: {data.suggestion}")
+            lines.append(f"(One possible approach: {data.suggestion})")
         parts.append("\n".join(lines))
     return "\n\n".join(parts)
 
@@ -79,8 +79,13 @@ def _build_revision_prompt(script: str, judge: JudgeScore) -> str:
         )
 
     return (
-        f"The script did not pass all quality criteria. {preserve_instruction}"
-        f"Address only these failures:\n\n{failed_feedback}\n\n"
+        f"A reviewer (smaller model) flagged these concerns. Use the critique to understand the issue; "
+        f"address it in whatever way feels natural for the script. Do not adopt suggestions verbatim "
+        "if they would make it sound stiff or over-edited.\n\n"
+        f"{preserve_instruction}"
+        f"Reviewer feedback:\n\n{failed_feedback}\n\n"
+        "The revised script must still sound natural and spoken—like a real person explaining to a friend. "
+        "Do not make it sound over-edited or like you're checking boxes.\n\n"
         "Output only the revised script, with the same structure ([HOOK], [BODY], [CLOSE] or similar)."
     )
 
