@@ -1,11 +1,13 @@
-name: mixed
+name: default-no-question
 breakdown:
   model: gpt-4o
   system_prompt: source-breakdown-system-prompt.md
 script:
-  model: claude-sonnet-4-5-20250929
+  model: gpt-4o
   system_prompt: short-script-system-prompt.md
   temperature: 1.0
+  judge_gate: true
+  judge_max_retries: 2
 chunk:
   model: gpt-4o
   system_prompt: transcript-chunker-system-prompt.md

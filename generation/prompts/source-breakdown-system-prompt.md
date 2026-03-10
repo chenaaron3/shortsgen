@@ -21,12 +21,13 @@ You are NOT summarizing or paraphrasing. The actual text will be extracted from 
 
 ## Nugget Rules
 
+- **Full coverage:** Nuggets must cover every line from 1 through the last line of the source. No gaps. No overlaps.
+- **Contiguous:** Each nugget's `end_line + 1` must equal the next nugget's `start_line`. First nugget starts at 1; last nugget ends at the final line.
+- **Sequential:** Output nuggets in order by `start_line`.
 - **Atomic:** One clear concept per nugget. If a passage has two distinct ideas, split into two nuggets.
 - **Self-contained:** Each nugget should work as standalone content. Avoid splitting mid-paragraph or mid-thought.
 - **Prefer 300+ words:** Aim for substantial chunks. Include full paragraphs and examples. Short clips (~1-2 sentences) are too thin.
-- **Multiple per source:** Expect several nuggets per chapter. One chapter often contains many discrete ideas.
-- **No overlap:** Line ranges should not overlap. Each line belongs to at most one nugget.
-- **Gaps allowed:** You can skip lines that don't contain useful content (headers, separators, filler).
+- **Title:** One phrase capturing the single most important idea in that section (~40 chars).
 
 ---
 
@@ -35,7 +36,7 @@ You are NOT summarizing or paraphrasing. The actual text will be extracted from 
 Return structured JSON with a list of nuggets. Each nugget has:
 
 - **id:** Unique slug, e.g. `atomic-habits-001`. Use source title (slugified) + zero-padded index.
-- **title:** Short descriptive title for the idea (under ~60 chars).
+- **title:** One phrase for the single most important idea in that section (~40 chars).
 - **start_line:** First line number of this nugget (1-indexed, inclusive).
 - **end_line:** Last line number of this nugget (1-indexed, inclusive).
 - **source_ref:** Optional object with `chapter`, `section`, `timestamp` (any can be null).
@@ -69,7 +70,7 @@ Return structured JSON with a list of nuggets. Each nugget has:
     {
       "id": "atomic-habits-001",
       "title": "Identity over outcomes",
-      "start_line": 5,
+      "start_line": 1,
       "end_line": 9,
       "source_ref": {
         "chapter": "2",
@@ -80,7 +81,7 @@ Return structured JSON with a list of nuggets. Each nugget has:
     {
       "id": "atomic-habits-002",
       "title": "Systems beat goals",
-      "start_line": 13,
+      "start_line": 10,
       "end_line": 14,
       "source_ref": {
         "chapter": "3",
@@ -92,13 +93,13 @@ Return structured JSON with a list of nuggets. Each nugget has:
 }
 ```
 
-Note: Lines 1-4 and 10-12 are skipped (headers/blanks). The actual text from lines 5-9 and 13-14 will be extracted separately.
+Note: Nuggets cover lines 1-9 and 10-14 contiguously. No gaps. The actual text will be extracted from these line ranges.
 
 ---
 
 ## Edge Cases
 
-- **Thin passages:** If a section has no distinct idea, skip it.
-- **Redundant ideas:** If the same idea appears in multiple places, pick the strongest passage.
+- **Thin passages:** If a section has no distinct idea, include it in an adjacent nugget. Never leave gaps.
+- **Redundant ideas:** If the same idea appears in multiple places, assign each occurrence to a nugget; coverage is required.
 - **No clear structure:** If the source lacks chapters/sections, use `source_ref` sparingly; `id` and `title` still required.
-- **Long source:** Process the full source. Output nuggets for all substantive content.
+- **Long source:** Process the full source. Output nuggets covering every line from 1 to the last line.

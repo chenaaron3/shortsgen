@@ -152,7 +152,7 @@ def main():
         source_key,
         config=configs[0],
         skip_cache=skip_breakdown_cache,
-        max_nuggets=10, # Can generate up to 10 nuggets, but just limit the actual pipeline
+        max_nuggets=args.max_nuggets,
     )
     if args.max_nuggets:
         nuggets = nuggets[: args.max_nuggets]

@@ -59,14 +59,18 @@ The hook creates an open loop using **any** of these strategies (all count equal
 - Frames a compelling situation or claim that implies an explanation is coming.
 - Example: “There’s one realistic way people escape the rat race—and most people ignore it.”
 
-### Question hooks (allowed, but higher bar)
+### Question hooks (allowed, but demoted / higher bar)
 
-A hook that uses a question can PASS if it’s **specific and engaging**, and doesn’t drag.
-PASS when:
+A hook that uses a question can PASS, but it should be treated as a **weaker default format** than a strong direct statement.
+
+PASS only when:
 
 - The question is **about a concrete topic** (not vague therapy-speak).
 - It creates a clear “I want to know” loop **by itself**, OR the next line begins answering/explaining.
 - One question max.
+- A direct statement version would **not obviously be stronger**.
+
+If a hook could work equally well as a **question** or a **direct statement/claim/promise**, prefer the **direct statement**.
 
 FAIL when:
 
@@ -88,6 +92,7 @@ FAIL when:
 - **Generic intention statements:** “Today I want to talk about X” FAIL **only if X is generic** (e.g., “success,” “happiness,” “motivation”) and there’s no concrete deliverable (no secret/steps/ways/how-to).
 - **Late hook:** multiple sentences of setup before any clear reason to keep watching.
 - **Full payoff in hook:** it gives away the entire answer immediately (no reason to continue).
+- **Weak question hook:** it uses a question format where a direct statement/claim/promise would be stronger.
 
 ---
 
@@ -96,7 +101,13 @@ FAIL when:
 1. Identify the hook (first 1–2 sentences).
 2. Ask: “Would a casual viewer expect something useful/interesting immediately?”
    - If yes → PASS (unless it’s vague metaphor / platitude / definition-only / late / full payoff).
-3. If it’s a question hook: PASS only if specific and not dragging; otherwise FAIL.
+3. If it’s a question hook: PASS only if specific, concrete, not dragging, and **not obviously weaker than a direct statement version**; otherwise FAIL.
+
+---
+
+## Suggestion preference
+
+When suggesting an improvement for a failing hook, **do not default to rewriting it as a question**. Prefer a **direct statement, claim, problem + payoff, or outcome promise**. Only suggest a question hook if it is clearly stronger than a statement version.
 
 ---
 
@@ -122,6 +133,7 @@ FAIL when:
 - **Definition-only:** “Parkinson’s Law states that work expands to fill the time available.”
 - **Vague metaphor:** “Imagine you are the architect of your life.”
 - **Late hook:** multiple lines of setup before any angle/payoff
+- **Weak question vs stronger statement:** "Have you ever struggled with focus?" (FAIL if a direct version like "Most people can't focus because they train distraction all day" would be stronger)
 
 ---
 
