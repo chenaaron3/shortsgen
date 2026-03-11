@@ -13,9 +13,11 @@ Usage:
 """
 
 import argparse
+import contextvars
 import hashlib
 import json
 import sys
+import traceback
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -25,7 +27,7 @@ from dotenv import load_dotenv
 from config_loader import load_config
 from path_utils import env_path, video_cache_path, video_public
 from logger import error, info, progress, set_step_context
-from usage_trace import get_trace, print_summary, reset as usage_reset
+from usage_trace import flush_traces_for_key, flush_traces_to_disk, print_batch_summary, print_summary, set_context as usage_set_context
 from pipeline.generate_images import run as run_images
 from pipeline.generate_script import run as run_script
 from pipeline.generate_voice import run as run_voice
@@ -60,11 +62,18 @@ def _steps_from(step: str) -> frozenset[str]:
 def _finish_partial(cache_key: str, config_hash: str) -> None:
     """Print summary and output paths when pipeline breaks early."""
     out_dir = video_cache_path(cache_key, config_hash)
-    print_summary()
     usage_path = video_cache_path(cache_key, config_hash, "usage.json")
-    if usage_path.parent.exists():
-        usage_path.write_text(json.dumps(get_trace(), indent=2), encoding="utf-8")
-        info(f"   📊 Usage trace: {usage_path}")
+    flush_traces_for_key(config_hash, cache_key)
+    print_summary(usage_path)
+    if usage_path.exists():
+        try:
+            data = json.loads(usage_path.read_text(encoding="utf-8"))
+            est = data.get("estimate", {})
+            if est.get("total_usd", 0) > 0:
+                info(f"   📊 Usage trace: {usage_path}")
+                info(f"   💰 Est. cost: ${est['total_usd']:.4f} (LLM ${est.get('llm_usd', 0):.4f} + images ${est.get('images_usd', 0):.4f} + voice ${est.get('voice_usd', 0):.4f})")
+        except Exception:
+            pass
     info("")
     info("✅ Done (stopped early)")
     info(f"   📁 Output: {out_dir}")
@@ -115,7 +124,7 @@ def run(
         cache_key = content_hash(raw_content)
     info(f"🔑 cache_key: {cache_key} | config: {config.name}")
 
-    usage_reset()
+    usage_set_context(cache_key, config_hash)
     invalidate_steps = _steps_from(step) if step else frozenset()
     if invalidate_steps:
         info(f"  Invalidating cache for: {', '.join(sorted(invalidate_steps))}")
@@ -144,26 +153,37 @@ def run(
         return None
 
     set_step_context(3, 6)
+    # ThreadPoolExecutor workers don't inherit contextvars; each worker needs its own context copy
+    def _run_images():
+        run_ctx = contextvars.copy_context()
+        return run_ctx.run(
+            lambda: run_images(
+                chunks,
+                cache_key,
+                config_hash,
+                max_scenes=max_scenes,
+                skip_cache="image" in invalidate_steps,
+                prototype=prototype,
+                model=config.image.model if config.image else None,
+            )
+        )
+
+    def _run_voice():
+        run_ctx = contextvars.copy_context()
+        return run_ctx.run(
+            lambda: run_voice(
+                chunks,
+                cache_key,
+                config_hash,
+                max_scenes=max_scenes,
+                skip_cache="voice" in invalidate_steps,
+                prototype=prototype,
+            )
+        )
+
     with ThreadPoolExecutor(max_workers=2) as executor:
-        future_images = executor.submit(
-            run_images,
-            chunks,
-            cache_key,
-            config_hash,
-            max_scenes=max_scenes,
-            skip_cache="image" in invalidate_steps,
-            prototype=prototype,
-            model=config.image.model if config.image else None,
-        )
-        future_voice = executor.submit(
-            run_voice,
-            chunks,
-            cache_key,
-            config_hash,
-            max_scenes=max_scenes,
-            skip_cache="voice" in invalidate_steps,
-            prototype=prototype,
-        )
+        future_images = executor.submit(_run_images)
+        future_voice = executor.submit(_run_voice)
         for future in as_completed([future_images, future_voice]):
             future.result()
 
@@ -197,11 +217,18 @@ def run(
         raise
 
     out_dir = video_cache_path(cache_key, config_hash)
-    print_summary()
     usage_path = video_cache_path(cache_key, config_hash, "usage.json")
-    if usage_path.parent.exists():
-        usage_path.write_text(json.dumps(get_trace(), indent=2), encoding="utf-8")
-        info(f"   📊 Usage trace: {usage_path}")
+    flush_traces_for_key(config_hash, cache_key)
+    print_summary(usage_path)
+    if usage_path.exists():
+        try:
+            data = json.loads(usage_path.read_text(encoding="utf-8"))
+            est = data.get("estimate", {})
+            if est.get("total_usd", 0) > 0:
+                info(f"   📊 Usage trace: {usage_path}")
+                info(f"   💰 Est. cost: ${est['total_usd']:.4f} (LLM ${est.get('llm_usd', 0):.4f} + images ${est.get('images_usd', 0):.4f} + voice ${est.get('voice_usd', 0):.4f})")
+        except Exception:
+            pass
     info("")
     info("✅ Done")
     info(f"   📁 Output: {out_dir}")
@@ -254,10 +281,14 @@ def run_batch(
                     item_title = item.get("title") if isinstance(item, dict) else getattr(item, "title", "?")
                     if total > 1:
                         progress(done, total, f"{item_id} — {item_title}")
-                except Exception:
+                except Exception as e:
                     item_id = item.get("id") if isinstance(item, dict) else getattr(item, "id", "?")
                     failed.append(item_id)
                     done += 1
+                    error(f"  {item_id} failed: {e}")
+                    tb = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+                    for line in tb.rstrip().split("\n"):
+                        error(f"    {line}")
                     if total > 1:
                         progress(done, total, f"{item_id} — failed")
                 if on_item_done:
@@ -379,6 +410,9 @@ def main():
 
     try:
         run_batch(items, configs, concurrency=1, **run_kwargs)
+        flush_traces_to_disk()
+        print_batch_summary(items, configs)
+        info("")
         eval_path = write_eval_dataset(configs=configs, nuggets=items)
         info(f"   📋 Eval dataset: {eval_path}")
     except Exception:

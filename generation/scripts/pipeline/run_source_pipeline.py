@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 from config_loader import load_config
 from path_utils import env_path, breakdown_output_dir, video_cache_path
 from logger import error, info
-from usage_trace import print_summary, reset as usage_reset
+from usage_trace import flush_traces_to_disk, print_batch_summary, set_context as usage_set_context
 from pipeline.breakdown_source import run as run_breakdown, source_hash
 from pipeline.run_pipeline import run_batch
 from pipeline.write_eval_dataset import write_eval_dataset
@@ -135,8 +135,8 @@ def main():
         sys.exit(1)
 
     configs = [load_config(c) for c in args.config]
-    usage_reset()
     source_key = source_hash(source_content)
+    usage_set_context(source_key, "_breakdown")
     info(f"📚 Source: {source_path.name}")
     info(f"🔑 source_key: {source_key}")
     info(f"📋 Configs: {[c.name for c in configs]}")
@@ -161,7 +161,8 @@ def main():
     if args.break_at == "breakdown":
         out = {"nuggets": [n.model_dump() for n in nuggets]}
         print(json.dumps(out, indent=2))
-        print_summary()
+        flush_traces_to_disk()
+        print_batch_summary([n.model_dump() for n in nuggets], configs)
         info("")
         info("✅ Done")
         sys.exit(0)
@@ -187,7 +188,8 @@ def main():
         prototype=args.prototype,
     )
 
-    print_summary()
+    flush_traces_to_disk()
+    print_batch_summary([n.model_dump() for n in nuggets], configs)
     info("")
 
     # Write eval dataset from cached scripts

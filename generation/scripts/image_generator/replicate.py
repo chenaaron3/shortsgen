@@ -88,7 +88,7 @@ def generate_image(
                 "prompt": prompt,
                 "input_fidelity": input_fidelity,
                 "output_format": "png",
-                "aspect_ratio": "2:3",
+                "aspect_ratio": "1:1", #"2:3" use for tall images
                 "background": "transparent",
                 "openai_api_key": api_key,
             }

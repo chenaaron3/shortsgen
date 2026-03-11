@@ -7,6 +7,8 @@ import json
 
 import requests
 
+from usage_trace import record_voice
+
 _URL = "https://ttsvibes.com/?/generate"
 DEFAULT_VOICE = "tt-en_us_002"
 _HEADERS = {
@@ -47,4 +49,7 @@ def generate_for_scenes(
         if not b64:
             raise RuntimeError("ttsvibes: no audio in response")
         clips.append(base64.b64decode(b64))
+    total_chars = sum(len(s.text.strip()) for s in scenes)
+    if total_chars:
+        record_voice("Voice", "ttsvibes", total_chars)
     return clips

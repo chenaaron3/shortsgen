@@ -4,6 +4,7 @@ Script generation strategies: Iterative (revise with feedback, preserve passing 
 
 from __future__ import annotations
 
+import contextvars
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Protocol, runtime_checkable
@@ -148,8 +149,13 @@ class ParallelStrategy:
             judge = score_script(script, model=ctx.judge_model)
             return JudgeAttempt(script=script, judge=judge)
 
+        # ThreadPoolExecutor workers don't inherit contextvars; each worker needs its own context copy
+        def _generate_with_ctx(i: int) -> JudgeAttempt:
+            run_ctx = contextvars.copy_context()
+            return run_ctx.run(_generate_one, i)
+
         with ThreadPoolExecutor(max_workers=n) as ex:
-            futures = {ex.submit(_generate_one, i): i for i in range(n)}
+            futures = {ex.submit(_generate_with_ctx, i): i for i in range(n)}
             for i, future in enumerate(as_completed(futures), 1):
                 attempt = future.result()
                 attempts.append(attempt)

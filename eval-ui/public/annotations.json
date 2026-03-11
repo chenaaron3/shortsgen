@@ -1651,5 +1651,93 @@
       }
     ],
     "reviewedAt": "2026-03-05T02:25:56.512Z"
+  },
+  {
+    "traceId": "226075818de01b79",
+    "model": "default",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-11T01:26:14.550Z"
+  },
+  {
+    "traceId": "8f993afeac105e3d",
+    "model": "claude",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-11T01:26:18.850Z"
+  },
+  {
+    "traceId": "1e7662f54af0d59d",
+    "model": "claude",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-11T01:26:27.600Z"
+  },
+  {
+    "traceId": "891a8ad5bdfaccb8",
+    "model": "claude",
+    "judgments": [
+      {
+        "dimension": "engagement",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "clarity",
+        "pass": true,
+        "critique": ""
+      },
+      {
+        "dimension": "payoff",
+        "pass": true,
+        "critique": ""
+      }
+    ],
+    "reviewedAt": "2026-03-11T01:27:51.368Z"
   }
 ]

@@ -16,12 +16,11 @@ from image_generator import generate_image as generate_image_impl, get_config
 from models import Chunks, Scene
 from path_utils import env_path, mascot_path as default_mascot_path, video_cache_path
 from logger import cache_stats_summary, error, progress, step_end, step_start
-from usage_trace import record_image
+from usage_trace import record_image, set_context as usage_set_context
 
 load_dotenv(env_path())
 
 DEFAULT_CONCURRENCY = 10
-
 
 STYLE_PROMPT = (
     "Hand-drawn stick figure style. Black line art on transparent background. "
@@ -34,12 +33,21 @@ STYLE_PROMPT = (
     "Use the reference for character design; place in the described scene. "
     "Result must look like crisp pen or chalk drawing, not rendered or shaded."
 )
-# STYLE_PROMPT = (
-#     "The scene exists in a whimsical seaside town inspired by the atmosphere of Studio Ghibli’s Kiki’s Delivery Service. "
-#     "The world features warm Mediterranean-style architecture, red clay rooftops, ivy-covered stone houses, narrow cobblestone streets, flower boxes, and a view of the blue ocean in the distance. "
-#     "Soft golden sunlight, pastel skies, gentle sea breeze, and a cozy European village feeling. "
-# )
 
+# Used when prototype=True (text-to-image only, no mascot reference image)
+MASCOT_DESCRIPTION = (
+    "A minimalist, cute, gender-neutral stick-figure mascot with a very large perfectly round head and a very small simple body underneath it. "
+    "The design is extremely clean and iconic: white fill, bold smooth black outline, flat black-and-white 2D vector style, no shading, no texture, no sketch lines, no realism. "
+    "The head is the defining feature: a near-perfect circle that takes up most of the character, making the mascot feel instantly recognizable and easy to read at a glance. "
+    "The face is very simple and centered, with two large circular eyes, black pupils, tiny white highlights, and a tiny simple mouth that can change slightly for expression. "
+    "The mascot always wears perfectly round eyeglasses with thin black rims; the glasses are symmetrical, sit low and centered on the face, and are the main identity trait of the character. "
+    "The body is tiny, smooth, and understated compared to the head, with a narrow rounded torso and very simple proportions. "
+    "The arms and legs are short, thin, rounded, and tube-like, like soft noodle limbs rather than realistic anatomy. "
+    "The hands and feet are extremely simplified, with no visible fingers, no separated toes, and no detailed joints. "
+    "The mascot has no hair, no eyebrows unless only minimally suggested for expression, no nose, no ears, no eyelashes, no clothing, no accessories other than the glasses, and NO TAIL. "
+    "The silhouette should feel closer to a clean cartoon stick mascot than to a bean, plush toy, animal, ghost, or blob creature. "
+    "The overall vibe is playful, wholesome, friendly, expressive, nerdy, and highly readable, with consistent simple proportions and a clean mascot-sheet appearance. "
+)
 
 def _update_chunks_json(cache_key: str, config_hash: str, chunks: Chunks, field: str) -> None:
     """Read chunks.json, update only the given field, write back. Safe for parallel updates."""
@@ -164,7 +172,11 @@ def run(
             cached_count += 1
             continue
 
-        full_prompt = f"{imagery}. {STYLE_PROMPT}"
+        full_prompt = (
+            f"{MASCOT_DESCRIPTION}{imagery}. {STYLE_PROMPT}"
+            if prototype
+            else f"{imagery}. {STYLE_PROMPT}"
+        )
         request_path = images_dir / f"image_{i + 1}_request.json"
         is_transition = getattr(scene, "transition_from_previous", False)
         work.append((i, imagery, filename, full_prompt, request_path, is_transition))
@@ -231,8 +243,13 @@ def run(
     if len(chains_with_work) == 1 and len(chains_with_work[0]) == 1:
         _run_chain(chains_with_work[0])
     else:
+        # Workers don't inherit contextvars; set usage key in each worker (Context.run can't be shared across threads)
+        def _run_chain_with_ctx(chain):
+            usage_set_context(cache_key, config_hash, clear=False)
+            _run_chain(chain)
+
         with ThreadPoolExecutor(max_workers=min(concurrency, len(chains_with_work))) as executor:
-            list(executor.map(_run_chain, chains_with_work))
+            list(executor.map(_run_chain_with_ctx, chains_with_work))
 
     _update_chunks_json(cache_key, config_hash, chunks, "image_path")
     step_end("Images", outputs=[images_dir], cache_hits=cached_count, cache_misses=len(work))

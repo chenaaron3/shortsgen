@@ -492,13 +492,13 @@ function App() {
                         onStarToggle={handleStarToggle}
                         canStar={!!canAddToGoldenSet}
                       />
-                      {selectedJudgeResult && selectedAnnotation?.judgments && (
+                      {selectedJudgeResult && (
                         <JudgeComparison
                           judgeResult={selectedJudgeResult}
                           humanJudgments={
                             Object.fromEntries(
                               DIMENSIONS.map((dim) => {
-                                const j = selectedAnnotation!.judgments!.find((x) => x.dimension === dim);
+                                const j = selectedAnnotation?.judgments?.find((x) => x.dimension === dim);
                                 return [dim, j ? { pass: j.pass, critique: j.critique } : undefined];
                               })
                             ) as Record<Dimension, { pass: boolean; critique: string } | undefined>

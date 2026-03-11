@@ -1,13 +1,11 @@
-name: default-no-question
+name: prototype
 breakdown:
-  model: gpt-4o
+  model: gpt-4o-mini
   system_prompt: source-breakdown-system-prompt.md
 script:
-  model: gpt-4o
+  model: gpt-4o-mini
   system_prompt: short-script-system-prompt.md
   temperature: 1.0
-  judge_gate: true
-  judge_max_retries: 2
 chunk:
-  model: gpt-4o
+  model: gpt-4o-mini
   system_prompt: transcript-chunker-system-prompt.md

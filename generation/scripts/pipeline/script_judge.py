@@ -14,7 +14,7 @@ from litellm import completion
 from models import DimensionScore, JudgeScore
 from path_utils import env_path, prompts_dir
 from schema_utils import schema_for_openai
-from usage_trace import record_llm
+from usage_trace import get_context, record_llm, set_context
 
 load_dotenv(env_path())
 
@@ -99,8 +99,19 @@ def judge_script(
     def _call(dim: str) -> tuple[str, DimensionScore]:
         return dim, judge_dimension(script, dim, model=model)
 
+    # Workers don't inherit contextvars; each must set the usage key so record_llm uses correct key.
+    # Cannot share one Context across workers (Context can only be entered by one thread at a time).
+    current_key = get_context()
+    cache_key_for_worker = current_key[1] if current_key else None
+    config_hash_for_worker = current_key[0] if current_key else None
+
+    def _call_with_ctx(dim: str) -> tuple[str, DimensionScore]:
+        if cache_key_for_worker and config_hash_for_worker:
+            set_context(cache_key_for_worker, config_hash_for_worker, clear=False)
+        return _call(dim)
+
     with ThreadPoolExecutor(max_workers=3) as ex:
-        futures = {ex.submit(_call, d): d for d in dims}
+        futures = {ex.submit(_call_with_ctx, d): d for d in dims}
         for future in as_completed(futures):
             dim, result = future.result()
             results[dim] = result
