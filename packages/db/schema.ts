@@ -9,7 +9,9 @@ import {
   timestamp,
   integer,
   primaryKey,
+  uuid,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 // Auth.js tables (see https://authjs.dev/getting-started/adapters/drizzle)
 
@@ -64,3 +66,38 @@ export const verificationToken = pgTable(
   },
   (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 );
+
+// Run-Video flow: one run (source text) can have many videos
+
+export const runs = pgTable("runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  userInput: text("user_input").notNull(),
+  status: text("status")
+    .$type<"pending" | "processing" | "completed" | "failed">()
+    .default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const videos = pgTable("videos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  runId: uuid("run_id")
+    .notNull()
+    .references(() => runs.id, { onDelete: "cascade" }),
+  s3Prefix: text("s3_prefix"),
+  status: text("status")
+    .$type<"preparing" | "ready" | "failed">()
+    .default("preparing"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const runsRelations = relations(runs, ({ one, many }) => ({
+  user: one(user),
+  videos: many(videos),
+}));
+
+export const videosRelations = relations(videos, ({ one }) => ({
+  run: one(runs),
+}));

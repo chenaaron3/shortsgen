@@ -23,6 +23,7 @@ shortgen/
 │       ├── assets/           # Mascot reference
 │       └── cache/            # Config-scoped cache
 ├── packages/
+│   ├── schemas/              # Manifest schema: Zod (source) → JSON Schema → Pydantic
 │   └── db/                   # Drizzle schema placeholder (wire up later)
 ├── public/                   # Shared Remotion assets (Python writes, Remotion reads)
 │   └── shortgen/
@@ -59,12 +60,21 @@ Requires `-c config.yaml`. Config defines model and system prompt for each LLM s
 | Artifact              | Location                                   | Purpose                                                                                                  |
 | --------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | **chunks.json**       | `cache/{configHash}/videos/{cacheKey}/`    | Pipeline: scenes with text, imagery, section, image_path, voice_path.                                    |
-| **manifest.json**     | `public/shortgen/{configHash}_{cacheKey}/` | Remotion: composite cacheKey, scenes, captions.                                                          |
+| **manifest.json**     | `public/shortgen/{configHash}_{cacheKey}/` | Remotion: composite cacheKey, scenes, captions. Schema: `packages/schemas` (Zod → JSON Schema → Pydantic). |
 | **index.json**        | `public/shortgen/`                         | List of composite keys; Root.tsx uses it to register compositions.                                       |
 | **breakdown.json**    | `cache/_breakdown/{sourceHash}/`           | Shared nuggets; per-config: `cache/{configName}/breakdowns/{sourceHash}/` (videos.md, upload_state.json) |
 | **upload_state.json** | Same dir as breakdown.json                 | Per-cache_key YouTube upload state; used by `upload_youtube --breakdown-hash -c config`.                 |
 
 **Caption format:** `{ "text", "startMs", "endMs", "timestampMs", "confidence" }` (word-level from Whisper or scene-level fallback).
+
+### Manifest schema (shared TypeScript + Python)
+
+Manifest typing is defined once in Zod (`packages/schemas/manifest.ts`) and kept in sync with Python:
+
+1. **Zod** (source) → `manifest.schema.json` via `pnpm schemas:build`
+2. **JSON Schema** → Pydantic (`services/python-generator/scripts/schemas/video_manifest.py`) via `pnpm schemas:py`
+
+After editing `packages/schemas/manifest.ts`, run `pnpm schemas:py` (it runs `schemas:build` first). See `.cursor/rules/manifest-schema-sync.mdc`.
 
 ---
 
@@ -99,6 +109,10 @@ pnpm dev
 # Eval UI
 pnpm eval:ui
 
+# Manifest schema sync (after editing packages/schemas/manifest.ts)
+pnpm schemas:build   # Zod → manifest.schema.json
+pnpm schemas:py      # Also regenerates Pydantic (video_manifest.py)
+
 # Pipeline (use run.py launcher or pnpm pipeline)
 python services/python-generator/scripts/run.py pipeline/run_source_pipeline.py -f content.txt -c default --no-breakdown
 # or: pnpm pipeline -- pipeline/run_source_pipeline.py -f content.txt -c default --no-breakdown
@@ -122,6 +136,7 @@ pnpm sst:deploy
 
 ## Conventions (for contributors and AI)
 
+- **Manifest schema:** Edit Zod in `packages/schemas/manifest.ts`; run `pnpm schemas:py` so TypeScript and Python stay in sync. Do not hand-edit `manifest.schema.json` or `video_manifest.py`.
 - **Paths:** Use `path_utils` only; no hardcoded paths. Key: `video_cache_path(cache_key, config_hash, ...)`, `breakdown_cache_path(source_hash, config_hash)`, `remotion_composite_key()`, `video_public()`, `project_root()`, `prompts_dir()`, `env_path()`.
 - **Logging:** Use `logger` (step_start, step_end, cache_hit, cache_miss, progress, info, warn, error) in pipeline scripts; see `.cursor/rules/logger.mdc`.
 - **Scripts:** Intended to be run from `generation/scripts/` (or project root with `generation/scripts/` on path); `path_utils` is relative to project root.

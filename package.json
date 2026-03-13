@@ -3,16 +3,28 @@
   "version": "1.0.0",
   "private": true,
   "description": "Remotion-based short video generator",
+  "pnpm": {
+    "overrides": {
+      "@types/react": "18.2.79",
+      "@types/react-dom": "18.2.25"
+    }
+  },
   "scripts": {
     "dev": "pnpm --filter @shortgen/remotion dev",
+    "remotion:build": "pnpm --filter @shortgen/remotion build:web",
     "eval:ui": "pnpm --filter @shortgen/eval-ui dev",
     "web": "pnpm --filter @shortgen/web dev",
     "build": "pnpm --filter @shortgen/remotion build",
     "render": "pnpm --filter @shortgen/remotion render",
     "upgrade": "pnpm --filter @shortgen/remotion upgrade",
     "pipeline": "python services/python-generator/scripts/run.py",
+    "schemas:build": "pnpm --filter @shortgen/schemas build",
+    "schemas:py": "pnpm schemas:build && services/python-generator/.venv/bin/datamodel-codegen --input packages/schemas/manifest.schema.json --input-file-type jsonschema --output services/python-generator/scripts/schemas/video_manifest.py",
     "sst:dev": "sst dev",
     "sst:deploy": "sst deploy"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0"
   },
   "devDependencies": {
     "sst": "^3.19.3"

@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "remotion studio --public-dir=../../public",
     "build": "remotion build",
+    "build:web": "remotion build --out-dir=../web/public/remotion",
     "render": "remotion render",
     "upgrade": "remotion upgrade"
   },
   "dependencies": {
+    "@shortgen/schemas": "workspace:*",
     "@remotion/bundler": "4.0.300",
     "@remotion/cli": "4.0.300",
     "@remotion/captions": "4.0.300",

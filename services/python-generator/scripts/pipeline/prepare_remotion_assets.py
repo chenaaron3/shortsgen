@@ -24,8 +24,9 @@ except ImportError:
     WhisperModel = None
 
 
-from path_utils import remotion_composite_key, video_cache_path, video_public
 from logger import error, info, step_end, step_start, warn
+from path_utils import remotion_composite_key, video_cache_path, video_public
+from schemas.video_manifest import VideoManifest
 
 
 def get_image_dimensions(path: Path) -> tuple[int, int]:
@@ -215,7 +216,7 @@ def prepare(
 
     duration_in_frames = int(round(total_duration * fps))
 
-    video_manifest = {
+    video_manifest_dict = {
         "cacheKey": composite_key,
         "fps": fps,
         "width": width,
@@ -225,9 +226,11 @@ def prepare(
         "captions": captions,
     }
 
+    validated = VideoManifest.model_validate(video_manifest_dict)
     manifest_path = output_dir / "manifest.json"
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(video_manifest, f, indent=2)
+    manifest_path.write_text(
+        validated.model_dump_json(exclude_none=True, indent=2), encoding="utf-8"
+    )
 
     _write_shortgen_index(video_public_dir)
 

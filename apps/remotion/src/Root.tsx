@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { staticFile } from "remotion";
-import { ShortVideoComposition } from "./ShortVideo";
+import {
+  ShortVideoAssetBaseComposition,
+  ShortVideoComposition,
+} from "./ShortVideo";
 
 export const RemotionRoot: React.FC = () => {
   const [cacheKeys, setCacheKeys] = useState<string[]>([]);
@@ -18,6 +21,7 @@ export const RemotionRoot: React.FC = () => {
   return (
     <>
       <ShortVideoComposition />
+      <ShortVideoAssetBaseComposition />
       {cacheKeys.map((key) => (
         <ShortVideoComposition key={key} cacheKey={key} />
       ))}

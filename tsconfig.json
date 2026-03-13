@@ -12,5 +12,5 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": ["apps/*/src/**/*", "packages/*/src/**/*"]
+  "include": ["apps/*/src/**/*", "packages/*/src/**/*", "functions/**/*", "sst-env.d.ts"]
 }

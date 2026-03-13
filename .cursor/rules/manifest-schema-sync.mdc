@@ -1,0 +1,32 @@
+---
+description: Run schema sync when manifest schema changes (Zod → JSON Schema → Pydantic)
+globs: packages/schemas/**/*.ts, packages/schemas/**/*.json
+alwaysApply: false
+---
+
+# Manifest Schema Sync
+
+The manifest schema is defined in Zod and must stay in sync with Python Pydantic models.
+
+## When to Run
+
+**After editing** `packages/schemas/manifest.ts` (or other schema files in that package), run:
+
+```bash
+pnpm schemas:build   # Zod → manifest.schema.json
+pnpm schemas:py      # manifest.schema.json → Pydantic (video_manifest.py)
+```
+
+## Agent Behavior
+
+When you **modify** any of:
+
+- `packages/schemas/manifest.ts`
+- `packages/schemas/manifest.schema.json` (only if edited manually; usually it's generated)
+
+— run both commands and verify they succeed before considering the change complete. If you edited only `manifest.ts`, `schemas:py` will run `schemas:build` first (it's a dependency in the script).
+
+## Generated Files (Do Not Edit)
+
+- `packages/schemas/manifest.schema.json` — from Zod
+- `services/python-generator/scripts/schemas/video_manifest.py` — from JSON Schema

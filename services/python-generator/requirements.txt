@@ -14,6 +14,10 @@ google-api-python-client-stubs>=1.31.0
 google-auth-oauthlib>=1.0.0
 google-auth-httplib2>=0.1.0
 
+psycopg2-binary>=2.9.0
+boto3>=1.28.0
+datamodel-code-generator>=0.26.0
+
 # Optional: for perchance_images.py --get-key (auto-fetch userKey)
 # playwright>=1.40.0  # then: playwright install chromium
 
