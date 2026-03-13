@@ -144,3 +144,38 @@ class ScriptJudgeResults(BaseModel):
     allPass: bool = Field(..., description="Whether all dimensions passed")
     attempts: list[JudgeAttempt] | None = Field(default=None, description="All attempts when judge_gate")
     selectedIndex: int | None = Field(default=None, description="Index of selected attempt when judge_gate")
+
+
+class PairwiseJudgeOutput(BaseModel):
+    """Structured output for pairwise script judge: A or B."""
+
+    winner: Literal["A", "B"] = Field(
+        ...,
+        description="Which script performs better with viewers: A or B",
+    )
+    reason: str = Field(
+        default="",
+        description="Brief reason why this script wins (1-2 sentences, for prompt tuning).",
+    )
+
+
+class PairwiseJudgeResult(BaseModel):
+    """One pairwise comparison result from batch evaluation."""
+
+    video_id_a: str | None = Field(default=None, description="Video ID for script A")
+    video_id_b: str | None = Field(default=None, description="Video ID for script B")
+    script_a: str = Field(default="", description="Transcript for script A")
+    script_b: str = Field(default="", description="Transcript for script B")
+    gold: Literal["A", "B"] = Field(..., description="Ground-truth winner from view counts")
+    pred: Literal["A", "B"] = Field(..., description="Judge prediction")
+    reason: str = Field(default="", description="Judge rationale")
+    correct: bool = Field(..., description="Whether pred matches gold")
+
+
+class PairwiseBatchOutput(BaseModel):
+    """Output of run_batch: accuracy and per-example results."""
+
+    accuracy: float = Field(..., description="Fraction of correct predictions")
+    correct: int = Field(..., description="Number of correct predictions")
+    total: int = Field(..., description="Total number of examples")
+    results: list[PairwiseJudgeResult] = Field(..., description="Per-example results")

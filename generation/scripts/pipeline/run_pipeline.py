@@ -132,7 +132,7 @@ def run(
     if hash_mode:
         info("  Hash mode: starting from chunker (using cached script.md)")
     if prototype:
-        info("  Prototype mode: cheap text-to-image (no mascot) + free ttsvibes TTS")
+        info("  Prototype mode: cheap text-to-image (no mascot) + free readaloud TTS")
 
     script: str
     if hash_mode:
@@ -361,7 +361,7 @@ def main():
     parser.add_argument(
         "--prototype",
         action="store_true",
-        help="Use cheap text-to-image (Replicate FLUX Schnell) + free ttsvibes TTS; no mascot, no ElevenLabs",
+        help="Use cheap text-to-image (Replicate FLUX Schnell) + free readaloud TTS; no mascot, no ElevenLabs",
     )
     args = parser.parse_args()
 

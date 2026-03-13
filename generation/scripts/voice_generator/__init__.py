@@ -5,15 +5,22 @@ Voice generators for TTS. Use prototype=True or VOICE_GENERATOR env to select ba
 import os
 
 from .elevenlabs import generate_for_scenes as elevenlabs_generate_for_scenes
+from .readaloud import generate_for_scenes as readaloud_generate_for_scenes
+from .readaloud import DEFAULT_VOICE as READALOUD_DEFAULT_VOICE
 from .ttsvibes import generate_for_scenes as ttsvibes_generate_for_scenes
 from .ttsvibes import DEFAULT_VOICE as TTSVIBES_DEFAULT_VOICE
 
 
 def _get_backend(prototype: bool) -> str:
     override = (os.getenv("VOICE_GENERATOR") or "").strip().lower()
-    if override in ("elevenlabs", "ttsvibes"):
+    if override in ("elevenlabs", "readaloud", "ttsvibes"):
         return override
-    return "ttsvibes" if prototype else "elevenlabs"
+    return "readaloud" if prototype else "elevenlabs"
+
+
+def get_backend(prototype: bool) -> str:
+    """Return the active voice backend name (elevenlabs, readaloud, or ttsvibes)."""
+    return _get_backend(prototype)
 
 
 def _validate_credentials(prototype: bool) -> None:
@@ -23,7 +30,7 @@ def _validate_credentials(prototype: bool) -> None:
         if not api_key:
             raise RuntimeError(
                 "ELEVENLABS_API_KEY (or XI_API_KEY) not found. "
-                "Add it to .env or use --prototype for free ttsvibes TTS."
+                "Add it to .env or use --prototype for free readaloud TTS."
             )
 
 
@@ -40,7 +47,10 @@ def generate_for_scenes(
     _validate_credentials(prototype)
     backend = _get_backend(prototype)
 
-    if backend == "ttsvibes":
+    if backend == "readaloud":
+        voice = (os.getenv("READALOUD_VOICE") or "").strip() or READALOUD_DEFAULT_VOICE
+        return readaloud_generate_for_scenes(scenes, voice=voice, **kwargs)
+    elif backend == "ttsvibes":
         voice = (os.getenv("TTSVIBES_VOICE") or "").strip() or TTSVIBES_DEFAULT_VOICE
         return ttsvibes_generate_for_scenes(scenes, voice=voice, **kwargs)
     else:

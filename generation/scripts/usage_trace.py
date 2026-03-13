@@ -38,6 +38,7 @@ _IMAGE_PRICES: dict[str, float] = {
     "google/gemini": 0.02,
 }
 _VOICE_PRICES: dict[str, float] = {
+    "readaloud": 0.0,  # prototype mode: free TTS (read-aloud.com)
     "ttsvibes": 0.0,  # prototype mode: free TTS
     "eleven_v3": 0.12,
     "eleven_multilingual_v2": 0.18,

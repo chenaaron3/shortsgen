@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate TTS voice from chunker JSON. Uses voice_generator (ElevenLabs or ttsvibes).
+Generate TTS voice from chunker JSON. Uses voice_generator (ElevenLabs, readaloud, or ttsvibes).
 Outputs to cache/{config_hash}/videos/{cache_key}/voice/voice_1.mp3, etc.
 """
 
@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from models import Chunks
 from path_utils import env_path, video_cache_path
 from logger import cache_stats_summary, error, info, progress, step_end, step_start
-from voice_generator import generate_for_scenes
+from voice_generator import generate_for_scenes, get_backend
 
 load_dotenv(env_path())
 
@@ -43,7 +43,7 @@ def run(
     prototype: bool = False,
 ) -> Chunks:
     """
-    Generate voice via voice_generator (ElevenLabs or ttsvibes when prototype).
+    Generate voice via voice_generator (ElevenLabs or readaloud when prototype).
     Output: cache/{config_hash}/videos/{cache_key}/voice/voice_1.mp3 (or voice_prototype/ when prototype).
     """
     voice_dir = video_cache_path(
@@ -85,10 +85,11 @@ def run(
     extra = f"max={max_scenes}" if max_scenes else ""
     cache_stats_summary(0, len(scenes), len(scenes), extra)
 
-    if prototype:
-        info("  Generating with ttsvibes (free TTS, one call per scene)...")
-    else:
+    backend = get_backend(prototype)
+    if backend == "elevenlabs":
         info("  Generating full script with eleven_v3 (single call for continuity)...")
+    else:
+        info(f"  Generating with {backend} (free TTS, one call per scene)...")
 
     try:
         clips = generate_for_scenes(
