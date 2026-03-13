@@ -1,6 +1,6 @@
 ---
 description: Path management for the pipeline (path_utils.py)
-globs: generation/**/*.py
+globs: services/python-generator/**/*.py
 alwaysApply: false
 ---
 
@@ -23,7 +23,9 @@ from path_utils import video_cache_path, breakdown_cache_path, breakdown_output_
 | `breakdown_output_dir(source_hash, config_hash)` | `cache/{config_hash}/breakdowns/{hash}/` (videos.md, upload_state.json) |
 | `remotion_composite_key(config_hash, cache_key)` | `{config_hash}_{cache_key}` for public/shortgen/ and manifest.cacheKey |
 | `video_public()` | `public/` — Remotion static assets |
-| `project_root()` | Project root |
+| `project_root()` | Monorepo root |
+| `eval_ui_public()` | `apps/eval-ui/public` (or `eval-ui/public` fallback) |
+| `remotion_app_root()` | `apps/remotion` (for npx remotion render cwd) |
 | `prompts_dir()` | `generation/prompts/` |
 | `assets_dir()` | `generation/assets/` |
 | `mascot_path()` | Default mascot canvas |
@@ -33,4 +35,4 @@ from path_utils import video_cache_path, breakdown_cache_path, breakdown_output_
 
 1. Cache assets live under `video_cache_path(cache_key, config_hash, ...)` — e.g. `video_cache_path(cache_key, config_hash, "chunks.json")`.
 2. Remotion output goes under `video_public() / "shortgen" / remotion_composite_key(config_hash, cache_key)` — manifests, images, voice.
-3. Scripts run from project root (e.g. `python generation/scripts/pipeline/run_pipeline.py`); path_utils resolves relative to project root.
+3. Scripts run from project root (e.g. `python services/python-generator/scripts/run.py pipeline/run_source_pipeline.py -f x -c default`); path_utils resolves monorepo root via pnpm-workspace.yaml or sst.config.ts.

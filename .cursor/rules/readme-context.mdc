@@ -13,7 +13,7 @@ The README documents:
 - Pipeline flow (single content and source breakdown)
 - Data structures (chunks.json, manifest.json, breakdown, index)
 - Setup and environment variables
-- Commands and CLI options (run_pipeline, run_source_pipeline, prepare, render, upload_youtube)
+- Commands and CLI options (run_source_pipeline with --no-breakdown for single content, prepare, render, upload_youtube)
 - Conventions (path_utils, logger, run directory)
 - APIs and backends (OpenAI, ElevenLabs, Replicate, faster-whisper, YouTube)
 

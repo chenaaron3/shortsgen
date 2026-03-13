@@ -14,6 +14,6 @@ credentials.json
 token.json
 
 # Cache and generated assets
-generation/cache/
+services/python-generator/cache/
 public/shortgen/
-eval-ui/public/eval-assets/
+apps/eval-ui/public/eval-assets/

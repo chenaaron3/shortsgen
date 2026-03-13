@@ -1,26 +1,19 @@
 {
   "name": "shortgen",
   "version": "1.0.0",
+  "private": true,
   "description": "Remotion-based short video generator",
   "scripts": {
-    "dev": "remotion studio",
-    "eval:ui": "cd eval-ui && npm run dev",
-    "build": "remotion build",
-    "render": "remotion render",
-    "upgrade": "remotion upgrade"
-  },
-  "dependencies": {
-    "@remotion/bundler": "4.0.300",
-    "@remotion/cli": "4.0.300",
-    "@remotion/captions": "4.0.300",
-    "@remotion/media-utils": "4.0.300",
-    "@remotion/renderer": "4.0.300",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "remotion": "4.0.300"
+    "dev": "pnpm --filter @shortgen/remotion dev",
+    "eval:ui": "pnpm --filter @shortgen/eval-ui dev",
+    "build": "pnpm --filter @shortgen/remotion build",
+    "render": "pnpm --filter @shortgen/remotion render",
+    "upgrade": "pnpm --filter @shortgen/remotion upgrade",
+    "pipeline": "python services/python-generator/scripts/run.py",
+    "sst:dev": "sst dev",
+    "sst:deploy": "sst deploy"
   },
   "devDependencies": {
-    "@types/react": "18.2.0",
-    "typescript": "^5.0.0"
+    "sst": "^3.19.3"
   }
 }

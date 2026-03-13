@@ -8,54 +8,33 @@ Remotion-based short video generator for faceless shorts. Turns raw content (or 
 
 ## Project structure
 
+pnpm monorepo with SST v3. See [RESTRUCTURE.md](RESTRUCTURE.md) for the full folder map.
+
 ```
 shortgen/
-├── src/                          # Remotion compositions
-│   ├── Root.tsx                  # Fetches index.json, registers ShortVideoComposition per cacheKey
-│   ├── ShortVideo.tsx            # Main composition: manifest-driven Series + CaptionsOverlay
-│   ├── SceneSlide.tsx            # One scene: image + voice, fade in/out
-│   ├── CaptionsOverlay.tsx       # TikTok-style word captions (@remotion/captions)
-│   └── types.ts                 # VideoManifest, SceneInput, Caption
-├── public/                       # Static assets for Remotion
-│   └── shortgen/{cacheKey}/      # Per-content (written by prepare step)
-│       ├── manifest.json         # Scenes, captions, dimensions, durationInFrames
-│       ├── images/               # image_1.png, ...
-│       └── voice/               # voice_1.mp3, ...
-├── generation/                   # Python pipeline
-│   ├── scripts/                 # Run from project root (e.g. python generation/scripts/pipeline/run_pipeline.py)
-│   │   ├── pipeline/            # Content generation: script → chunker → images+voice → prepare → render
-│   │   │   ├── run_pipeline.py       # Single content: full pipeline
-│   │   │   ├── run_source_pipeline.py # Source file → breakdown → one pipeline run per nugget
-│   │   │   ├── breakdown_source.py   # LLM: source → nuggets → breakdown.json
-│   │   │   ├── generate_script.py    # Step 1: LLM → script.md
-│   │   │   ├── run_chunker.py       # Step 2: LLM (structured) → chunks.json
-│   │   │   ├── generate_images.py   # Step 3: image_generator → images/
-│   │   │   ├── generate_voice.py     # Step 3: ElevenLabs TTS → voice/
-│   │   │   ├── prepare_remotion_assets.py # Step 4: copy to public/, Whisper captions → manifest.json
-│   │   │   └── render_video.py      # Step 5: npx remotion render ShortVideo
-│   │   ├── upload/              # Distribution
-│   │   │   └── upload_youtube.py    # Upload short.mp4 to YouTube (Data API v3)
-│   │   ├── path_utils.py        # cache_path, video_public, project_root, etc.
-│   │   ├── models.py            # Pydantic: Scene, Chunks, Nugget, BreakdownOutput, ...
-│   │   ├── logger.py            # step_start/end, cache_hit/miss, progress
-│   │   └── image_generator/     # Backend: gpt (OpenAI) or replicate (IMAGE_GENERATOR)
-│   ├── configs/                 # Pipeline configs (model + system prompt per step)
-│   ├── prompts/                 # LLM system prompts
-│   ├── assets/                  # Mascot reference (mascot_glasses.png)
-│   ├── cache/                   # Config-scoped cache
-│   │   └── {configHash}/        # Per-config
-│   │       ├── _breakdown/{sourceHash}/  # breakdown.json (shared)
-│   │       └── videos/{cacheKey}/        # script.md, chunks.json, images/, voice/, captions/
-│   └── requirements.txt
-├── remotion.config.ts
-└── package.json
+├── apps/
+│   ├── remotion/              # Remotion compositions (src/, remotion.config.ts)
+│   └── eval-ui/               # Vite + React eval UI
+├── services/
+│   └── python-generator/     # Python pipeline (Fargate)
+│       ├── scripts/          # pipeline/, upload/, eval/, judge/, etc.
+│       ├── configs/          # YAML configs
+│       ├── prompts/          # LLM system prompts
+│       ├── assets/           # Mascot reference
+│       └── cache/            # Config-scoped cache
+├── packages/
+│   └── db/                   # Drizzle schema placeholder (wire up later)
+├── public/                   # Shared Remotion assets (Python writes, Remotion reads)
+│   └── shortgen/
+├── sst.config.ts             # SST v3 infrastructure
+└── package.json              # pnpm workspace root
 ```
 
 ---
 
 ## Pipeline flow
 
-### Single content (run_pipeline)
+### Single content (run_source_pipeline --no-breakdown)
 
 Requires `-c config.yaml`. Config defines model and system prompt for each LLM step (breakdown, script, chunk).
 
@@ -65,7 +44,7 @@ Requires `-c config.yaml`. Config defines model and system prompt for each LLM s
 4. **Prepare** — Copy to `public/shortgen/{configHash}_{cacheKey}/`, Whisper captions → `manifest.json`
 5. **Render** — `npx remotion render` → `cache/{configHash}/videos/{cacheKey}/short.mp4`
 
-**Cache key:** First 16 chars of `SHA256(raw_content)`. Hash mode: `-H CACHE_KEY -c config.yaml` runs from chunker onward.
+**Cache key:** First 16 chars of `SHA256(raw_content)`.
 
 ### Source breakdown (run_source_pipeline)
 
@@ -92,11 +71,11 @@ Requires `-c config.yaml`. Config defines model and system prompt for each LLM s
 ## Setup
 
 ```bash
-# Remotion (Node)
-npm install
+# Install deps (pnpm monorepo)
+pnpm install
 
 # Pipeline (Python); run from project root
-pip install -r generation/requirements.txt
+pip install -r services/python-generator/requirements.txt
 ```
 
 **Environment (`.env` in project root):**
@@ -111,47 +90,32 @@ pip install -r generation/requirements.txt
 
 ## Commands
 
-Run Python scripts from **project root**. Use `generation/scripts/run.py` as a launcher (sets PYTHONPATH), or export `PYTHONPATH=generation/scripts` first.
+Run from **project root**.
 
 ```bash
-# Option: set PYTHONPATH once, then run scripts directly
-export PYTHONPATH=generation/scripts  # or: . generation/scripts/.envrc if using direnv
-python generation/scripts/pipeline/run_pipeline.py -f content.txt
+# Remotion Studio
+pnpm dev
 
-# Option: use the run launcher (no export needed)
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt
-```
+# Eval UI
+pnpm eval:ui
 
-```bash
-# Config required: -c config.yaml (e.g. generation/configs/default.yaml or "default")
-# Single content — full pipeline
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt -c configs/default.yaml
+# Pipeline (use run.py launcher or pnpm pipeline)
+python services/python-generator/scripts/run.py pipeline/run_source_pipeline.py -f content.txt -c default --no-breakdown
+# or: pnpm pipeline -- pipeline/run_source_pipeline.py -f content.txt -c default --no-breakdown
 
-# Run up to a step (invalidates that step and later)
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt -c default --step script
+# Config required: -c config (e.g. default)
+# Single content — full pipeline (--no-breakdown = use entire file as one nugget)
+python services/python-generator/scripts/run.py pipeline/run_source_pipeline.py -f content.txt -c default --no-breakdown
 
-# Limit scenes (testing)
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt -c default --max-scenes 3
-
-# Resume from cache (starts at chunker)
-python generation/scripts/run.py pipeline/run_pipeline.py -H 8d9dea719895c33a -c default
-
-# Prototype mode: cheap text-to-image only (FLUX Schnell, no mascot, no transitions; requires IMAGE_GENERATOR=replicate)
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt -c default --prototype
-
-# Source → many videos (one or more configs); writes eval-dataset.json for eval UI
-python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c default
-python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c claude-sonnet gpt4o --max-nuggets 5
-
-# Script-only eval (no images/voice/video): --break script
-python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c default claude-sonnet --break script
+# Source breakdown (one or more configs); writes eval-dataset.json
+python services/python-generator/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c default
 
 # Remotion Studio (pick composition by composite cacheKey in UI)
-npx remotion studio
+pnpm dev
 
-# Upload to YouTube (requires -c)
-python generation/scripts/run.py upload/upload_youtube.py --cache-key CACHE_KEY -c default
-python generation/scripts/run.py upload/upload_youtube.py --breakdown-hash SOURCE_HASH -c default
+# SST
+pnpm sst:dev
+pnpm sst:deploy
 ```
 
 ---

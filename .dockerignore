@@ -1,0 +1,28 @@
+# Ephemeral cache (generated at runtime)
+services/python-generator/cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+
+# Secrets (pass via Fargate env/secrets)
+.env
+.env.*
+
+# Node / Remotion (not used in Python-only image)
+node_modules/
+
+# Eval UI (not needed for generation)
+apps/eval-ui/
+
+# Git
+.git/
+.gitignore
+
+# IDE / misc
+.cursor/

@@ -5,60 +5,35 @@ alwaysApply: true
 
 # shortgen — Project Structure
 
-Remotion-based short video generator. Combines AI-generated images + voice with word-level captions for faceless shorts.
+Remotion-based short video generator. pnpm monorepo with SST v3. See RESTRUCTURE.md for full folder map.
 
 ## Directory Layout
 
 ```
 shortgen/
-├── src/                    # Remotion React compositions
-│   ├── Root.tsx            # Fetches index.json, registers ShortVideoComposition per cacheKey
-│   ├── ShortVideo.tsx      # Main composition; loads manifest, renders Series + CaptionsOverlay
-│   ├── SceneSlide.tsx      # One scene: image + audio, fade in/out
-│   ├── CaptionsOverlay.tsx # TikTok-style word captions (@remotion/captions)
-│   └── types.ts            # VideoManifest, SceneInput, Caption
-├── public/                 # Static assets for Remotion
-│   └── shortgen/{configHash}_{cacheKey}/  # Per-content assets (composite key)
-│       ├── manifest.json   # Pipeline output: scenes, captions, dimensions
-│       ├── images/         # image_1.png, ...
-│       └── voice/          # voice_1.mp3, ...
-├── generation/             # Python pipeline
-│   ├── scripts/           # Run from project root (e.g. python generation/scripts/pipeline/run_pipeline.py)
-│   │   ├── pipeline/      # Content generation: script → chunker → images+voice → prepare → render
-│   │   │   ├── run_pipeline.py         # Orchestrator: 5-step pipeline
-│   │   │   ├── run_source_pipeline.py  # Source → breakdown → N×pipeline
-│   │   │   ├── breakdown_source.py     # Break source into nuggets → breakdown.json
-│   │   │   ├── generate_script.py      # Step 1: LLM → script.md
-│   │   │   ├── run_chunker.py          # Step 2: LLM → chunks.json
-│   │   │   ├── generate_images.py      # Step 3: OpenAI/Replicate → images/
-│   │   │   ├── generate_voice.py       # Step 3: ElevenLabs TTS → voice/
-│   │   │   ├── prepare_remotion_assets.py  # Step 4: copy to public/, manifest, Whisper captions
-│   │   │   └── render_video.py        # Step 5: npx remotion render
-│   │   ├── upload/        # Distribution
-│   │   │   └── upload_youtube.py
-│   │   ├── run.py         # Launcher: sets PYTHONPATH, runs scripts (e.g. run.py pipeline/run_pipeline.py -f x)
-│   ├── config_loader.py  # Load YAML configs, compute config_hash
-│   ├── path_utils.py     # video_cache_path, breakdown_cache_path, remotion_composite_key, etc.
-│   │   ├── models.py      # Pydantic: Scene, Chunks, Nugget, BreakdownOutput, etc.
-│   │   └── logger.py     # step_start/end, cache_hit/miss, progress
-│   ├── prompts/           # LLM system prompts
-│   │   ├── source-breakdown-system-prompt.md
-│   │   ├── short-script-system-prompt.md
-│   │   └── transcript-chunker-system-prompt.md
-│   ├── configs/            # YAML configs: default.yaml, claude-sonnet.yaml, etc.
-│   ├── assets/             # Mascot reference (mascot_canvas.png)
-│   ├── cache/              # Pipeline cache
-│   │   ├── _breakdown/     # Shared breakdown (fair config comparison, sorts first)
-│   │   │   └── {sourceHash}/breakdown.json
-│   │   └── {configHash}/   # Per-config
-│   │       ├── breakdowns/{sourceHash}/  # videos.md, upload_state.json
-│   │       └── videos/{cacheKey}/   # Per-nugget (hash of summary)
-│   │           ├── script.md
-│   │           ├── chunks.json
-│   │           ├── images/, voice/
-│   │           └── captions/captions.json
-│   └── requirements.txt
-└── remotion.config.ts
+├── apps/
+│   ├── remotion/              # Remotion compositions (src/, remotion.config.ts)
+│   └── eval-ui/               # Vite + React eval UI
+├── services/
+│   └── python-generator/      # Python pipeline (Fargate)
+│       ├── scripts/           # pipeline/, upload/, eval/, judge/, etc.
+│       │   ├── pipeline/      # run_pipeline, run_source_pipeline, breakdown_source, generate_*, prepare_*, render_video
+│       │   ├── upload/        # upload_youtube
+│       │   ├── run.py         # Launcher: PYTHONPATH, runs scripts
+│       │   ├── path_utils.py  # video_cache_path, video_public, project_root, eval_ui_public, remotion_app_root
+│       │   ├── models.py      # Pydantic: Scene, Chunks, Nugget, BreakdownOutput
+│       │   └── logger.py      # step_start/end, cache_hit/miss
+│       ├── configs/           # YAML configs: default.yaml, claude-sonnet.yaml
+│       ├── prompts/           # LLM system prompts
+│       ├── assets/            # Mascot reference
+│       ├── cache/             # _breakdown/, {configHash}/breakdowns/, {configHash}/videos/
+│       └── requirements.txt
+├── packages/
+│   └── db/                    # Drizzle schema placeholder (wire up later)
+├── public/                    # Shared Remotion assets (Python writes, Remotion reads)
+│   └── shortgen/{configHash}_{cacheKey}/
+├── sst.config.ts              # SST v3: VPC, Cluster, Fargate Service
+└── package.json               # pnpm workspace root
 ```
 
 ## Pipeline Flow (5 Steps)
@@ -67,7 +42,7 @@ shortgen/
 2. **Chunks** — Script → Config LLM (structured) → `chunks.json`
 3. **Images + Voice** — OpenAI/Replicate + ElevenLabs TTS → `images/`, `voice/`
 4. **Prepare** — Copy to `public/shortgen/{configHash}_{cacheKey}/`, Whisper captions → `manifest.json`
-5. **Render** — `npx remotion render ShortVideo --props='{"cacheKey":"{configHash}_{cacheKey}"}'`
+5. **Render** — `npx remotion render ShortVideo` (from apps/remotion)
 
 Cache key = first 16 chars of SHA256(raw_content). Config hash = first 16 chars of SHA256(config).
 
@@ -75,33 +50,26 @@ Cache key = first 16 chars of SHA256(raw_content). Config hash = first 16 chars 
 
 **chunks.json** (pipeline): `{ "scenes": [{ "text", "imagery", "section", "image_path", "voice_path" }] }`
 
-**manifest.json** (Remotion): `{ "cacheKey", "fps": 60, "width": 1080, "height": 1920, "durationInFrames", "scenes": [{ "text", "imagePath", "voicePath", "durationInSeconds" }], "captions": [{ "text", "startMs", "endMs", "timestampMs", "confidence" }] }`
+**manifest.json** (Remotion): `{ "cacheKey", "fps": 60, "width": 1080, "height": 1920, "durationInFrames", "scenes": [...], "captions": [...] }`
 
 **index.json** (`public/shortgen/index.json`): `{ "cacheKeys": [...] }` — written by prepare for Remotion Studio discovery.
 
-**Breakdown → pipeline link:** Each nugget in `breakdown.json` has a **cache_key** (first 16 chars of SHA256(summary), set when writing the breakdown). So breakdown → child cache paths are in the file.
-
 ## Env Vars
 
-`.env`: `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `ANTHROPIC_API_KEY` (for Claude configs)
+`.env` at project root: `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `ANTHROPIC_API_KEY` (for Claude configs)
 
 ## Commands
 
 ```bash
-# Config required: -c config (e.g. default, configs/default.yaml)
-
-# Full pipeline (single raw content)
-python generation/scripts/run.py pipeline/run_pipeline.py -f content.txt -c default
-
-# Source breakdown (one or more configs); writes eval-dataset.json. --break script for script-only eval
-python generation/scripts/run.py pipeline/run_source_pipeline.py -f book.txt -c default claude-sonnet
-
-# Remotion Studio (composite cacheKey: configHash_cacheKey)
-npx remotion studio
+pnpm dev          # Remotion Studio
+pnpm eval:ui      # Eval UI
+pnpm pipeline -- pipeline/run_source_pipeline.py -f content.txt -c default --no-breakdown
+pnpm sst:dev      # SST dev mode
+pnpm sst:deploy   # Deploy to AWS
 ```
 
 ## APIs & Dependencies
 
-- **Images**: OpenAI `gpt-image-1-mini` images/edits (img2img), mascot as reference, hand-drawn stick figure style
+- **Images**: OpenAI `gpt-image-1-mini` or Replicate
 - **Voice**: ElevenLabs `eleven_multilingual_v2`, voice Adam
-- **Captions**: faster-whisper (word-level) or scene-level fallback from chunk text
+- **Captions**: faster-whisper (word-level) or scene-level fallback
