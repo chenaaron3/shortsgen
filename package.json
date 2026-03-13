@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @shortgen/remotion dev",
     "eval:ui": "pnpm --filter @shortgen/eval-ui dev",
+    "web": "pnpm --filter @shortgen/web dev",
     "build": "pnpm --filter @shortgen/remotion build",
     "render": "pnpm --filter @shortgen/remotion render",
     "upgrade": "pnpm --filter @shortgen/remotion upgrade",
