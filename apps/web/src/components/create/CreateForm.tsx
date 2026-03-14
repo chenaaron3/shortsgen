@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { api } from "~/utils/api";
+import { useUserConfig } from "~/hooks/useUserConfig";
 import { InspirationCard } from "./InspirationCard";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
@@ -17,6 +18,7 @@ import {
 export function CreateForm() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { config } = useUserConfig();
   const [input, setInput] = useState("");
 
   const createRunMutation = api.runs.createRun.useMutation({
@@ -27,7 +29,7 @@ export function CreateForm() {
 
   const handleStart = () => {
     if (!input.trim()) return;
-    createRunMutation.mutate({ userInput: input.trim() });
+    createRunMutation.mutate({ userInput: input.trim(), config });
   };
 
   if (status === "loading") {

@@ -34,7 +34,13 @@ export const runsRouter = createTRPCRouter({
    * Returns runId and wsUrl. Client should connect to WebSocket before redirecting to edit page.
    */
   createRun: protectedProcedure
-    .input(z.object({ userInput: z.string().min(1) }))
+    .input(
+      z.object({
+        userInput: z.string().min(1),
+        /** Pipeline config: prototype (cheap/fast) or default (full quality). From user tier. */
+        config: z.enum(["prototype", "default"]).optional().default("prototype"),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const [run] = await ctx.db
         .insert(runs)
@@ -56,7 +62,7 @@ export const runsRouter = createTRPCRouter({
         body: JSON.stringify({
           runId: run.id,
           sourceContent: input.userInput,
-          config: "default",
+          config: input.config,
         }),
       });
 

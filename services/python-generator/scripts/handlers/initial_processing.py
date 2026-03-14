@@ -5,6 +5,7 @@ Emits progress via WebSocket (runId -> connectionId lookup).
 
 import json
 import sys
+import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -14,6 +15,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from config_loader import load_config
+from logger import error as log_error, warn as log_warn
 from models import Nugget, ProcessedClip
 from pipeline.breakdown_source import run as run_breakdown, source_hash
 from pipeline.generate_script import run as run_script
@@ -48,8 +50,21 @@ def handler(event: dict, context) -> dict:
     source_content = event.get("sourceContent", "")
     config_name = event.get("config", "default")
     if not run_id or not source_content:
+        log_warn(f"[initial_processing] 400 runId={run_id!r} sourceContent empty={not source_content}")
         return {"statusCode": 400, "body": json.dumps({"error": "runId and sourceContent required"})}
 
+    try:
+        return _handler_impl(event, run_id, source_content, config_name)
+    except Exception as e:
+        log_error(f"[initial_processing] failed runId={run_id}: {e}")
+        traceback.print_exc()
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e), "runId": run_id}),
+        }
+
+
+def _handler_impl(event: dict, run_id: str, source_content: str, config_name: str) -> dict:
     config = load_config(config_name)
     config_hash = config.hash
 
@@ -67,7 +82,7 @@ def handler(event: dict, context) -> dict:
 
     # 2. Create video per nugget, process in parallel (script -> scenes)
     results = []
-    with ThreadPoolExecutor(max_workers=min(5, len(nuggets))) as executor:
+    with ThreadPoolExecutor(max_workers=min(10, len(nuggets))) as executor:
         futures = {}
         for nugget in nuggets:
             video_id = create_video(run_id, status="preparing")
@@ -95,6 +110,8 @@ def handler(event: dict, context) -> dict:
                 )
                 results.append(result.model_dump())
             except Exception as e:
+                log_error(f"[initial_processing] clip failed videoId={video_id}: {e}")
+                traceback.print_exc()
                 emit_event(
                     run_id,
                     ProgressEventType.error,

@@ -66,15 +66,22 @@ export const finalizeClipRequestSchema = z.object({
 });
 export type FinalizeClipRequest = z.infer<typeof finalizeClipRequestSchema>;
 
-// --- Response schemas ---
-export const initialProcessingResponseSchema = z.object({
+// --- Response schemas (shared shape for async trigger endpoints) ---
+const triggerResponseBaseSchema = z.object({
   jobId: z.string(),
   status: z.literal("started"),
   logsUrl: z.string().optional(),
 });
+export const initialProcessingResponseSchema = triggerResponseBaseSchema;
+export const updateFeedbackResponseSchema = triggerResponseBaseSchema;
+export const finalizeClipResponseSchema = triggerResponseBaseSchema;
 export type InitialProcessingResponse = z.infer<
   typeof initialProcessingResponseSchema
 >;
+export type UpdateFeedbackResponse = z.infer<
+  typeof updateFeedbackResponseSchema
+>;
+export type FinalizeClipResponse = z.infer<typeof finalizeClipResponseSchema>;
 
 // --- WebSocket progress event types (shared with Python via types:sync) ---
 export const progressEventTypeSchema = z.enum([

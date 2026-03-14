@@ -6,10 +6,13 @@ Called by Update Clip With Feedback Lambda.
 import re
 import sys
 from pathlib import Path
+from typing import cast
 
 from dotenv import load_dotenv
 from litellm import completion
+from litellm.types.utils import ModelResponse
 
+from config_loader import Config
 from models import Chunks, ChunksOutput, Scene
 from schema_utils import schema_for_openai
 
@@ -71,17 +74,15 @@ def _build_feedback_prompt(
 def apply_feedback(
     script: str,
     chunks: Chunks,
+    config: Config,
     *,
     script_feedback: str | None = None,
     scene_feedback: list[dict] | None = None,
-    model: str = "gpt-4o",
-    config=None,
 ) -> Chunks:
     """
     Apply user feedback to revise scenes. Returns modified Chunks.
     """
-    if config:
-        model = config.chunk.model
+    model = config.chunk.model
     system_prompt = (
         "You revise short-form video scenes based on user feedback. "
         "Output valid JSON matching the schema: title, description, scenes (each: text, imagery, section, transition_from_previous). "
@@ -107,12 +108,14 @@ def apply_feedback(
             ],
             response_format=response_format,
             temperature=0.5,
+            stream=False,
         )
-        content = (response.choices[0].message.content or "").strip()
+        resp = cast(ModelResponse, response)
+        content = (resp.choices[0].message.content or "").strip()
         content = _extract_json(content)
         parsed = ChunksOutput.model_validate_json(content)
-        if getattr(response, "usage", None):
-            u = response.usage
+        u = getattr(resp, "usage", None)
+        if u:
             record_llm("ApplyFeedback", model, u.prompt_tokens, u.completion_tokens)
         return Chunks(
             title=parsed.title,

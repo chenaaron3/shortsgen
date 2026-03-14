@@ -22,6 +22,7 @@
     "types:sync": "pnpm types:build && services/python-generator/.venv/bin/datamodel-codegen --input packages/types/generated/manifest.schema.json --input-file-type jsonschema --output services/python-generator/scripts/schemas/video_manifest.py && services/python-generator/.venv/bin/datamodel-codegen --input packages/types/generated/api.schema.json --input-file-type jsonschema --output services/python-generator/scripts/schemas/api_models.py && services/python-generator/.venv/bin/datamodel-codegen --input packages/types/generated/table.schema.json --input-file-type jsonschema --output services/python-generator/scripts/schemas/table_models.py && services/python-generator/.venv/bin/datamodel-codegen --input packages/types/generated/progress-event-type.schema.json --input-file-type jsonschema --output services/python-generator/scripts/schemas/progress_event_type.py",
     "sst:dev": "sst dev",
     "sst:deploy": "sst deploy",
+    "logs:ws-connect": "aws logs tail $(aws logs describe-log-groups --log-group-name-prefix /aws/lambda --query \"logGroups[?contains(logGroupName, 'ShortgenProgressApiRouteConnect')].logGroupName | [0]\" --output text) --follow --format short",
     "db:push": "pnpm --filter @shortgen/db db:push"
   },
   "dependencies": {

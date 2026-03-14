@@ -1,10 +1,16 @@
 """
 Lambda handler: Finalize Clip. Generate images + voice + prepare, upload to S3.
 Calls run_pipeline with in-memory chunks from DB (skips script + chunker).
+
+Config flow (single source of truth):
+- createRun passes config ("prototype" | "default") to initial-processing
+- initial_processing stores config_hash on each video (from config.hash)
+- finalize_clip reads video.config_hash → load_config() for YAML, prototype=(config_hash=="prototype")
 """
 
 import json
 import sys
+import traceback
 from pathlib import Path
 
 _SCRIPTS = Path(__file__).resolve().parent.parent
@@ -12,6 +18,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from config_loader import load_config
+from logger import error as log_error, warn as log_warn
 from models import Chunks
 from path_utils import remotion_composite_key, video_public
 from pipeline.run_pipeline import run as run_pipeline
@@ -26,20 +33,41 @@ def handler(event: dict, context) -> dict:
     run_id = event.get("runId")
     video_id = event.get("videoId")
     if not run_id or not video_id:
+        log_warn(f"[finalize_clip] 400 runId={run_id!r} videoId={video_id!r}")
         return {"statusCode": 400, "body": json.dumps({"error": "runId and videoId required"})}
 
+    try:
+        return _handler_impl(event, run_id, video_id)
+    except Exception as e:
+        log_error(f"[finalize_clip] failed runId={run_id} videoId={video_id}: {e}")
+        traceback.print_exc()
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e), "runId": run_id, "videoId": video_id}),
+        }
+
+
+def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     video = get_video(video_id)
     if not video or str(video.run_id) != str(run_id):
+        log_warn(f"[finalize_clip] 404 runId={run_id} videoId={video_id} video={video is not None}")
         return {"statusCode": 404, "body": json.dumps({"error": "Video not found"})}
 
     chunks_json = video.chunks
     cache_key = video.cache_key
     config_hash = video.config_hash
     if not chunks_json or not cache_key or not config_hash:
+        log_warn(
+            f"[finalize_clip] 400 runId={run_id} videoId={video_id} "
+            f"chunks={bool(chunks_json)} cacheKey={bool(cache_key)} configHash={bool(config_hash)}"
+        )
         return {"statusCode": 400, "body": json.dumps({"error": "Video missing chunks, cacheKey, or configHash"})}
 
     config = load_config(config_hash)
     chunks = Chunks.model_validate(json.loads(chunks_json))
+
+    # prototype = cheap images/fast whisper; derived from video's config (set at create)
+    prototype = config_hash == "prototype"
 
     emit_event(
         run_id,
@@ -54,7 +82,7 @@ def handler(event: dict, context) -> dict:
         config=config,
         config_hash=config_hash,
         break_at="prepare",
-        prototype=False,
+        prototype=prototype,
     )
 
     emit_event(

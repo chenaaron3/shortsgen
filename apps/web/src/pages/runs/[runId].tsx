@@ -42,7 +42,18 @@ export default function EditRunPage() {
   const [finalizingVideoId, setFinalizingVideoId] = useState<string | null>(null);
 
   const wsBaseUrl = env.NEXT_PUBLIC_SHORTGEN_WS_URL;
-  const wsUrl = wsBaseUrl && runId ? `${wsBaseUrl}?runId=${runId}` : "";
+  const wsUrl =
+    wsBaseUrl && runId
+      ? (() => {
+          try {
+            const u = new URL(wsBaseUrl);
+            if (!u.pathname || u.pathname === "/") u.pathname = "/$default";
+            return `${u.toString()}?runId=${runId}`;
+          } catch {
+            return `${wsBaseUrl}?runId=${runId}`;
+          }
+        })()
+      : "";
 
   const runQuery = api.runs.getById.useQuery(
     { runId: runId! },
@@ -86,7 +97,7 @@ export default function EditRunPage() {
     [runQuery]
   );
 
-  const { status: wsStatus } = useRunProgress({
+  const { status: wsStatus, closeInfo: wsCloseInfo } = useRunProgress({
     wsUrl,
     enabled: !!runId && !!wsUrl,
     onMessage: handleMessage,
@@ -213,6 +224,7 @@ export default function EditRunPage() {
         selectedVideoId={selectedVideoId}
         onSelectVideo={setSelectedVideoId}
         wsStatus={wsStatus}
+        wsCloseInfo={wsCloseInfo}
       />
       <main className="flex flex-1 flex-col overflow-auto p-6">
         <div className="mb-6 flex items-center justify-between">

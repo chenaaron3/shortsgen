@@ -46,10 +46,13 @@ def emit_by_run_id(
     """Look up connectionId by runId, then emit. Used by Lambda handlers."""
     tbl = table_name or os.environ.get("CONNECTIONS_TABLE_NAME")
     if not tbl:
+        print("[websocket_progress] CONNECTIONS_TABLE_NAME not set, skipping emit", flush=True)
         return
     conn_id = _get_connection_id(run_id, tbl)
     if conn_id:
         emit(conn_id, message)
+    else:
+        print(f"[websocket_progress] no connectionId for runId={run_id}, WebSocket not connected", flush=True)
 
 
 def emit_event(

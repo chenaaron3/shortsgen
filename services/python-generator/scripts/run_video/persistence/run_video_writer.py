@@ -13,7 +13,7 @@ RUNS_TABLE = f"{TABLE_PREFIX}runs"
 VIDEOS_TABLE = f"{TABLE_PREFIX}videos"
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 try:
     import psycopg2
@@ -22,9 +22,12 @@ except ImportError:
     psycopg2 = None
     RealDictCursor = None
 
+from pydantic import BaseModel
+
 if TYPE_CHECKING:
     from schemas.table_models import Run, Video
 
+T = TypeVar("T", bound=BaseModel)
 RunStatus = Literal["pending", "processing", "completed", "failed"]
 VideoStatus = Literal["preparing", "ready", "failed"]
 
@@ -105,7 +108,7 @@ def update_run_status(run_id: str, status: RunStatus) -> None:
         conn.commit()
 
 
-def _row_to_model(row: dict, model_cls, datetime_fields: tuple[str, ...] = ("created_at",)) -> object:
+def _row_to_model(row: dict, model_cls: type[T], datetime_fields: tuple[str, ...] = ("created_at",)) -> T:
     """Convert DB row to Pydantic model, serializing datetime fields to ISO strings."""
     d = dict(row)
     for key in datetime_fields:

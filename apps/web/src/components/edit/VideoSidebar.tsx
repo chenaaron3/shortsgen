@@ -10,6 +10,7 @@ interface VideoSidebarProps {
   selectedVideoId: string | null;
   onSelectVideo: (videoId: string) => void;
   wsStatus: string;
+  wsCloseInfo?: { code: number; reason: string } | null;
 }
 
 export function VideoSidebar({
@@ -17,6 +18,7 @@ export function VideoSidebar({
   selectedVideoId,
   onSelectVideo,
   wsStatus,
+  wsCloseInfo,
 }: VideoSidebarProps) {
   return (
     <aside className="w-56 shrink-0 border-r border-border bg-card p-4 lg:w-64">
@@ -31,7 +33,11 @@ export function VideoSidebar({
           }`}
         />
         <span className="text-xs text-muted-foreground">
-          {wsStatus === "connected" ? "Live" : wsStatus}
+          {wsStatus === "connected"
+            ? "Live"
+            : wsStatus === "closed" && wsCloseInfo
+              ? `closed (${wsCloseInfo.code})`
+              : wsStatus}
         </span>
       </div>
       <h3 className="mb-2 text-sm font-medium text-foreground">Videos</h3>

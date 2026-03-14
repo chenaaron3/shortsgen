@@ -22,9 +22,13 @@ export async function handler(event: {
   console.log("[trigger-initial-processing] invoked");
   try {
     const authErr = checkAuth(event.headers);
-    if (authErr) return authErr;
+    if (authErr) {
+      console.warn("[trigger-initial-processing] 401 Unauthorized");
+      return authErr;
+    }
 
     if (!event.body) {
+      console.warn("[trigger-initial-processing] 400 Missing body");
       return { statusCode: 400, body: JSON.stringify({ error: "Missing body" }) };
     }
 
@@ -32,6 +36,7 @@ export async function handler(event: {
       JSON.parse(event.body) as unknown,
     );
     if (!parsed.success) {
+      console.warn("[trigger-initial-processing] 400 validation failed", parsed.error.flatten().formErrors);
       return {
         statusCode: 400,
         body: JSON.stringify({ error: parsed.error.flatten().formErrors }),
@@ -65,7 +70,7 @@ export async function handler(event: {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack : undefined;
-    console.error("trigger-initial-processing error:", message, stack);
+    console.error("[trigger-initial-processing] error:", message, stack);
     return {
       statusCode: 500,
       body: JSON.stringify({

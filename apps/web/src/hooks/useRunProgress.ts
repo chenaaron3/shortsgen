@@ -64,6 +64,7 @@ export function useRunProgress({
   );
   const [lastMessage, setLastMessage] = useState<ProgressMessage | null>(null);
   const [lastError, setLastError] = useState<Event | null>(null);
+  const [closeInfo, setCloseInfo] = useState<{ code: number; reason: string } | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectCountRef = useRef(0);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -91,9 +92,17 @@ export function useRunProgress({
         reconnectCountRef.current = 0;
       };
 
-      ws.onclose = () => {
+      ws.onclose = (ev) => {
         wsRef.current = null;
+        setCloseInfo({ code: ev.code, reason: ev.reason || "" });
         setStatus("closed");
+        if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+          console.warn(
+            "[useRunProgress] WebSocket closed",
+            { code: ev.code, reason: ev.reason, clean: ev.wasClean },
+            "Codes: 1000=normal, 1006=abnormal, 4xxx=API Gateway reject"
+          );
+        }
         if (
           reconnectCountRef.current < maxReconnectAttempts &&
           document.visibilityState === "visible"
@@ -135,5 +144,11 @@ export function useRunProgress({
     };
   }, [enabled, wsUrl, handleMessage, maxReconnectAttempts]);
 
-  return { status, lastMessage, lastError, connected: status === "connected" };
+  return {
+    status,
+    lastMessage,
+    lastError,
+    closeInfo,
+    connected: status === "connected",
+  };
 }

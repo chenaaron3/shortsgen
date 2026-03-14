@@ -26,8 +26,12 @@ export default $config({
     // WebSocket API for live progress updates
     const wsApi = new sst.aws.ApiGatewayWebSocket("ShortgenProgressApi");
 
-    wsApi.route("$connect", "functions/ws-connect.handler", {
+    wsApi.route("$connect", {
+      handler: "functions/ws-connect.handler",
       link: [connectionsTable],
+      environment: {
+        CONNECTIONS_TABLE_NAME: connectionsTable.name,
+      },
     });
     wsApi.route("$disconnect", "functions/ws-disconnect.handler", {
       link: [connectionsTable],
