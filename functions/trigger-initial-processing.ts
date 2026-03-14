@@ -17,6 +17,7 @@ export async function handler(event: {
   body?: string;
   headers?: Record<string, string>;
 }): Promise<{ statusCode: number; body: string }> {
+  console.log("[trigger-initial-processing] invoked");
   try {
     if (!event.body) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing body" }) };
@@ -38,6 +39,7 @@ export async function handler(event: {
         "ShortgenInitialProcessing not linked to trigger. Check sst.config.ts route has link: [initialProcessing].",
       );
     }
+    console.log("[trigger-initial-processing] invoking Lambda", functionName, "runId=", parsed.data.runId);
     await lambda.send(
       new InvokeCommand({
         FunctionName: functionName,

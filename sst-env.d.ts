@@ -10,10 +10,6 @@ declare module "sst" {
       "type": "sst.aws.ApiGatewayV2"
       "url": string
     }
-    "ShortgenApiSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "ShortgenAssets": {
       "name": string
       "type": "sst.aws.Bucket"

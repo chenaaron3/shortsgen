@@ -35,7 +35,6 @@ export default $config({
     wsApi.route("$default", "functions/ws-default.handler");
 
     const databaseUrl = new sst.Secret("ShortgenDatabaseUrl");
-    const apiSecret = new sst.Secret("ShortgenApiSecret");
 
     // Shared env for all Python Lambdas (from linked resources)
     const pythonEnv = {
@@ -117,32 +116,13 @@ export default $config({
       ],
     });
 
-    const authorizer = api.addAuthorizer({
-      name: "ShortgenApiAuthorizer",
-      type: "http",
-      lambda: {
-        function: {
-          handler: "functions/api-authorizer.handler",
-          link: [apiSecret],
-          environment: {
-            SHORTGEN_API_SECRET: apiSecret.value,
-          },
-        },
-        identitySources: ["$request.header.X-API-Secret"],
-        response: "iam",
-      },
-    });
-
     api.route("POST /runs/initial-processing", "functions/trigger-initial-processing.handler", {
-      auth: { lambda: authorizer.id },
       link: [initialProcessing],
     });
     api.route("POST /runs/update-feedback", "functions/trigger-update-feedback.handler", {
-      auth: { lambda: authorizer.id },
       link: [updateFeedback],
     });
     api.route("POST /runs/finalize-clip", "functions/trigger-finalize-clip.handler", {
-      auth: { lambda: authorizer.id },
       link: [finalizeClip],
     });
 

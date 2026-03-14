@@ -10,9 +10,6 @@ class Resource:
     class ShortgenApi:
         type: str
         url: str
-    class ShortgenApiSecret:
-        type: str
-        value: str
     class ShortgenAssets:
         name: str
         type: str
