@@ -192,9 +192,22 @@ pnpm sst:deploy
 
 ## Web app flow (apps/web)
 
-Create page: user pastes source text → creates Run in DB → triggers `initial-processing` Lambda → Python breakdown + pipeline per nugget → WebSocket progress → user reviews clips, adds feedback → `update-feedback` → user finalizes clip → `finalize-clip` Lambda → Remotion render → S3 → `VIDEO_READY` over WebSocket.
+Create page: user pastes source text → creates Run in DB → triggers `initial-processing` Lambda → Python breakdown + pipeline per nugget → WebSocket progress → user reviews clips, adds feedback → `update-feedback` → batch finalize → `finalize-all` (Step Functions) → Remotion render → S3 → `VIDEO_READY` over WebSocket.
 
-**API routes:** `POST /runs/initial-processing`, `POST /runs/update-feedback`, `POST /runs/finalize-clip`. Node Lambdas in `functions/` invoke Python handlers in `scripts/handlers/`. These endpoints are protected by a shared secret; only the tRPC server (Next.js) can call them.
+### Run phases and video status
+
+| Run phase   | Video status | UI |
+|-------------|--------------|-----|
+| **Breakdown** | — | Hero: "Analysing your content" + 4-step progress bubbles |
+| **Scripting** | `created` → `scripts` | Navbar + sidebar; edit script + imagery; per-scene like/dislike; **Next** → batch finalize |
+| **Asset gen** | `assets` | Imagery editable; regenerate per scene; **Export** → move to export |
+| **Exporting** | `export` | Ready for Remotion render; download/share |
+
+- **Next** (scripting): batch finalize all videos with `status="scripts"` via Step Functions.
+- **Export** (asset gen): DB write to move all `assets` → `export` (tRPC only).
+- **updateImagery**: per-scene imagery regeneration (direct text or LLM from feedback); only overwrites the target scene's image.
+
+**API routes:** `POST /runs/initial-processing`, `POST /runs/update-feedback`, `POST /runs/update-imagery`, `POST /runs/finalize-all`. Node Lambdas in `functions/` invoke Python handlers in `scripts/handlers/`. These endpoints are protected by a shared secret; only the tRPC server (Next.js) can call them.
 
 ---
 
@@ -206,10 +219,10 @@ Admins can view CloudWatch logs for a run (and optionally a specific video) from
 
 The Python logger (`services/python-generator/scripts/logger.py`) prefixes every log line with `[runId=xxx]` and, when applicable, `[videoId=yyy]` so CloudWatch can filter by run or video.
 
-- **runId:** Set at the start of each Lambda handler (initial_processing, update_feedback, finalize_clip). All pipeline logs include it.
+- **runId:** Set at the start of each Lambda handler (initial_processing, update_feedback, update_imagery, finalize_clip). All pipeline logs include it.
 - **videoId:** Set when processing a specific video:
   - **initial_processing:** Per-clip work (script, chunker) runs in a thread pool; each worker sets video context via `set_video_context(video_id)` so that clip’s logs include videoId.
-  - **update_feedback, finalize_clip:** Set at handler start (single video per invocation).
+  - **update_feedback, update_imagery, finalize_clip:** Set at handler start (single video per invocation).
 
 Run-level steps (e.g. breakdown) have runId only. Video-level steps have both.
 

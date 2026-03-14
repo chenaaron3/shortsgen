@@ -71,7 +71,7 @@ export const adminRouter = createTRPCRouter({
         const endTimeSec = Math.floor(Date.now() / 1000);
 
         const filterClause = input.videoId
-          ? `filter @message like /${input.videoId}/`
+          ? `filter @message like /${input.runId}/ and ( @message like /${input.videoId}/ or @message not like /videoId/ )`
           : `filter @message like /${input.runId}/ and @message not like /videoId/`;
 
         const { queryId } = await client.send(
