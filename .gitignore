@@ -13,6 +13,9 @@ out/
 credentials.json
 token.json
 
+# SST build artifacts and state (may contain secrets)
+.sst/
+
 # Cache and generated assets
 services/python-generator/cache/
 public/shortgen/
