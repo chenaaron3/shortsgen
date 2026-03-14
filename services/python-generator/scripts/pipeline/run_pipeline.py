@@ -82,6 +82,7 @@ def run(
     config,
     config_hash: str,
     max_scenes: int | None = None,
+    scene_indices: list[int] | None = None,
     step: str | None = None,
     break_at: str | None = None,
     prototype: bool = False,
@@ -90,12 +91,13 @@ def run(
     Run the full pipeline for raw content, an existing cache, or in-memory chunks.
 
     Args:
-        raw_content: Raw text to turn into a short video. Not required when cache_key (hash mode) or chunks is provided.
+        raw_content: Raw text to turn into a short video. Not required when chunks is provided.
         cache_key: Use this cache key instead of computing from content. Required when chunks is provided.
         chunks: In-memory chunks; skip script and chunker, start at images. Writes chunks.json to cache.
         config: Pipeline config (from config_loader).
         config_hash: Hash of config for cache paths.
         max_scenes: Only generate first N scenes (for testing).
+        scene_indices: Only regenerate these scene indices (0-based). Used for updateImagery.
         step: Invalidate cache for STEP and all subsequent steps, then run full pipeline.
         break_at: Stop after completing this step (script, chunker, image, prepare, video).
                   image covers both image and voice phase.
@@ -105,7 +107,6 @@ def run(
         Path to output video when full pipeline completes, else None.
     """
     chunks_mode = chunks is not None
-    hash_mode = cache_key is not None and not raw_content and not chunks_mode
 
     if chunks_mode:
         if not cache_key:
@@ -114,19 +115,13 @@ def run(
         if step == "script" or step == "chunker":
             error("Cannot run step 'script' or 'chunker' when chunks is provided.")
             raise ValueError("chunks mode cannot run script or chunker steps")
-    elif hash_mode:
-        script_path = video_cache_path(cache_key, config_hash, "script.md")
-        if not script_path.exists():
-            error(f"Cache {cache_key} has no script.md for this config. Provide content with -f to run from step 1.")
-            raise ValueError("Cache missing script.md")
-        if step == "script":
-            error("Cannot run step 'script' in hash mode (no raw content). Use -f to provide content.")
-            raise ValueError("Hash mode cannot run script step")
     else:
         if not raw_content or not raw_content.strip():
             error("No content provided. Use -f file.")
-            raise ValueError("No content or cache_key")
+            raise ValueError("No content provided")
         cache_key = content_hash(raw_content)
+    if cache_key is None:
+        raise ValueError("cache_key required")
     info(f"🔑 cache_key: {cache_key} | config: {config.name}")
 
     usage_set_context(cache_key, config_hash)
@@ -139,18 +134,13 @@ def run(
         cache_dir = video_cache_path(cache_key, config_hash)
         cache_dir.mkdir(parents=True, exist_ok=True)
         (cache_dir / "chunks.json").write_text(chunks.model_dump_json(indent=2), encoding="utf-8")
-    elif hash_mode:
-        info("  Hash mode: starting from chunker (using cached script.md)")
     if prototype:
         info("  Prototype mode: cheap text-to-image (no mascot) + free readaloud TTS")
 
     if not chunks_mode:
-        script: str
-        if hash_mode:
-            script = video_cache_path(cache_key, config_hash, "script.md").read_text(encoding="utf-8")
-        else:
-            set_step_context(1, 6)
-            script = run_script(raw_content, cache_key, config, config_hash, skip_cache="script" in invalidate_steps)
+        set_step_context(1, 6)
+        assert raw_content is not None  # validated above
+        script = run_script(raw_content, cache_key, config, config_hash, skip_cache="script" in invalidate_steps)
 
         if break_at == "script":
             _finish_partial(cache_key, config_hash)
@@ -163,6 +153,7 @@ def run(
             _finish_partial(cache_key, config_hash)
             return None
 
+    assert chunks is not None  # chunks_mode or assigned from run_chunker above
     set_step_context(3, 6)
     # ThreadPoolExecutor workers don't inherit contextvars; each worker needs its own context copy
     def _run_images():
@@ -173,6 +164,7 @@ def run(
                 cache_key,
                 config_hash,
                 max_scenes=max_scenes,
+                scene_indices=scene_indices,
                 skip_cache="image" in invalidate_steps,
                 prototype=prototype,
                 model=config.image.model if config.image else None,
@@ -192,11 +184,15 @@ def run(
             )
         )
 
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        future_images = executor.submit(_run_images)
-        future_voice = executor.submit(_run_voice)
-        for future in as_completed([future_images, future_voice]):
-            future.result()
+    if scene_indices is not None:
+        # Single-scene regeneration (updateImagery): only images, skip voice
+        _run_images()
+    else:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_images = executor.submit(_run_images)
+            future_voice = executor.submit(_run_voice)
+            for future in as_completed([future_images, future_voice]):
+                future.result()
 
     if break_at in ("image", "voice"):
         _finish_partial(cache_key, config_hash)
@@ -260,7 +256,7 @@ def run_batch(
     **run_kwargs,
 ) -> None:
     """
-    Run the pipeline for each (item, config) pair. Items need .original_text and .cache_key (or computed).
+    Run the pipeline for each (item, config) pair. Items need .original_text.
     Supports optional callbacks for source-pipeline features (e.g. write_videos_markdown).
     """
     for config in configs:
@@ -315,14 +311,14 @@ def _run_one_item(
     config_hash: str,
     run_kwargs: dict,
 ) -> None:
-    """Run pipeline for a single item. Extracts original_text/cache_key from item (dict or object)."""
+    """Run pipeline for a single item. Extracts original_text from item (dict or object)."""
     raw = item.get("original_text") if isinstance(item, dict) else getattr(item, "original_text", None)
-    ck = item.get("cache_key") if isinstance(item, dict) else getattr(item, "cache_key", None)
     raw_content = raw if raw else None
-    cache_key = ck if (ck and not raw) else None
+    if not raw_content or not raw_content.strip():
+        error("Item missing original_text.")
+        raise ValueError("Item missing original_text")
     run(
         raw_content,
-        cache_key=cache_key,
         config=config,
         config_hash=config_hash,
         **run_kwargs,

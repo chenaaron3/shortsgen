@@ -1,14 +1,14 @@
 /**
- * Trigger Finalize Clip: generate images + voice + prepare, upload to S3.
- * Receives { runId, videoId }. Invokes ShortgenFinalizeClip Lambda async.
+ * Trigger Update Imagery: update single-scene imagery (direct or LLM), regenerate image.
+ * Receives { runId, videoId, sceneIndex, imagery? | feedback? }. Invokes ShortgenUpdateImagery Lambda async.
  */
 
 import { Resource } from "sst";
 
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 import {
-  finalizeClipRequestSchema,
-  finalizeClipResponseSchema,
+  updateImageryRequestSchema,
+  updateImageryResponseSchema,
 } from "@shortgen/types";
 
 import { checkAuth } from "./check-auth";
@@ -19,24 +19,27 @@ export async function handler(event: {
   body?: string;
   headers?: Record<string, string>;
 }): Promise<{ statusCode: number; body: string }> {
-  console.log("[trigger-finalize-clip] invoked");
+  console.log("[trigger-update-imagery] invoked");
   try {
     const authErr = checkAuth(event.headers);
     if (authErr) {
-      console.warn("[trigger-finalize-clip] 401 Unauthorized");
+      console.warn("[trigger-update-imagery] 401 Unauthorized");
       return authErr;
     }
 
     if (!event.body) {
-      console.warn("[trigger-finalize-clip] 400 Missing body");
+      console.warn("[trigger-update-imagery] 400 Missing body");
       return { statusCode: 400, body: JSON.stringify({ error: "Missing body" }) };
     }
 
-    const parsed = finalizeClipRequestSchema.safeParse(
+    const parsed = updateImageryRequestSchema.safeParse(
       JSON.parse(event.body) as unknown,
     );
     if (!parsed.success) {
-      console.warn("[trigger-finalize-clip] 400 validation failed", parsed.error.flatten().formErrors);
+      console.warn(
+        "[trigger-update-imagery] 400 validation failed",
+        parsed.error.flatten().formErrors,
+      );
       return {
         statusCode: 400,
         body: JSON.stringify({ error: parsed.error.flatten().formErrors }),
@@ -44,20 +47,22 @@ export async function handler(event: {
     }
 
     console.log(
-      "[trigger-finalize-clip] invoking Lambda runId=",
+      "[trigger-update-imagery] invoking Lambda runId=",
       parsed.data.runId,
       "videoId=",
       parsed.data.videoId,
+      "sceneIndex=",
+      parsed.data.sceneIndex,
     );
     await lambda.send(
       new InvokeCommand({
-        FunctionName: Resource.ShortgenFinalizeClip.name,
+        FunctionName: Resource.ShortgenUpdateImagery.name,
         InvocationType: "Event",
         Payload: JSON.stringify(parsed.data),
       }),
     );
 
-    const response = finalizeClipResponseSchema.parse({
+    const response = updateImageryResponseSchema.parse({
       jobId: parsed.data.runId,
       status: "started",
     });
@@ -68,7 +73,7 @@ export async function handler(event: {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack : undefined;
-    console.error("[trigger-finalize-clip] error:", message, stack);
+    console.error("[trigger-update-imagery] error:", message, stack);
     return {
       statusCode: 500,
       body: JSON.stringify({

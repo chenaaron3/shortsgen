@@ -66,6 +66,31 @@ export const finalizeClipRequestSchema = z.object({
 });
 export type FinalizeClipRequest = z.infer<typeof finalizeClipRequestSchema>;
 
+export const finalizeAllRequestSchema = z.object({
+  runId: z.string().uuid(),
+  videoIds: z.array(z.string().uuid()).min(1),
+});
+export type FinalizeAllRequest = z.infer<typeof finalizeAllRequestSchema>;
+
+export const updateImageryRequestSchema = z
+  .object({
+    runId: z.string().uuid(),
+    videoId: z.string().uuid(),
+    sceneIndex: z.number().int().min(0),
+    /** Direct path: use this text for image generation. */
+    imagery: z.string().optional(),
+    /** LLM path: like/dislike + reason to regenerate imagery via LLM. */
+    liked: z.boolean().optional(),
+    feedback: z.string().optional(),
+  })
+  .refine(
+    (data) =>
+      (data.imagery !== undefined && data.imagery.trim().length > 0) ||
+      data.feedback !== undefined,
+    { message: "Provide imagery (direct) or feedback (LLM path)" }
+  );
+export type UpdateImageryRequest = z.infer<typeof updateImageryRequestSchema>;
+
 // --- Response schemas (shared shape for async trigger endpoints) ---
 const triggerResponseBaseSchema = z.object({
   jobId: z.string(),
@@ -75,6 +100,8 @@ const triggerResponseBaseSchema = z.object({
 export const initialProcessingResponseSchema = triggerResponseBaseSchema;
 export const updateFeedbackResponseSchema = triggerResponseBaseSchema;
 export const finalizeClipResponseSchema = triggerResponseBaseSchema;
+export const finalizeAllResponseSchema = triggerResponseBaseSchema;
+export const updateImageryResponseSchema = triggerResponseBaseSchema;
 export type InitialProcessingResponse = z.infer<
   typeof initialProcessingResponseSchema
 >;
@@ -82,11 +109,14 @@ export type UpdateFeedbackResponse = z.infer<
   typeof updateFeedbackResponseSchema
 >;
 export type FinalizeClipResponse = z.infer<typeof finalizeClipResponseSchema>;
+export type FinalizeAllResponse = z.infer<typeof finalizeAllResponseSchema>;
+export type UpdateImageryResponse = z.infer<typeof updateImageryResponseSchema>;
 
 // --- WebSocket progress event types (shared with Python via types:sync) ---
 export const progressEventTypeSchema = z.enum([
   "breakdown_started",
   "breakdown_complete",
+  "clip_started",
   "clip_complete",
   "initial_processing_complete",
   "feedback_applied",

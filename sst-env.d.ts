@@ -34,6 +34,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "ShortgenFinalizeAllStateMachine": {
+      "arn": string
+      "type": "sst.aws.StepFunctions"
+    }
     "ShortgenFinalizeClip": {
       "name": string
       "type": "sst.aws.Function"
@@ -56,6 +60,10 @@ declare module "sst" {
       "value": string
     }
     "ShortgenUpdateFeedback": {
+      "name": string
+      "type": "sst.aws.Function"
+    }
+    "ShortgenUpdateImagery": {
       "name": string
       "type": "sst.aws.Function"
     }

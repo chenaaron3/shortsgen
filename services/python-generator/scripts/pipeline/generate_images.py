@@ -49,11 +49,21 @@ MASCOT_DESCRIPTION = (
     "The overall vibe is playful, wholesome, friendly, expressive, nerdy, and highly readable, with consistent simple proportions and a clean mascot-sheet appearance. "
 )
 
-def _update_chunks_json(cache_key: str, config_hash: str, chunks: Chunks, field: str) -> None:
-    """Read chunks.json, update only the given field, write back. Safe for parallel updates."""
+def _update_chunks_json(
+    cache_key: str,
+    config_hash: str,
+    chunks: Chunks,
+    field: str,
+    *,
+    only_scene_indices: set[int] | None = None,
+) -> None:
+    """Read chunks.json, update only the given field, write back. Safe for parallel updates.
+    When only_scene_indices is set, only update those scenes (preserves others)."""
     chunks_path = video_cache_path(cache_key, config_hash, "chunks.json")
     data = json.loads(chunks_path.read_text(encoding="utf-8"))
     for i, scene in enumerate(chunks.scenes):
+        if only_scene_indices is not None and i not in only_scene_indices:
+            continue
         if i < len(data["scenes"]):
             val = getattr(scene, field, None)
             if val is not None:
@@ -129,6 +139,7 @@ def run(
     mascot_path: Path | None = None,
     skip_existing: bool = True,
     max_scenes: int | None = None,
+    scene_indices: list[int] | None = None,
     concurrency: int = DEFAULT_CONCURRENCY,
     model: str | None = None,
     skip_cache: bool = False,
@@ -139,6 +150,7 @@ def run(
     Chains: [[1], [2], [3]] = all parallel; [[1, 2], [3], [4]] = 2 after 1, then 3 and 4 parallel.
     Output: cache/{config_hash}/videos/{cache_key}/images/image_1.png, etc.
     max_scenes: if set, only generate this many scenes (for testing).
+    scene_indices: if set, only process these scene indices (0-based). Forces skip_cache for those.
     concurrency: max parallel chains (default 10).
     model: optional override for image generator (uses backend default if None).
     skip_cache: if True, regenerate all images even when cached (for --step image iteration).
@@ -156,18 +168,22 @@ def run(
     images_dir.mkdir(parents=True, exist_ok=True)
     total = len(scenes)
     to_process = scenes[:max_scenes] if max_scenes is not None else scenes
+    only_indices = set(scene_indices) if scene_indices is not None else None
     effective_model = PROTOTYPE_MODEL if prototype else model
     config = get_config(model_override=effective_model)
 
     work: list[tuple[int, str, Path, str, Path, bool]] = []
     cached_count = 0
     for i, scene in enumerate(to_process):
+        if only_indices is not None and i not in only_indices:
+            continue
         imagery = scene.imagery
         if not imagery:
             continue
 
         filename = images_dir / f"image_{i + 1}.png"
-        if not skip_cache and skip_existing and filename.exists():
+        force_regenerate = only_indices is not None and i in only_indices
+        if not skip_cache and not force_regenerate and skip_existing and filename.exists():
             scene.image_path = str(filename)
             cached_count += 1
             continue
@@ -186,7 +202,13 @@ def run(
     cache_stats_summary(cached_count, len(work), len(work), extra)
 
     if not work:
-        _update_chunks_json(cache_key, config_hash, chunks, "image_path")
+        _update_chunks_json(
+            cache_key,
+            config_hash,
+            chunks,
+            "image_path",
+            only_scene_indices=only_indices,
+        )
         step_end("Images", outputs=[images_dir], cache_hits=cached_count, cache_misses=0)
         return chunks
 
@@ -251,6 +273,12 @@ def run(
         with ThreadPoolExecutor(max_workers=min(concurrency, len(chains_with_work))) as executor:
             list(executor.map(_run_chain_with_ctx, chains_with_work))
 
-    _update_chunks_json(cache_key, config_hash, chunks, "image_path")
+    _update_chunks_json(
+        cache_key,
+        config_hash,
+        chunks,
+        "image_path",
+        only_scene_indices=only_indices,
+    )
     step_end("Images", outputs=[images_dir], cache_hits=cached_count, cache_misses=len(work))
     return chunks

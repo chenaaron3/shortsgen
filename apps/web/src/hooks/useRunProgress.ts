@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import type { ProgressEventType } from "@shortgen/types";
 
 /** Base shape for all progress events (runId, videoId, type, optional payload). */
@@ -22,14 +23,30 @@ export type ProgressMessage =
   | (ProgressMessageBase & { type: "VIDEO_CREATED" })
   | (ProgressMessageBase & { type: "VIDEO_READY"; s3Prefix: string })
   | (ProgressMessageBase & { type: "breakdown_started" })
-  | (ProgressMessageBase & { type: "breakdown_complete"; payload?: { nuggets?: unknown } })
+  | (ProgressMessageBase & {
+      type: "breakdown_complete";
+      payload?: { nuggets?: unknown };
+    })
+  | (ProgressMessageBase & {
+      type: "clip_started";
+      payload?: { videoId?: string; sourceText?: string };
+    })
   | (ProgressMessageBase & {
       type: "clip_complete";
       payload?: { videoId?: string; script?: string; chunks?: unknown };
     })
-  | (ProgressMessageBase & { type: "initial_processing_complete"; payload?: { clips?: unknown[] } })
-  | (ProgressMessageBase & { type: "feedback_applied"; payload?: { chunks?: unknown } })
-  | (ProgressMessageBase & { type: "finalize_progress"; payload?: { step?: string } })
+  | (ProgressMessageBase & {
+      type: "initial_processing_complete";
+      payload?: { clips?: unknown[] };
+    })
+  | (ProgressMessageBase & {
+      type: "feedback_applied";
+      payload?: { chunks?: unknown };
+    })
+  | (ProgressMessageBase & {
+      type: "finalize_progress";
+      payload?: { step?: string };
+    })
   | (ProgressMessageBase & {
       type: "finalize_complete";
       payload?: { videoId?: string; s3Prefix?: string };
@@ -59,16 +76,22 @@ export function useRunProgress({
   enabled = true,
   maxReconnectAttempts = MAX_RECONNECT_ATTEMPTS,
 }: UseRunProgressOptions) {
-  const [status, setStatus] = useState<"idle" | "connecting" | "connected" | "closed" | "error">(
-    "idle"
-  );
+  const [status, setStatus] = useState<
+    "idle" | "connecting" | "connected" | "closed" | "error"
+  >("idle");
   const [lastMessage, setLastMessage] = useState<ProgressMessage | null>(null);
   const [lastError, setLastError] = useState<Event | null>(null);
-  const [closeInfo, setCloseInfo] = useState<{ code: number; reason: string } | null>(null);
+  const [closeInfo, setCloseInfo] = useState<{
+    code: number;
+    reason: string;
+  } | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectCountRef = useRef(0);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const onMessageRef = useRef(onMessage);
+  const activeRef = useRef(true);
 
   onMessageRef.current = onMessage;
 
@@ -81,6 +104,8 @@ export function useRunProgress({
   useEffect(() => {
     if (!enabled || !wsUrl) return;
 
+    activeRef.current = true;
+
     const connect = () => {
       setStatus("connecting");
       setLastError(null);
@@ -88,7 +113,10 @@ export function useRunProgress({
       wsRef.current = ws;
 
       ws.onopen = () => {
-        if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+        if (
+          typeof window !== "undefined" &&
+          process.env.NODE_ENV === "development"
+        ) {
           console.log("[useRunProgress] WebSocket connected");
         }
         setStatus("connected");
@@ -99,14 +127,19 @@ export function useRunProgress({
         wsRef.current = null;
         setCloseInfo({ code: ev.code, reason: ev.reason || "" });
         setStatus("closed");
-        if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+        if (
+          typeof window !== "undefined" &&
+          process.env.NODE_ENV === "development"
+        ) {
           console.warn(
             "[useRunProgress] WebSocket closed",
             { code: ev.code, reason: ev.reason, clean: ev.wasClean },
-            "Codes: 1000=normal, 1006=abnormal, 4xxx=API Gateway reject"
+            "Codes: 1000=normal, 1006=abnormal, 4xxx=API Gateway reject",
           );
         }
+        // Only reconnect if we're still mounted and this wasn't an intentional close
         if (
+          activeRef.current &&
           reconnectCountRef.current < maxReconnectAttempts &&
           document.visibilityState === "visible"
         ) {
@@ -116,7 +149,10 @@ export function useRunProgress({
       };
 
       ws.onerror = (e) => {
-        if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+        if (
+          typeof window !== "undefined" &&
+          process.env.NODE_ENV === "development"
+        ) {
           console.log("[useRunProgress] WebSocket error", e);
         }
         setLastError(e);
@@ -126,7 +162,10 @@ export function useRunProgress({
       ws.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data as string) as ProgressMessage;
-          if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+          if (
+            typeof window !== "undefined" &&
+            process.env.NODE_ENV === "development"
+          ) {
             console.log("[useRunProgress] WebSocket message:", data);
           }
           handleMessage(data);
@@ -144,6 +183,7 @@ export function useRunProgress({
     connect();
 
     return () => {
+      activeRef.current = false;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
@@ -151,7 +191,7 @@ export function useRunProgress({
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [enabled, wsUrl, handleMessage, maxReconnectAttempts]);
+  }, [enabled, wsUrl, maxReconnectAttempts]);
 
   return {
     status,

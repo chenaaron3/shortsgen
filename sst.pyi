@@ -28,6 +28,9 @@ class Resource:
     class ShortgenElevenlabsApiKey:
         type: str
         value: str
+    class ShortgenFinalizeAllStateMachine:
+        arn: str
+        type: str
     class ShortgenFinalizeClip:
         name: str
         type: str
@@ -45,6 +48,9 @@ class Resource:
         type: str
         value: str
     class ShortgenUpdateFeedback:
+        name: str
+        type: str
+    class ShortgenUpdateImagery:
         name: str
         type: str
 

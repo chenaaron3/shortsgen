@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 T = TypeVar("T", bound=BaseModel)
 RunStatus = Literal["pending", "processing", "completed", "failed"]
-VideoStatus = Literal["preparing", "ready", "failed"]
+VideoStatus = Literal["created", "scripts", "assets", "export", "failed"]
 
 
 def _conn():
@@ -41,7 +41,7 @@ def _conn():
     return psycopg2.connect(url)
 
 
-def create_video(run_id: str, *, status: VideoStatus = "preparing") -> str:
+def create_video(run_id: str, *, status: VideoStatus = "created") -> str:
     """Insert a Video record. Returns the new video id."""
     vid = str(uuid.uuid4())
     with _conn() as conn:

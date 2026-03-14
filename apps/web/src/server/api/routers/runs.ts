@@ -2,8 +2,8 @@ import { z } from "zod";
 import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
-import { runs } from "@shortgen/db";
-import { desc, eq } from "drizzle-orm";
+import { runs, videos } from "@shortgen/db";
+import { and, desc, eq } from "drizzle-orm";
 
 export const runsRouter = createTRPCRouter({
   /** List all runs for the current user with their videos. */
@@ -150,10 +150,11 @@ export const runsRouter = createTRPCRouter({
     }),
 
   /**
-   * Finalize a clip: generate images + voice + prepare, upload to S3.
+   * Move all videos in a run from assets to export phase. Quick DB write.
+   * Call when assets are generated and user is ready to export.
    */
-  finalizeClip: protectedProcedure
-    .input(z.object({ runId: z.string().uuid(), videoId: z.string().uuid() }))
+  finalizeAssets: protectedProcedure
+    .input(z.object({ runId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [run] = await ctx.db
         .select()
@@ -164,7 +165,111 @@ export const runsRouter = createTRPCRouter({
         throw new Error("Run not found");
       }
 
-      const res = await fetch(`${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/finalize-clip`, {
+      const result = await ctx.db
+        .update(videos)
+        .set({ status: "export" })
+        .where(
+          and(
+            eq(videos.run_id, input.runId),
+            eq(videos.status, "assets"),
+          ),
+        )
+        .returning({ id: videos.id });
+
+      return { updatedCount: result.length };
+    }),
+
+  /**
+   * Update single-scene imagery (direct or LLM) and regenerate image.
+   */
+  updateImagery: protectedProcedure
+    .input(
+      z
+        .object({
+          runId: z.string().uuid(),
+          videoId: z.string().uuid(),
+          sceneIndex: z.number().int().min(0),
+          imagery: z.string().optional(),
+          feedback: z.string().optional(),
+        })
+        .refine(
+          (d) =>
+            (d.imagery !== undefined && d.imagery.trim().length > 0) ||
+            d.feedback !== undefined,
+          { message: "Provide imagery or feedback" },
+        ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [run] = await ctx.db
+        .select()
+        .from(runs)
+        .where(eq(runs.id, input.runId));
+
+      if (!run || run.userId !== ctx.session.user.id) {
+        throw new Error("Run not found");
+      }
+
+      const body: Record<string, unknown> = {
+        runId: input.runId,
+        videoId: input.videoId,
+        sceneIndex: input.sceneIndex,
+      };
+      if (input.imagery !== undefined) body.imagery = input.imagery;
+      if (input.feedback !== undefined) body.feedback = input.feedback;
+
+      const res = await fetch(
+        `${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/update-imagery`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Secret": env.SHORTGEN_API_SECRET,
+          },
+          body: JSON.stringify(body),
+        },
+      );
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Update imagery failed: ${err}`);
+      }
+
+      const data = (await res.json()) as { jobId: string; status: string };
+      return { jobId: data.jobId, status: data.status };
+    }),
+
+  /**
+   * Batch finalize all videos in a run that have status "scripts".
+   * Triggers Step Functions to run finalize_clip for each video in parallel.
+   */
+  finalizeAll: protectedProcedure
+    .input(z.object({ runId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [run] = await ctx.db
+        .select()
+        .from(runs)
+        .where(eq(runs.id, input.runId));
+
+      if (!run || run.userId !== ctx.session.user.id) {
+        throw new Error("Run not found");
+      }
+
+      const scriptsVideos = await ctx.db
+        .select({ id: videos.id })
+        .from(videos)
+        .where(
+          and(
+            eq(videos.run_id, input.runId),
+            eq(videos.status, "scripts"),
+          ),
+        );
+
+      const videoIds = scriptsVideos.map((v) => v.id);
+      if (videoIds.length === 0) {
+        throw new Error("No videos in scripts phase to finalize");
+      }
+
+      const res = await fetch(`${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/finalize-all`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -172,23 +277,21 @@ export const runsRouter = createTRPCRouter({
         },
         body: JSON.stringify({
           runId: input.runId,
-          videoId: input.videoId,
+          videoIds,
         }),
       });
 
       if (!res.ok) {
         const err = await res.text();
-        throw new Error(`Finalize clip failed: ${err}`);
+        throw new Error(`Finalize all failed: ${err}`);
       }
 
       const data = (await res.json()) as {
         jobId: string;
         status: string;
-        logsUrl?: string;
       };
       console.log(
-        `[finalize-clip] runId=${input.runId} videoId=${input.videoId} triggered`,
-        data.logsUrl ? `| View logs: ${data.logsUrl}` : "| (Redeploy API for CloudWatch URL)",
+        `[finalize-all] runId=${input.runId} videos=${videoIds.length} triggered`,
       );
       return { jobId: data.jobId, status: data.status };
     }),

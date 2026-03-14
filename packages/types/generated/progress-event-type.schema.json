@@ -6,6 +6,7 @@
       "enum": [
         "breakdown_started",
         "breakdown_complete",
+        "clip_started",
         "clip_complete",
         "initial_processing_complete",
         "feedback_applied",

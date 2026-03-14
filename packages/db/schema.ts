@@ -97,8 +97,8 @@ export const videos = pgTable(t("videos"), {
   s3_prefix: text("s3_prefix"),
   source_text: text("source_text"), // Raw source chunk for this clip (nugget.original_text)
   status: text("status")
-    .$type<"preparing" | "ready" | "failed">()
-    .default("preparing"),
+    .$type<"created" | "scripts" | "assets" | "export" | "failed">()
+    .default("created"),
   script: text("script"),
   chunks: text("chunks"), // JSON: Chunks from pipeline
   cache_key: text("cache_key"),

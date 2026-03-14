@@ -34,7 +34,7 @@ export const adminRouter = createTRPCRouter({
     return { isAdmin };
   }),
 
-  /** Fetch CloudWatch logs for a run. When videoId is provided, returns run-level logs + that video's logs. */
+  /** Fetch CloudWatch logs for a run. When videoId is provided, returns only logs for that video (excludes other videos in the run). */
   getRunLogs: adminProcedure
     .input(z.object({ runId: z.string().uuid(), videoId: z.string().uuid().optional() }))
     .query(async ({ ctx, input }) => {
@@ -71,8 +71,8 @@ export const adminRouter = createTRPCRouter({
         const endTimeSec = Math.floor(Date.now() / 1000);
 
         const filterClause = input.videoId
-          ? `filter @message like /${input.runId}/ or @message like /${input.videoId}/`
-          : `filter @message like /${input.runId}/`;
+          ? `filter @message like /${input.videoId}/`
+          : `filter @message like /${input.runId}/ and @message not like /videoId/`;
 
         const { queryId } = await client.send(
           new StartQueryCommand({

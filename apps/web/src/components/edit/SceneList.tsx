@@ -12,12 +12,21 @@ interface SceneListProps {
   scenes: Scene[];
   feedbackByScene: Record<number, string>;
   onFeedbackChange: (sceneIndex: number, liked: boolean | null, feedback: string) => void;
+  /** Assets phase: lock script, imagery editable, show regenerate. */
+  scriptLocked?: boolean;
+  imageryEditable?: boolean;
+  onRegenerate?: (sceneIndex: number, imagery?: string, feedback?: string) => void;
+  regeneratingSceneIndex?: number | null;
 }
 
 export function SceneList({
   scenes,
   feedbackByScene,
   onFeedbackChange,
+  scriptLocked = false,
+  imageryEditable = false,
+  onRegenerate,
+  regeneratingSceneIndex = null,
 }: SceneListProps) {
   if (scenes.length === 0) {
     return (
@@ -34,6 +43,10 @@ export function SceneList({
           sceneIndex={i}
           feedback={feedbackByScene[i]}
           onFeedbackChange={onFeedbackChange}
+          scriptLocked={scriptLocked}
+          imageryEditable={imageryEditable}
+          onRegenerate={onRegenerate}
+          isRegenerating={regeneratingSceneIndex === i}
         />
       ))}
     </div>

@@ -62,6 +62,10 @@ export default $config({
       REPLICATE_API_TOKEN: replicateApiToken.value,
       ELEVENLABS_API_KEY: elevenlabsApiKey.value,
       ANTHROPIC_API_KEY: anthropicApiKey.value,
+      // Lambda /home is read-only; use baked-in Whisper models from Docker build
+      HF_HOME: "/var/task/whisper-models",
+      HF_HUB_CACHE: "/var/task/whisper-models",
+      XDG_CACHE_HOME: "/var/task/whisper-models",
     };
 
     // Python pipeline Lambdas (container image, 15min timeout)
@@ -103,6 +107,30 @@ export default $config({
         },
       },
     );
+
+    const updateImagery = new sst.aws.Function("ShortgenUpdateImagery", {
+      ...pythonBase,
+      handler:
+        "./services/python-generator/scripts/handlers/update_imagery.handler",
+      link: [
+        connectionsTable,
+        bucket,
+        wsApi,
+        databaseUrl,
+        openaiApiKey,
+        replicateApiToken,
+        elevenlabsApiKey,
+        anthropicApiKey,
+      ],
+      transform: {
+        function: (args) => {
+          args.imageConfig = {
+            ...(args.imageConfig ?? {}),
+            commands: ["handlers.update_imagery.handler"],
+          };
+        },
+      },
+    });
 
     const updateFeedback = new sst.aws.Function("ShortgenUpdateFeedback", {
       ...pythonBase,
@@ -151,6 +179,25 @@ export default $config({
       },
     });
 
+    const finalizeAllStateMachine = new sst.aws.StepFunctions(
+      "ShortgenFinalizeAllStateMachine",
+      {
+        definition: (() => {
+          const finalizeClipInvoke = sst.aws.StepFunctions.lambdaInvoke({
+            name: "FinalizeClip",
+            function: finalizeClip,
+          });
+          const done = sst.aws.StepFunctions.succeed({ name: "Done" });
+          const map = sst.aws.StepFunctions.map({
+            name: "FinalizeAllVideos",
+            processor: finalizeClipInvoke,
+            items: "{% $states.input.items %}",
+          });
+          return map.next(done);
+        })(),
+      },
+    );
+
     // Trigger API: Next.js tRPC server only (protected by shared secret). Node Lambdas invoke Python Lambdas.
     const api = new sst.aws.ApiGatewayV2("ShortgenApi", {
       accessLog: { retention: "1 month" },
@@ -190,10 +237,17 @@ export default $config({
       },
     );
     api.route(
-      "POST /runs/finalize-clip",
-      "functions/trigger-finalize-clip.handler",
+      "POST /runs/update-imagery",
+      "functions/trigger-update-imagery.handler",
       {
-        link: [finalizeClip, apiSecret],
+        link: [updateImagery, apiSecret],
+      },
+    );
+    api.route(
+      "POST /runs/finalize-all",
+      "functions/trigger-finalize-all.handler",
+      {
+        link: [finalizeAllStateMachine, apiSecret],
       },
     );
 

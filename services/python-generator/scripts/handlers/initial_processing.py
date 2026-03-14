@@ -91,7 +91,13 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     with ThreadPoolExecutor(max_workers=min(10, len(nuggets))) as executor:
         futures = {}
         for nugget in nuggets:
-            video_id = create_video(run_id, status="preparing")
+            video_id = create_video(run_id, status="created")
+            emit_event(
+                run_id,
+                ProgressEventType.clip_started,
+                video_id=video_id,
+                payload={"videoId": video_id, "sourceText": nugget.original_text or ""},
+            )
             future = executor.submit(_process_one_clip, nugget, config, config_hash, run_id, video_id)
             futures[future] = (video_id, nugget)
 
@@ -106,7 +112,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                     cache_key=result.cacheKey,
                     config_hash=config_hash,
                     source_text=nugget.original_text or "",
-                    status="preparing",
+                    status="scripts",
                 )
                 emit_event(
                     run_id,

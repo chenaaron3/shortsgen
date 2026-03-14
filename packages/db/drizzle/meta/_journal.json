@@ -8,6 +8,13 @@
       "when": 1773472000000,
       "tag": "0001_shortgen_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773472100000,
+      "tag": "0002_video_status_overhaul",
+      "breakpoints": true
     }
   ]
 }

@@ -70,6 +70,7 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     # prototype = cheap images/fast whisper; derived from video's config (set at create)
     prototype = config_hash == "prototype"
 
+    update_video(video_id, status="assets")
     emit_event(
         run_id,
         ProgressEventType.finalize_progress,
@@ -101,7 +102,8 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     if bucket_name and output_dir.exists():
         upload_dir_to_s3(output_dir, bucket_name, s3_prefix)
 
-    update_video(video_id, s3_prefix=s3_prefix, status="ready")
+    # don't change to export yet since user can still iterate on assets
+    update_video(video_id, s3_prefix=s3_prefix)
     update_run_status(run_id, "completed")
     emit_event(
         run_id,

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Lambda-compatible Python image for pipeline handlers.
 # SST uses this when building Python Functions with container: true.
 # Static ffmpeg binary (no shared libs) - package managers don't have ffmpeg in Lambda/AL2023.
@@ -15,6 +16,17 @@ COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffprobe /usr/local/bin/
 # Copy requirements and install
 COPY requirements.txt ${LAMBDA_TASK_ROOT}/
 RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.txt
+
+# Pre-download faster-whisper models into image (avoids cold-start download in Lambda).
+# Cache mount persists downloads between builds so redeploys skip re-downloading (~1GB).
+RUN --mount=type=cache,target=/root/.cache/huggingface \
+    HF_HOME=/root/.cache/huggingface python -c "\
+from faster_whisper import WhisperModel; \
+WhisperModel('distil-large-v3', device='cpu', compute_type='int8'); \
+WhisperModel('base', device='cpu', compute_type='int8'); \
+" && \
+    mkdir -p ${LAMBDA_TASK_ROOT}/whisper-models && \
+    cp -a /root/.cache/huggingface/hub ${LAMBDA_TASK_ROOT}/whisper-models/
 
 # Copy pipeline code. SST artifact layout: shortgen_pipeline/scripts/handlers/...
 # path_utils resolves from __file__; handlers.* imports need scripts/ on PYTHONPATH.
