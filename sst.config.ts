@@ -35,13 +35,22 @@ export default $config({
     wsApi.route("$default", "functions/ws-default.handler");
 
     const databaseUrl = new sst.Secret("ShortgenDatabaseUrl");
+    const apiSecret = new sst.Secret("ShortgenApiSecret");
+    const openaiApiKey = new sst.Secret("ShortgenOpenaiApiKey");
+    const replicateApiToken = new sst.Secret("ShortgenReplicateApiToken");
+    const elevenlabsApiKey = new sst.Secret("ShortgenElevenlabsApiKey");
+    const anthropicApiKey = new sst.Secret("ShortgenAnthropicApiKey");
 
-    // Shared env for all Python Lambdas (from linked resources)
+    // Shared env for all Python Lambdas (from linked resources + API keys)
     const pythonEnv = {
       CONNECTIONS_TABLE_NAME: connectionsTable.name,
       WEBSOCKET_ENDPOINT: wsApi.managementEndpoint,
       BUCKET_NAME: bucket.name,
       DATABASE_URL: databaseUrl.value,
+      OPENAI_API_KEY: openaiApiKey.value,
+      REPLICATE_API_TOKEN: replicateApiToken.value,
+      ELEVENLABS_API_KEY: elevenlabsApiKey.value,
+      ANTHROPIC_API_KEY: anthropicApiKey.value,
     };
 
     // Python pipeline Lambdas (container image, 15min timeout)
@@ -57,39 +66,77 @@ export default $config({
     // imageConfig.commands from the handler path (services.python-generator...), but
     // the Dockerfile uses PYTHONPATH=generation/scripts so the correct module is
     // handlers.initial_processing. Override imageConfig to fix the import path.
-    const initialProcessing = new sst.aws.Function("ShortgenInitialProcessing", {
-      ...pythonBase,
-      handler: "./services/python-generator/scripts/handlers/initial_processing.handler",
-      link: [connectionsTable, bucket, wsApi, databaseUrl],
-      transform: {
-        function: (args) => ({
-          ...args,
-          imageConfig: { ...(args.imageConfig ?? {}), commands: ["handlers.initial_processing.handler"] },
-        }),
+    const initialProcessing = new sst.aws.Function(
+      "ShortgenInitialProcessing",
+      {
+        ...pythonBase,
+        handler:
+          "./services/python-generator/scripts/handlers/initial_processing.handler",
+        link: [
+          connectionsTable,
+          bucket,
+          wsApi,
+          databaseUrl,
+          openaiApiKey,
+          replicateApiToken,
+          elevenlabsApiKey,
+          anthropicApiKey,
+        ],
+        transform: {
+          function: (args) => {
+            args.imageConfig = {
+              ...(args.imageConfig ?? {}),
+              commands: ["handlers.initial_processing.handler"],
+            };
+          },
+        },
       },
-    });
+    );
 
     const updateFeedback = new sst.aws.Function("ShortgenUpdateFeedback", {
       ...pythonBase,
-      handler: "./services/python-generator/scripts/handlers/update_feedback.handler",
-      link: [connectionsTable, wsApi, databaseUrl],
+      handler:
+        "./services/python-generator/scripts/handlers/update_feedback.handler",
+      link: [
+        connectionsTable,
+        wsApi,
+        databaseUrl,
+        openaiApiKey,
+        replicateApiToken,
+        elevenlabsApiKey,
+        anthropicApiKey,
+      ],
       transform: {
-        function: (args) => ({
-          ...args,
-          imageConfig: { ...(args.imageConfig ?? {}), commands: ["handlers.update_feedback.handler"] },
-        }),
+        function: (args) => {
+          args.imageConfig = {
+            ...(args.imageConfig ?? {}),
+            commands: ["handlers.update_feedback.handler"],
+          };
+        },
       },
     });
 
     const finalizeClip = new sst.aws.Function("ShortgenFinalizeClip", {
       ...pythonBase,
-      handler: "./services/python-generator/scripts/handlers/finalize_clip.handler",
-      link: [connectionsTable, bucket, wsApi, databaseUrl],
+      handler:
+        "./services/python-generator/scripts/handlers/finalize_clip.handler",
+      link: [
+        connectionsTable,
+        bucket,
+        wsApi,
+        databaseUrl,
+        openaiApiKey,
+        replicateApiToken,
+        elevenlabsApiKey,
+        anthropicApiKey,
+      ],
       transform: {
-        function: (args) => ({
-          ...args,
-          imageConfig: { ...(args.imageConfig ?? {}), commands: ["handlers.finalize_clip.handler"] },
-        }),
+        function: (args) => {
+          args.imageConfig = {
+            ...(args.imageConfig ?? {}),
+            commands: ["handlers.finalize_clip.handler"],
+          };
+        },
       },
     });
 
@@ -113,18 +160,31 @@ export default $config({
         bucket,
         wsApi,
         databaseUrl,
+        apiSecret,
       ],
     });
 
-    api.route("POST /runs/initial-processing", "functions/trigger-initial-processing.handler", {
-      link: [initialProcessing],
-    });
-    api.route("POST /runs/update-feedback", "functions/trigger-update-feedback.handler", {
-      link: [updateFeedback],
-    });
-    api.route("POST /runs/finalize-clip", "functions/trigger-finalize-clip.handler", {
-      link: [finalizeClip],
-    });
+    api.route(
+      "POST /runs/initial-processing",
+      "functions/trigger-initial-processing.handler",
+      {
+        link: [initialProcessing, apiSecret],
+      },
+    );
+    api.route(
+      "POST /runs/update-feedback",
+      "functions/trigger-update-feedback.handler",
+      {
+        link: [updateFeedback, apiSecret],
+      },
+    );
+    api.route(
+      "POST /runs/finalize-clip",
+      "functions/trigger-finalize-clip.handler",
+      {
+        link: [finalizeClip, apiSecret],
+      },
+    );
 
     return {
       apiUrl: api.url,

@@ -11,12 +11,17 @@ import {
   updateClipFeedbackRequestSchema,
 } from "@shortgen/types";
 
+import { checkAuth } from "./check-auth";
+
 const lambda = new LambdaClient({});
 
 export async function handler(event: {
   body?: string;
   headers?: Record<string, string>;
 }): Promise<{ statusCode: number; body: string }> {
+  const authErr = checkAuth(event.headers);
+  if (authErr) return authErr;
+
   if (!event.body) {
     return { statusCode: 400, body: JSON.stringify({ error: "Missing body" }) };
   }

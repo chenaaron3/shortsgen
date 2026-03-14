@@ -11,6 +11,8 @@ import {
   initialProcessingResponseSchema,
 } from "@shortgen/types";
 
+import { checkAuth } from "./check-auth";
+
 const lambda = new LambdaClient({});
 
 export async function handler(event: {
@@ -19,6 +21,9 @@ export async function handler(event: {
 }): Promise<{ statusCode: number; body: string }> {
   console.log("[trigger-initial-processing] invoked");
   try {
+    const authErr = checkAuth(event.headers);
+    if (authErr) return authErr;
+
     if (!event.body) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing body" }) };
     }

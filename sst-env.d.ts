@@ -6,9 +6,17 @@
 
 declare module "sst" {
   export interface Resource {
+    "ShortgenAnthropicApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "ShortgenApi": {
       "type": "sst.aws.ApiGatewayV2"
       "url": string
+    }
+    "ShortgenApiSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
     }
     "ShortgenAssets": {
       "name": string
@@ -22,6 +30,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "ShortgenElevenlabsApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "ShortgenFinalizeClip": {
       "name": string
       "type": "sst.aws.Function"
@@ -30,10 +42,18 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Function"
     }
+    "ShortgenOpenaiApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "ShortgenProgressApi": {
       "managementEndpoint": string
       "type": "sst.aws.ApiGatewayWebSocket"
       "url": string
+    }
+    "ShortgenReplicateApiToken": {
+      "type": "sst.sst.Secret"
+      "value": string
     }
     "ShortgenUpdateFeedback": {
       "name": string

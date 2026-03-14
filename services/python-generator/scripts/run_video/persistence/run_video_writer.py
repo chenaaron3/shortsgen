@@ -1,11 +1,16 @@
 """
 DB writer for Run-Video flow. Matches Drizzle schema in packages/db/schema.ts.
 Uses psycopg2 for direct Postgres access from the Python pipeline Task.
+Table names use shortgen_ prefix (TABLE_PREFIX in schema.ts).
 """
 
 from __future__ import annotations
 
 import os
+
+TABLE_PREFIX = "shortgen_"
+RUNS_TABLE = f"{TABLE_PREFIX}runs"
+VIDEOS_TABLE = f"{TABLE_PREFIX}videos"
 import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
@@ -39,8 +44,8 @@ def create_video(run_id: str, *, status: VideoStatus = "preparing") -> str:
     with _conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """
-                INSERT INTO videos (id, run_id, status)
+                f"""
+                INSERT INTO {VIDEOS_TABLE} (id, run_id, status)
                 VALUES (%s, %s, %s)
                 """,
                 (vid, run_id, status),
@@ -83,7 +88,7 @@ def update_video(
     with _conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                f"UPDATE videos SET {set_clause} WHERE id = %s",
+                f"UPDATE {VIDEOS_TABLE} SET {set_clause} WHERE id = %s",
                 values,
             )
         conn.commit()
@@ -94,7 +99,7 @@ def update_run_status(run_id: str, status: RunStatus) -> None:
     with _conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE runs SET status = %s WHERE id = %s",
+                f"UPDATE {RUNS_TABLE} SET status = %s WHERE id = %s",
                 (status, run_id),
             )
         conn.commit()
@@ -116,7 +121,7 @@ def get_run(run_id: str) -> Run | None:
     with _conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                'SELECT id, "userId", user_input, status, created_at FROM runs WHERE id = %s',
+                f'SELECT id, "userId", user_input, status, created_at FROM {RUNS_TABLE} WHERE id = %s',
                 (run_id,),
             )
             row = cur.fetchone()
@@ -130,7 +135,7 @@ def get_video(video_id: str) -> Video | None:
     with _conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                "SELECT id, run_id, s3_prefix, source_text, status, script, chunks, cache_key, config_hash, created_at FROM videos WHERE id = %s",
+                f"SELECT id, run_id, s3_prefix, source_text, status, script, chunks, cache_key, config_hash, created_at FROM {VIDEOS_TABLE} WHERE id = %s",
                 (video_id,),
             )
             row = cur.fetchone()

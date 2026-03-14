@@ -103,6 +103,54 @@ cd services/python-generator && uv sync
 
 ---
 
+## Manual setup (SST deployment)
+
+For deploying the web app + Python Lambdas to AWS:
+
+### 1. Create `.env` at project root
+
+Add your API keys (used for local pipeline and for copying into SST secrets):
+
+```
+OPENAI_API_KEY=sk-...
+REPLICATE_API_TOKEN=r8_...
+ELEVENLABS_API_KEY=sk_...
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+### 2. Set SST secrets (required before deploy)
+
+Replace `<stage>` with your stage (e.g. `aaron`). `ShortgenApiSecret` must match `SHORTGEN_API_SECRET` in `apps/web/.env`.
+
+```bash
+# Option A: Set each secret manually
+pnpm sst secret set ShortgenApiSecret <value> --stage <stage>
+pnpm sst secret set ShortgenOpenaiApiKey <value> --stage <stage>
+pnpm sst secret set ShortgenReplicateApiToken <value> --stage <stage>
+pnpm sst secret set ShortgenElevenlabsApiKey <value> --stage <stage>
+pnpm sst secret set ShortgenAnthropicApiKey <value> --stage <stage>
+
+# Option B: Set from .env (run from project root)
+source .env
+pnpm sst secret set ShortgenApiSecret "$SHORTGEN_API_SECRET" --stage <stage>
+pnpm sst secret set ShortgenOpenaiApiKey "$OPENAI_API_KEY" --stage <stage>
+pnpm sst secret set ShortgenReplicateApiToken "$REPLICATE_API_TOKEN" --stage <stage>
+pnpm sst secret set ShortgenElevenlabsApiKey "$ELEVENLABS_API_KEY" --stage <stage>
+pnpm sst secret set ShortgenAnthropicApiKey "$ANTHROPIC_API_KEY" --stage <stage>
+```
+
+### 3. Deploy
+
+```bash
+pnpm sst deploy --stage <stage>
+```
+
+### 4. Configure web app
+
+After deploy, set `apps/web/.env` with the API URL, WebSocket URL, bucket name, and the same `SHORTGEN_API_SECRET` used in step 2.
+
+---
+
 ## Commands
 
 Run from **project root**.
