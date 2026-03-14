@@ -5,9 +5,9 @@ import { Resource } from "sst";
 const client = new DynamoDBClient({});
 
 export const handler: APIGatewayProxyWebsocketHandlerV2 = async (event) => {
-  const token = event.queryStringParameters?.token;
-  if (!token) {
-    return { statusCode: 400, body: "Missing token" };
+  const runId = event.queryStringParameters?.runId;
+  if (!runId) {
+    return { statusCode: 400, body: "Missing runId" };
   }
 
   const connectionId = event.requestContext.connectionId;
@@ -17,7 +17,7 @@ export const handler: APIGatewayProxyWebsocketHandlerV2 = async (event) => {
     new PutItemCommand({
       TableName: Resource.ShortgenConnections.name,
       Item: {
-        token: { S: token },
+        runId: { S: runId },
         connectionId: { S: connectionId },
         ttl: { N: String(ttlSec) },
       },

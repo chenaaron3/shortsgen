@@ -1,0 +1,141 @@
+{
+  "$ref": "#/definitions/TableSchemas",
+  "definitions": {
+    "TableSchemas": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "userId": {
+              "type": "string"
+            },
+            "user_input": {
+              "type": "string"
+            },
+            "status": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "not": {}
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "userId",
+            "user_input",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "video": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "run_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "s3_prefix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "source_text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "script": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "chunks": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cache_key": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "config_hash": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "not": {}
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "run_id",
+            "s3_prefix",
+            "source_text",
+            "status",
+            "script",
+            "chunks",
+            "cache_key",
+            "config_hash"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

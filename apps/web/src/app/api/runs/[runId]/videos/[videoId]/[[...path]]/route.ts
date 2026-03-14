@@ -30,12 +30,12 @@ export async function GET(
   }
 
   const [video] = await db
-    .select({ s3Prefix: videos.s3Prefix })
+    .select({ s3Prefix: videos.s3_prefix })
     .from(videos)
     .where(
       and(
         eq(videos.id, videoId),
-        eq(videos.runId, runId)
+        eq(videos.run_id, runId)
       )
     );
 

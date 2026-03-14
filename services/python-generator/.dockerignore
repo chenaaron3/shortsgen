@@ -1,0 +1,11 @@
+# Exclude large/unnecessary files from Docker build context
+cache/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.git/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+*.md

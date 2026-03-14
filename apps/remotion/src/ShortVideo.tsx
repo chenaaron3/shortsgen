@@ -19,7 +19,7 @@ import {
 import { defaultEffectsConfig } from './effectsConfig';
 import { SceneSlide } from './SceneSlide';
 
-import { manifestSchema, type VideoManifest } from "@shortgen/schemas";
+import { manifestSchema, type VideoManifest } from "@shortgen/types";
 
 const FPS = 60;
 const WIDTH = 1080;

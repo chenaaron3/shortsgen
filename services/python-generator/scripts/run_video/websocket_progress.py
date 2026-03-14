@@ -1,17 +1,78 @@
 """
 Emit progress updates to WebSocket via API Gateway Management API.
 Used by the pipeline when running as a Task (RUN_ID, CONNECTION_ID provided).
+Lambdas use runId to look up connectionId from DynamoDB via emit_by_run_id.
 """
 
 import json
 import os
 from typing import Any
 
-# boto3 for apigatewaymanagementapi
+from schemas.progress_event_type import ProgressEventType  # pyright: ignore[reportMissingImports]
+
+# boto3 for apigatewaymanagementapi and dynamodb
 try:
     import boto3
 except ImportError:
     boto3 = None
+
+
+def _get_connection_id(run_id: str, table_name: str) -> str | None:
+    """Look up connectionId from DynamoDB by runId. Returns None if not found."""
+    if boto3 is None:
+        return None
+    dynamo = boto3.client("dynamodb")
+    try:
+        resp = dynamo.query(
+            TableName=table_name,
+            KeyConditionExpression="runId = :runId",
+            ExpressionAttributeValues={":runId": {"S": run_id}},
+            Limit=1,
+        )
+        items = resp.get("Items", [])
+        if items and "connectionId" in items[0]:
+            return items[0]["connectionId"].get("S")
+    except Exception as e:
+        print(f"[websocket_progress] DynamoDB lookup failed: {e}", flush=True)
+    return None
+
+
+def emit_by_run_id(
+    run_id: str,
+    message: dict[str, Any],
+    *,
+    table_name: str | None = None,
+) -> None:
+    """Look up connectionId by runId, then emit. Used by Lambda handlers."""
+    tbl = table_name or os.environ.get("CONNECTIONS_TABLE_NAME")
+    if not tbl:
+        return
+    conn_id = _get_connection_id(run_id, tbl)
+    if conn_id:
+        emit(conn_id, message)
+
+
+def emit_event(
+    run_id: str,
+    event_type: ProgressEventType | str,
+    *,
+    video_id: str = "",
+    payload: dict[str, Any] | None = None,
+    table_name: str | None = None,
+) -> None:
+    """
+    Emit a typed progress event. Higher-level API that understands runId and videoId.
+    Use ProgressEventType enum for type safety (shared with React via packages/types).
+    """
+    type_val = event_type.value if isinstance(event_type, ProgressEventType) else event_type
+    message: dict[str, Any] = {
+        "runId": run_id,
+        "videoId": video_id,
+        "type": type_val,
+    }
+    if payload:
+        message["payload"] = payload
+    emit_by_run_id(run_id, message, table_name=table_name)
 
 
 def _get_client():

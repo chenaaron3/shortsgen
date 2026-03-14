@@ -19,6 +19,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from config_loader import load_config
+from models import Chunks
 from path_utils import env_path, video_cache_path, video_public
 from logger import error, info, progress, set_step_context
 from usage_trace import flush_traces_for_key, flush_traces_to_disk, print_batch_summary, print_summary, set_context as usage_set_context
@@ -77,6 +78,7 @@ def run(
     raw_content: str | None = None,
     *,
     cache_key: str | None = None,
+    chunks: Chunks | None = None,
     config,
     config_hash: str,
     max_scenes: int | None = None,
@@ -85,12 +87,12 @@ def run(
     prototype: bool = False,
 ) -> Path | None:
     """
-    Run the full pipeline for raw content or an existing cache.
+    Run the full pipeline for raw content, an existing cache, or in-memory chunks.
 
     Args:
-        raw_content: Raw text to turn into a short video. Not required when cache_key is provided.
-        cache_key: Use this cache key instead of computing from content. When provided without
-                   raw_content, runs from step 2 (chunker) using cached script.md.
+        raw_content: Raw text to turn into a short video. Not required when cache_key (hash mode) or chunks is provided.
+        cache_key: Use this cache key instead of computing from content. Required when chunks is provided.
+        chunks: In-memory chunks; skip script and chunker, start at images. Writes chunks.json to cache.
         config: Pipeline config (from config_loader).
         config_hash: Hash of config for cache paths.
         max_scenes: Only generate first N scenes (for testing).
@@ -102,8 +104,17 @@ def run(
     Returns:
         Path to output video when full pipeline completes, else None.
     """
-    hash_mode = cache_key is not None and not raw_content
-    if hash_mode:
+    chunks_mode = chunks is not None
+    hash_mode = cache_key is not None and not raw_content and not chunks_mode
+
+    if chunks_mode:
+        if not cache_key:
+            error("cache_key required when chunks is provided.")
+            raise ValueError("cache_key required when chunks is provided")
+        if step == "script" or step == "chunker":
+            error("Cannot run step 'script' or 'chunker' when chunks is provided.")
+            raise ValueError("chunks mode cannot run script or chunker steps")
+    elif hash_mode:
         script_path = video_cache_path(cache_key, config_hash, "script.md")
         if not script_path.exists():
             error(f"Cache {cache_key} has no script.md for this config. Provide content with -f to run from step 1.")
@@ -123,28 +134,34 @@ def run(
     if invalidate_steps:
         info(f"  Invalidating cache for: {', '.join(sorted(invalidate_steps))}")
 
-    if hash_mode:
+    if chunks_mode:
+        info("  Chunks mode: starting from images (using in-memory chunks)")
+        cache_dir = video_cache_path(cache_key, config_hash)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        (cache_dir / "chunks.json").write_text(chunks.model_dump_json(indent=2), encoding="utf-8")
+    elif hash_mode:
         info("  Hash mode: starting from chunker (using cached script.md)")
     if prototype:
         info("  Prototype mode: cheap text-to-image (no mascot) + free readaloud TTS")
 
-    script: str
-    if hash_mode:
-        script = video_cache_path(cache_key, config_hash, "script.md").read_text(encoding="utf-8")
-    else:
-        set_step_context(1, 6)
-        script = run_script(raw_content, cache_key, config, config_hash, skip_cache="script" in invalidate_steps)
+    if not chunks_mode:
+        script: str
+        if hash_mode:
+            script = video_cache_path(cache_key, config_hash, "script.md").read_text(encoding="utf-8")
+        else:
+            set_step_context(1, 6)
+            script = run_script(raw_content, cache_key, config, config_hash, skip_cache="script" in invalidate_steps)
 
-    if break_at == "script":
-        _finish_partial(cache_key, config_hash)
-        return None
+        if break_at == "script":
+            _finish_partial(cache_key, config_hash)
+            return None
 
-    set_step_context(2, 6)
-    chunks = run_chunker(script, cache_key, config, config_hash, skip_cache="chunker" in invalidate_steps)
+        set_step_context(2, 6)
+        chunks = run_chunker(script, cache_key, config, config_hash, skip_cache="chunker" in invalidate_steps)
 
-    if break_at == "chunker":
-        _finish_partial(cache_key, config_hash)
-        return None
+        if break_at == "chunker":
+            _finish_partial(cache_key, config_hash)
+            return None
 
     set_step_context(3, 6)
     # ThreadPoolExecutor workers don't inherit contextvars; each worker needs its own context copy

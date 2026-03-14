@@ -35,6 +35,15 @@ class Chunks(BaseModel):
     description: str = Field(default="", description="Short description for upload metadata")
 
 
+class ProcessedClip(BaseModel):
+    """Result of processing one nugget: script + chunker output. Used by initial_processing handler."""
+
+    videoId: str = Field(..., description="Video ID in DB")
+    script: str = Field(..., description="Generated script markdown")
+    chunks: Chunks = Field(..., description="Chunked scenes")
+    cacheKey: str = Field(..., description="Content cache key")
+
+
 class SceneOutput(BaseModel):
     """LLM output for a single scene (text, imagery, section only)."""
 

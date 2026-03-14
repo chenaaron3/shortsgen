@@ -10,7 +10,7 @@
     "upgrade": "remotion upgrade"
   },
   "dependencies": {
-    "@shortgen/schemas": "workspace:*",
+    "@shortgen/types": "workspace:*",
     "@remotion/bundler": "4.0.300",
     "@remotion/cli": "4.0.300",
     "@remotion/captions": "4.0.300",

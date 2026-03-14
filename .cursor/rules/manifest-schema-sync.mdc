@@ -1,32 +1,36 @@
 ---
-description: Run schema sync when manifest schema changes (Zod → JSON Schema → Pydantic)
-globs: packages/schemas/**/*.ts, packages/schemas/**/*.json
+description: Run type sync when schema changes (Zod → JSON Schema → Pydantic)
+globs: packages/types/**/*.ts, packages/types/generated/**/*.json
 alwaysApply: false
 ---
 
-# Manifest Schema Sync
+# Types Sync (Zod → Pydantic)
 
-The manifest schema is defined in Zod and must stay in sync with Python Pydantic models.
+Schemas are defined in Zod in `packages/types` and stay in sync with Python Pydantic models.
 
 ## When to Run
 
-**After editing** `packages/schemas/manifest.ts` (or other schema files in that package), run:
+**After editing** any schema in `packages/types/src/` (manifest, api, table), run:
 
 ```bash
-pnpm schemas:build   # Zod → manifest.schema.json
-pnpm schemas:py      # manifest.schema.json → Pydantic (video_manifest.py)
+pnpm types:build   # Zod → JSON Schema (packages/types/generated/)
+pnpm types:sync    # JSON Schema → Pydantic (scripts/schemas/*.py)
 ```
 
 ## Agent Behavior
 
 When you **modify** any of:
 
-- `packages/schemas/manifest.ts`
-- `packages/schemas/manifest.schema.json` (only if edited manually; usually it's generated)
+- `packages/types/src/manifest/`
+- `packages/types/src/api/`
+- `packages/types/src/table/`
 
-— run both commands and verify they succeed before considering the change complete. If you edited only `manifest.ts`, `schemas:py` will run `schemas:build` first (it's a dependency in the script).
+— run `pnpm types:sync` and verify it succeeds. It runs `types:build` first.
 
 ## Generated Files (Do Not Edit)
 
-- `packages/schemas/manifest.schema.json` — from Zod
-- `services/python-generator/scripts/schemas/video_manifest.py` — from JSON Schema
+- `packages/types/generated/*.schema.json` — from Zod
+- `services/python-generator/scripts/schemas/video_manifest.py` — from manifest
+- `services/python-generator/scripts/schemas/api_models.py` — from api
+- `services/python-generator/scripts/schemas/table_models.py` — from table
+- `services/python-generator/scripts/schemas/progress_event_type.py` — from progress event type (shared with React)

@@ -1,0 +1,25 @@
+{
+  "name": "@shortgen/types",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./manifest": "./src/manifest/index.ts",
+    "./api": "./src/api/index.ts",
+    "./table": "./src/table/index.ts"
+  },
+  "scripts": {
+    "build": "tsx scripts/generate-json-schema.ts"
+  },
+  "dependencies": {
+    "@shortgen/db": "workspace:*",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.19.0",
+    "zod-to-json-schema": "^3.23.0"
+  }
+}

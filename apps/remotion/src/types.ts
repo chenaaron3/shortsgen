@@ -1,6 +1,6 @@
-/** Re-export from shared schema. Source: packages/schemas (Zod → Pydantic). */
+/** Re-export from shared types. Source: packages/types (Zod → Pydantic). */
 export type {
   Caption,
   SceneInput,
   VideoManifest,
-} from "@shortgen/schemas";
+} from "@shortgen/types";

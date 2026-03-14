@@ -1,0 +1,131 @@
+{
+  "$ref": "#/definitions/ApiSchemas",
+  "definitions": {
+    "ApiSchemas": {
+      "type": "object",
+      "properties": {
+        "chunks": {
+          "type": "object",
+          "properties": {
+            "scenes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "imagery": {
+                    "type": "string"
+                  },
+                  "section": {
+                    "type": "string",
+                    "enum": [
+                      "Hook",
+                      "Body",
+                      "Close"
+                    ]
+                  },
+                  "transition_from_previous": {
+                    "type": "boolean"
+                  },
+                  "image_path": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "voice_path": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "text",
+                  "imagery",
+                  "section"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "scenes"
+          ],
+          "additionalProperties": false
+        },
+        "nugget": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "start_line": {
+              "type": "number"
+            },
+            "end_line": {
+              "type": "number"
+            },
+            "source_ref": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "chapter": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "section": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "timestamp": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "original_text": {
+              "type": "string"
+            },
+            "cache_key": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "start_line",
+            "end_line"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

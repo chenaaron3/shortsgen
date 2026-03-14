@@ -17,7 +17,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <div className={geist.className}>
+      <div className={`${geist.className} dark`}>
         <Component {...pageProps} />
       </div>
     </SessionProvider>

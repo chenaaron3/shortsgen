@@ -1,8 +1,6 @@
 /**
  * Shared manifest schema for Remotion videos.
  * Source of truth: Zod → JSON Schema → Pydantic (Python).
- * @see packages/schemas/manifest.schema.json (generated)
- * @see services/python-generator/scripts/schemas/video_manifest.py (generated)
  */
 
 import { z } from "zod";
@@ -27,7 +25,7 @@ export const sceneInputSchema = z.object({
   imageHeight: z.number().optional(),
 });
 
-/** Remotion manifest: scenes, captions, metadata. Single source of truth; JSON Schema generated for Pydantic. */
+/** Remotion manifest: scenes, captions, metadata. */
 export const manifestSchema = z.object({
   cacheKey: z.string(),
   fps: z.number(),

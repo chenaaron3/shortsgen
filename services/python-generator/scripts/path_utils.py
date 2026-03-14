@@ -1,5 +1,6 @@
 """Centralized path management for the shortgen pipeline."""
 
+import os
 from pathlib import Path
 
 _GENERATION_ROOT = Path(__file__).resolve().parent.parent
@@ -46,7 +47,9 @@ def prompts_dir() -> Path:
 
 
 def cache_base() -> Path:
-    """Base cache directory."""
+    """Base cache directory. In Lambda, use /tmp for writable storage."""
+    if os.environ.get("LAMBDA_TASK_ROOT") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        return Path("/tmp") / "shortgen_cache"
     return _GENERATION_ROOT / "cache"
 
 
@@ -71,7 +74,9 @@ def remotion_composite_key(config_hash: str, cache_key: str) -> str:
 
 
 def video_public() -> Path:
-    """Remotion public directory for static assets."""
+    """Remotion public directory for static assets. In Lambda, use /tmp for output before S3 upload."""
+    if os.environ.get("LAMBDA_TASK_ROOT") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        return Path("/tmp") / "shortgen_public"
     return _PROJECT_ROOT / "public"
 
 

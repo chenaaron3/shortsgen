@@ -1,0 +1,22 @@
+{
+  "$ref": "#/definitions/ProgressEventType",
+  "definitions": {
+    "ProgressEventType": {
+      "type": "string",
+      "enum": [
+        "breakdown_started",
+        "breakdown_complete",
+        "clip_complete",
+        "initial_processing_complete",
+        "feedback_applied",
+        "finalize_progress",
+        "finalize_complete",
+        "error",
+        "PROGRESS",
+        "VIDEO_CREATED",
+        "VIDEO_READY"
+      ]
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
