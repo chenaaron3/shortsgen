@@ -18,6 +18,8 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    /** Comma-separated emails allowed for admin features (e.g. run logs viewer). */
+    ADMIN_EMAILS: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_SHORTGEN_WS_URL: z.string().url(),
@@ -34,6 +36,7 @@ export const env = createEnv({
     SHORTGEN_API_SECRET: process.env.SHORTGEN_API_SECRET,
     SHORTGEN_BUCKET_NAME: process.env.SHORTGEN_BUCKET_NAME,
     NODE_ENV: process.env.NODE_ENV,
+    ADMIN_EMAILS: process.env.ADMIN_EMAILS,
     NEXT_PUBLIC_SHORTGEN_WS_URL: process.env.NEXT_PUBLIC_SHORTGEN_WS_URL,
     NEXT_PUBLIC_REMOTION_SERVE_URL: process.env.NEXT_PUBLIC_REMOTION_SERVE_URL,
   },

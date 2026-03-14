@@ -14,7 +14,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from config_loader import load_config
-from logger import error as log_error, warn as log_warn
+from logger import error as log_error, info as log_info, run_video_context, warn as log_warn
 from models import Chunks
 from pipeline.apply_feedback import apply_feedback
 from run_video.persistence.run_video_writer import get_video, update_video
@@ -39,21 +39,21 @@ def handler(event: dict, context) -> dict:
         log_warn(f"[update-feedback] 400 runId={run_id!r} videoId={video_id!r}")
         return {"statusCode": 400, "body": json.dumps({"error": "runId and videoId required"})}
 
-    print(f"[update-feedback] runId={run_id} videoId={video_id} | View logs: {_cloudwatch_url(context)}")
-
-    try:
-        return _handler_impl(run_id, video_id, script_feedback, scene_feedback)
-    except Exception as e:
-        log_error(f"[update-feedback] failed runId={run_id} videoId={video_id}: {e}")
-        traceback.print_exc()
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e), "runId": run_id, "videoId": video_id}),
-        }
+    with run_video_context(run_id, video_id):
+        log_info(f"View logs: {_cloudwatch_url(context)}")
+        try:
+            return _handler_impl(run_id, video_id, script_feedback, scene_feedback)
+        except Exception as e:
+            log_error(f"[update-feedback] failed runId={run_id} videoId={video_id}: {e}")
+            traceback.print_exc()
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": str(e), "runId": run_id, "videoId": video_id}),
+            }
 
 
 def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -> dict:
-    print(f"[update-feedback] fetching video videoId={video_id}", flush=True)
+    log_info(f"[update-feedback] fetching video videoId={video_id}")
     video = get_video(video_id)
     if not video or str(video.run_id) != str(run_id):
         log_warn(f"[update-feedback] 404 runId={run_id} videoId={video_id} video={video is not None}")
@@ -68,7 +68,7 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
     chunks = Chunks.model_validate_json(chunks_json)
     config_hash = video.config_hash or "default"
     config = load_config(config_hash)
-    print(f"[update-feedback] applying feedback config={config_hash} scriptFeedback={bool(script_feedback)} sceneFeedback={len(scene_feedback or [])} scenes", flush=True)
+    log_info(f"[update-feedback] applying feedback config={config_hash} scriptFeedback={bool(script_feedback)} sceneFeedback={len(scene_feedback or [])} scenes")
     revised = apply_feedback(
         script,
         chunks,
@@ -76,14 +76,14 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
         script_feedback=script_feedback,
         scene_feedback=scene_feedback,
     )
-    print(f"[update-feedback] feedback applied, persisting to DB", flush=True)
+    log_info(f"[update-feedback] feedback applied, persisting to DB")
     update_video(video_id, chunks=revised.model_dump_json())
-    print(f"[update-feedback] emitting feedback_applied via WebSocket", flush=True)
+    log_info(f"[update-feedback] emitting feedback_applied via WebSocket")
     emit_event(
         run_id,
         ProgressEventType.feedback_applied,
         video_id=video_id,
         payload={"chunks": revised.model_dump()},
     )
-    print(f"[update-feedback] done runId={run_id} videoId={video_id}", flush=True)
+    log_info(f"[update-feedback] done runId={run_id} videoId={video_id}")
     return {"statusCode": 200, "body": json.dumps({"chunks": revised.model_dump()})}

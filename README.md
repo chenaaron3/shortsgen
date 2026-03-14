@@ -198,6 +198,42 @@ Create page: user pastes source text → creates Run in DB → triggers `initial
 
 ---
 
+## Admin run logs
+
+Admins can view CloudWatch logs for a run (and optionally a specific video) from the run page via the "View logs" button.
+
+### Log context (runId, videoId)
+
+The Python logger (`services/python-generator/scripts/logger.py`) prefixes every log line with `[runId=xxx]` and, when applicable, `[videoId=yyy]` so CloudWatch can filter by run or video.
+
+- **runId:** Set at the start of each Lambda handler (initial_processing, update_feedback, finalize_clip). All pipeline logs include it.
+- **videoId:** Set when processing a specific video:
+  - **initial_processing:** Per-clip work (script, chunker) runs in a thread pool; each worker sets video context via `set_video_context(video_id)` so that clip’s logs include videoId.
+  - **update_feedback, finalize_clip:** Set at handler start (single video per invocation).
+
+Run-level steps (e.g. breakdown) have runId only. Video-level steps have both.
+
+### Querying from the client
+
+The admin tRPC endpoint `admin.getRunLogs({ runId, videoId? })`:
+
+1. Fetches the run from DB to get `created_at` for the time window.
+2. Discovers Shortgen log groups via `DescribeLogGroups` (prefix `/aws/lambda`, name contains `Shortgen`).
+3. Runs a CloudWatch Logs Insights query:
+   - With **videoId:** `filter @message like /runId/ or @message like /videoId/` — run-level logs plus that video’s logs.
+   - Without **videoId:** `filter @message like /runId/` — all run logs.
+4. Polls `GetQueryResults` until the query completes (CloudWatch queries are async).
+5. Returns `{ logs: [{ timestamp, logStream, message }], error? }`.
+
+The run page passes the currently selected video to the modal; with no video selected, it queries run-level logs only.
+
+### Admin setup
+
+- **ADMIN_EMAILS** (apps/web/.env): Comma-separated emails allowed to see the View logs button and call `getRunLogs`.
+- **AWS credentials** (apps/web/.env): `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` (default `us-east-1`). IAM needs `logs:DescribeLogGroups`, `logs:StartQuery`, `logs:GetQueryResults`.
+
+---
+
 ## SST deploy
 
 **Before deploying:** Ensure sufficient disk space (~20GB+ free). If deploy fails with `failed to extract tar.gz file: exit status 1`, free Docker space:
@@ -230,7 +266,7 @@ SHORTGEN_API_SECRET=<same-value-as-sst-secret>
 
 - **Types:** Edit Zod in `packages/types/src/`; run `pnpm types:sync` so TypeScript and Python stay in sync. Do not hand-edit `packages/types/generated/` or `scripts/schemas/*.py`.
 - **Paths:** Use `path_utils` only; no hardcoded paths. Key: `video_cache_path(cache_key, config_hash, ...)`, `breakdown_cache_path(source_hash, config_hash)`, `remotion_composite_key()`, `video_public()`, `project_root()`, `prompts_dir()`, `env_path()`.
-- **Logging:** Use `logger` (step_start, step_end, cache_hit, cache_miss, progress, info, warn, error) in pipeline scripts; see `.cursor/rules/logger.mdc`.
+- **Logging:** Use `logger` (step_start, step_end, cache_hit, cache_miss, progress, info, warn, error) in pipeline scripts; see `.cursor/rules/logger.mdc`. Handlers set `set_run_context(run_id)` and `set_video_context(video_id)` so CloudWatch can filter by run/video (see [Admin run logs](#admin-run-logs)).
 - **Scripts:** Run via `pnpm pipeline -- <script>` or `python services/python-generator/scripts/run.py <script>`; `run.py` sets `PYTHONPATH` to `scripts/`. `path_utils` resolves monorepo root.
 - **Remotion:** Composition id for rendering is `ShortVideo`; it receives `cacheKey` in props and loads `public/shortgen/{cacheKey}/manifest.json` in `calculateMetadata`. Root registers one composition per entry in `index.json` for Studio.
 

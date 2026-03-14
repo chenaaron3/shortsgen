@@ -9,6 +9,7 @@ import { useRunProgress } from "~/hooks/useRunProgress";
 import { env } from "~/env";
 import { VideoSidebar } from "~/components/edit/VideoSidebar";
 import { SceneList } from "~/components/edit/SceneList";
+import { RunLogsModal } from "~/components/edit/RunLogsModal";
 import { ScriptFeedbackInput } from "~/components/edit/ScriptFeedbackInput";
 import { RenderVideoButton } from "~/components/edit/RenderVideoButton";
 import { Button } from "~/components/ui/button";
@@ -40,6 +41,7 @@ export default function EditRunPage() {
     s3Prefix: string;
   } | null>(null);
   const [finalizingVideoId, setFinalizingVideoId] = useState<string | null>(null);
+  const [logsModalOpen, setLogsModalOpen] = useState(false);
 
   const wsBaseUrl = env.NEXT_PUBLIC_SHORTGEN_WS_URL;
   const wsUrl =
@@ -59,6 +61,8 @@ export default function EditRunPage() {
     { runId: runId! },
     { enabled: !!runId }
   );
+
+  const isAdminQuery = api.admin.isAdmin.useQuery(undefined, { enabled: !!session });
 
   const updateFeedbackMutation = api.runs.updateClipFeedback.useMutation();
   const finalizeMutation = api.runs.finalizeClip.useMutation({
@@ -231,6 +235,15 @@ export default function EditRunPage() {
           <Link href="/" className="text-muted-foreground hover:text-foreground">
             ← Back
           </Link>
+          {isAdminQuery.data?.isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLogsModalOpen(true)}
+            >
+              View logs
+            </Button>
+          )}
         </div>
 
         {selectedVideo && (
@@ -284,6 +297,13 @@ export default function EditRunPage() {
           </p>
         )}
       </main>
+
+      <RunLogsModal
+        open={logsModalOpen}
+        onClose={() => setLogsModalOpen(false)}
+        runId={runId}
+        videoId={selectedVideoId}
+      />
     </div>
   );
 }

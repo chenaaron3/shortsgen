@@ -8,6 +8,7 @@ import json
 import os
 from typing import Any
 
+from logger import warn as log_warn
 from schemas.progress_event_type import ProgressEventType  # pyright: ignore[reportMissingImports]
 
 # boto3 for apigatewaymanagementapi and dynamodb
@@ -18,22 +19,20 @@ except ImportError:
 
 
 def _get_connection_id(run_id: str, table_name: str) -> str | None:
-    """Look up connectionId from DynamoDB by runId. Returns None if not found."""
+    """Look up connectionId from DynamoDB by runId (1:1). Returns None if not found."""
     if boto3 is None:
         return None
     dynamo = boto3.client("dynamodb")
     try:
-        resp = dynamo.query(
+        resp = dynamo.get_item(
             TableName=table_name,
-            KeyConditionExpression="runId = :runId",
-            ExpressionAttributeValues={":runId": {"S": run_id}},
-            Limit=1,
+            Key={"runId": {"S": run_id}},
         )
-        items = resp.get("Items", [])
-        if items and "connectionId" in items[0]:
-            return items[0]["connectionId"].get("S")
+        item = resp.get("Item")
+        if item and "connectionId" in item:
+            return item["connectionId"].get("S")
     except Exception as e:
-        print(f"[websocket_progress] DynamoDB lookup failed: {e}", flush=True)
+        log_warn(f"[websocket_progress] DynamoDB lookup failed: {e}")
     return None
 
 
@@ -46,13 +45,13 @@ def emit_by_run_id(
     """Look up connectionId by runId, then emit. Used by Lambda handlers."""
     tbl = table_name or os.environ.get("CONNECTIONS_TABLE_NAME")
     if not tbl:
-        print("[websocket_progress] CONNECTIONS_TABLE_NAME not set, skipping emit", flush=True)
+        log_warn("[websocket_progress] CONNECTIONS_TABLE_NAME not set, skipping emit")
         return
     conn_id = _get_connection_id(run_id, tbl)
     if conn_id:
         emit(conn_id, message)
     else:
-        print(f"[websocket_progress] no connectionId for runId={run_id}, WebSocket not connected", flush=True)
+        log_warn(f"[websocket_progress] no connectionId for runId={run_id}, WebSocket not connected")
 
 
 def emit_event(
@@ -103,7 +102,7 @@ def emit(connection_id: str, message: dict[str, Any]) -> None:
         )
     except Exception as e:
         # Connection may have closed; log and continue
-        print(f"[websocket_progress] Failed to send: {e}", flush=True)
+        log_warn(f"[websocket_progress] Failed to send: {e}")
 
 
 def emit_progress(

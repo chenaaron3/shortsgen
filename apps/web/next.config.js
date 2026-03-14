@@ -12,6 +12,9 @@ const config = {
   // @see https://github.com/nextauthjs/next-auth/discussions/10058
   transpilePackages: ["next-auth"],
 
+  // AWS SDK packages use Node.js-specific code; exclude from bundling
+  serverExternalPackages: ["@aws-sdk/client-cloudwatch-logs"],
+
   /**
    * If you are using `appDir` then you must comment the below `i18n` config out.
    *

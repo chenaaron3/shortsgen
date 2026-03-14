@@ -15,7 +15,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from config_loader import load_config
-from logger import error as log_error, warn as log_warn
+from logger import error as log_error, run_context, video_context, warn as log_warn
 from models import Nugget, ProcessedClip
 from pipeline.breakdown_source import run as run_breakdown, source_hash
 from pipeline.generate_script import run as run_script
@@ -32,6 +32,11 @@ def _content_cache_key(text: str) -> str:
 
 def _process_one_clip(nugget: Nugget, config, config_hash: str, run_id: str, video_id: str) -> ProcessedClip:
     """Run script + chunker for one nugget. Returns { videoId, script, chunks }."""
+    with video_context(video_id):
+        return _process_one_clip_impl(nugget, config, config_hash, run_id, video_id)
+
+
+def _process_one_clip_impl(nugget: Nugget, config, config_hash: str, run_id: str, video_id: str) -> ProcessedClip:
     raw = nugget.original_text or ""
     cache_key = nugget.cache_key or _content_cache_key(raw)
     script = run_script(raw, cache_key, config, config_hash, skip_cache=True)
@@ -53,15 +58,16 @@ def handler(event: dict, context) -> dict:
         log_warn(f"[initial_processing] 400 runId={run_id!r} sourceContent empty={not source_content}")
         return {"statusCode": 400, "body": json.dumps({"error": "runId and sourceContent required"})}
 
-    try:
-        return _handler_impl(event, run_id, source_content, config_name)
-    except Exception as e:
-        log_error(f"[initial_processing] failed runId={run_id}: {e}")
-        traceback.print_exc()
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e), "runId": run_id}),
-        }
+    with run_context(run_id):
+        try:
+            return _handler_impl(event, run_id, source_content, config_name)
+        except Exception as e:
+            log_error(f"[initial_processing] failed runId={run_id}: {e}")
+            traceback.print_exc()
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": str(e), "runId": run_id}),
+            }
 
 
 def _handler_impl(event: dict, run_id: str, source_content: str, config_name: str) -> dict:

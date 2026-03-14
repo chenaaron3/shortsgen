@@ -5,12 +5,80 @@ output file reporting, and clear step boundaries.
 Thread-safe for concurrent execution (images + voice).
 """
 
+import contextvars
+from contextlib import contextmanager
 import sys
 import threading
 from pathlib import Path
 
 _lock = threading.Lock()
 _step_context: tuple[int, int] | None = None  # (num, total) when in pipeline
+_run_context: str | None = None  # runId for CloudWatch filtering
+_video_context_var: contextvars.ContextVar[str | None] = contextvars.ContextVar("video_id", default=None)
+
+
+def set_run_context(run_id: str) -> None:
+    """Set runId context so all logs include it for CloudWatch filtering."""
+    global _run_context
+    _run_context = run_id
+
+
+def clear_run_context() -> None:
+    """Clear runId context."""
+    global _run_context
+    _run_context = None
+
+
+def set_video_context(video_id: str) -> None:
+    """Set videoId context so video-specific logs include it for CloudWatch filtering."""
+    _video_context_var.set(video_id)
+
+
+def clear_video_context() -> None:
+    """Clear videoId context."""
+    _video_context_var.set(None)
+
+
+@contextmanager
+def run_context(run_id: str):
+    """Context manager: set run context on enter, clear on exit."""
+    set_run_context(run_id)
+    try:
+        yield
+    finally:
+        clear_run_context()
+
+
+@contextmanager
+def run_video_context(run_id: str, video_id: str):
+    """Context manager: set run + video context on enter, clear both on exit."""
+    set_run_context(run_id)
+    set_video_context(video_id)
+    try:
+        yield
+    finally:
+        clear_video_context()
+        clear_run_context()
+
+
+@contextmanager
+def video_context(video_id: str):
+    """Context manager: set video context on enter, clear on exit."""
+    set_video_context(video_id)
+    try:
+        yield
+    finally:
+        clear_video_context()
+
+
+def _prefix() -> str:
+    """Return [runId=xxx] [videoId=xxx] prefix when run/video context is set."""
+    parts: list[str] = []
+    if _run_context:
+        parts.append(f"[runId={_run_context}]")
+    if _video_context_var.get():
+        parts.append(f"[videoId={_video_context_var.get()}]")
+    return " ".join(parts) + " " if parts else ""
 
 
 def set_step_context(num: int, total: int) -> None:
@@ -51,9 +119,10 @@ def step_start(name: str, *, num: int | None = None, total: int | None = None) -
     emoji = _STEP_EMOJIS.get(name, "▶")
     label = f" {prefix} " if prefix else " "
     with _lock:
+        p = _prefix()
         print("", flush=True, file=sys.stdout)
-        print(f"{emoji} {label}{name}", flush=True, file=sys.stdout)
-        print("─" * 50, flush=True, file=sys.stdout)
+        print(f"{p}{emoji} {label}{name}", flush=True, file=sys.stdout)
+        print(f"{p}{'─' * 50}", flush=True, file=sys.stdout)
 
 
 def step_end(
@@ -73,24 +142,25 @@ def step_end(
         parts.append(f"{duration_sec:.1f}s")
     summary = " · " + " · ".join(parts[1:]) if len(parts) > 1 else ""
     with _lock:
-        print(f"  {parts[0]}{summary}", flush=True, file=sys.stdout)
-        for p in outputs:
-            path_str = str(Path(p)) if p else ""
-            print(f"    → {path_str}", flush=True, file=sys.stdout)
+        p = _prefix()
+        print(f"{p}  {parts[0]}{summary}", flush=True, file=sys.stdout)
+        for out in outputs:
+            path_str = str(Path(out)) if out else ""
+            print(f"{p}    → {path_str}", flush=True, file=sys.stdout)
         print("", flush=True, file=sys.stdout)
 
 
 def cache_hit(path: Path | str) -> None:
     """Log a cache hit."""
     with _lock:
-        print(f"  ✓ cache hit: {path}", flush=True, file=sys.stdout)
+        print(f"{_prefix()}  ✓ cache hit: {path}", flush=True, file=sys.stdout)
 
 
 def cache_miss(path: Path | str | None = None) -> None:
     """Log a cache miss (optional path or reason)."""
     msg = str(path) if path else "cache miss"
     with _lock:
-        print(f"  ○ cache miss: {msg}", flush=True, file=sys.stdout)
+        print(f"{_prefix()}  ○ cache miss: {msg}", flush=True, file=sys.stdout)
 
 
 def progress(current: int, total: int, message: str = "") -> None:
@@ -98,7 +168,7 @@ def progress(current: int, total: int, message: str = "") -> None:
     prefix = f"  [{current}/{total}]"
     line = f"{prefix} {message}" if message else prefix
     with _lock:
-        print(line, flush=True, file=sys.stdout)
+        print(f"{_prefix()}{line}", flush=True, file=sys.stdout)
 
 
 def output(path: Path | str, label: str = "") -> None:
@@ -106,25 +176,25 @@ def output(path: Path | str, label: str = "") -> None:
     path_str = str(Path(path)) if path else ""
     line = f"  output: {path_str}" + (f" ({label})" if label else "")
     with _lock:
-        print(line, flush=True, file=sys.stdout)
+        print(f"{_prefix()}{line}", flush=True, file=sys.stdout)
 
 
 def info(msg: str) -> None:
     """Log an info message."""
     with _lock:
-        print(msg, flush=True, file=sys.stdout)
+        print(f"{_prefix()}{msg}", flush=True, file=sys.stdout)
 
 
 def warn(msg: str) -> None:
     """Log a warning to stderr."""
     with _lock:
-        print(msg, flush=True, file=sys.stderr)
+        print(f"{_prefix()}{msg}", flush=True, file=sys.stderr)
 
 
 def error(msg: str) -> None:
     """Log an error to stderr."""
     with _lock:
-        print(msg, flush=True, file=sys.stderr)
+        print(f"{_prefix()}{msg}", flush=True, file=sys.stderr)
 
 
 def cache_stats_summary(
@@ -137,4 +207,4 @@ def cache_stats_summary(
     if extra:
         parts.append(extra)
     with _lock:
-        print(f"  {' · '.join(parts)}", flush=True, file=sys.stdout)
+        print(f"{_prefix()}  {' · '.join(parts)}", flush=True, file=sys.stdout)

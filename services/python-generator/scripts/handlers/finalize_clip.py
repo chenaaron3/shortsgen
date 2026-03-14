@@ -18,7 +18,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from config_loader import load_config
-from logger import error as log_error, warn as log_warn
+from logger import error as log_error, run_video_context, warn as log_warn
 from models import Chunks
 from path_utils import remotion_composite_key, video_public
 from pipeline.run_pipeline import run as run_pipeline
@@ -36,15 +36,16 @@ def handler(event: dict, context) -> dict:
         log_warn(f"[finalize_clip] 400 runId={run_id!r} videoId={video_id!r}")
         return {"statusCode": 400, "body": json.dumps({"error": "runId and videoId required"})}
 
-    try:
-        return _handler_impl(event, run_id, video_id)
-    except Exception as e:
-        log_error(f"[finalize_clip] failed runId={run_id} videoId={video_id}: {e}")
-        traceback.print_exc()
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e), "runId": run_id, "videoId": video_id}),
-        }
+    with run_video_context(run_id, video_id):
+        try:
+            return _handler_impl(event, run_id, video_id)
+        except Exception as e:
+            log_error(f"[finalize_clip] failed runId={run_id} videoId={video_id}: {e}")
+            traceback.print_exc()
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": str(e), "runId": run_id, "videoId": video_id}),
+            }
 
 
 def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:

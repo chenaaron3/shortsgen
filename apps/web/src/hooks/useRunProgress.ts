@@ -88,6 +88,9 @@ export function useRunProgress({
       wsRef.current = ws;
 
       ws.onopen = () => {
+        if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+          console.log("[useRunProgress] WebSocket connected");
+        }
         setStatus("connected");
         reconnectCountRef.current = 0;
       };
@@ -113,6 +116,9 @@ export function useRunProgress({
       };
 
       ws.onerror = (e) => {
+        if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+          console.log("[useRunProgress] WebSocket error", e);
+        }
         setLastError(e);
         setStatus("error");
       };
@@ -120,6 +126,9 @@ export function useRunProgress({
       ws.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data as string) as ProgressMessage;
+          if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+            console.log("[useRunProgress] WebSocket message:", data);
+          }
           handleMessage(data);
         } catch {
           handleMessage({

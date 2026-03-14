@@ -13,13 +13,16 @@ export default $config({
       access: "cloudfront",
     });
 
-    // WebSocket runId -> connectionId mapping (TTL 1hr)
+    // WebSocket runId -> connectionId mapping (1:1, overwrite on connect, TTL 1hr)
     const connectionsTable = new sst.aws.Dynamo("ShortgenConnections", {
       fields: {
         runId: "string",
         connectionId: "string",
       },
-      primaryIndex: { hashKey: "runId", rangeKey: "connectionId" },
+      primaryIndex: { hashKey: "runId" },
+      globalIndexes: {
+        ConnectionIdIndex: { hashKey: "connectionId" },
+      },
       ttl: "ttl",
     });
 
@@ -33,8 +36,12 @@ export default $config({
         CONNECTIONS_TABLE_NAME: connectionsTable.name,
       },
     });
-    wsApi.route("$disconnect", "functions/ws-disconnect.handler", {
+    wsApi.route("$disconnect", {
+      handler: "functions/ws-disconnect.handler",
       link: [connectionsTable],
+      environment: {
+        CONNECTIONS_TABLE_NAME: connectionsTable.name,
+      },
     });
     wsApi.route("$default", "functions/ws-default.handler");
 
