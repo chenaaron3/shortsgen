@@ -37,6 +37,8 @@ export const chunksSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
 });
+/** Structured output from chunker/feedback LLM (ChunksOutput in Python). */
+export type ChunksOutput = z.infer<typeof chunksSchema>;
 
 // --- Request schemas ---
 export const initialProcessingRequestSchema = z.object({
@@ -95,7 +97,6 @@ export type UpdateImageryRequest = z.infer<typeof updateImageryRequestSchema>;
 const triggerResponseBaseSchema = z.object({
   jobId: z.string(),
   status: z.literal("started"),
-  logsUrl: z.string().optional(),
 });
 export const initialProcessingResponseSchema = triggerResponseBaseSchema;
 export const updateFeedbackResponseSchema = triggerResponseBaseSchema;
@@ -113,20 +114,39 @@ export type FinalizeAllResponse = z.infer<typeof finalizeAllResponseSchema>;
 export type UpdateImageryResponse = z.infer<typeof updateImageryResponseSchema>;
 
 // --- WebSocket progress event types (shared with Python via types:sync) ---
+/**
+ * Progress event types emitted over WebSocket during pipeline execution.
+ *
+ * - breakdown_started: Run was just created; breakdown is starting.
+ * - breakdown_completed: Source script for each video is determined. Slight gap before first video is created.
+ * - video_started: A video record was created in the DB.
+ * - script_created: Script generated and saved for a video. Display this in the UI.
+ * - video_completed: Scenes generated for a video. Video transitions to scripts status.
+ * - initial_processing_complete: All videos and scenes completed for the run.
+ * - feedback_partial: Streaming partial LLM output while applying feedback. Client can optimistically show tokens. feedback_completed still used for final state.
+ * - feedback_completed: Feedback complete; chunks ready to fetch.
+ * - asset_gen_started: Asset generation (images, voice, captions) has started for a video.
+ * - image_generated: Image generated for a scene (during asset_gen).
+ * - voice_generated: Voice generated for a scene (during asset_gen).
+ * - caption_generated: Captions generated (during asset_gen).
+ * - asset_gen_completed: Asset generation done; video ready for export.
+ * - error: Pipeline error.
+ */
 export const progressEventTypeSchema = z.enum([
   "breakdown_started",
-  "breakdown_complete",
-  "clip_started",
-  "clip_complete",
+  "breakdown_completed",
+  "video_started",
+  "script_created",
+  "video_completed",
   "initial_processing_complete",
-  "feedback_applied",
-  "finalize_progress",
-  "finalize_complete",
+  "feedback_partial",
+  "feedback_completed",
+  "asset_gen_started",
+  "image_generated",
+  "voice_generated",
+  "caption_generated",
+  "asset_gen_completed",
   "error",
-  // Legacy
-  "PROGRESS",
-  "VIDEO_CREATED",
-  "VIDEO_READY",
 ]);
 export type ProgressEventType = z.infer<typeof progressEventTypeSchema>;
 
@@ -148,10 +168,14 @@ export const clipCompletePayloadSchema = z.object({
   script: z.string(),
   chunks: chunksSchema,
 });
-export const feedbackAppliedPayloadSchema = z.object({
+export const feedbackPartialPayloadSchema = z.object({
+  /** Partial LLM output (raw tokens or partial JSON). */
+  partial: z.string(),
+});
+export const feedbackCompletedPayloadSchema = z.object({
   chunks: chunksSchema,
 });
-export const finalizeCompletePayloadSchema = z.object({
+export const assetGenCompletePayloadSchema = z.object({
   videoId: z.string(),
   s3Prefix: z.string(),
 });

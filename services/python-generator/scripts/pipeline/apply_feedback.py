@@ -1,16 +1,23 @@
 """
 Apply human feedback to script and scenes. Revises Chunks based on script-level and per-scene feedback.
 Called by Update Clip With Feedback Lambda.
+
+Requires on_partial callback for streaming. Emits partial LLM output as tokens arrive so the client
+can optimistically display progress (feedback_partial events).
+
+Uses OpenAI client directly for streaming + structured output (litellm has known issues with this combo).
+Requires an OpenAI model (e.g. gpt-4o) in config.chunk.model.
 """
 
+import os
 import re
-import sys
-from pathlib import Path
+from collections.abc import Callable
 from typing import cast
 
 from dotenv import load_dotenv
-from litellm import completion
-from litellm.types.utils import ModelResponse
+from json_repair import repair_json
+from openai import OpenAI
+from openai.types.chat import completion_create_params
 
 from config_loader import Config
 from models import Chunks, ChunksOutput, Scene
@@ -18,7 +25,6 @@ from schema_utils import schema_for_openai
 
 from path_utils import env_path
 from logger import error
-from usage_trace import record_llm
 
 load_dotenv(env_path())
 
@@ -78,9 +84,13 @@ def apply_feedback(
     *,
     script_feedback: str | None = None,
     scene_feedback: list[dict] | None = None,
+    on_partial: Callable[[str], None],
 ) -> Chunks:
     """
     Apply user feedback to revise scenes. Returns modified Chunks.
+
+    Streams LLM output and calls on_partial(accumulated_content) for each chunk.
+    Enables client to show feedback_partial events optimistically.
     """
     model = config.chunk.model
     system_prompt = (
@@ -88,35 +98,86 @@ def apply_feedback(
         "Output valid JSON matching the schema: title, description, scenes (each: text, imagery, section, transition_from_previous). "
         "Imagery must be under 200 chars. Section is Hook, Body, or Close."
     )
+    user_content = _build_feedback_prompt(script, chunks, script_feedback, scene_feedback)
+    return _apply_feedback_streaming(
+        model=model,
+        system_prompt=system_prompt,
+        user_content=user_content,
+        on_partial=on_partial,
+    )
+
+
+def _openai_model(model: str) -> str:
+    """Normalize model name for OpenAI SDK (strip provider prefix if present)."""
+    if model.startswith("openai/"):
+        return model[len("openai/") :]
+    return model
+
+
+def _apply_feedback_streaming(
+    *,
+    model: str,
+    system_prompt: str,
+    user_content: str,
+    on_partial: Callable[[str], None],
+) -> Chunks:
+    """
+    Stream LLM response with structured output via OpenAI client.
+    Uses response_format + stream=True (OpenAI supports this; litellm has issues).
+    """
+    openai_model = _openai_model(model)
+    if not openai_model.startswith(("gpt-", "o1-", "o3-")):
+        openai_model = "gpt-4o"
+
     schema = ChunksOutput.model_json_schema()
     schema = schema_for_openai(schema)
-    response_format = {
-        "type": "json_schema",
-        "json_schema": {
-            "name": schema.get("title", "ChunksOutput"),
-            "strict": True,
-            "schema": schema,
+    response_format = cast(
+        completion_create_params.ResponseFormat,
+        {
+            "type": "json_schema",
+            "json_schema": {
+                "name": schema.get("title", "ChunksOutput"),
+                "strict": True,
+                "schema": schema,
+            },
         },
-    }
-    user_content = _build_feedback_prompt(script, chunks, script_feedback, scene_feedback)
+    )
+
+    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    accumulated = ""
     try:
-        response = completion(
-            model=model,
+        stream = client.chat.completions.create(
+            model=openai_model,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_content},
             ],
             response_format=response_format,
             temperature=0.5,
-            stream=False,
+            stream=True,
         )
-        resp = cast(ModelResponse, response)
-        content = (resp.choices[0].message.content or "").strip()
-        content = _extract_json(content)
-        parsed = ChunksOutput.model_validate_json(content)
-        u = getattr(resp, "usage", None)
-        if u:
-            record_llm("ApplyFeedback", model, u.prompt_tokens, u.completion_tokens)
+        for chunk in stream:
+            if chunk.choices:
+                delta = chunk.choices[0].delta.content or ""
+                if delta:
+                    accumulated += delta
+                    # Emit when we have valid JSON (repair_json is no-op if already valid)
+                    content = _extract_json(accumulated.strip())
+                    if not content:
+                        continue
+                    try:
+                        repaired = repair_json(content, logging=False)
+                        if repaired:
+                            ChunksOutput.model_validate_json(repaired)
+                            on_partial(repaired)
+                    except Exception:
+                        pass
+        content = _extract_json(accumulated.strip())
+        try:
+            parsed = ChunksOutput.model_validate_json(content)
+        except Exception:
+            content = cast(str, repair_json(content, logging=False)) or content
+            parsed = ChunksOutput.model_validate_json(content)
         return Chunks(
             title=parsed.title,
             description=parsed.description,
@@ -133,5 +194,5 @@ def apply_feedback(
             ],
         )
     except Exception as e:
-        error(f"Error applying feedback: {e}")
+        error(f"Error applying feedback (streaming): {e}")
         raise

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { sceneSchema } from "@shortgen/types";
+import type { z } from "zod";
 import { Card, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -17,6 +19,16 @@ interface SceneRowProps {
   sceneIndex: number;
   feedback: string | undefined;
   onFeedbackChange: (sceneIndex: number, liked: boolean | null, feedback: string) => void;
+  /** Suggested revision (from feedback streaming). Rendered as overlay, not overwriting. */
+  suggestion?: z.infer<typeof sceneSchema> | undefined;
+  /** Per-field accept/decline for this scene. When declined, suggestion is hidden. */
+  suggestionDecisions?: { text?: "accept" | "decline"; imagery?: "accept" | "decline" };
+  /** Called when user accepts or declines a suggestion for text or imagery. */
+  onSuggestionDecision?: (
+    sceneIndex: number,
+    field: "text" | "imagery",
+    decision: "accept" | "decline",
+  ) => void;
   /** When true, script (text) is read-only. Used in assets phase. Unused for now. */
   scriptLocked?: boolean;
   /** When true, imagery is editable via textarea. Used in assets phase. */
@@ -30,6 +42,9 @@ export function SceneRow({
   scene,
   sceneIndex,
   feedback,
+  suggestion,
+  suggestionDecisions,
+  onSuggestionDecision,
   onFeedbackChange,
   scriptLocked = false,
   imageryEditable = false,
@@ -98,6 +113,34 @@ export function SceneRow({
           <div>
             <span className="text-xs font-medium text-muted-foreground">{scene.section}</span>
             <p className="text-foreground">{scene.text}</p>
+            {suggestion &&
+              suggestion.text !== scene.text &&
+              suggestionDecisions?.text !== "decline" && (
+                <div className="mt-2 rounded-md border border-dashed border-primary/30 bg-primary/5 px-2 py-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">Suggested</span>
+                  <p className="text-sm text-muted-foreground">{suggestion.text}</p>
+                  {onSuggestionDecision && (
+                    <div className="mt-2 flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSuggestionDecision(sceneIndex, "text", "accept")}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onSuggestionDecision(sceneIndex, "text", "decline")}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
           </div>
           <div>
             <span className="text-xs font-medium text-muted-foreground">Image description</span>
@@ -111,6 +154,34 @@ export function SceneRow({
             ) : (
               <p className="text-muted-foreground">{scene.imagery}</p>
             )}
+            {suggestion &&
+              suggestion.imagery !== scene.imagery &&
+              suggestionDecisions?.imagery !== "decline" && (
+                <div className="mt-2 rounded-md border border-dashed border-primary/30 bg-primary/5 px-2 py-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">Suggested</span>
+                  <p className="text-sm text-muted-foreground">{suggestion.imagery}</p>
+                  {onSuggestionDecision && (
+                    <div className="mt-2 flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSuggestionDecision(sceneIndex, "imagery", "accept")}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onSuggestionDecision(sceneIndex, "imagery", "decline")}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">

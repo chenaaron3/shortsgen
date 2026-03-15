@@ -1,9 +1,15 @@
 import { z } from "zod";
+import { chunksSchema } from "@shortgen/types";
 import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 import { runs, videos } from "@shortgen/db";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, type InferSelectModel } from "drizzle-orm";
+
+/** Run with videos relation. Used as explicit return type for getById so tRPC infers it. */
+export type RunWithVideos = InferSelectModel<typeof runs> & {
+  videos: InferSelectModel<typeof videos>[];
+};
 
 export const runsRouter = createTRPCRouter({
   /** List all runs for the current user with their videos. */
@@ -18,7 +24,7 @@ export const runsRouter = createTRPCRouter({
   /** Get a run with its videos. */
   getById: protectedProcedure
     .input(z.object({ runId: z.string().uuid() }))
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }): Promise<RunWithVideos | null> => {
       const runWithVideos = await ctx.db.query.runs.findFirst({
         where: eq(runs.id, input.runId),
         with: { videos: true },
@@ -26,7 +32,7 @@ export const runsRouter = createTRPCRouter({
 
       if (!runWithVideos || runWithVideos.userId !== ctx.session.user.id) return null;
 
-      return runWithVideos;
+      return runWithVideos as RunWithVideos;
     }),
 
   /**
@@ -78,15 +84,8 @@ export const runsRouter = createTRPCRouter({
         throw new Error(`Initial processing failed: ${msg}`);
       }
 
-      const data = (await res.json()) as {
-        jobId: string;
-        status: string;
-        logsUrl?: string;
-      };
-      console.log(
-        `[initial-processing] runId=${run.id} triggered`,
-        data.logsUrl ? `| View logs: ${data.logsUrl}` : "| (Redeploy API for CloudWatch URL)",
-      );
+      await res.json();
+      console.log(`[initial-processing] runId=${run.id} triggered`);
 
       return {
         runId: run.id,
@@ -137,16 +136,53 @@ export const runsRouter = createTRPCRouter({
         throw new Error(`Update feedback failed: ${err}`);
       }
 
-      const data = (await res.json()) as {
-        jobId: string;
-        status: string;
-        logsUrl?: string;
-      };
-      console.log(
-        `[update-feedback] runId=${input.runId} videoId=${input.videoId} triggered`,
-        data.logsUrl ? `| View logs: ${data.logsUrl}` : "| (Redeploy API for CloudWatch URL)",
-      );
+      const data = (await res.json()) as { jobId: string; status: string };
+      console.log(`[update-feedback] runId=${input.runId} videoId=${input.videoId} triggered`);
       return { jobId: data.jobId, status: data.status };
+    }),
+
+  /**
+   * Accept feedback suggestion and persist chunks to DB. Call after user accepts
+   * the suggestion shown from feedback_completed (chunks in store).
+   */
+  acceptFeedbackChunks: protectedProcedure
+    .input(
+      z.object({
+        runId: z.string().uuid(),
+        videoId: z.string().uuid(),
+        chunks: chunksSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [run] = await ctx.db
+        .select()
+        .from(runs)
+        .where(eq(runs.id, input.runId));
+
+      if (!run || run.userId !== ctx.session.user.id) {
+        throw new Error("Run not found");
+      }
+
+      const [video] = await ctx.db
+        .select()
+        .from(videos)
+        .where(
+          and(
+            eq(videos.id, input.videoId),
+            eq(videos.run_id, input.runId),
+          ),
+        );
+
+      if (!video) {
+        throw new Error("Video not found");
+      }
+
+      await ctx.db
+        .update(videos)
+        .set({ chunks: JSON.stringify(input.chunks) })
+        .where(eq(videos.id, input.videoId));
+
+      return { ok: true };
     }),
 
   /**

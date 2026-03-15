@@ -61,7 +61,6 @@ export async function handler(event: {
     const response = initialProcessingResponseSchema.parse({
       jobId: parsed.data.runId,
       status: "started",
-      logsUrl: `https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups/log-group/${encodeURIComponent(`/aws/lambda/${functionName}`)}`,
     });
     return {
       statusCode: 202,

@@ -3,10 +3,8 @@ Lambda handler: Update Clip With Feedback. Applies script + per-scene feedback, 
 """
 
 import json
-import os
 import sys
 import traceback
-from urllib.parse import quote
 from pathlib import Path
 
 _SCRIPTS = Path(__file__).resolve().parent.parent
@@ -17,16 +15,9 @@ from config_loader import load_config
 from logger import error as log_error, info as log_info, run_video_context, warn as log_warn
 from models import Chunks
 from pipeline.apply_feedback import apply_feedback
-from run_video.persistence.run_video_writer import get_video, update_video
+from run_video.persistence.run_video_writer import get_video
 from run_video.websocket_progress import emit_event
 from schemas.progress_event_type import ProgressEventType
-
-
-def _cloudwatch_url(context) -> str:
-    region = os.environ.get("AWS_REGION", "us-east-1")
-    lg = (context.log_group_name or "").replace("/", "$252F")
-    ls = quote(context.log_stream_name or "", safe="")
-    return f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logsV2:log-groups/log-group/{lg}/log-events/{ls}"
 
 
 def handler(event: dict, context) -> dict:
@@ -40,7 +31,6 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 400, "body": json.dumps({"error": "runId and videoId required"})}
 
     with run_video_context(run_id, video_id):
-        log_info(f"View logs: {_cloudwatch_url(context)}")
         try:
             return _handler_impl(run_id, video_id, script_feedback, scene_feedback)
         except Exception as e:
@@ -69,19 +59,27 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
     config_hash = video.config_hash or "default"
     config = load_config(config_hash)
     log_info(f"[update-feedback] applying feedback config={config_hash} scriptFeedback={bool(script_feedback)} sceneFeedback={len(scene_feedback or [])} scenes")
+
+    def on_partial(partial: str) -> None:
+        emit_event(
+            run_id,
+            ProgressEventType.feedback_partial,
+            video_id=video_id,
+            payload={"partial": partial},
+        )
+
     revised = apply_feedback(
         script,
         chunks,
         config,
         script_feedback=script_feedback,
         scene_feedback=scene_feedback,
+        on_partial=on_partial,
     )
-    log_info(f"[update-feedback] feedback applied, persisting to DB")
-    update_video(video_id, chunks=revised.model_dump_json())
-    log_info(f"[update-feedback] emitting feedback_applied via WebSocket")
+    log_info(f"[update-feedback] feedback applied, emitting feedback_completed (client must accept to persist)")
     emit_event(
         run_id,
-        ProgressEventType.feedback_applied,
+        ProgressEventType.feedback_completed,
         video_id=video_id,
         payload={"chunks": revised.model_dump()},
     )

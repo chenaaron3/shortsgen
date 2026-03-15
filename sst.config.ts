@@ -69,11 +69,12 @@ export default $config({
     };
 
     // Python pipeline Lambdas (container image, 15min timeout)
+    // cache: false disables ECR remote cache upload (saves 15–20+ min per deploy)
     const pythonBase = {
       runtime: "python3.12" as const,
       timeout: "15 minutes",
       memory: "3008 MB",
-      python: { container: true } as const,
+      python: { container: { cache: false } } as const,
       environment: pythonEnv,
     };
 

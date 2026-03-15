@@ -37,6 +37,26 @@ def upload_dir_to_s3(
             client.upload_file(str(fp), bucket_name, key, ExtraArgs=kwargs)
 
 
+def upload_file_to_s3(
+    local_path: Path,
+    bucket_name: str,
+    s3_key: str,
+    *,
+    extra_args: dict | None = None,
+) -> None:
+    """Upload a single file to S3."""
+    if boto3 is None:
+        raise RuntimeError("boto3 required. pip install boto3")
+    local_path = Path(local_path)
+    if not local_path.is_file():
+        raise FileNotFoundError(f"File not found: {local_path}")
+    client = boto3.client("s3")
+    kwargs = {"ContentType": _content_type(local_path.suffix)}
+    if extra_args:
+        kwargs.update(extra_args)
+    client.upload_file(str(local_path), bucket_name, s3_key, ExtraArgs=kwargs)
+
+
 def _content_type(suffix: str) -> str:
     m = {
         ".json": "application/json",

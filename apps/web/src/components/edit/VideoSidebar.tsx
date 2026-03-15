@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "~/components/ui/skeleton";
 
@@ -9,9 +10,9 @@ interface Video {
 }
 
 interface VideoSidebarProps {
+  runId: string;
   videos: Video[];
-  selectedVideoId: string | null;
-  onSelectVideo: (videoId: string) => void;
+  activeVideoId: string;
   wsStatus: string;
   wsCloseInfo?: { code: number; reason: string } | null;
   /** Video ID showing revision loading indicator (feedback submitted, waiting for apply). */
@@ -19,9 +20,9 @@ interface VideoSidebarProps {
 }
 
 export function VideoSidebar({
+  runId,
   videos,
-  selectedVideoId,
-  onSelectVideo,
+  activeVideoId,
   wsStatus,
   wsCloseInfo,
   revisionLoadingVideoId,
@@ -56,11 +57,11 @@ export function VideoSidebar({
       ) : (
         <nav className="space-y-1">
           {videos.map((v) => (
-            <button
+            <Link
               key={v.id}
-              onClick={() => onSelectVideo(v.id)}
+              href={`/runs/${runId}/videos/${v.id}`}
               className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
-                selectedVideoId === v.id
+                activeVideoId === v.id
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
@@ -69,7 +70,7 @@ export function VideoSidebar({
               {revisionLoadingVideoId === v.id && (
                 <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
               )}
-            </button>
+            </Link>
           ))}
         </nav>
       )}

@@ -4,6 +4,13 @@ import { Check } from "lucide-react";
 
 export type RunPhase = "breakdown" | "scripting" | "asset_gen" | "exporting";
 
+/**
+ * Run phases shown in the progress stepper.
+ * - breakdown: Run just created; no videos yet. Source content is being analysed into nuggets.
+ * - scripting: Videos created with scripts and scenes. Users iterate on script (text mainly).
+ * - asset_gen: Scripts locked in. Voice and image data available. Users can regenerate images.
+ * - exporting: Flag that videos were exported via Remotion Lambda. Functionally same as asset_gen—can still regenerate and re-export.
+ */
 const STEPS: { key: RunPhase; label: string }[] = [
   { key: "breakdown", label: "Breakdown" },
   { key: "scripting", label: "Scripting" },

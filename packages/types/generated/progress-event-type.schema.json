@@ -5,17 +5,19 @@
       "type": "string",
       "enum": [
         "breakdown_started",
-        "breakdown_complete",
-        "clip_started",
-        "clip_complete",
+        "breakdown_completed",
+        "video_started",
+        "script_created",
+        "video_completed",
         "initial_processing_complete",
-        "feedback_applied",
-        "finalize_progress",
-        "finalize_complete",
-        "error",
-        "PROGRESS",
-        "VIDEO_CREATED",
-        "VIDEO_READY"
+        "feedback_partial",
+        "feedback_completed",
+        "asset_gen_started",
+        "image_generated",
+        "voice_generated",
+        "caption_generated",
+        "asset_gen_completed",
+        "error"
       ]
     }
   },

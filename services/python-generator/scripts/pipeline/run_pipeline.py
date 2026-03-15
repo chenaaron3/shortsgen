@@ -82,10 +82,10 @@ def run(
     config,
     config_hash: str,
     max_scenes: int | None = None,
-    scene_indices: list[int] | None = None,
     step: str | None = None,
     break_at: str | None = None,
     prototype: bool = False,
+    on_step_complete: Callable[[str], None] | None = None,
 ) -> Path | None:
     """
     Run the full pipeline for raw content, an existing cache, or in-memory chunks.
@@ -97,11 +97,11 @@ def run(
         config: Pipeline config (from config_loader).
         config_hash: Hash of config for cache paths.
         max_scenes: Only generate first N scenes (for testing).
-        scene_indices: Only regenerate these scene indices (0-based). Used for updateImagery.
         step: Invalidate cache for STEP and all subsequent steps, then run full pipeline.
         break_at: Stop after completing this step (script, chunker, image, prepare, video).
                   image covers both image and voice phase.
         prototype: Use cheap text-to-image only (Replicate FLUX Schnell); no mascot, no img2img transitions.
+        on_step_complete: Optional callback invoked when a step finishes. Step names: "script", "chunker", "image", "voice", "caption".
 
     Returns:
         Path to output video when full pipeline completes, else None.
@@ -141,6 +141,8 @@ def run(
         set_step_context(1, 6)
         assert raw_content is not None  # validated above
         script = run_script(raw_content, cache_key, config, config_hash, skip_cache="script" in invalidate_steps)
+        if on_step_complete:
+            on_step_complete("script")
 
         if break_at == "script":
             _finish_partial(cache_key, config_hash)
@@ -148,6 +150,8 @@ def run(
 
         set_step_context(2, 6)
         chunks = run_chunker(script, cache_key, config, config_hash, skip_cache="chunker" in invalidate_steps)
+        if on_step_complete:
+            on_step_complete("chunker")
 
         if break_at == "chunker":
             _finish_partial(cache_key, config_hash)
@@ -164,7 +168,6 @@ def run(
                 cache_key,
                 config_hash,
                 max_scenes=max_scenes,
-                scene_indices=scene_indices,
                 skip_cache="image" in invalidate_steps,
                 prototype=prototype,
                 model=config.image.model if config.image else None,
@@ -184,15 +187,14 @@ def run(
             )
         )
 
-    if scene_indices is not None:
-        # Single-scene regeneration (updateImagery): only images, skip voice
-        _run_images()
-    else:
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            future_images = executor.submit(_run_images)
-            future_voice = executor.submit(_run_voice)
-            for future in as_completed([future_images, future_voice]):
-                future.result()
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        future_images = executor.submit(_run_images)
+        future_voice = executor.submit(_run_voice)
+        step_by_future = {future_images: "image", future_voice: "voice"}
+        for future in as_completed(step_by_future):
+            future.result()
+            if on_step_complete and future in step_by_future:
+                on_step_complete(step_by_future[future])
 
     if break_at in ("image", "voice"):
         _finish_partial(cache_key, config_hash)
@@ -208,6 +210,8 @@ def run(
             whisper_model="base" if prototype else "distil-large-v3",
             skip_cache="prepare" in invalidate_steps,
         )
+        if on_step_complete:
+            on_step_complete("prepare")
     except Exception as e:
         error(str(e))
         raise

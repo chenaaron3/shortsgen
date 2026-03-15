@@ -2,11 +2,12 @@
 Lambda handler: Update Imagery. Update single-scene imagery (direct or LLM), regenerate image.
 Path A: direct imagery text -> use for image generation.
 Path B: feedback (like/dislike + reason) -> LLM regenerates imagery.
-Either path: regenerate image, run prepare, upload to S3.
+Either path: regenerate image, copy to public, upload single image to S3.
 """
 
 import json
 import os
+import shutil
 import sys
 import traceback
 from pathlib import Path
@@ -19,10 +20,10 @@ from config_loader import load_config
 from logger import error as log_error, info as log_info, run_video_context, warn as log_warn
 from models import Chunks
 from path_utils import remotion_composite_key, video_cache_path, video_public
-from pipeline.apply_feedback import apply_feedback
-from pipeline.run_pipeline import run as run_pipeline
+from pipeline.generate_images import run as run_images
+from pipeline.revise_imagery import revise_single_scene_imagery
 from run_video.persistence.run_video_writer import get_video, update_video
-from run_video.s3_upload import upload_dir_to_s3
+from run_video.s3_upload import upload_file_to_s3
 from run_video.websocket_progress import emit_event
 from schemas.progress_event_type import ProgressEventType
 
@@ -68,7 +69,6 @@ def _handler_impl(
     chunks_json = video.chunks
     cache_key = video.cache_key
     config_hash = video.config_hash
-    script = video.script or ""
     if not chunks_json or not cache_key or not config_hash:
         log_warn(
             f"[update_imagery] 400 runId={run_id} videoId={video_id} "
@@ -89,25 +89,16 @@ def _handler_impl(
         chunks.scenes[scene_index].imagery = imagery.strip()
         log_info(f"[update_imagery] direct imagery for scene {scene_index}")
     else:
-        # Path B: LLM from feedback — apply_feedback revises all scenes; we only want imagery for this scene
-        scene_feedback = [{"sceneIndex": scene_index, "feedback": feedback or ""}]
-        revised = apply_feedback(
-            script,
-            chunks,
-            config,
-            script_feedback=None,
-            scene_feedback=scene_feedback,
+        # Path B: LLM from feedback — revise only this scene's imagery
+        scene = chunks.scenes[scene_index]
+
+        new_imagery = revise_single_scene_imagery(
+            scene_text=scene.text,
+            current_imagery=scene.imagery,
+            feedback=feedback or "",
+            config=config,
         )
-        # Post-process: copy only the imagery for the target scene; preserve text/section/transition and all other scenes
-        original_scenes = chunks.scenes
-        revised_scenes = revised.scenes
-        if scene_index < len(revised_scenes):
-            original_scenes[scene_index].imagery = revised_scenes[scene_index].imagery
-        chunks = Chunks(
-            title=chunks.title,
-            description=chunks.description,
-            scenes=original_scenes,
-        )
+        chunks.scenes[scene_index].imagery = new_imagery
         log_info(f"[update_imagery] LLM revised imagery for scene {scene_index}")
 
     update_video(video_id, chunks=chunks.model_dump_json())
@@ -129,32 +120,43 @@ def _handler_impl(
 
     emit_event(
         run_id,
-        ProgressEventType.finalize_progress,
+        ProgressEventType.asset_gen_started,
         video_id=video_id,
         payload={"step": "images_voice"},
     )
 
-    run_pipeline(
-        cache_key=cache_key,
-        chunks=chunks,
-        config=config,
-        config_hash=config_hash,
+    run_images(
+        chunks,
+        cache_key,
+        config_hash,
         scene_indices=[scene_index],
-        break_at="prepare",
+        skip_cache=True,
         prototype=prototype,
+        model=config.image.model if config.image else None,
     )
+    emit_event(run_id, ProgressEventType.image_generated, video_id=video_id)
+
+    composite_key = remotion_composite_key(config_hash, cache_key)
+    images_subdir = "images_prototype" if prototype else "images"
+    cache_images_dir = video_cache_path(cache_key, config_hash, images_subdir)
+    image_filename = f"image_{scene_index + 1}.png"
+    cache_image_path = cache_images_dir / image_filename
+
+    output_dir = video_public() / "shortgen" / composite_key
+    output_images_dir = output_dir / "images"
+    output_images_dir.mkdir(parents=True, exist_ok=True)
+    output_image_path = output_images_dir / image_filename
+    shutil.copy2(cache_image_path, output_image_path)
 
     bucket_name = os.environ.get("BUCKET_NAME")
-    composite_key = remotion_composite_key(config_hash, cache_key)
-    output_dir = video_public() / "shortgen" / composite_key
     s3_prefix = f"runs/{run_id}/{video_id}/"
-
-    if bucket_name and output_dir.exists():
-        upload_dir_to_s3(output_dir, bucket_name, s3_prefix)
+    if bucket_name and output_image_path.exists():
+        s3_key = f"{s3_prefix.rstrip('/')}/images/{image_filename}"
+        upload_file_to_s3(output_image_path, bucket_name, s3_key)
 
     emit_event(
         run_id,
-        ProgressEventType.feedback_applied,
+        ProgressEventType.feedback_completed,
         video_id=video_id,
         payload={"chunks": chunks.model_dump()},
     )

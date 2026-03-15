@@ -47,7 +47,12 @@ def _process_one_clip_impl(nugget: Nugget, config, config_hash: str, run_id: str
         config_hash=config_hash,
         source_text=raw,
     )
-    emit_event(run_id, ProgressEventType.clip_started, video_id=video_id, payload={"videoId": video_id, "sourceText": raw})
+    emit_event(
+        run_id,
+        ProgressEventType.script_created,
+        video_id=video_id,
+        payload={"videoId": video_id, "script": script},
+    )
     log_info(f"[initial_processing] script updated videoId={video_id}")
     chunks = run_chunker(script, cache_key, config, config_hash, skip_cache=True)
     return ProcessedClip(
@@ -95,7 +100,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     breakdown_json = json.dumps([n.model_dump() for n in nuggets])
     emit_event(
         run_id,
-        ProgressEventType.breakdown_complete,
+        ProgressEventType.breakdown_completed,
         payload={"nuggets": breakdown_json},
     )
 
@@ -109,7 +114,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
             log_info(f"[initial_processing] clip started videoId={video_id}")
             emit_event(
                 run_id,
-                ProgressEventType.clip_started,
+                ProgressEventType.video_started,
                 video_id=video_id,
                 payload={"videoId": video_id, "sourceText": nugget.original_text or ""},
             )
@@ -131,7 +136,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                 )
                 emit_event(
                     run_id,
-                    ProgressEventType.clip_complete,
+                    ProgressEventType.video_completed,
                     video_id=video_id,
                     payload=result.model_dump(),
                 )

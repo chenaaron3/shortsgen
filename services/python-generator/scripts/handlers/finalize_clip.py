@@ -73,10 +73,19 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     update_video(video_id, status="assets")
     emit_event(
         run_id,
-        ProgressEventType.finalize_progress,
+        ProgressEventType.asset_gen_started,
         video_id=video_id,
         payload={"step": "images_voice"},
     )
+
+    def on_step_complete(step: str) -> None:
+        event = {
+            "image": ProgressEventType.image_generated,
+            "voice": ProgressEventType.voice_generated,
+            "prepare": ProgressEventType.caption_generated,
+        }.get(step)
+        if event:
+            emit_event(run_id, event, video_id=video_id)
 
     run_pipeline(
         cache_key=cache_key,
@@ -85,13 +94,7 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
         config_hash=config_hash,
         break_at="prepare",
         prototype=prototype,
-    )
-
-    emit_event(
-        run_id,
-        ProgressEventType.finalize_progress,
-        video_id=video_id,
-        payload={"step": "prepare"},
+        on_step_complete=on_step_complete,
     )
 
     bucket_name = event.get("bucketName") or __import__("os").environ.get("BUCKET_NAME")
@@ -107,7 +110,7 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     update_run_status(run_id, "completed")
     emit_event(
         run_id,
-        ProgressEventType.finalize_complete,
+        ProgressEventType.asset_gen_completed,
         video_id=video_id,
         payload={"videoId": video_id, "s3Prefix": s3_prefix},
     )

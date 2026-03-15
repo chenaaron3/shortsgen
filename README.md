@@ -192,7 +192,7 @@ pnpm sst:deploy
 
 ## Web app flow (apps/web)
 
-Create page: user pastes source text → creates Run in DB → triggers `initial-processing` Lambda → Python breakdown + pipeline per nugget → WebSocket progress → user reviews clips, adds feedback → `update-feedback` → batch finalize → `finalize-all` (Step Functions) → Remotion render → S3 → `VIDEO_READY` over WebSocket.
+Create page: user pastes source text → creates Run in DB → triggers `initial-processing` Lambda → Python breakdown + pipeline per nugget → WebSocket progress → user reviews clips, adds feedback → `update-feedback` → batch finalize → `finalize-all` (Step Functions) → Remotion render → S3 → `asset_gen_completed` over WebSocket.
 
 ### Run phases and video status
 

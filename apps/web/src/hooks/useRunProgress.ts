@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import type { ProgressEventType } from "@shortgen/types";
+import type { ChunksOutput, ProgressEventType } from "@shortgen/types";
+import { useRunStore } from "~/stores/useRunStore";
+import { env } from "~/env";
 
 /** Base shape for all progress events (runId, videoId, type, optional payload). */
 export interface ProgressMessageBase {
@@ -14,25 +16,21 @@ export interface ProgressMessageBase {
 
 /** Extended types for discriminated union (payload shapes per event type). */
 export type ProgressMessage =
-  | (ProgressMessageBase & {
-      type: "PROGRESS";
-      step?: string;
-      description?: string;
-      progress?: number;
-    })
-  | (ProgressMessageBase & { type: "VIDEO_CREATED" })
-  | (ProgressMessageBase & { type: "VIDEO_READY"; s3Prefix: string })
   | (ProgressMessageBase & { type: "breakdown_started" })
   | (ProgressMessageBase & {
-      type: "breakdown_complete";
+      type: "breakdown_completed";
       payload?: { nuggets?: unknown };
     })
   | (ProgressMessageBase & {
-      type: "clip_started";
+      type: "video_started";
       payload?: { videoId?: string; sourceText?: string };
     })
   | (ProgressMessageBase & {
-      type: "clip_complete";
+      type: "script_created";
+      payload?: { videoId?: string; script?: string };
+    })
+  | (ProgressMessageBase & {
+      type: "video_completed";
       payload?: { videoId?: string; script?: string; chunks?: unknown };
     })
   | (ProgressMessageBase & {
@@ -40,15 +38,31 @@ export type ProgressMessage =
       payload?: { clips?: unknown[] };
     })
   | (ProgressMessageBase & {
-      type: "feedback_applied";
+      type: "feedback_partial";
+      payload?: { partial?: string };
+    })
+  | (ProgressMessageBase & {
+      type: "feedback_completed";
       payload?: { chunks?: unknown };
     })
   | (ProgressMessageBase & {
-      type: "finalize_progress";
+      type: "asset_gen_started";
       payload?: { step?: string };
     })
   | (ProgressMessageBase & {
-      type: "finalize_complete";
+      type: "image_generated";
+      payload?: { sceneIndex?: number };
+    })
+  | (ProgressMessageBase & {
+      type: "voice_generated";
+      payload?: { sceneIndex?: number };
+    })
+  | (ProgressMessageBase & {
+      type: "caption_generated";
+      payload?: unknown;
+    })
+  | (ProgressMessageBase & {
+      type: "asset_gen_completed";
       payload?: { videoId?: string; s3Prefix?: string };
     })
   | (ProgressMessageBase & {
@@ -200,4 +214,104 @@ export function useRunProgress({
     closeInfo,
     connected: status === "connected",
   };
+}
+
+function buildWsUrl(runId: string): string {
+  const wsBaseUrl = env.NEXT_PUBLIC_SHORTGEN_WS_URL;
+  if (!wsBaseUrl) return "";
+  try {
+    const u = new URL(wsBaseUrl);
+    if (!u.pathname || u.pathname === "/") u.pathname = "/$default";
+    return `${u.toString()}?runId=${runId}`;
+  } catch {
+    return `${wsBaseUrl}?runId=${runId}`;
+  }
+}
+
+/** Handler that updates zustand + optionally refetches. Used by useRunProgressWithHandler. */
+function createProgressHandler(refetch: (() => void) | undefined) {
+  return (msg: ProgressMessage) => {
+    const {
+      setBreakdownComplete,
+      setSourceText,
+      setSceneUpdating,
+      setVideoUpdating,
+      setFeedbackPartial,
+      clearFeedbackPartial,
+    } = useRunStore.getState();
+
+    if (msg.type === "breakdown_completed") setBreakdownComplete(true);
+
+    if (msg.type === "feedback_partial" && msg.payload) {
+      const p = msg.payload as { partial?: string };
+      if (p.partial !== undefined && msg.videoId) {
+        setFeedbackPartial(msg.videoId, p.partial);
+      }
+    }
+
+    if (msg.type === "feedback_completed" && msg.videoId && msg.payload) {
+      const p = msg.payload as { chunks?: ChunksOutput };
+      if (p.chunks) setFeedbackPartial(msg.videoId, p.chunks);
+    }
+
+    if (msg.type === "video_started" && msg.payload) {
+      const p = msg.payload as { videoId?: string; sourceText?: string };
+      const vid = p.videoId ?? msg.videoId;
+      const text = p.sourceText ?? "";
+      if (vid) {
+        setSourceText(vid, text);
+        refetch?.();
+      }
+    }
+
+    if (
+      msg.type === "initial_processing_complete" ||
+      msg.type === "script_created" ||
+      msg.type === "video_completed" ||
+      msg.type === "feedback_completed"
+    ) {
+      setSceneUpdating(null);
+      refetch?.();
+    }
+
+    if (msg.type === "asset_gen_completed" && msg.payload) {
+      const p = msg.payload as { videoId?: string; s3Prefix?: string };
+      if (p.videoId && p.s3Prefix) setVideoUpdating(false);
+    }
+  };
+}
+
+export interface UseRunProgressWithHandlerOptions {
+  /** Called when run data should be refetched (e.g. after script_created, video_completed). */
+  refetch?: () => void;
+  enabled?: boolean;
+}
+
+/**
+ * WebSocket progress hook with built-in handler for run progress events.
+ * Updates zustand store and optionally refetches run data.
+ * Use this on run and video pages instead of useRunProgress + manual handler.
+ */
+export function useRunProgressWithHandler(
+  runId: string,
+  options: UseRunProgressWithHandlerOptions = {}
+) {
+  const { refetch, enabled = true } = options;
+  const refetchRef = useRef(refetch);
+  refetchRef.current = refetch;
+
+  const onMessage = useMemo(
+    () => createProgressHandler(() => refetchRef.current?.()),
+    []
+  );
+
+  const wsUrl = useMemo(() => buildWsUrl(runId), [runId]);
+
+  const result = useRunProgress({
+    wsUrl,
+    onMessage,
+    enabled: !!wsUrl && enabled,
+  });
+
+  return result;
 }
