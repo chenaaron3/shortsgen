@@ -15,7 +15,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from config_loader import load_config
-from logger import error as log_error, run_context, video_context, warn as log_warn
+from logger import error as log_error, info as log_info, run_context, video_context, warn as log_warn
 from models import Nugget, ProcessedClip
 from pipeline.breakdown_source import run as run_breakdown, source_hash
 from pipeline.generate_script import run as run_script
@@ -40,6 +40,15 @@ def _process_one_clip_impl(nugget: Nugget, config, config_hash: str, run_id: str
     raw = nugget.original_text or ""
     cache_key = nugget.cache_key or _content_cache_key(raw)
     script = run_script(raw, cache_key, config, config_hash, skip_cache=True)
+    update_video(
+        video_id,
+        script=script,
+        cache_key=cache_key,
+        config_hash=config_hash,
+        source_text=raw,
+    )
+    emit_event(run_id, ProgressEventType.clip_started, video_id=video_id, payload={"videoId": video_id, "sourceText": raw})
+    log_info(f"[initial_processing] script updated videoId={video_id}")
     chunks = run_chunker(script, cache_key, config, config_hash, skip_cache=True)
     return ProcessedClip(
         videoId=video_id,
@@ -71,14 +80,18 @@ def handler(event: dict, context) -> dict:
 
 
 def _handler_impl(event: dict, run_id: str, source_content: str, config_name: str) -> dict:
+    log_info(f"[initial_processing] starting runId={run_id} config={config_name}")
     config = load_config(config_name)
     config_hash = config.hash
+    log_info(f"[initial_processing] config_hash={config_hash}")
 
     emit_event(run_id, ProgressEventType.breakdown_started)
 
     # 1. Breakdown
     source_key = source_hash(source_content)
+    log_info(f"[initial_processing] running breakdown source_key={source_key}")
     nuggets = run_breakdown(source_content, source_key, config=config, skip_cache=True)
+    log_info(f"[initial_processing] breakdown complete nuggets={len(nuggets)}")
     breakdown_json = json.dumps([n.model_dump() for n in nuggets])
     emit_event(
         run_id,
@@ -87,11 +100,13 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     )
 
     # 2. Create video per nugget, process in parallel (script -> scenes)
+    log_info(f"[initial_processing] processing {len(nuggets)} clips in parallel")
     results = []
     with ThreadPoolExecutor(max_workers=min(10, len(nuggets))) as executor:
         futures = {}
         for nugget in nuggets:
             video_id = create_video(run_id, status="created")
+            log_info(f"[initial_processing] clip started videoId={video_id}")
             emit_event(
                 run_id,
                 ProgressEventType.clip_started,
@@ -121,6 +136,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                     payload=result.model_dump(),
                 )
                 results.append(result.model_dump())
+                log_info(f"[initial_processing] clip complete videoId={video_id}")
             except Exception as e:
                 log_error(f"[initial_processing] clip failed videoId={video_id}: {e}")
                 traceback.print_exc()
@@ -132,10 +148,12 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                 )
                 raise
 
+    log_info(f"[initial_processing] all clips done, updating run status")
     update_run_status(run_id, "completed")
     emit_event(
         run_id,
         ProgressEventType.initial_processing_complete,
         payload={"clips": results},
     )
+    log_info(f"[initial_processing] complete runId={run_id} clips={len(results)}")
     return {"statusCode": 200, "body": json.dumps({"runId": run_id, "status": "completed"})}
