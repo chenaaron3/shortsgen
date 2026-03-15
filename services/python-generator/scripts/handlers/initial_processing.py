@@ -154,11 +154,11 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                 raise
 
     log_info(f"[initial_processing] all clips done, updating run status")
-    update_run_status(run_id, "completed")
+    update_run_status(run_id, "scripting")
     emit_event(
         run_id,
         ProgressEventType.initial_processing_complete,
         payload={"clips": results},
     )
     log_info(f"[initial_processing] complete runId={run_id} clips={len(results)}")
-    return {"statusCode": 200, "body": json.dumps({"runId": run_id, "status": "completed"})}
+    return {"statusCode": 200, "body": json.dumps({"runId": run_id, "status": "scripting"})}

@@ -86,7 +86,10 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
 
   const updateFeedbackMutation = api.runs.updateClipFeedback.useMutation();
   const finalizeAllMutation = api.runs.finalizeAll.useMutation({
-    onSuccess: () => setVideoUpdating(true),
+    onSuccess: () => {
+      setVideoUpdating(true);
+      void runQuery.refetch();
+    },
   });
   const finalizeAssetsMutation = api.runs.finalizeAssets.useMutation({
     onSuccess: () => void runQuery.refetch(),
@@ -95,14 +98,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     onSuccess: (_, variables) => setSceneUpdating(variables.sceneIndex),
   });
 
-  const runPhase: RunPhase = (() => {
-    if (videos.length === 0) return "breakdown";
-    const allExport = videos.every((v) => v.status === "export");
-    if (allExport) return "exporting";
-    const anyAssets = videos.some((v) => v.status === "assets");
-    if (anyAssets || videoUpdating) return "asset_gen";
-    return "scripting";
-  })();
+  const runPhase: RunPhase = (runData.status ?? "breakdown") as RunPhase;
 
   const allVideosHaveScripts =
     videos.length > 0 && videos.every((v) => v.status === "scripts");
@@ -171,11 +167,11 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
         setSceneFeedback(videoId, sceneIndex, feedback)
       : undefined;
 
-  const scriptLocked = runPhase === "asset_gen" || runPhase === "exporting";
-  const imageryEditable = runPhase === "asset_gen" || runPhase === "exporting";
+  const scriptLocked = runPhase === "asset_gen" || runPhase === "export";
+  const imageryEditable = runPhase === "asset_gen" || runPhase === "export";
   const onRegenerateImagery =
     selectedVideo &&
-      (runPhase === "asset_gen" || runPhase === "exporting") &&
+      (runPhase === "asset_gen" || runPhase === "export") &&
       selectedVideo.status === "export"
       ? handleRegenerateImagery(selectedVideo.id)
       : undefined;
@@ -263,7 +259,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
               />
             )}
 
-            {(runPhase === "asset_gen" || runPhase === "exporting") && (
+            {(runPhase === "asset_gen" || runPhase === "export") && (
               <AssetGenStatusMessage runPhase={runPhase} />
             )}
           </>

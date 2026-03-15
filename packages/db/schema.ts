@@ -4,16 +4,16 @@
  * Exports Zod schemas via drizzle-zod for types/table and Python codegen.
  */
 
+import { relations } from "drizzle-orm";
 import {
+  integer,
   pgTable,
+  primaryKey,
   text,
   timestamp,
-  integer,
-  primaryKey,
   uuid,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
-import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 // Table prefix (change here to rename all tables)
@@ -53,7 +53,7 @@ export const account = pgTable(
     primaryKey({
       columns: [account.provider, account.providerAccountId],
     }),
-  ]
+  ],
 );
 
 export const session = pgTable(t("session"), {
@@ -71,11 +71,27 @@ export const verificationToken = pgTable(
     token: text("token").notNull(),
     expires: timestamp("expires", { mode: "date" }).notNull(),
   },
-  (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
+  (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })],
 );
 
 // Run-Video flow: one run (source text) can have many videos
 // Keys match DB column names (snake_case) for consistency with Python and drizzle-zod output.
+// Run status = pipeline phase: breakdown → scripting → asset_gen → export
+export const runStatusValues = [
+  "breakdown",
+  "scripting",
+  "asset_gen",
+  "export",
+  "failed",
+] as const;
+export type RunStatus = (typeof runStatusValues)[number];
+
+export const RUN_PHASE_STEPS: { key: RunStatus; label: string }[] = [
+  { key: "breakdown", label: "Analyze" },
+  { key: "scripting", label: "Ideate" },
+  { key: "asset_gen", label: "Generate" },
+  { key: "export", label: "Export" },
+];
 
 export const runs = pgTable(t("runs"), {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -83,9 +99,7 @@ export const runs = pgTable(t("runs"), {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   user_input: text("user_input").notNull(),
-  status: text("status")
-    .$type<"pending" | "processing" | "completed" | "failed">()
-    .default("pending"),
+  status: text("status").$type<RunStatus>().default("breakdown"),
   created_at: timestamp("created_at").defaultNow(),
 });
 

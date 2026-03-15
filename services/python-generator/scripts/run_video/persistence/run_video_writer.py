@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from schemas.table_models import Run, Video
 
 T = TypeVar("T", bound=BaseModel)
-RunStatus = Literal["pending", "processing", "completed", "failed"]
+RunStatus = Literal["breakdown", "scripting", "asset_gen", "export", "failed"]
 VideoStatus = Literal["created", "scripts", "assets", "export", "failed"]
 
 

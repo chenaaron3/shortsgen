@@ -107,7 +107,6 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
 
     # don't change to export yet since user can still iterate on assets
     update_video(video_id, s3_prefix=s3_prefix)
-    update_run_status(run_id, "completed")
     emit_event(
         run_id,
         ProgressEventType.asset_gen_completed,

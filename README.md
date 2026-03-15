@@ -186,6 +186,8 @@ pnpm dev
 # SST
 pnpm sst:dev
 pnpm sst:deploy
+
+Python Lambdas use `dev: false` (run in deployed container) to avoid SST's Python handler path bugs with uv workspaces. First `sst dev` builds the container; subsequent runs use it.
 ```
 
 ---
@@ -207,7 +209,18 @@ Create page: user pastes source text → creates Run in DB → triggers `initial
 - **Export** (asset gen): DB write to move all `assets` → `export` (tRPC only).
 - **updateImagery**: per-scene imagery regeneration (direct text or LLM from feedback); only overwrites the target scene's image.
 
-**API routes:** `POST /runs/initial-processing`, `POST /runs/update-feedback`, `POST /runs/update-imagery`, `POST /runs/finalize-all`. Node Lambdas in `functions/` invoke Python handlers in `scripts/handlers/`. These endpoints are protected by a shared secret; only the tRPC server (Next.js) can call them.
+### Feedback suggestions (accept/decline)
+
+When the user submits script or per-scene feedback, `update-feedback` streams `feedback_partial` events (partial ChunksOutput JSON) and emits `feedback_completed` with the full chunks. **Chunks are not persisted until the user accepts.**
+
+- **Streaming:** Partial revisions appear as overlay suggestions on each scene (secondary text, dashed border).
+- **Complete:** "Revision ready — accept or decline" bar with Accept/Decline buttons.
+- **Accept:** tRPC `acceptFeedbackChunks` persists chunks to DB; suggestion cleared, run refetched.
+- **Decline:** Suggestion cleared; DB unchanged.
+
+`feedbackPartialByVideo` in the run store is strongly typed as `ChunksOutput` (parsed from JSON via `chunksSchema`).
+
+**API routes:** `POST /runs/initial-processing`, `POST /runs/update-feedback`, `POST /runs/update-imagery`, `POST /runs/finalize-all`. Node Lambdas in `functions/` invoke Python handlers in `scripts/handlers/`. These endpoints are protected by a shared secret; only the tRPC server (Next.js) can call them. Feedback persistence is via tRPC `runs.acceptFeedbackChunks` (direct DB write).
 
 ---
 

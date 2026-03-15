@@ -66,15 +66,19 @@ export default $config({
       HF_HOME: "/var/task/whisper-models",
       HF_HUB_CACHE: "/var/task/whisper-models",
       XDG_CACHE_HOME: "/var/task/whisper-models",
+      // uv needs a writable cache dir; /var/task is read-only in Lambda
+      UV_CACHE_DIR: "/tmp/uv-cache",
     };
 
     // Python pipeline Lambdas (container image, 15min timeout)
-    // cache: false disables ECR remote cache upload (saves 15–20+ min per deploy)
+    // Note: container must be bool; object form { cache: false } causes ion parse error
+    // dev: false = run in deployed container (not Live); avoids SST Python handler path bugs
     const pythonBase = {
       runtime: "python3.12" as const,
       timeout: "15 minutes",
       memory: "3008 MB",
-      python: { container: { cache: false } } as const,
+      python: { container: true } as const,
+      dev: false,
       environment: pythonEnv,
     };
 
@@ -100,10 +104,12 @@ export default $config({
         ],
         transform: {
           function: (args) => {
-            args.imageConfig = {
-              ...(args.imageConfig ?? {}),
-              commands: ["handlers.initial_processing.handler"],
-            };
+            if (args.imageConfig != null) {
+              args.imageConfig = {
+                ...args.imageConfig,
+                commands: ["handlers.initial_processing.handler"],
+              };
+            }
           },
         },
       },
@@ -125,10 +131,12 @@ export default $config({
       ],
       transform: {
         function: (args) => {
-          args.imageConfig = {
-            ...(args.imageConfig ?? {}),
-            commands: ["handlers.update_imagery.handler"],
-          };
+          if (args.imageConfig != null) {
+            args.imageConfig = {
+              ...args.imageConfig,
+              commands: ["handlers.update_imagery.handler"],
+            };
+          }
         },
       },
     });
@@ -148,10 +156,12 @@ export default $config({
       ],
       transform: {
         function: (args) => {
-          args.imageConfig = {
-            ...(args.imageConfig ?? {}),
-            commands: ["handlers.update_feedback.handler"],
-          };
+          if (args.imageConfig != null) {
+            args.imageConfig = {
+              ...args.imageConfig,
+              commands: ["handlers.update_feedback.handler"],
+            };
+          }
         },
       },
     });
@@ -172,10 +182,12 @@ export default $config({
       ],
       transform: {
         function: (args) => {
-          args.imageConfig = {
-            ...(args.imageConfig ?? {}),
-            commands: ["handlers.finalize_clip.handler"],
-          };
+          if (args.imageConfig != null) {
+            args.imageConfig = {
+              ...args.imageConfig,
+              commands: ["handlers.finalize_clip.handler"],
+            };
+          }
         },
       },
     });

@@ -53,7 +53,7 @@ export const runsRouter = createTRPCRouter({
         .values({
           userId: ctx.session.user.id,
           user_input: input.userInput,
-          status: "processing",
+          status: "breakdown",
         })
         .returning();
 
@@ -212,6 +212,13 @@ export const runsRouter = createTRPCRouter({
         )
         .returning({ id: videos.id });
 
+      if (result.length > 0) {
+        await ctx.db
+          .update(runs)
+          .set({ status: "export" })
+          .where(eq(runs.id, input.runId));
+      }
+
       return { updatedCount: result.length };
     }),
 
@@ -304,6 +311,11 @@ export const runsRouter = createTRPCRouter({
       if (videoIds.length === 0) {
         throw new Error("No videos in scripts phase to finalize");
       }
+
+      await ctx.db
+        .update(runs)
+        .set({ status: "asset_gen" })
+        .where(eq(runs.id, input.runId));
 
       const res = await fetch(`${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/finalize-all`, {
         method: "POST",

@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^25.5.0",
     "sst": "^3.19.3"
   }
 }

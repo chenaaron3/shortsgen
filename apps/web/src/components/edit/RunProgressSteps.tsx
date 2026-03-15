@@ -1,22 +1,10 @@
 "use client";
 
 import { Check } from "lucide-react";
+import type { RunStatus } from "@shortgen/db";
+import { RUN_PHASE_STEPS } from "@shortgen/db";
 
-export type RunPhase = "breakdown" | "scripting" | "asset_gen" | "exporting";
-
-/**
- * Run phases shown in the progress stepper.
- * - breakdown: Run just created; no videos yet. Source content is being analysed into nuggets.
- * - scripting: Videos created with scripts and scenes. Users iterate on script (text mainly).
- * - asset_gen: Scripts locked in. Voice and image data available. Users can regenerate images.
- * - exporting: Flag that videos were exported via Remotion Lambda. Functionally same as asset_gen—can still regenerate and re-export.
- */
-const STEPS: { key: RunPhase; label: string }[] = [
-  { key: "breakdown", label: "Breakdown" },
-  { key: "scripting", label: "Scripting" },
-  { key: "asset_gen", label: "Asset Gen" },
-  { key: "exporting", label: "Exporting" },
-];
+export type RunPhase = RunStatus;
 
 interface RunProgressStepsProps {
   phase: RunPhase;
@@ -32,13 +20,13 @@ export function RunProgressSteps({
   className,
   compact = false,
 }: RunProgressStepsProps) {
-  const phaseIndex = STEPS.findIndex((s) => s.key === phase);
+  const phaseIndex = RUN_PHASE_STEPS.findIndex((s) => s.key === phase);
 
   return (
     <div
       className={`flex items-center gap-2 ${compact ? "gap-1.5" : "gap-4"} ${className ?? ""}`}
     >
-      {STEPS.map((step, i) => {
+      {RUN_PHASE_STEPS.map((step, i) => {
         const isComplete = step.key === "breakdown" ? breakdownComplete : i < phaseIndex;
         const isActive = step.key === phase;
         const isPast = i < phaseIndex || (step.key === "breakdown" && breakdownComplete);
@@ -74,7 +62,7 @@ export function RunProgressSteps({
                 {step.label}
               </span>
             )}
-            {i < STEPS.length - 1 && (
+            {i < RUN_PHASE_STEPS.length - 1 && (
               <div
                 className={`h-px w-4 shrink-0 ${
                   isPast ? "bg-green-500" : "bg-muted-foreground/30"

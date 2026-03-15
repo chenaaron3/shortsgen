@@ -8,7 +8,7 @@ interface AssetGenStatusMessageProps {
 
 export function AssetGenStatusMessage({ runPhase }: AssetGenStatusMessageProps) {
   const message =
-    runPhase === "exporting"
+    runPhase === "export"
       ? "All videos are ready. Download or share from the video player."
       : "Generating assets…";
 
