@@ -23,7 +23,7 @@ from path_utils import remotion_composite_key, video_cache_path, video_public
 from pipeline.generate_images import run as run_images
 from pipeline.revise_imagery import revise_single_scene_imagery
 from run_video.persistence.run_video_writer import get_video, update_video
-from run_video.s3_upload import upload_file_to_s3
+from run_video.s3_upload import upload_to_run
 from run_video.websocket_progress import emit_event
 from schemas.progress_event_type import ProgressEventType
 
@@ -148,11 +148,12 @@ def _handler_impl(
     output_image_path = output_images_dir / image_filename
     shutil.copy2(cache_image_path, output_image_path)
 
-    bucket_name = os.environ.get("BUCKET_NAME")
-    s3_prefix = f"runs/{run_id}/{video_id}/"
-    if bucket_name and output_image_path.exists():
-        s3_key = f"{s3_prefix.rstrip('/')}/images/{image_filename}"
-        upload_file_to_s3(output_image_path, bucket_name, s3_key)
+    upload_to_run(
+        run_id,
+        output_image_path,
+        video_id=video_id,
+        path=f"images/{image_filename}",
+    )
 
     emit_event(
         run_id,

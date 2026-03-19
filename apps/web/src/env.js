@@ -20,6 +20,8 @@ export const env = createEnv({
       .default("development"),
     /** Comma-separated emails allowed for admin features (e.g. run logs viewer). */
     ADMIN_EMAILS: z.string().optional(),
+    /** OpenAI API key for breakdown message generation. Optional; falls back to static messages if unset. */
+    OPENAI_API_KEY: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_SHORTGEN_WS_URL: z.string().url(),
@@ -37,6 +39,7 @@ export const env = createEnv({
     SHORTGEN_BUCKET_NAME: process.env.SHORTGEN_BUCKET_NAME,
     NODE_ENV: process.env.NODE_ENV,
     ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     NEXT_PUBLIC_SHORTGEN_WS_URL: process.env.NEXT_PUBLIC_SHORTGEN_WS_URL,
     NEXT_PUBLIC_REMOTION_SERVE_URL: process.env.NEXT_PUBLIC_REMOTION_SERVE_URL,
   },

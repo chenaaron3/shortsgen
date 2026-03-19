@@ -17,10 +17,12 @@ if str(_SCRIPTS) not in sys.path:
 from config_loader import load_config
 from logger import error as log_error, info as log_info, run_context, video_context, warn as log_warn
 from models import Nugget, ProcessedClip
+from path_utils import breakdown_cache_path, video_cache_path
 from pipeline.breakdown_source import run as run_breakdown, source_hash
 from pipeline.generate_script import run as run_script
 from pipeline.run_chunker import run as run_chunker
 from run_video.persistence.run_video_writer import create_video, update_run_status, update_video
+from run_video.s3_upload import upload_to_run
 from run_video.websocket_progress import emit_event
 from schemas.progress_event_type import ProgressEventType
 
@@ -97,6 +99,10 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     log_info(f"[initial_processing] running breakdown source_key={source_key}")
     nuggets = run_breakdown(source_content, source_key, config=config, skip_cache=True)
     log_info(f"[initial_processing] breakdown complete nuggets={len(nuggets)}")
+
+    breakdown_path = breakdown_cache_path(source_key)
+    if breakdown_path.exists():
+        upload_to_run(run_id, breakdown_path, path="breakdown.json")
     breakdown_json = json.dumps([n.model_dump() for n in nuggets])
     emit_event(
         run_id,
@@ -140,6 +146,10 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                     video_id=video_id,
                     payload=result.model_dump(),
                 )
+                # Upload per-video artifacts for debugging
+                cache_dir = video_cache_path(result.cacheKey, config_hash)
+                if cache_dir.exists():
+                    upload_to_run(run_id, cache_dir, video_id=video_id)
                 results.append(result.model_dump())
                 log_info(f"[initial_processing] clip complete videoId={video_id}")
             except Exception as e:

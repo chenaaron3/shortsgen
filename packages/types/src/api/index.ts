@@ -40,6 +40,10 @@ export const chunksSchema = z.object({
 /** Structured output from chunker/feedback LLM (ChunksOutput in Python). */
 export type ChunksOutput = z.infer<typeof chunksSchema>;
 
+/** Breakdown phase loading messages (LLM-generated, stored in runs.breakdown_messages). */
+export const breakdownMessagesSchema = z.array(z.string().min(1).max(60));
+export type BreakdownMessages = z.infer<typeof breakdownMessagesSchema>;
+
 // --- Request schemas ---
 export const initialProcessingRequestSchema = z.object({
   runId: z.string().uuid(),

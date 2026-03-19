@@ -17,7 +17,7 @@ from models import BreakdownOutput, Nugget
 from schema_utils import schema_for_openai
 
 from path_utils import env_path, prompts_dir, breakdown_cache_path
-from logger import cache_hit, cache_miss, error, step_end, step_start
+from logger import cache_hit, cache_miss, error, step_end, step_start, warn
 from usage_trace import record_llm
 
 load_dotenv(env_path())
@@ -141,7 +141,26 @@ def run(
     for n in result.nuggets:
         n.original_text = _extract_lines(source_content, n.start_line, n.end_line)
         n.cache_key = _content_cache_key(n.original_text)
+
+    # Filter out nuggets with no source text (LLM can return invalid line ranges)
+    valid_nuggets = []
+    for n in result.nuggets:
+        text = (n.original_text or "").strip()
+        if not text:
+            warn(
+                f"Skipping nugget id={n.id!r} title={n.title!r} "
+                f"(no source: original_text empty, start_line={n.start_line} end_line={n.end_line})"
+            )
+            continue
+        valid_nuggets.append(n)
+    if len(valid_nuggets) < len(result.nuggets):
+        warn(f"Filtered {len(result.nuggets) - len(valid_nuggets)} invalid nuggets (empty source text), {len(valid_nuggets)} valid")
+    if not valid_nuggets:
+        error("No valid nuggets (all had empty source text). Aborting.")
+        sys.exit(1)
+    result.nuggets = valid_nuggets
+
     breakdown_path.parent.mkdir(parents=True, exist_ok=True)
     breakdown_path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
     step_end("Breakdown", outputs=[breakdown_path], cache_hits=0, cache_misses=1)
-    return result.nuggets
+    return valid_nuggets

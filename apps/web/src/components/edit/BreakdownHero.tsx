@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { DotLoader } from 'react-spinners';
 
-const BREAKDOWN_MESSAGES = [
+const FALLBACK_MESSAGES = [
   "Identifying topics…",
   "Preparing clips…",
   "Almost ready…",
@@ -11,21 +12,27 @@ const BREAKDOWN_MESSAGES = [
 const CYCLE_INTERVAL_MS = 2500;
 
 interface BreakdownHeroProps {
-  /** When true, show completion state instead of cycling messages. */
   complete?: boolean;
   className?: string;
+  /** Contextual messages from LLM. Falls back to static list if empty. */
+  messages?: string[] | null;
 }
 
-export function BreakdownHero({ complete = false, className }: BreakdownHeroProps) {
+export function BreakdownHero({
+  complete = false,
+  className,
+  messages,
+}: BreakdownHeroProps) {
+  const list = messages?.length ? messages : FALLBACK_MESSAGES;
   const [messageIndex, setMessageIndex] = useState(0);
 
   useEffect(() => {
     if (complete) return;
     const id = setInterval(() => {
-      setMessageIndex((i) => (i + 1) % BREAKDOWN_MESSAGES.length);
+      setMessageIndex((i) => (i + 1) % list.length);
     }, CYCLE_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [complete]);
+  }, [complete, list.length]);
 
   return (
     <div
@@ -37,10 +44,10 @@ export function BreakdownHero({ complete = false, className }: BreakdownHeroProp
       <p className="max-w-md text-lg text-muted-foreground">
         {complete
           ? "Your clips are ready. Select a video to edit scripts and imagery."
-          : BREAKDOWN_MESSAGES[messageIndex]}
+          : list[messageIndex]}
       </p>
       {!complete && (
-        <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+        <DotLoader color="var(--primary)" size={28} speedMultiplier={1.2} />
       )}
     </div>
   );

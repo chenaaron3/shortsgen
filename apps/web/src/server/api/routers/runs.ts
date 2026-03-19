@@ -1,10 +1,47 @@
 import { z } from "zod";
+import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
 import { chunksSchema } from "@shortgen/types";
 import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 import { runs, videos } from "@shortgen/db";
 import { and, desc, eq, type InferSelectModel } from "drizzle-orm";
+
+const BREAKDOWN_MESSAGES_SYSTEM = `You generate short, playful loading messages for a video creation app. The user pasted content and the app is analyzing it to create short-form videos.
+
+Each message should:
+- Be 2-8 words
+- Feel like a Discord update: witty, light, occasionally silly
+- Reference the content when possible (topics, tone, themes)
+- Sound like something is actively happening
+
+Infer content type from the text (how-to, essay, transcript, story, recipe, etc.) and tailor messages. Avoid generic phrases like "Analyzing..." unless you add a twist.
+
+Examples: "Consulting the content council…", "Finding the climax…", "Checking if the intro hooks…"`;
+
+const breakdownMessagesSchema = z.object({
+  messages: z.array(z.string().min(1).max(60)).min(1),
+});
+
+async function generateBreakdownMessages(content: string): Promise<string[] | null> {
+  if (!env.OPENAI_API_KEY) return null;
+  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+  const truncated = content.slice(0, 4000);
+  const res = await openai.beta.chat.completions.parse({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: BREAKDOWN_MESSAGES_SYSTEM },
+      { role: "user", content: truncated },
+    ],
+    max_tokens: 200,
+    response_format: zodResponseFormat(breakdownMessagesSchema, "breakdown_messages"),
+  });
+  const parsed = res.choices[0]?.message?.parsed;
+  if (!parsed) return null;
+  const result = breakdownMessagesSchema.safeParse(parsed);
+  return result.success ? result.data.messages : null;
+}
 
 /** Run with videos relation. Used as explicit return type for getById so tRPC infers it. */
 export type RunWithVideos = InferSelectModel<typeof runs> & {
@@ -58,6 +95,14 @@ export const runsRouter = createTRPCRouter({
         .returning();
 
       if (!run) throw new Error("Failed to create run");
+
+      const messages = await generateBreakdownMessages(input.userInput);
+      if (messages && messages.length > 0) {
+        await ctx.db
+          .update(runs)
+          .set({ breakdown_messages: JSON.stringify(messages) })
+          .where(eq(runs.id, run.id));
+      }
 
       const res = await fetch(`${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/initial-processing`, {
         method: "POST",

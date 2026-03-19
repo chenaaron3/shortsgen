@@ -1,17 +1,19 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "~/components/ui/button";
-import { useRunStore } from "~/stores/useRunStore";
-import { RunProgressSteps } from "./RunProgressSteps";
-import { BreakdownHero } from "./BreakdownHero";
-import { RunLogsModal } from "./RunLogsModal";
+import Link from 'next/link';
+import { Button } from '~/components/ui/button';
+import { useRunStore } from '~/stores/useRunStore';
+
+import { BreakdownHero } from './BreakdownHero';
+import { RunLogsModal } from './RunLogsModal';
+import { RunProgressSteps } from './RunProgressSteps';
 
 interface BreakdownPhaseViewProps {
   isAdmin: boolean;
+  breakdownMessages?: string[] | null;
 }
 
-export function BreakdownPhaseView({ isAdmin }: BreakdownPhaseViewProps) {
+export function BreakdownPhaseView({ isAdmin, breakdownMessages }: BreakdownPhaseViewProps) {
   const runId = useRunStore((s) => s.ui.runId);
   const breakdownComplete = useRunStore((s) => s.progress.breakdownComplete);
   const logsModalOpen = useRunStore((s) => s.ui.logsModalOpen);
@@ -41,7 +43,7 @@ export function BreakdownPhaseView({ isAdmin }: BreakdownPhaseViewProps) {
         </div>
       </header>
       <main className="flex flex-1 flex-col items-center justify-center p-8">
-        <BreakdownHero complete={breakdownComplete} />
+        <BreakdownHero complete={breakdownComplete} messages={breakdownMessages} />
         <RunProgressSteps
           phase="breakdown"
           breakdownComplete={breakdownComplete}

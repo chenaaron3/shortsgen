@@ -1,18 +1,18 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { Suspense, useEffect } from "react";
-import { AuthRequiredLayout } from "~/components/layouts/AuthRequiredLayout";
-import { BreakdownPhaseView } from "~/components/edit/BreakdownPhaseView";
-import { RunNotFound } from "~/components/edit/RunNotFound";
-import { RunPageSkeleton } from "~/components/edit/RunPageSkeleton";
-import { Button } from "~/components/ui/button";
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { Suspense, useEffect } from 'react';
+import { BreakdownPhaseView } from '~/components/edit/BreakdownPhaseView';
+import { RunNotFound } from '~/components/edit/RunNotFound';
+import { RunPageSkeleton } from '~/components/edit/RunPageSkeleton';
+import { AuthRequiredLayout } from '~/components/layouts/AuthRequiredLayout';
+import { Button } from '~/components/ui/button';
 import { useRunProgressWithHandler } from '~/hooks/useRunProgress';
 import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
-import type { RouterOutputs } from "~/utils/api";
+import { breakdownMessagesSchema } from '@shortgen/types';
 
 function EditRunContent({ runId }: { runId: string }) {
   const router = useRouter();
@@ -45,7 +45,18 @@ function EditRunContent({ runId }: { runId: string }) {
   const showHeroLayout = videos.length === 0;
 
   if (showHeroLayout) {
-    return <BreakdownPhaseView isAdmin={!!isAdminQuery.data?.isAdmin} />;
+    let messages: string[] | undefined;
+    const raw = runWithVideos.breakdown_messages;
+    if (raw) {
+      const result = breakdownMessagesSchema.safeParse(JSON.parse(raw));
+      if (result.success) messages = result.data;
+    }
+    return (
+      <BreakdownPhaseView
+        isAdmin={!!isAdminQuery.data?.isAdmin}
+        breakdownMessages={messages}
+      />
+    );
   }
 
   // Brief loading state while redirecting

@@ -22,8 +22,8 @@ from logger import error as log_error, run_video_context, warn as log_warn
 from models import Chunks
 from path_utils import remotion_composite_key, video_public
 from pipeline.run_pipeline import run as run_pipeline
-from run_video.persistence.run_video_writer import get_video, update_video, update_run_status
-from run_video.s3_upload import upload_dir_to_s3
+from run_video.persistence.run_video_writer import get_video, update_video
+from run_video.s3_upload import upload_to_run
 from run_video.websocket_progress import emit_event
 from schemas.progress_event_type import ProgressEventType
 
@@ -97,13 +97,9 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
         on_step_complete=on_step_complete,
     )
 
-    bucket_name = event.get("bucketName") or __import__("os").environ.get("BUCKET_NAME")
     composite_key = remotion_composite_key(config_hash, cache_key)
     output_dir = video_public() / "shortgen" / composite_key
-    s3_prefix = f"runs/{run_id}/{video_id}/"
-
-    if bucket_name and output_dir.exists():
-        upload_dir_to_s3(output_dir, bucket_name, s3_prefix)
+    s3_prefix = upload_to_run(run_id, output_dir, video_id=video_id)
 
     # don't change to export yet since user can still iterate on assets
     update_video(video_id, s3_prefix=s3_prefix)
