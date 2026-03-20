@@ -51,7 +51,7 @@ function splitCaptionsBySentence(captions: Caption[]): Caption[][] {
       groups.push(current);
       current = [];
     }
-    current.push(c);
+    if (c) current.push(c);
   }
   if (current.length > 0) groups.push(current);
   return groups;
@@ -69,8 +69,11 @@ type PageWithDisplayEnd = Omit<TikTokPage, "tokens"> & {
 /** Partition group interval into non-overlapping word segments. Words span start=>end of group. */
 function partitionTokenIntervals(tokens: TikTokPage["tokens"]): TokenWithDisplaySpan[] {
   if (tokens.length === 0) return [];
-  const groupStart = tokens[0].fromMs;
-  const groupEnd = tokens[tokens.length - 1].toMs;
+  const first = tokens[0];
+  const last = tokens[tokens.length - 1];
+  if (!first || !last) return [];
+  const groupStart = first.fromMs;
+  const groupEnd = last.toMs;
   let groupSpan = Math.max(0, groupEnd - groupStart);
   const totalDuration = tokens.reduce((s, t) => s + (t.toMs - t.fromMs), 0);
   if (groupSpan <= 0) groupSpan = totalDuration > 0 ? totalDuration : 1;
@@ -101,10 +104,10 @@ function mergePageIntervals(
   const sorted = [...pages].sort((a, b) => a.startMs - b.startMs);
   return sorted.map((p, i) => {
     const nativeEnd = p.startMs + p.durationMs;
-    const displayEndMs =
-      i + 1 < sorted.length
-        ? sorted[i + 1].startMs
-        : Math.max(nativeEnd, videoDurationMs);
+    const nextPage = i + 1 < sorted.length ? sorted[i + 1] : null;
+    const displayEndMs = nextPage
+      ? nextPage.startMs
+      : Math.max(nativeEnd, videoDurationMs);
     const tokens = partitionTokenIntervals(p.tokens);
     return { ...p, displayEndMs, tokens };
   });

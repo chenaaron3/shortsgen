@@ -18,15 +18,15 @@ COPY requirements.txt ${LAMBDA_TASK_ROOT}/
 RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.txt
 
 # Pre-download faster-whisper models into image (avoids cold-start download in Lambda).
-# Commented out: makes Docker builds very long; models will download at Lambda cold start.
-# RUN --mount=type=cache,target=/root/.cache/huggingface \
-#     HF_HOME=/root/.cache/huggingface python -c "\
-# from faster_whisper import WhisperModel; \
-# WhisperModel('distil-large-v3', device='cpu', compute_type='int8'); \
-# WhisperModel('base', device='cpu', compute_type='int8'); \
-# " && \
-#     mkdir -p ${LAMBDA_TASK_ROOT}/whisper-models && \
-#     cp -a /root/.cache/huggingface/hub ${LAMBDA_TASK_ROOT}/whisper-models/
+# Build cache mount speeds rebuilds; first build ~5–10 min. HF_TOKEN optional for rate limits.
+RUN --mount=type=cache,target=/root/.cache/huggingface \
+    HF_HOME=/root/.cache/huggingface python -c "\
+from faster_whisper import WhisperModel; \
+WhisperModel('distil-large-v3', device='cpu', compute_type='int8'); \
+WhisperModel('base', device='cpu', compute_type='int8'); \
+" && \
+    mkdir -p ${LAMBDA_TASK_ROOT}/whisper-models && \
+    cp -a /root/.cache/huggingface/hub ${LAMBDA_TASK_ROOT}/whisper-models/
 
 # Copy pipeline code. SST artifact layout: shortgen_pipeline/scripts/handlers/...
 # path_utils resolves from __file__; handlers.* imports need scripts/ on PYTHONPATH.

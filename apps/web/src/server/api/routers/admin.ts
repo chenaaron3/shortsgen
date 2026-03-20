@@ -13,12 +13,7 @@ import {
   GetQueryResultsCommand,
   StartQueryCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
-import {
-  GetObjectCommand,
-  ListObjectsV2Command,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { runs } from "@shortgen/db";
 
 const LOG_GROUP_PREFIX = "/aws/lambda";
@@ -195,7 +190,7 @@ export const adminRouter = createTRPCRouter({
       }
     }),
 
-  /** Get presigned URL for an artifact. Client opens link directly to S3. */
+  /** Get CDN URL for an artifact. All asset reads go through CDN. */
   getArtifactUrl: adminProcedure
     .input(z.object({ runId: z.string().uuid(), path: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
@@ -206,22 +201,14 @@ export const adminRouter = createTRPCRouter({
       if (!run) {
         return { url: null, error: "Run not found" };
       }
-      const bucket = env.SHORTGEN_BUCKET_NAME;
-      if (!bucket) {
-        return { url: null, error: "SHORTGEN_BUCKET_NAME not configured" };
-      }
       const key = `runs/${input.runId}/${input.path}`.replace(/\/+/g, "/");
       if (key.includes("..")) {
         return { url: null, error: "Invalid path" };
       }
-      try {
-        const client = new S3Client({});
-        const command = new GetObjectCommand({ Bucket: bucket, Key: key });
-        const url = await getSignedUrl(client, command, { expiresIn: 3600 });
-        return { url };
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        return { url: null, error: `S3 error: ${msg}` };
+      if (!env.SHORTGEN_CDN_URL) {
+        return { url: null, error: "SHORTGEN_CDN_URL not configured" };
       }
+      const cdnBase = env.SHORTGEN_CDN_URL.replace(/\/$/, "");
+      return { url: `${cdnBase}/${key}` };
     }),
 });

@@ -13,6 +13,10 @@ export default $config({
       access: "cloudfront",
     });
 
+    // CDN in front of bucket for cheap reads via presigned URLs
+    const assetsRouter = new sst.aws.Router("ShortgenAssetsRouter");
+    assetsRouter.routeBucket("/", bucket);
+
     // WebSocket runId -> connectionId mapping (1:1, overwrite on connect, TTL 1hr)
     const connectionsTable = new sst.aws.Dynamo("ShortgenConnections", {
       fields: {
@@ -62,9 +66,9 @@ export default $config({
       REPLICATE_API_TOKEN: replicateApiToken.value,
       ELEVENLABS_API_KEY: elevenlabsApiKey.value,
       ANTHROPIC_API_KEY: anthropicApiKey.value,
-      // Lambda /home is read-only; use baked-in Whisper models from Docker build
+      // Baked-in Whisper models from Docker build (no cold-start download)
       HF_HOME: "/var/task/whisper-models",
-      HF_HUB_CACHE: "/var/task/whisper-models",
+      HF_HUB_CACHE: "/var/task/whisper-models/hub",
       XDG_CACHE_HOME: "/var/task/whisper-models",
       // uv needs a writable cache dir; /var/task is read-only in Lambda
       UV_CACHE_DIR: "/tmp/uv-cache",
@@ -192,6 +196,27 @@ export default $config({
       },
     });
 
+    // ECR lifecycle policy: expire untagged images after 1 day (build artifacts); keep all tagged (Lambdas need them)
+    const ecrLifecyclePolicy = JSON.stringify({
+      rules: [
+        {
+          rulePriority: 1,
+          description: "Expire untagged images older than 1 day",
+          selection: {
+            tagStatus: "untagged",
+            countType: "sinceImagePushed",
+            countUnit: "days",
+            countNumber: 1,
+          },
+          action: { type: "expire" },
+        },
+      ],
+    });
+    new aws.ecr.LifecyclePolicy("ShortgenEcrLifecycle", {
+      repository: "sst-asset",
+      policy: ecrLifecyclePolicy,
+    });
+
     const finalizeAllStateMachine = new sst.aws.StepFunctions(
       "ShortgenFinalizeAllStateMachine",
       {
@@ -199,6 +224,8 @@ export default $config({
           const finalizeClipInvoke = sst.aws.StepFunctions.lambdaInvoke({
             name: "FinalizeClip",
             function: finalizeClip,
+            // Pipe Map iteration input (runId, videoId) to Lambda; without this, Lambda receives empty event
+            payload: "{% $states.input %}",
           });
           const done = sst.aws.StepFunctions.succeed({ name: "Done" });
           const map = sst.aws.StepFunctions.map({
@@ -227,6 +254,7 @@ export default $config({
         initialProcessing,
         updateFeedback,
         finalizeClip,
+        finalizeAllStateMachine,
         connectionsTable,
         bucket,
         wsApi,
@@ -267,6 +295,7 @@ export default $config({
     return {
       apiUrl: api.url,
       bucket: bucket.name,
+      assetsCdnUrl: assetsRouter.url,
       wsUrl: wsApi.url,
       wsManagementEndpoint: wsApi.managementEndpoint,
       connectionsTable: connectionsTable.name,

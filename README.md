@@ -281,6 +281,7 @@ pnpm exec sst deploy
 SHORTGEN_API_URL=https://<api-id>.execute-api.us-east-1.amazonaws.com
 NEXT_PUBLIC_SHORTGEN_WS_URL=wss://<ws-api-id>.execute-api.us-east-1.amazonaws.com/$default
 SHORTGEN_BUCKET_NAME=<bucket-name>
+SHORTGEN_CDN_URL=<assets-cdn-url>  # From SST assetsCdnUrl; enables cheap CDN reads for video preview
 SHORTGEN_API_SECRET=<same-value-as-sst-secret>
 ```
 

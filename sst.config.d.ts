@@ -5,6 +5,9 @@
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sst: any;
+  // AWS provider is preloaded by SST
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const aws: any;
   function $config(input: {
     app?: (input: { stage: string }) => { name: string; home?: "aws" | "cloudflare" | "local" };
     run?: () => Promise<Record<string, unknown> | void>;

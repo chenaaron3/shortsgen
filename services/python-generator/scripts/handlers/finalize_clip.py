@@ -70,7 +70,6 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     # prototype = cheap images/fast whisper; derived from video's config (set at create)
     prototype = config_hash == "prototype"
 
-    update_video(video_id, status="assets")
     emit_event(
         run_id,
         ProgressEventType.asset_gen_started,
@@ -102,7 +101,7 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     s3_prefix = upload_to_run(run_id, output_dir, video_id=video_id)
 
     # don't change to export yet since user can still iterate on assets
-    update_video(video_id, s3_prefix=s3_prefix)
+    update_video(video_id, s3_prefix=s3_prefix, status="assets")
     emit_event(
         run_id,
         ProgressEventType.asset_gen_completed,

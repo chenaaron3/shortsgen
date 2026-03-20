@@ -10,7 +10,7 @@ const config = {
 
   // Workaround for next-auth@5.0.0-beta.25 + Next.js 15 module resolution
   // @see https://github.com/nextauthjs/next-auth/discussions/10058
-  transpilePackages: ["next-auth"],
+  transpilePackages: ["next-auth", "@shortgen/remotion"],
 
   // AWS SDK packages use Node.js-specific code; exclude from bundling
   serverExternalPackages: ["@aws-sdk/client-cloudwatch-logs"],

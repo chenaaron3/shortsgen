@@ -1,4 +1,4 @@
-import { and, desc, eq, InferSelectModel, type } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
@@ -6,7 +6,10 @@ import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 import { runs, videos } from "@shortgen/db";
-import { chunksSchema } from "@shortgen/types";
+import { chunksSchema, manifestSchema } from "@shortgen/types";
+
+import type { VideoManifest } from "@shortgen/types";
+import type { InferSelectModel } from "drizzle-orm";
 
 const BREAKDOWN_MESSAGES_SYSTEM = `You generate short, playful loading messages for a video creation app. The user pasted content and the app is analyzing it to create short-form videos.
 
@@ -402,4 +405,52 @@ export const runsRouter = createTRPCRouter({
       );
       return { jobId: data.jobId, status: data.status };
     }),
+
+  /**
+   * Get video assets (manifest + CDN base URL) for preview. All asset reads go through CDN.
+   */
+  getVideoAssets: protectedProcedure
+    .input(
+      z.object({
+        runId: z.string().uuid(),
+        videoId: z.string().uuid(),
+      }),
+    )
+    .query(
+      async ({
+        ctx,
+        input,
+      }): Promise<{ manifest: VideoManifest; assetBaseUrl: string } | null> => {
+        const [video] = await ctx.db
+          .select({ s3Prefix: videos.s3_prefix })
+          .from(videos)
+          .where(
+            and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
+          );
+
+        if (!video?.s3Prefix || !env.SHORTGEN_CDN_URL) return null;
+
+        const [run] = await ctx.db
+          .select({ userId: runs.userId })
+          .from(runs)
+          .where(eq(runs.id, input.runId));
+
+        if (!run || run.userId !== ctx.session.user.id) return null;
+
+        const prefix = video.s3Prefix.replace(/\/$/, "");
+        const cdnBase = env.SHORTGEN_CDN_URL.replace(/\/$/, "");
+        const assetBaseUrl = `${cdnBase}/${prefix}`;
+        const manifestUrl = `${assetBaseUrl}/manifest.json`;
+
+        try {
+          const res = await fetch(manifestUrl);
+          if (!res.ok) return null;
+          const data = (await res.json()) as unknown;
+          const manifest = manifestSchema.parse(data);
+          return { manifest, assetBaseUrl };
+        } catch {
+          return null;
+        }
+      },
+    ),
 });

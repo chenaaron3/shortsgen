@@ -15,6 +15,8 @@ export const env = createEnv({
     SHORTGEN_API_URL: z.string().url(),
     SHORTGEN_API_SECRET: z.string().min(1),
     SHORTGEN_BUCKET_NAME: z.string().optional(),
+    /** CloudFront CDN URL for assets (from SST assetsCdnUrl). When set, preview uses presigned CDN URLs for cheap reads. */
+    SHORTGEN_CDN_URL: z.string().url().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -37,6 +39,7 @@ export const env = createEnv({
     SHORTGEN_API_URL: process.env.SHORTGEN_API_URL,
     SHORTGEN_API_SECRET: process.env.SHORTGEN_API_SECRET,
     SHORTGEN_BUCKET_NAME: process.env.SHORTGEN_BUCKET_NAME,
+    SHORTGEN_CDN_URL: process.env.SHORTGEN_CDN_URL,
     NODE_ENV: process.env.NODE_ENV,
     ADMIN_EMAILS: process.env.ADMIN_EMAILS,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,

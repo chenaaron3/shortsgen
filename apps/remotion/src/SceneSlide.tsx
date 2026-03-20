@@ -72,7 +72,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
     : 1;
 
   // Ken Burns: pan direction (only if both kenBurns and panEnabled)
-  const dir = PAN_DIRECTIONS[sceneIndex % PAN_DIRECTIONS.length];
+  const dir = PAN_DIRECTIONS[sceneIndex % PAN_DIRECTIONS.length] ?? PAN_DIRECTIONS[0]!;
   const panX =
     kenBurns.enabled && kenBurns.panEnabled
       ? interpolate(

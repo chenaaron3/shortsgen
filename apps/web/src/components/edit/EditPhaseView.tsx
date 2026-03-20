@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from 'react';
+import { Badge } from '~/components/ui/badge';
 import { useSuggestionFeedback } from '~/hooks/useSuggestionFeedback';
 import { getVideoDisplayName, parseVideoChunks } from '~/lib/parseVideoChunks';
 import { sceneFeedbackToApiString } from '~/lib/sceneFeedback';
@@ -8,13 +9,13 @@ import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
 import { AssetGenStatusMessage } from './AssetGenStatusMessage';
-import { Badge } from '~/components/ui/badge';
 import { EditRunHeader } from './EditRunHeader';
 import { RawScriptCard } from './RawScriptCard';
 import { RunLogsModal } from './RunLogsModal';
 import { MainContentSkeleton } from './RunPageSkeleton';
 import { SceneList } from './SceneList';
 import { ScriptFeedbackSection } from './ScriptFeedbackSection';
+import { VideoPreview } from './VideoPreview';
 import { VideoSidebar } from './VideoSidebar';
 
 import type { RunPhase } from "./RunProgressSteps";
@@ -169,6 +170,9 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
       ? handleRegenerateImagery(selectedVideo.id)
       : undefined;
 
+  const showPreview =
+    selectedVideo?.status === "assets" || selectedVideo?.status === "export";
+
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground lg:flex-row">
       <VideoSidebar
@@ -198,38 +202,49 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
 
         <div className="scrollbar-seamless min-h-0 flex-1 overflow-auto">
           {selectedVideo && (
-            <div className="mx-auto max-w-2xl px-6 py-6 pb-8">
-              <div
-                className={
-                  description ? "mb-1 flex items-center gap-2" : "mb-4 flex items-center gap-2"
-                }
-              >
-                <h1 className="text-xl font-bold">
-                  {getVideoDisplayName(selectedVideo)}
-                </h1>
-                <Badge variant="secondary" className="text-xs">
-                  {scenes.length} scenes
-                </Badge>
+            <div className="flex gap-8 px-6 py-6 pb-8">
+              <div className="min-w-0 flex-1">
+                <div className="mx-auto max-w-2xl">
+                  <div
+                    className={
+                      description ? "mb-1 flex items-center gap-2" : "mb-4 flex items-center gap-2"
+                    }
+                  >
+                    <h1 className="text-xl font-bold">
+                      {getVideoDisplayName(selectedVideo)}
+                    </h1>
+                    <Badge variant="secondary" className="text-xs">
+                      {scenes.length} scenes
+                    </Badge>
+                  </div>
+                  {description && (
+                    <p className="mb-4 text-sm text-muted-foreground">{description}</p>
+                  )}
+                  {sourceText && <RawScriptCard sourceText={sourceText} />}
+                  <div className="mb-8">
+                    <SceneList
+                      runId={runId}
+                      scenes={scenes}
+                      videoId={videoId}
+                      currentChunks={currentChunks}
+                      blockAcceptSuggestionField={isDecisionPending}
+                      scriptLocked={scriptLocked}
+                      imageryEditable={imageryEditable}
+                      onRegenerate={onRegenerateImagery}
+                      sceneUpdating={sceneUpdating}
+                    />
+                  </div>
+                  {(runPhase === "asset_gen" || runPhase === "export") && (
+                    <AssetGenStatusMessage runPhase={runPhase} />
+                  )}
+                </div>
               </div>
-              {description && (
-                <p className="mb-4 text-sm text-muted-foreground">{description}</p>
-              )}
-              {sourceText && <RawScriptCard sourceText={sourceText} />}
-              <div className="mb-8">
-                <SceneList
-                  runId={runId}
-                  scenes={scenes}
-                  videoId={videoId}
-                  currentChunks={currentChunks}
-                  blockAcceptSuggestionField={isDecisionPending}
-                  scriptLocked={scriptLocked}
-                  imageryEditable={imageryEditable}
-                  onRegenerate={onRegenerateImagery}
-                  sceneUpdating={sceneUpdating}
-                />
-              </div>
-              {(runPhase === "asset_gen" || runPhase === "export") && (
-                <AssetGenStatusMessage runPhase={runPhase} />
+              {showPreview && (
+                <div className="sticky top-6 shrink-0 self-start">
+                  <div className="aspect-9/16 w-[360px] overflow-hidden rounded-lg border border-border bg-black">
+                    <VideoPreview runId={runId} videoId={videoId} />
+                  </div>
+                </div>
               )}
             </div>
           )}

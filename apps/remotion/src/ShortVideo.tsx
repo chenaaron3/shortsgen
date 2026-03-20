@@ -29,6 +29,8 @@ type ShortVideoProps = {
   manifest: VideoManifest;
   /** When set, assets are loaded from this base URL instead of staticFile. For web Player. */
   assetBaseUrl?: string;
+  /** When set (e.g. for web Player), use this URL for background music instead of staticFile. */
+  backgroundMusicUrl?: string;
 };
 
 function resolveAssetUrl(
@@ -45,6 +47,7 @@ function resolveAssetUrl(
 export function ShortVideo({
   manifest,
   assetBaseUrl,
+  backgroundMusicUrl,
 }: ShortVideoProps) {
   const effectsConfig = defaultEffectsConfig;
 
@@ -77,10 +80,12 @@ export function ShortVideo({
   );
   const fadeOutStart = Math.max(fadeFrames, durationInFrames - fadeFrames);
 
+  const bgMusicSrc = backgroundMusicUrl ?? staticFile("background_music.mp3");
+
   return (
     <>
       <Audio
-        src={staticFile("background_music.mp3")}
+        src={bgMusicSrc}
         volume={(f) =>
           interpolate(
             f,
@@ -213,7 +218,7 @@ export const ShortVideoComposition: React.FC<ShortVideoCompositionProps> = ({
   );
 };
 
-/** For web Player: loads manifest and assets from assetBaseUrl (e.g. /api/runs/x/videos/y/) */
+/** For web Player: loads manifest and assets from assetBaseUrl (e.g. CDN URL) */
 export const SHORTVIDEO_ASSETBASE_ID = "ShortVideo-AssetBase";
 
 type ShortVideoAssetBaseProps = {

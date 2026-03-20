@@ -2,6 +2,9 @@
   "name": "@shortgen/remotion",
   "version": "1.0.0",
   "private": true,
+  "exports": {
+    "./ShortVideo": "./src/player-entry.tsx"
+  },
   "scripts": {
     "dev": "remotion studio --public-dir=../../public",
     "build": "remotion build",
