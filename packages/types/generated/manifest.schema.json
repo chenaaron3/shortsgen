@@ -83,8 +83,7 @@
               "text",
               "startMs",
               "endMs",
-              "timestampMs",
-              "confidence"
+              "timestampMs"
             ],
             "additionalProperties": false
           }

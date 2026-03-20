@@ -11,7 +11,7 @@ export const captionSchema = z.object({
   startMs: z.number(),
   endMs: z.number(),
   timestampMs: z.number().nullable(),
-  confidence: z.number().nullable(),
+  confidence: z.number().nullable().optional(),
 });
 
 /** Single scene: image, voice, duration */

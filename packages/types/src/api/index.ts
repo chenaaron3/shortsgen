@@ -93,7 +93,7 @@ export const updateImageryRequestSchema = z
     (data) =>
       (data.imagery !== undefined && data.imagery.trim().length > 0) ||
       data.feedback !== undefined,
-    { message: "Provide imagery (direct) or feedback (LLM path)" }
+    { message: "Provide imagery (direct) or feedback (LLM path)" },
   );
 export type UpdateImageryRequest = z.infer<typeof updateImageryRequestSchema>;
 

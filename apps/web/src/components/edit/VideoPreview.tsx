@@ -1,8 +1,9 @@
 "use client";
 
-import dynamic from 'next/dynamic';
-import React from 'react';
-import { api } from '~/utils/api';
+import dynamic from "next/dynamic";
+import { Download } from "lucide-react";
+import React from "react";
+import { api } from "~/utils/api";
 
 const Player = dynamic(
   () => import("@remotion/player").then((mod) => mod.Player),
@@ -39,6 +40,13 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
 
   if (!videoAssets?.manifest?.scenes?.length) {
     if (isFetched && !videoAssets) {
+      console.log("videoAssets", videoAssets);
+      console.log("isFetched", isFetched);
+      console.log("isError", isError);
+      console.log("runId", runId);
+      console.log("videoId", videoId);
+      console.log("videoAssets", videoAssets);
+      console.log("videoAssets", videoAssets);
       return (
         <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4">
           <p className="text-center text-sm text-muted-foreground">
@@ -54,16 +62,19 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
     );
   }
 
-  const { manifest, assetBaseUrl } = videoAssets;
+  const { manifest, assetBaseUrl, exportUrl, backgroundMusicUrl } =
+    videoAssets;
 
   return (
-    <div className="h-full w-full overflow-hidden rounded-lg border border-border bg-black">
-      <Player
+    <div className="flex flex-col gap-2">
+      <div className="h-full w-full overflow-hidden rounded-lg border border-border bg-black">
+        <Player
+        acknowledgeRemotionLicense
         component={ShortVideo as React.ComponentType<Record<string, unknown>>}
         inputProps={{
           manifest,
           assetBaseUrl,
-          backgroundMusicUrl: "/background_music.mp3",
+          backgroundMusicUrl,
         }}
         durationInFrames={manifest.durationInFrames}
         compositionWidth={manifest.width}
@@ -78,6 +89,19 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
         controls
         loop
       />
+      </div>
+      {exportUrl && (
+        <a
+          href={exportUrl}
+          download="short.mp4"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
+        >
+          <Download className="h-4 w-4" />
+          Download
+        </a>
+      )}
     </div>
   );
 }

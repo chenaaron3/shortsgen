@@ -32,10 +32,9 @@ function getCloudWatchClient(): CloudWatchLogsClient | null {
 export const adminRouter = createTRPCRouter({
   /** Returns whether the current user is an admin (for showing admin UI). */
   isAdmin: protectedProcedure.query(({ ctx }) => {
-    const emails =
-      env.ADMIN_EMAILS?.split(",")
-        .map((e) => e.trim().toLowerCase())
-        .filter(Boolean) ?? [];
+    const emails = env.ADMIN_EMAILS.split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
     const isAdmin =
       emails.length > 0 &&
       !!ctx.session.user.email &&

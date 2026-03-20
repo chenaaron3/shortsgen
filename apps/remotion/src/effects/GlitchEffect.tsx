@@ -52,6 +52,7 @@ export const GlitchEffect: React.FC<GlitchEffectProps> = ({
           >
             <Img
               src={imageSrc}
+              crossOrigin="anonymous"
               style={{
                 position: "absolute",
                 left: 0,

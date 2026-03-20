@@ -46,6 +46,7 @@ Return structured JSON with a list of nuggets. Each nugget has:
 ## Example
 
 **Source (with line numbers):**
+
 ```
 1|# Atomic Habits
 2|
@@ -64,6 +65,7 @@ Return structured JSON with a list of nuggets. Each nugget has:
 ```
 
 **Output:**
+
 ```json
 {
   "nuggets": [

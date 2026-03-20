@@ -19,6 +19,9 @@ class Resource:
     class ShortgenAssets:
         name: str
         type: str
+    class ShortgenAssetsRouter:
+        type: str
+        url: str
     class ShortgenConnections:
         name: str
         type: str

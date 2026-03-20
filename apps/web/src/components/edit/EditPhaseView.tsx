@@ -86,7 +86,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
       void runQuery.refetch();
     },
   });
-  const finalizeAssetsMutation = api.runs.finalizeAssets.useMutation({
+  const triggerExportMutation = api.runs.triggerExport.useMutation({
     onSuccess: () => void runQuery.refetch(),
   });
   const updateImageryMutation = api.runs.updateImagery.useMutation({
@@ -104,10 +104,13 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     !finalizeAllMutation.isPending;
   const allVideosHaveAssets =
     videos.length > 0 && videos.every((v) => v.status === "assets");
+  const hasExportableVideos = videos.some(
+    (v) => v.status === "assets" || v.status === "exported",
+  );
   const canShowExportButton =
-    runPhase === "asset_gen" &&
-    allVideosHaveAssets &&
-    !finalizeAssetsMutation.isPending;
+    ((runPhase === "asset_gen" && allVideosHaveAssets) ||
+      (runPhase === "export" && hasExportableVideos)) &&
+    !triggerExportMutation.isPending;
 
   const handleApplyFeedback = useCallback(() => {
     if (!runId || !videoId) return;
@@ -141,10 +144,10 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     finalizeAllMutation.mutate({ runId });
   }, [runId, finalizeAllMutation]);
 
-  const handleFinalizeAssets = useCallback(() => {
+  const handleTriggerExport = useCallback(() => {
     if (!runId) return;
-    finalizeAssetsMutation.mutate({ runId });
-  }, [runId, finalizeAssetsMutation]);
+    triggerExportMutation.mutate({ runId });
+  }, [runId, triggerExportMutation]);
 
   const handleRegenerateImagery = useCallback(
     (videoId: string) =>
@@ -165,13 +168,15 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const imageryEditable = runPhase === "asset_gen" || runPhase === "export";
   const onRegenerateImagery =
     selectedVideo &&
-      (runPhase === "asset_gen" || runPhase === "export") &&
-      selectedVideo.status === "export"
+    (runPhase === "asset_gen" || runPhase === "export") &&
+    selectedVideo.status === "exported"
       ? handleRegenerateImagery(selectedVideo.id)
       : undefined;
 
   const showPreview =
-    selectedVideo?.status === "assets" || selectedVideo?.status === "export";
+    selectedVideo?.status === "assets" ||
+    selectedVideo?.status === "exporting" ||
+    selectedVideo?.status === "exported";
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground lg:flex-row">
@@ -194,9 +199,9 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
             canShowExportButton={canShowExportButton}
             isAdmin={!!isAdminQuery.data?.isAdmin}
             onNext={handleFinalizeAll}
-            onExport={handleFinalizeAssets}
+            onExport={handleTriggerExport}
             nextPending={finalizeAllMutation.isPending}
-            exportPending={finalizeAssetsMutation.isPending}
+            exportPending={triggerExportMutation.isPending}
           />
         </header>
 
@@ -235,7 +240,14 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
                     />
                   </div>
                   {(runPhase === "asset_gen" || runPhase === "export") && (
-                    <AssetGenStatusMessage runPhase={runPhase} />
+                    <AssetGenStatusMessage
+                      runPhase={runPhase}
+                      allVideosExported={
+                        runPhase === "export" &&
+                        videos.length > 0 &&
+                        videos.every((v) => v.status === "exported")
+                      }
+                    />
                   )}
                 </div>
               </div>

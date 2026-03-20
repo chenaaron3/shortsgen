@@ -10,10 +10,13 @@
     "build": "remotion build",
     "build:web": "remotion build --out-dir=../web/public/remotion",
     "render": "remotion render",
-    "upgrade": "remotion upgrade"
+    "upgrade": "remotion upgrade",
+    "lambda:deploy-function": "remotion lambda functions deploy",
+    "lambda:deploy-site": "remotion lambda sites create src/index.ts --site-name=shortgen"
   },
   "dependencies": {
     "@shortgen/types": "workspace:*",
+    "@remotion/lambda": "4.0.300",
     "@remotion/bundler": "4.0.300",
     "@remotion/cli": "4.0.300",
     "@remotion/captions": "4.0.300",

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
@@ -11,44 +11,47 @@ import { chunksSchema, manifestSchema } from "@shortgen/types";
 import type { VideoManifest } from "@shortgen/types";
 import type { InferSelectModel } from "drizzle-orm";
 
-const BREAKDOWN_MESSAGES_SYSTEM = `You generate short, playful loading messages for a video creation app. The user pasted content and the app is analyzing it to create short-form videos.
+const BREAKDOWN_SYSTEM = `You generate a short title and playful loading messages for a video creation app. The user pasted content and the app is analyzing it to create short-form videos.
 
-Each message should:
-- Be 2-8 words
+Title:
+- 3-8 words, descriptive of the content (topic, theme, or vibe)
+- Suitable for a list/card view (e.g. "How to Make Sourdough", "The History of Coffee", "5 Productivity Hacks")
+
+Messages (each 2-8 words):
 - Feel like a Discord update: witty, light, occasionally silly
 - Reference the content when possible (topics, tone, themes)
 - Sound like something is actively happening
 
-Infer content type from the text (how-to, essay, transcript, story, recipe, etc.) and tailor messages. Avoid generic phrases like "Analyzing..." unless you add a twist.
+Infer content type from the text (how-to, essay, transcript, story, recipe, etc.) and tailor both title and messages. Avoid generic phrases like "Analyzing..." unless you add a twist.
 
 Examples: "Consulting the content council…", "Finding the climax…", "Checking if the intro hooks…"`;
 
-const breakdownMessagesSchema = z.object({
+const breakdownOutputSchema = z.object({
+  title: z.string().min(1).max(80),
   messages: z.array(z.string().min(1).max(60)).min(1),
 });
 
-async function generateBreakdownMessages(
+async function generateBreakdownContent(
   content: string,
-): Promise<string[] | null> {
-  if (!env.OPENAI_API_KEY) return null;
+): Promise<{ title: string; messages: string[] } | null> {
   const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
   const truncated = content.slice(0, 4000);
   const res = await openai.beta.chat.completions.parse({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: BREAKDOWN_MESSAGES_SYSTEM },
+      { role: "system", content: BREAKDOWN_SYSTEM },
       { role: "user", content: truncated },
     ],
-    max_tokens: 200,
+    max_tokens: 250,
     response_format: zodResponseFormat(
-      breakdownMessagesSchema,
-      "breakdown_messages",
+      breakdownOutputSchema,
+      "breakdown_output",
     ),
   });
   const parsed = res.choices[0]?.message?.parsed;
   if (!parsed) return null;
-  const result = breakdownMessagesSchema.safeParse(parsed);
-  return result.success ? result.data.messages : null;
+  const result = breakdownOutputSchema.safeParse(parsed);
+  return result.success ? result.data : null;
 }
 
 /** Run with videos relation. Used as explicit return type for getById so tRPC infers it. */
@@ -110,7 +113,7 @@ export const runsRouter = createTRPCRouter({
 
       if (!run) throw new Error("Failed to create run");
 
-      const [, messages] = await Promise.all([
+      const [, breakdown] = await Promise.all([
         (async () => {
           const res = await fetch(
             `${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/initial-processing`,
@@ -143,12 +146,15 @@ export const runsRouter = createTRPCRouter({
           await res.json();
           console.log(`[initial-processing] runId=${run.id} triggered`);
         })(),
-        generateBreakdownMessages(input.userInput),
+        generateBreakdownContent(input.userInput),
       ]);
-      if (messages && messages.length > 0) {
+      if (breakdown && breakdown.messages.length > 0) {
         await ctx.db
           .update(runs)
-          .set({ breakdown_messages: JSON.stringify(messages) })
+          .set({
+            title: breakdown.title,
+            breakdown_messages: JSON.stringify(breakdown.messages),
+          })
           .where(eq(runs.id, run.id));
       }
 
@@ -253,10 +259,11 @@ export const runsRouter = createTRPCRouter({
     }),
 
   /**
-   * Move all videos in a run from assets to export phase. Quick DB write.
-   * Call when assets are generated and user is ready to export.
+   * Trigger Remotion Lambda render for exportable videos in a run.
+   * Run: set to "export" instantly. Videos: exportable = assets | exported; each gets job + status "exporting".
+   * Webhook marks each video "exported" and sets export_path when done.
    */
-  finalizeAssets: protectedProcedure
+  triggerExport: protectedProcedure
     .input(z.object({ runId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [run] = await ctx.db
@@ -268,20 +275,93 @@ export const runsRouter = createTRPCRouter({
         throw new Error("Run not found");
       }
 
-      const result = await ctx.db
-        .update(videos)
-        .set({ status: "export" })
-        .where(and(eq(videos.run_id, input.runId), eq(videos.status, "assets")))
-        .returning({ id: videos.id });
+      const videosToExport = await ctx.db
+        .select({ id: videos.id, s3_prefix: videos.s3_prefix })
+        .from(videos)
+        .where(
+          and(
+            eq(videos.run_id, input.runId),
+            inArray(videos.status, ["assets", "exported"]),
+            isNotNull(videos.s3_prefix),
+          ),
+        );
 
-      if (result.length > 0) {
-        await ctx.db
-          .update(runs)
-          .set({ status: "export" })
-          .where(eq(runs.id, input.runId));
+      if (videosToExport.length === 0) {
+        throw new Error("No videos ready to export");
       }
 
-      return { updatedCount: result.length };
+      const {
+        REMOTION_LAMBDA_FUNCTION_NAME,
+        REMOTION_LAMBDA_REGION,
+        REMOTION_LAMBDA_SERVE_URL,
+        REMOTION_WEBHOOK_URL,
+        REMOTION_WEBHOOK_SECRET,
+        SHORTGEN_CDN_URL,
+        SHORTGEN_BUCKET_NAME,
+      } = env;
+
+      // Run: set to "export" instantly
+      await ctx.db
+        .update(runs)
+        .set({ status: "export" })
+        .where(eq(runs.id, input.runId));
+
+      const cdnBase = SHORTGEN_CDN_URL.replace(/\/$/, "");
+      const { renderMediaOnLambda } = await import("@remotion/lambda/client");
+
+      const webhook = {
+        url: REMOTION_WEBHOOK_URL,
+        secret: REMOTION_WEBHOOK_SECRET,
+      };
+
+      const results = await Promise.allSettled(
+        videosToExport.map(async (v) => {
+          const s3Prefix = v.s3_prefix!.replace(/\/$/, "");
+          const assetBaseUrl = `${cdnBase}/${s3Prefix}`;
+          const outKey = `${s3Prefix}/short.mp4`;
+          const backgroundMusicUrl = `${cdnBase}/assets/background_music.mp3`;
+
+          const result = await renderMediaOnLambda({
+            region: REMOTION_LAMBDA_REGION as Parameters<
+              typeof import("@remotion/lambda/client").renderMediaOnLambda
+            >[0]["region"],
+            functionName: REMOTION_LAMBDA_FUNCTION_NAME,
+            serveUrl: REMOTION_LAMBDA_SERVE_URL,
+            composition: "ShortVideo-AssetBase",
+            inputProps: { assetBaseUrl, backgroundMusicUrl },
+            codec: "h264",
+            webhook: {
+              ...webhook,
+              customData: { runId: input.runId, videoId: v.id },
+            },
+            outName: {
+              key: outKey,
+              bucketName: SHORTGEN_BUCKET_NAME,
+            },
+            privacy: "no-acl",
+          });
+
+          await ctx.db
+            .update(videos)
+            .set({ status: "exporting" })
+            .where(eq(videos.id, v.id));
+
+          return result;
+        }),
+      );
+
+      const failed = results.filter((r) => r.status === "rejected");
+      if (failed.length > 0) {
+        console.error("[triggerExport] Some renders failed:", failed);
+        for (const f of failed) {
+          if (f.status === "rejected") console.error(f.reason);
+        }
+      }
+
+      return {
+        triggeredCount: results.filter((r) => r.status === "fulfilled").length,
+        failedCount: failed.length,
+      };
     }),
 
   /**
@@ -408,6 +488,7 @@ export const runsRouter = createTRPCRouter({
 
   /**
    * Get video assets (manifest + CDN base URL) for preview. All asset reads go through CDN.
+   * When video is exported, includes exportUrl for download.
    */
   getVideoAssets: protectedProcedure
     .input(
@@ -420,15 +501,23 @@ export const runsRouter = createTRPCRouter({
       async ({
         ctx,
         input,
-      }): Promise<{ manifest: VideoManifest; assetBaseUrl: string } | null> => {
+      }): Promise<{
+        manifest: VideoManifest;
+        assetBaseUrl: string;
+        exportUrl?: string;
+        backgroundMusicUrl: string;
+      } | null> => {
         const [video] = await ctx.db
-          .select({ s3Prefix: videos.s3_prefix })
+          .select({
+            s3Prefix: videos.s3_prefix,
+            exportPath: videos.export_path,
+          })
           .from(videos)
           .where(
             and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
           );
 
-        if (!video?.s3Prefix || !env.SHORTGEN_CDN_URL) return null;
+        if (!video?.s3Prefix) return null;
 
         const [run] = await ctx.db
           .select({ userId: runs.userId })
@@ -447,8 +536,18 @@ export const runsRouter = createTRPCRouter({
           if (!res.ok) return null;
           const data = (await res.json()) as unknown;
           const manifest = manifestSchema.parse(data);
-          return { manifest, assetBaseUrl };
+          const exportUrl = video.exportPath
+            ? `${cdnBase}/${video.exportPath.replace(/\/$/, "")}`
+            : undefined;
+          const backgroundMusicUrl = `${cdnBase}/assets/background_music.mp3`;
+          return {
+            manifest,
+            assetBaseUrl,
+            exportUrl,
+            backgroundMusicUrl,
+          };
         } catch {
+          console.log("error fetching manifest", manifestUrl);
           return null;
         }
       },

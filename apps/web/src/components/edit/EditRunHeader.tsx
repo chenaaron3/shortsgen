@@ -30,16 +30,18 @@ export function EditRunHeader({
 }: EditRunHeaderProps) {
   const setLogsModalOpen = useRunStore((s) => s.setLogsModalOpen);
   return (
-    <div className="mb-6 flex items-center justify-between">
+    <div className="relative mb-6 flex items-center justify-between">
       <Link href="/" className="text-muted-foreground hover:text-foreground">
         ← Back
       </Link>
-      <div className="flex items-center gap-4">
+      <div className="absolute left-1/2 -translate-x-1/2">
         <RunProgressSteps
           phase={runPhase}
           breakdownComplete={breakdownComplete}
           compact
         />
+      </div>
+      <div className="flex items-center gap-4">
         {canShowNextButton && (
           <Button onClick={onNext} disabled={nextPending}>
             Next

@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { VideoListItem } from "./VideoListItem";
-import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
+import Link from 'next/link';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent, CardHeader } from '~/components/ui/card';
+
+import { VideoListItem } from './VideoListItem';
+
 import type { RouterOutputs } from "~/utils/api";
 
 type RunFromList = RouterOutputs["runs"]["listRunsForUser"]["runs"][number];
@@ -23,9 +25,11 @@ interface RunCardProps {
 export function RunCard({ run }: RunCardProps) {
   const runWithVideos = run as RunWithVideos;
   const videos = runWithVideos.videos ?? [];
-  const truncated = run.user_input.length > 120
-    ? run.user_input.slice(0, 120) + "..."
-    : run.user_input;
+  const displayTitle =
+    run.title?.trim() ||
+    (run.user_input.length > 120
+      ? run.user_input.slice(0, 120) + "..."
+      : run.user_input);
   const dateStr = run.created_at
     ? new Date(run.created_at).toLocaleDateString()
     : "";
@@ -33,7 +37,7 @@ export function RunCard({ run }: RunCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-2">
-        <p className="text-sm text-muted-foreground line-clamp-2">{truncated}</p>
+        <p className="text-sm text-muted-foreground line-clamp-2">{displayTitle}</p>
         <Link href={`/runs/${run.id}`}>
           <Button variant="secondary" size="sm">Edit</Button>
         </Link>

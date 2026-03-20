@@ -17,6 +17,12 @@
             "user_input": {
               "type": "string"
             },
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "status": {
               "type": [
                 "string",
@@ -51,6 +57,7 @@
             "id",
             "userId",
             "user_input",
+            "title",
             "status",
             "breakdown_messages"
           ],
@@ -68,6 +75,12 @@
               "format": "uuid"
             },
             "s3_prefix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "export_path": {
               "type": [
                 "string",
                 "null"
@@ -131,6 +144,7 @@
             "id",
             "run_id",
             "s3_prefix",
+            "export_path",
             "source_text",
             "status",
             "script",

@@ -22,6 +22,10 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "ShortgenAssetsRouter": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
     "ShortgenConnections": {
       "name": string
       "type": "sst.aws.Dynamo"

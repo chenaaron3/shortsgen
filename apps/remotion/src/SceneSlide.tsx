@@ -176,7 +176,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
       {/* Image wrapper: base image + glitch overlay */}
       <div style={imageWrapperStyle}>
         <div style={isTall ? { position: "relative" as const, width: "100%", height: "100%" } : { position: "relative" as const }}>
-          <Img src={imageSrc} style={baseImageStyle} />
+          <Img src={imageSrc} crossOrigin="anonymous" style={baseImageStyle} />
           <GlitchEffect
             imageSrc={imageSrc}
             intensity={glitchIntensity}

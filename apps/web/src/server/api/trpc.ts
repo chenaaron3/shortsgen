@@ -167,7 +167,7 @@ export const adminProcedure = t.procedure
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
-    const emails = env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean) ?? [];
+    const emails = env.ADMIN_EMAILS.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
     const isAdmin = emails.length > 0 && ctx.session.user.email && emails.includes(ctx.session.user.email.toLowerCase());
     if (!isAdmin) {
       throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });

@@ -22,22 +22,10 @@ declare module "next-auth" {
 }
 
 const providers = [
-  ...(env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET
-    ? [
-        Google({
-          clientId: env.AUTH_GOOGLE_ID,
-          clientSecret: env.AUTH_GOOGLE_SECRET,
-        }),
-      ]
-    : []),
-  ...(env.AUTH_GITHUB_ID && env.AUTH_GITHUB_SECRET
-    ? [
-        GitHub({
-          clientId: env.AUTH_GITHUB_ID,
-          clientSecret: env.AUTH_GITHUB_SECRET,
-        }),
-      ]
-    : []),
+  Google({
+    clientId: env.AUTH_GOOGLE_ID,
+    clientSecret: env.AUTH_GOOGLE_SECRET,
+  }),
 ];
 
 /**

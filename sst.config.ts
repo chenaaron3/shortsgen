@@ -11,6 +11,11 @@ export default $config({
     // Private S3 bucket; CloudFront-only access for signed URL delivery
     const bucket = new sst.aws.Bucket("ShortgenAssets", {
       access: "cloudfront",
+      cors: {
+        allowOrigins: ["*"],
+        allowMethods: ["GET", "HEAD"],
+        allowHeaders: ["*"],
+      },
     });
 
     // CDN in front of bucket for cheap reads via presigned URLs
@@ -252,6 +257,7 @@ export default $config({
       },
       link: [
         initialProcessing,
+        updateImagery,
         updateFeedback,
         finalizeClip,
         finalizeAllStateMachine,
