@@ -24,6 +24,8 @@ interface SceneListProps {
     feedback?: string,
   ) => void;
   sceneUpdating?: number | null;
+  /** When assets exist: scene index -> image URL for thumbnail */
+  imageUrlByIndex?: Record<number, string>;
 }
 
 const SECTIONS = ["Hook", "Body", "Close"] as const;
@@ -38,6 +40,7 @@ export function SceneList({
   imageryEditable = false,
   onRegenerate,
   sceneUpdating = null,
+  imageUrlByIndex,
 }: SceneListProps) {
   if (scenes.length === 0) {
     return (
@@ -81,6 +84,7 @@ export function SceneList({
                   imageryEditable={imageryEditable}
                   onRegenerate={onRegenerate}
                   isRegenerating={sceneUpdating === index}
+                  imageUrl={imageUrlByIndex?.[index]}
                 />
               ))}
             </div>

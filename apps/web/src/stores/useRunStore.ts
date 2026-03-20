@@ -3,7 +3,9 @@
 import { produce } from "immer";
 import { create } from "zustand";
 
-import { ChunksOutput, chunksSchema, type } from "@shortgen/types";
+import { chunksSchema } from "@shortgen/types";
+
+import type { ChunksOutput } from "@shortgen/types";
 
 import type { SceneFeedback } from "~/lib/sceneFeedback";
 

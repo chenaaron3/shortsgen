@@ -178,6 +178,21 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     selectedVideo?.status === "exporting" ||
     selectedVideo?.status === "exported";
 
+  const { data: videoAssets } = api.runs.getVideoAssets.useQuery(
+    { runId, videoId },
+    { enabled: !!runId && !!videoId && !!showPreview }
+  );
+
+  const imageUrlByIndex = useMemo(() => {
+    if (!videoAssets?.manifest?.scenes || !videoAssets.assetBaseUrl) return undefined;
+    const base = videoAssets.assetBaseUrl.replace(/\/$/, "");
+    const map: Record<number, string> = {};
+    videoAssets.manifest.scenes.forEach((scene, i) => {
+      if (scene.imagePath) map[i] = `${base}/${scene.imagePath}`;
+    });
+    return map;
+  }, [videoAssets]);
+
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground lg:flex-row">
       <VideoSidebar
@@ -237,6 +252,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
                       imageryEditable={imageryEditable}
                       onRegenerate={onRegenerateImagery}
                       sceneUpdating={sceneUpdating}
+                      imageUrlByIndex={imageUrlByIndex}
                     />
                   </div>
                   {(runPhase === "asset_gen" || runPhase === "export") && (

@@ -116,28 +116,26 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
     <div className="flex h-full w-full min-h-0 min-w-0 flex-col gap-2">
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-black">
         <Player
-          acknowledgeRemotionLicense
-          component={ShortVideo as React.ComponentType<Record<string, unknown>>}
-          inputProps={{
-            manifest,
-            assetBaseUrl,
-            backgroundMusicUrl,
-          }}
-          durationInFrames={manifest.durationInFrames}
-          compositionWidth={manifest.width}
-          compositionHeight={manifest.height}
-          fps={manifest.fps}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            minHeight: 0,
-            minWidth: 0,
-            objectFit: "contain",
-          }}
-          controls
-          loop
+          {...({
+            acknowledgeRemotionLicense: true,
+            component: ShortVideo as React.ComponentType<Record<string, unknown>>,
+            inputProps: { manifest, assetBaseUrl, backgroundMusicUrl },
+            durationInFrames: manifest.durationInFrames,
+            compositionWidth: manifest.width,
+            compositionHeight: manifest.height,
+            fps: manifest.fps,
+            style: {
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              minHeight: 0,
+              minWidth: 0,
+              objectFit: "contain",
+            },
+            controls: true,
+            loop: true,
+          } as React.ComponentProps<typeof Player>)}
         />
       </div>
       {exportUrl && (

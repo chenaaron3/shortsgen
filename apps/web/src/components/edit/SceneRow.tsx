@@ -1,7 +1,11 @@
 "use client";
 
-import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+} from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
@@ -39,6 +43,8 @@ interface SceneRowProps {
     feedback?: string,
   ) => void;
   isRegenerating?: boolean;
+  /** When assets exist: URL for scene image thumbnail */
+  imageUrl?: string;
 }
 
 export function SceneRow({
@@ -52,6 +58,7 @@ export function SceneRow({
   imageryEditable = false,
   onRegenerate,
   isRegenerating = false,
+  imageUrl,
 }: SceneRowProps) {
   const utils = api.useUtils();
   const acceptFieldMutation = api.runs.acceptSceneSuggestions.useMutation({
@@ -87,6 +94,7 @@ export function SceneRow({
   const [imageryText, setImageryText] = useState(scene.imagery);
   const [declinedSuggestion, setDeclinedSuggestion] = useState(false);
   const [feedbackPopoverOpen, setFeedbackPopoverOpen] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [pendingSentiment, setPendingSentiment] = useState<"like" | "dislike">(
     "like",
   );
@@ -241,8 +249,26 @@ export function SceneRow({
               </>
             )}
           </div>
-          <div className="flex shrink-0 flex-col items-end">
-            <div className="mt-auto">
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            {imageUrl && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setImageDialogOpen(true);
+                }}
+                className="relative z-10 shrink-0 cursor-pointer overflow-hidden rounded border border-border bg-muted/30 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="View scene image"
+              >
+                <img
+                  src={imageUrl}
+                  alt="Scene"
+                  className="block max-h-20 min-h-[48px] w-auto object-contain"
+                />
+              </button>
+            )}
+            <div className="mt-auto shrink-0">
               <Popover open={feedbackPopoverOpen} onOpenChange={handlePopoverOpenChange}>
                 <div className="flex flex-col items-end gap-0.5">
                   <PopoverTrigger asChild>
@@ -302,6 +328,20 @@ export function SceneRow({
           </div>
         </div>
       </CardContent>
+      {imageUrl && (
+        <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+          <DialogContent
+            className="w-fit max-w-[90vw] border-none bg-transparent p-0 shadow-none"
+            onPointerDownOutside={() => setImageDialogOpen(false)}
+          >
+            <img
+              src={imageUrl}
+              alt="Scene (full size)"
+              className="block max-h-[85vh] max-w-[90vw]"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 }
