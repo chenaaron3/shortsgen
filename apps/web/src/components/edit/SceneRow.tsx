@@ -1,13 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { sceneSchema } from "@shortgen/types";
-import type { z } from "zod";
-import { Card, CardContent } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
+import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent } from '~/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
+import { Textarea } from '~/components/ui/textarea';
+import {
+  EMPTY_SCENE_FEEDBACK, emptySceneFeedback, sceneFeedbackToApiString
+} from '~/lib/sceneFeedback';
+import { mergeSceneSuggestionsForOneScene } from '~/lib/suggestionMerge';
+import { useRunStore } from '~/stores/useRunStore';
+import { api } from '~/utils/api';
 
+import { WordDiff } from './WordDiff';
+
+import type { ChunksOutput } from "@shortgen/types";
 interface Scene {
   text: string;
   imagery: string;
@@ -16,212 +24,282 @@ interface Scene {
 
 interface SceneRowProps {
   scene: Scene;
+  runId: string;
+  videoId: string;
   sceneIndex: number;
-  feedback: string | undefined;
-  onFeedbackChange: (sceneIndex: number, liked: boolean | null, feedback: string) => void;
-  /** Suggested revision (from feedback streaming). Rendered as overlay, not overwriting. */
-  suggestion?: z.infer<typeof sceneSchema> | undefined;
-  /** Per-field accept/decline for this scene. When declined, suggestion is hidden. */
-  suggestionDecisions?: { text?: "accept" | "decline"; imagery?: "accept" | "decline" };
-  /** Called when user accepts or declines a suggestion for text or imagery. */
-  onSuggestionDecision?: (
-    sceneIndex: number,
-    field: "text" | "imagery",
-    decision: "accept" | "decline",
-  ) => void;
-  /** When true, script (text) is read-only. Used in assets phase. Unused for now. */
+  /** DB chunks for this video (for merging one suggested field). */
+  currentChunks: ChunksOutput;
+  /** When true, per-field Accept is disabled (e.g. parent “accept all” in flight). */
+  blockAcceptSuggestionField?: boolean;
   scriptLocked?: boolean;
-  /** When true, imagery is editable via textarea. Used in assets phase. */
   imageryEditable?: boolean;
-  /** Called when user requests regenerate (assets phase). Sends imagery and/or feedback. */
-  onRegenerate?: (sceneIndex: number, imagery?: string, feedback?: string) => void;
+  onRegenerate?: (
+    sceneIndex: number,
+    imagery?: string,
+    feedback?: string,
+  ) => void;
   isRegenerating?: boolean;
 }
 
 export function SceneRow({
   scene,
+  runId,
+  videoId,
   sceneIndex,
-  feedback,
-  suggestion,
-  suggestionDecisions,
-  onSuggestionDecision,
-  onFeedbackChange,
-  scriptLocked = false,
+  currentChunks,
+  blockAcceptSuggestionField = false,
+  scriptLocked: _scriptLocked = false,
   imageryEditable = false,
   onRegenerate,
   isRegenerating = false,
 }: SceneRowProps) {
-  const [reason, setReason] = useState(feedback ?? "");
-  const [imageryText, setImageryText] = useState(scene.imagery);
-  const liked: boolean | null =
-    feedback === "Looks good"
-      ? true
-      : feedback !== undefined && feedback !== ""
-        ? false
-        : null;
+  const utils = api.useUtils();
+  const acceptFieldMutation = api.runs.acceptSceneSuggestions.useMutation({
+    onSuccess: () => {
+      void utils.runs.getById.invalidate({ runId });
+    },
+  });
 
-  useEffect(() => {
-    setReason(feedback && feedback !== "Looks good" ? feedback : "");
-  }, [feedback]);
+  const acceptSceneSuggestion = useCallback(() => {
+    const sceneSuggestions =
+      useRunStore.getState().progress.sceneSuggestionsByVideo[videoId];
+    if (!sceneSuggestions) return;
+    const chunks = mergeSceneSuggestionsForOneScene(
+      currentChunks,
+      sceneSuggestions,
+      sceneIndex,
+    );
+    acceptFieldMutation.mutate({ runId, videoId, chunks });
+  }, [acceptFieldMutation, currentChunks, sceneIndex, videoId, runId]);
+
+  const acceptSuggestionPending =
+    acceptFieldMutation.isPending || blockAcceptSuggestionField;
+  const feedback = useRunStore((s) => {
+    const v = s.feedback.feedbackByVideo[videoId]?.sceneFeedback?.[sceneIndex];
+    return v ?? EMPTY_SCENE_FEEDBACK;
+  });
+  const setSceneFeedback = useRunStore((s) => s.setSceneFeedback);
+  const suggestion = useRunStore(
+    (s) => s.progress.sceneSuggestionsByVideo[videoId]?.scenes?.[sceneIndex],
+  );
+
+  const { sentiment, note } = feedback;
+  const [imageryText, setImageryText] = useState(scene.imagery);
+  const [declinedSuggestion, setDeclinedSuggestion] = useState(false);
+  const [feedbackPopoverOpen, setFeedbackPopoverOpen] = useState(false);
+  const [pendingSentiment, setPendingSentiment] = useState<"like" | "dislike">(
+    "like",
+  );
+  const [draftNote, setDraftNote] = useState("");
 
   useEffect(() => {
     setImageryText(scene.imagery);
   }, [scene.imagery]);
 
-  const handleLike = () => {
-    const newLiked = liked === true ? null : true;
-    onFeedbackChange(sceneIndex, newLiked, newLiked ? "Looks good" : "");
-    if (newLiked) setReason("");
+  useEffect(() => {
+    if (!suggestion) setDeclinedSuggestion(false);
+  }, [suggestion]);
+
+  const handleLikeClick = (e: React.MouseEvent) => {
+    if (sentiment === "like") {
+      e.stopPropagation();
+      setSceneFeedback(videoId, sceneIndex, emptySceneFeedback());
+      setFeedbackPopoverOpen(false);
+      return;
+    }
+    setSceneFeedback(videoId, sceneIndex, { sentiment: "like", note });
+    setPendingSentiment("like");
+    setDraftNote(note);
+    setFeedbackPopoverOpen(true);
   };
 
-  const handleDislike = () => {
-    const newLiked = liked === false ? null : false;
-    if (newLiked === false) {
-      onFeedbackChange(sceneIndex, false, reason);
-    } else {
-      onFeedbackChange(sceneIndex, null, "");
-      setReason("");
+  const handleDislikeClick = (e: React.MouseEvent) => {
+    if (sentiment === "dislike") {
+      e.stopPropagation();
+      setSceneFeedback(videoId, sceneIndex, emptySceneFeedback());
+      setFeedbackPopoverOpen(false);
+      return;
+    }
+    setSceneFeedback(videoId, sceneIndex, { sentiment: "dislike", note });
+    setPendingSentiment("dislike");
+    setDraftNote(note);
+    setFeedbackPopoverOpen(true);
+  };
+
+  const persistNoteAndClose = () => {
+    setSceneFeedback(videoId, sceneIndex, {
+      sentiment: pendingSentiment,
+      note: draftNote,
+    });
+    setFeedbackPopoverOpen(false);
+  };
+
+  const handlePopoverOpenChange = (open: boolean) => {
+    setFeedbackPopoverOpen(open);
+    if (!open) persistNoteAndClose();
+  };
+
+  const handleNoteKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      persistNoteAndClose();
     }
   };
 
-  const handleReasonChange = (value: string) => {
-    setReason(value);
-    if (liked === false) {
-      onFeedbackChange(sceneIndex, false, value);
-    }
-  };
+  const hasSceneFeedback = sceneFeedbackToApiString(feedback).length > 0;
 
   const canRegenerate =
     imageryEditable &&
     onRegenerate &&
-    (imageryText.trim() !== scene.imagery.trim() ||
-      (feedback !== undefined && feedback !== ""));
+    (imageryText.trim() !== scene.imagery.trim() || hasSceneFeedback);
 
   const handleRegenerate = () => {
     if (!onRegenerate || !canRegenerate) return;
     if (imageryText.trim() !== scene.imagery.trim()) {
       onRegenerate(sceneIndex, imageryText.trim());
-    } else if (feedback !== undefined) {
-      onRegenerate(sceneIndex, undefined, feedback);
+    } else if (hasSceneFeedback) {
+      onRegenerate(sceneIndex, undefined, sceneFeedbackToApiString(feedback));
     }
   };
 
+  const showSuggestion = suggestion && !declinedSuggestion;
+  const hasDiffs =
+    suggestion &&
+    (suggestion.text !== scene.text || suggestion.imagery !== scene.imagery);
+
   return (
-    <Card size="sm">
-      <CardContent className="space-y-2 pt-4">
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div>
-            <span className="text-xs font-medium text-muted-foreground">{scene.section}</span>
-            <p className="text-foreground">{scene.text}</p>
-            {suggestion &&
-              suggestion.text !== scene.text &&
-              suggestionDecisions?.text !== "decline" && (
-                <div className="mt-2 rounded-md border border-dashed border-primary/30 bg-primary/5 px-2 py-1.5">
-                  <span className="text-xs font-medium text-muted-foreground">Suggested</span>
-                  <p className="text-sm text-muted-foreground">{suggestion.text}</p>
-                  {onSuggestionDecision && (
-                    <div className="mt-2 flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onSuggestionDecision(sceneIndex, "text", "accept")}
-                      >
-                        Accept
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onSuggestionDecision(sceneIndex, "text", "decline")}
-                      >
-                        Decline
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-          </div>
-          <div>
-            <span className="text-xs font-medium text-muted-foreground">Image description</span>
-            {imageryEditable ? (
-              <Textarea
-                value={imageryText}
-                onChange={(e) => setImageryText(e.target.value)}
-                placeholder="Describe the image…"
-                className="mt-1 min-h-[80px] resize-y"
-              />
+    <Card size="sm" className="py-2 ring-0">
+      <CardContent className="pt-2">
+        <div className="flex items-stretch gap-2">
+          <div className="min-w-0 flex-1 space-y-2">
+            {showSuggestion ? (
+              <div className="space-y-2">
+                <WordDiff
+                  before={scene.text}
+                  after={suggestion!.text}
+                  variant="script"
+                />
+                <WordDiff
+                  before={scene.imagery}
+                  after={suggestion!.imagery}
+                  variant="imagery"
+                />
+                {hasDiffs && (
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-xs"
+                      disabled={acceptSuggestionPending}
+                      onClick={acceptSceneSuggestion}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs"
+                      disabled={acceptSuggestionPending}
+                      onClick={() => setDeclinedSuggestion(true)}
+                    >
+                      Decline
+                    </Button>
+                  </div>
+                )}
+              </div>
             ) : (
-              <p className="text-muted-foreground">{scene.imagery}</p>
+              <>
+                <p className="text-foreground text-sm leading-snug">{scene.text}</p>
+                <div>
+                  {imageryEditable ? (
+                    <Textarea
+                      value={imageryText}
+                      onChange={(e) => setImageryText(e.target.value)}
+                      placeholder="Image description…"
+                      className="min-h-[48px] resize-y text-xs"
+                    />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">{scene.imagery}</p>
+                  )}
+                </div>
+                {imageryEditable && onRegenerate && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={handleRegenerate}
+                      disabled={!canRegenerate || isRegenerating}
+                    >
+                      {isRegenerating ? "…" : "Regenerate"}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
-            {suggestion &&
-              suggestion.imagery !== scene.imagery &&
-              suggestionDecisions?.imagery !== "decline" && (
-                <div className="mt-2 rounded-md border border-dashed border-primary/30 bg-primary/5 px-2 py-1.5">
-                  <span className="text-xs font-medium text-muted-foreground">Suggested</span>
-                  <p className="text-sm text-muted-foreground">{suggestion.imagery}</p>
-                  {onSuggestionDecision && (
-                    <div className="mt-2 flex gap-2">
+          </div>
+          <div className="flex shrink-0 flex-col items-end">
+            <div className="mt-auto">
+              <Popover open={feedbackPopoverOpen} onOpenChange={handlePopoverOpenChange}>
+                <div className="flex flex-col items-end gap-0.5">
+                  <PopoverTrigger asChild>
+                    <div className="flex gap-0.5">
                       <Button
                         type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onSuggestionDecision(sceneIndex, "imagery", "accept")}
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={handleLikeClick}
+                        className={
+                          sentiment === "like"
+                            ? "text-green-600 hover:bg-green-500/10 hover:text-green-600"
+                            : "text-muted-foreground hover:text-foreground"
+                        }
+                        aria-label="Like scene"
                       >
-                        Accept
+                        <ThumbsUp className="size-3" />
                       </Button>
                       <Button
                         type="button"
                         variant="ghost"
-                        size="sm"
-                        onClick={() => onSuggestionDecision(sceneIndex, "imagery", "decline")}
+                        size="icon-xs"
+                        onClick={handleDislikeClick}
+                        className={
+                          sentiment === "dislike"
+                            ? "text-amber-600 hover:bg-amber-500/10 hover:text-amber-600"
+                            : "text-muted-foreground hover:text-foreground"
+                        }
+                        aria-label="Dislike scene"
                       >
-                        Decline
+                        <ThumbsDown className="size-3" />
                       </Button>
                     </div>
+                  </PopoverTrigger>
+                  {(sentiment === "like" || sentiment === "dislike") && note.trim() && (
+                    <p className="max-w-[120px] truncate text-right text-[10px] text-muted-foreground">
+                      {note.trim()}
+                    </p>
                   )}
                 </div>
-              )}
+                <PopoverContent side="bottom" align="end" className="w-72">
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    {pendingSentiment === "like"
+                      ? "What did you like?"
+                      : "What could improve?"}
+                  </p>
+                  <Textarea
+                    value={draftNote}
+                    onChange={(e) => setDraftNote(e.target.value)}
+                    onKeyDown={handleNoteKeyDown}
+                    placeholder="Optional note…"
+                    className="min-h-[60px] resize-y text-sm"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant={liked === true ? "default" : "secondary"}
-            size="sm"
-            onClick={handleLike}
-            className={liked === true ? "bg-green-600 hover:bg-green-700" : ""}
-          >
-            Like
-          </Button>
-          <Button
-            type="button"
-            variant={liked === false ? "destructive" : "secondary"}
-            size="sm"
-            onClick={handleDislike}
-          >
-            Dislike
-          </Button>
-          {liked === false && (
-            <Input
-              type="text"
-              value={reason}
-              onChange={(e) => handleReasonChange(e.target.value)}
-              placeholder="Reason for dislike…"
-              className="min-w-[200px]"
-            />
-          )}
-          {imageryEditable && onRegenerate && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRegenerate}
-              disabled={!canRegenerate || isRegenerating}
-            >
-              {isRegenerating ? "Regenerating…" : "Regenerate image"}
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

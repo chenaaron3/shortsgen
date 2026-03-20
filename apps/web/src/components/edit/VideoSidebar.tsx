@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { getVideoDisplayName } from "~/lib/parseVideoChunks";
 import { Skeleton } from "~/components/ui/skeleton";
 
 interface Video {
   id: string;
   status: string | null;
+  chunks?: unknown;
 }
 
 interface VideoSidebarProps {
@@ -28,7 +30,7 @@ export function VideoSidebar({
   revisionLoadingVideoId,
 }: VideoSidebarProps) {
   return (
-    <aside className="w-56 shrink-0 border-r border-border bg-card p-4 lg:w-64">
+    <aside className="scrollbar-seamless w-56 shrink-0 overflow-y-auto bg-card p-4 lg:w-64">
       <div className="mb-3 flex items-center gap-2">
         <span
           className={`h-2 w-2 rounded-full ${
@@ -66,7 +68,7 @@ export function VideoSidebar({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
-              <span className="font-mono">{v.id.slice(0, 8)}</span>
+              <span className="font-mono">{getVideoDisplayName(v)}</span>
               {revisionLoadingVideoId === v.id && (
                 <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
               )}

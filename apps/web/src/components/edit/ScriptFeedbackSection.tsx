@@ -1,8 +1,9 @@
 "use client";
 
+import { Send } from "lucide-react";
 import { useRunStore } from "~/stores/useRunStore";
-import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 
 interface ScriptFeedbackSectionProps {
   onApplyFeedback: () => void;
@@ -19,31 +20,35 @@ export function ScriptFeedbackSection({
   const setScriptFeedback = useRunStore((s) => s.setScriptFeedback);
 
   return (
-    <div className="mt-auto border-t border-border pt-6">
-      <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-        Script feedback
-      </h3>
-      <div className="flex gap-2">
-        <Textarea
-          value={scriptFeedback}
-          onChange={(e) => setScriptFeedback(e.target.value)}
-          placeholder="Feedback on the script (e.g. make it shorter, change the tone…)"
-          className="min-h-[80px] flex-1 resize-y"
-          rows={3}
-          disabled={disabled}
-        />
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={onApplyFeedback}
-          disabled={disabled}
-          className="shrink-0 self-end"
-        >
-          Submit
-        </Button>
-      </div>
+    <div className="mx-auto max-w-2xl">
+        <div className="flex items-center gap-2 rounded-full border border-input bg-background px-4 py-2">
+          <Input
+            value={scriptFeedback}
+            onChange={(e) => setScriptFeedback(e.target.value)}
+            placeholder="Add feedback on the script…"
+            className="min-w-0 flex-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
+            disabled={disabled}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                onApplyFeedback();
+              }
+            }}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onApplyFeedback}
+            disabled={disabled}
+            className="shrink-0 rounded-full bg-transparent hover:bg-transparent dark:bg-transparent dark:hover:bg-transparent"
+            aria-label="Submit feedback"
+          >
+            <Send className="size-4" />
+          </Button>
+        </div>
       {error && (
-        <p className="mt-2 text-sm text-destructive">{error}</p>
+        <p className="mt-2 text-center text-sm text-destructive">{error}</p>
       )}
     </div>
   );

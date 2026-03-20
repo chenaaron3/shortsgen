@@ -3,7 +3,7 @@ Apply human feedback to script and scenes. Revises Chunks based on script-level 
 Called by Update Clip With Feedback Lambda.
 
 Requires on_partial callback for streaming. Emits partial LLM output as tokens arrive so the client
-can optimistically display progress (feedback_partial events).
+can optimistically display progress (suggestion_partial events).
 
 Uses OpenAI client directly for streaming + structured output (litellm has known issues with this combo).
 Requires an OpenAI model (e.g. gpt-4o) in config.chunk.model.
@@ -90,7 +90,7 @@ def apply_feedback(
     Apply user feedback to revise scenes. Returns modified Chunks.
 
     Streams LLM output and calls on_partial(accumulated_content) for each chunk.
-    Enables client to show feedback_partial events optimistically.
+    Enables client to show suggestion_partial events optimistically.
     """
     model = config.chunk.model
     system_prompt = (

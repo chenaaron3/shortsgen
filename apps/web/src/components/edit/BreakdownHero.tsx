@@ -9,7 +9,7 @@ const FALLBACK_MESSAGES = [
   "Almost ready…",
 ];
 
-const CYCLE_INTERVAL_MS = 2500;
+const CYCLE_INTERVAL_MS = 5000;
 
 interface BreakdownHeroProps {
   complete?: boolean;

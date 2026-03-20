@@ -63,7 +63,7 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
     def on_partial(partial: str) -> None:
         emit_event(
             run_id,
-            ProgressEventType.feedback_partial,
+            ProgressEventType.suggestion_partial,
             video_id=video_id,
             payload={"partial": partial},
         )
@@ -76,10 +76,10 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
         scene_feedback=scene_feedback,
         on_partial=on_partial,
     )
-    log_info(f"[update-feedback] feedback applied, emitting feedback_completed (client must accept to persist)")
+    log_info(f"[update-feedback] feedback applied, emitting suggestion_completed (client must accept to persist)")
     emit_event(
         run_id,
-        ProgressEventType.feedback_completed,
+        ProgressEventType.suggestion_completed,
         video_id=video_id,
         payload={"chunks": revised.model_dump()},
     )

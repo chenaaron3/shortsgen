@@ -1,12 +1,12 @@
-import { z } from "zod";
+import { and, desc, eq, InferSelectModel, type } from "drizzle-orm";
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { chunksSchema } from "@shortgen/types";
+import { z } from "zod";
 import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 import { runs, videos } from "@shortgen/db";
-import { and, desc, eq, type InferSelectModel } from "drizzle-orm";
+import { chunksSchema } from "@shortgen/types";
 
 const BREAKDOWN_MESSAGES_SYSTEM = `You generate short, playful loading messages for a video creation app. The user pasted content and the app is analyzing it to create short-form videos.
 
@@ -24,7 +24,9 @@ const breakdownMessagesSchema = z.object({
   messages: z.array(z.string().min(1).max(60)).min(1),
 });
 
-async function generateBreakdownMessages(content: string): Promise<string[] | null> {
+async function generateBreakdownMessages(
+  content: string,
+): Promise<string[] | null> {
   if (!env.OPENAI_API_KEY) return null;
   const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
   const truncated = content.slice(0, 4000);
@@ -35,7 +37,10 @@ async function generateBreakdownMessages(content: string): Promise<string[] | nu
       { role: "user", content: truncated },
     ],
     max_tokens: 200,
-    response_format: zodResponseFormat(breakdownMessagesSchema, "breakdown_messages"),
+    response_format: zodResponseFormat(
+      breakdownMessagesSchema,
+      "breakdown_messages",
+    ),
   });
   const parsed = res.choices[0]?.message?.parsed;
   if (!parsed) return null;
@@ -51,11 +56,13 @@ export type RunWithVideos = InferSelectModel<typeof runs> & {
 export const runsRouter = createTRPCRouter({
   /** List all runs for the current user with their videos. */
   listRunsForUser: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.query.runs.findMany({
-      where: eq(runs.userId, ctx.session.user.id),
-      orderBy: desc(runs.created_at),
-      with: { videos: true },
-    }).then((runsWithVideos) => ({ runs: runsWithVideos }));
+    return ctx.db.query.runs
+      .findMany({
+        where: eq(runs.userId, ctx.session.user.id),
+        orderBy: desc(runs.created_at),
+        with: { videos: true },
+      })
+      .then((runsWithVideos) => ({ runs: runsWithVideos }));
   }),
 
   /** Get a run with its videos. */
@@ -67,7 +74,8 @@ export const runsRouter = createTRPCRouter({
         with: { videos: true },
       });
 
-      if (!runWithVideos || runWithVideos.userId !== ctx.session.user.id) return null;
+      if (!runWithVideos || runWithVideos.userId !== ctx.session.user.id)
+        return null;
 
       return runWithVideos as RunWithVideos;
     }),
@@ -81,8 +89,11 @@ export const runsRouter = createTRPCRouter({
       z.object({
         userInput: z.string().min(1),
         /** Pipeline config: prototype (cheap/fast) or default (full quality). From user tier. */
-        config: z.enum(["prototype", "default"]).optional().default("prototype"),
-      })
+        config: z
+          .enum(["prototype", "default"])
+          .optional()
+          .default("prototype"),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const [run] = await ctx.db
@@ -96,41 +107,47 @@ export const runsRouter = createTRPCRouter({
 
       if (!run) throw new Error("Failed to create run");
 
-      const messages = await generateBreakdownMessages(input.userInput);
+      const [, messages] = await Promise.all([
+        (async () => {
+          const res = await fetch(
+            `${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/initial-processing`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-API-Secret": env.SHORTGEN_API_SECRET,
+              },
+              body: JSON.stringify({
+                runId: run.id,
+                sourceContent: input.userInput,
+                config: input.config,
+              }),
+            },
+          );
+
+          if (!res.ok) {
+            const err = await res.text();
+            let parsed: { message?: string; error?: string };
+            try {
+              parsed = JSON.parse(err) as { message?: string; error?: string };
+            } catch {
+              parsed = {};
+            }
+            const msg = parsed.message ?? parsed.error ?? err;
+            throw new Error(`Initial processing failed: ${msg}`);
+          }
+
+          await res.json();
+          console.log(`[initial-processing] runId=${run.id} triggered`);
+        })(),
+        generateBreakdownMessages(input.userInput),
+      ]);
       if (messages && messages.length > 0) {
         await ctx.db
           .update(runs)
           .set({ breakdown_messages: JSON.stringify(messages) })
           .where(eq(runs.id, run.id));
       }
-
-      const res = await fetch(`${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/initial-processing`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Secret": env.SHORTGEN_API_SECRET,
-        },
-        body: JSON.stringify({
-          runId: run.id,
-          sourceContent: input.userInput,
-          config: input.config,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.text();
-        let parsed: { message?: string; error?: string };
-        try {
-          parsed = JSON.parse(err) as { message?: string; error?: string };
-        } catch {
-          parsed = {};
-        }
-        const msg = parsed.message ?? parsed.error ?? err;
-        throw new Error(`Initial processing failed: ${msg}`);
-      }
-
-      await res.json();
-      console.log(`[initial-processing] runId=${run.id} triggered`);
 
       return {
         runId: run.id,
@@ -150,7 +167,7 @@ export const runsRouter = createTRPCRouter({
         sceneFeedback: z
           .array(z.object({ sceneIndex: z.number(), feedback: z.string() }))
           .optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const [run] = await ctx.db
@@ -162,19 +179,22 @@ export const runsRouter = createTRPCRouter({
         throw new Error("Run not found");
       }
 
-      const res = await fetch(`${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/update-feedback`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Secret": env.SHORTGEN_API_SECRET,
+      const res = await fetch(
+        `${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/update-feedback`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Secret": env.SHORTGEN_API_SECRET,
+          },
+          body: JSON.stringify({
+            runId: input.runId,
+            videoId: input.videoId,
+            scriptFeedback: input.scriptFeedback,
+            sceneFeedback: input.sceneFeedback,
+          }),
         },
-        body: JSON.stringify({
-          runId: input.runId,
-          videoId: input.videoId,
-          scriptFeedback: input.scriptFeedback,
-          sceneFeedback: input.sceneFeedback,
-        }),
-      });
+      );
 
       if (!res.ok) {
         const err = await res.text();
@@ -182,15 +202,17 @@ export const runsRouter = createTRPCRouter({
       }
 
       const data = (await res.json()) as { jobId: string; status: string };
-      console.log(`[update-feedback] runId=${input.runId} videoId=${input.videoId} triggered`);
+      console.log(
+        `[update-feedback] runId=${input.runId} videoId=${input.videoId} triggered`,
+      );
       return { jobId: data.jobId, status: data.status };
     }),
 
   /**
-   * Accept feedback suggestion and persist chunks to DB. Call after user accepts
-   * the suggestion shown from feedback_completed (chunks in store).
+   * Persist accepted LLM scene suggestions (ChunksOutput) to DB. Call after user accepts
+   * the revision from suggestion_completed (stored in sceneSuggestionsByVideo until cleared).
    */
-  acceptFeedbackChunks: protectedProcedure
+  acceptSceneSuggestions: protectedProcedure
     .input(
       z.object({
         runId: z.string().uuid(),
@@ -212,10 +234,7 @@ export const runsRouter = createTRPCRouter({
         .select()
         .from(videos)
         .where(
-          and(
-            eq(videos.id, input.videoId),
-            eq(videos.run_id, input.runId),
-          ),
+          and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
         );
 
       if (!video) {
@@ -249,12 +268,7 @@ export const runsRouter = createTRPCRouter({
       const result = await ctx.db
         .update(videos)
         .set({ status: "export" })
-        .where(
-          and(
-            eq(videos.run_id, input.runId),
-            eq(videos.status, "assets"),
-          ),
-        )
+        .where(and(eq(videos.run_id, input.runId), eq(videos.status, "assets")))
         .returning({ id: videos.id });
 
       if (result.length > 0) {
@@ -346,10 +360,7 @@ export const runsRouter = createTRPCRouter({
         .select({ id: videos.id })
         .from(videos)
         .where(
-          and(
-            eq(videos.run_id, input.runId),
-            eq(videos.status, "scripts"),
-          ),
+          and(eq(videos.run_id, input.runId), eq(videos.status, "scripts")),
         );
 
       const videoIds = scriptsVideos.map((v) => v.id);
@@ -362,17 +373,20 @@ export const runsRouter = createTRPCRouter({
         .set({ status: "asset_gen" })
         .where(eq(runs.id, input.runId));
 
-      const res = await fetch(`${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/finalize-all`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Secret": env.SHORTGEN_API_SECRET,
+      const res = await fetch(
+        `${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/finalize-all`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Secret": env.SHORTGEN_API_SECRET,
+          },
+          body: JSON.stringify({
+            runId: input.runId,
+            videoIds,
+          }),
         },
-        body: JSON.stringify({
-          runId: input.runId,
-          videoIds,
-        }),
-      });
+      );
 
       if (!res.ok) {
         const err = await res.text();
@@ -388,5 +402,4 @@ export const runsRouter = createTRPCRouter({
       );
       return { jobId: data.jobId, status: data.status };
     }),
-
 });

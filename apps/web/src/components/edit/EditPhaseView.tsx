@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from 'react';
+import { useSuggestionFeedback } from '~/hooks/useSuggestionFeedback';
+import { getVideoDisplayName, parseVideoChunks } from '~/lib/parseVideoChunks';
+import { sceneFeedbackToApiString } from '~/lib/sceneFeedback';
 import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
-import { useSuggestionFeedback } from "~/hooks/useSuggestionFeedback";
 import { AssetGenStatusMessage } from './AssetGenStatusMessage';
+import { Badge } from '~/components/ui/badge';
 import { EditRunHeader } from './EditRunHeader';
 import { RawScriptCard } from './RawScriptCard';
 import { RunLogsModal } from './RunLogsModal';
@@ -16,12 +19,7 @@ import { VideoSidebar } from './VideoSidebar';
 
 import type { RunPhase } from "./RunProgressSteps";
 import type { RouterOutputs } from "~/utils/api";
-
 type RunWithVideos = NonNullable<RouterOutputs["runs"]["getById"]>;
-
-interface ChunksData {
-  scenes?: Array<{ text: string; imagery: string; section: string }>;
-}
 
 interface EditPhaseViewProps {
   runData: RunWithVideos;
@@ -36,7 +34,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const runQuery = api.runs.getById.useQuery({ runId });
   const isAdminQuery = api.admin.isAdmin.useQuery();
 
-  const { setSceneUpdating, setVideoUpdating } = useRunStore();
+  const { setSceneUpdating, setVideoUpdating, setScriptFeedback } = useRunStore();
 
   const sourceTextByVideo = useRunStore((s) => s.ui.sourceTextByVideo);
   const feedbackByVideo = useRunStore((s) => s.feedback.feedbackByVideo);
@@ -44,47 +42,43 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const breakdownComplete = useRunStore((s) => s.progress.breakdownComplete);
   const sceneUpdating = useRunStore((s) => s.progress.sceneUpdating);
   const videoUpdating = useRunStore((s) => s.progress.videoUpdating);
-  const setSceneFeedback = useRunStore((s) => s.setSceneFeedback);
   const setLogsModalOpen = useRunStore((s) => s.setLogsModalOpen);
   const logsModalOpen = useRunStore((s) => s.ui.logsModalOpen);
 
   const videos = runData.videos ?? [];
   const selectedVideo = videos.find((v) => v.id === videoId);
-  const chunks: ChunksData | null = selectedVideo?.chunks
-    ? typeof selectedVideo.chunks === "string"
-      ? (JSON.parse(selectedVideo.chunks) as ChunksData)
-      : (selectedVideo.chunks as ChunksData)
-    : null;
-  const scenes = chunks?.scenes ?? [];
+
+  const { currentChunks, scenes, description } = useMemo(
+    () => parseVideoChunks(selectedVideo?.chunks),
+    [selectedVideo?.chunks],
+  );
   const sourceText = selectedVideo
     ? (sourceTextByVideo[selectedVideo.id] ?? selectedVideo.source_text ?? "")
     : "";
-  const feedbackByScene = feedbackByVideo[videoId]?.sceneFeedback ?? {};
-  const feedbackPartial = useRunStore((s) => s.progress.feedbackPartialByVideo[videoId]);
-  const clearFeedbackPartial = useRunStore((s) => s.clearFeedbackPartial);
+  const sceneSuggestions = useRunStore((s) => s.progress.sceneSuggestionsByVideo[videoId]);
+  const clearSceneSuggestions = useRunStore((s) => s.clearSceneSuggestions);
   const effectiveBreakdownComplete = breakdownComplete || videos.length > 0;
 
-  const onSuggestionAcceptSuccess = useCallback(() => {
-    clearFeedbackPartial(videoId);
+  const onAcceptAllSuccess = useCallback(() => {
+    clearSceneSuggestions(videoId);
     void runQuery.refetch();
-  }, [videoId, clearFeedbackPartial, runQuery]);
+  }, [videoId, clearSceneSuggestions, runQuery]);
 
   const {
-    suggestionDecisions,
-    onSuggestionDecision,
-    acceptSuggestion,
+    acceptAllSceneSuggestions,
     declineSuggestion,
     isDecisionPending,
   } = useSuggestionFeedback({
     runId,
     videoId,
-    feedbackPartial,
-    scenes,
-    onAcceptSuccess: onSuggestionAcceptSuccess,
-    onDeclineSuccess: onSuggestionAcceptSuccess,
+    currentChunks,
+    sceneSuggestions,
+    onAcceptAllSuccess,
   });
 
-  const updateFeedbackMutation = api.runs.updateClipFeedback.useMutation();
+  const updateFeedbackMutation = api.runs.updateClipFeedback.useMutation({
+    onSuccess: () => setScriptFeedback(""),
+  });
   const finalizeAllMutation = api.runs.finalizeAll.useMutation({
     onSuccess: () => {
       setVideoUpdating(true);
@@ -119,8 +113,13 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     const fb = feedbackByVideo[videoId];
     const sceneFeedbackArray = fb?.sceneFeedback
       ? Object.entries(fb.sceneFeedback)
-        .filter(([, v]) => v.trim().length > 0)
-        .map(([k, v]) => ({ sceneIndex: Number(k), feedback: v }))
+        .map(([k, v]) => {
+          const s = sceneFeedbackToApiString(v);
+          return s.trim().length > 0
+            ? { sceneIndex: Number(k), feedback: s }
+            : null;
+        })
+        .filter((x): x is { sceneIndex: number; feedback: string } => x !== null)
       : undefined;
     updateFeedbackMutation.mutate({
       runId,
@@ -161,12 +160,6 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     [runId, updateImageryMutation]
   );
 
-  const handleFeedbackChange =
-    videoId
-      ? (sceneIndex: number, _liked: boolean | null, feedback: string) =>
-        setSceneFeedback(videoId, sceneIndex, feedback)
-      : undefined;
-
   const scriptLocked = runPhase === "asset_gen" || runPhase === "export";
   const imageryEditable = runPhase === "asset_gen" || runPhase === "export";
   const onRegenerateImagery =
@@ -177,7 +170,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
       : undefined;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground lg:flex-row">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground lg:flex-row">
       <VideoSidebar
         runId={runId}
         videos={videos}
@@ -188,38 +181,80 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
           updateFeedbackMutation.isPending ? videoId : null
         }
       />
-      <main className="flex flex-1 flex-col overflow-auto p-6">
-        <EditRunHeader
-          runPhase={runPhase}
-          breakdownComplete={effectiveBreakdownComplete}
-          canShowNextButton={canShowNextButton}
-          canShowExportButton={canShowExportButton}
-          isAdmin={!!isAdminQuery.data?.isAdmin}
-          onNext={handleFinalizeAll}
-          onExport={handleFinalizeAssets}
-          nextPending={finalizeAllMutation.isPending}
-          exportPending={finalizeAssetsMutation.isPending}
-        />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <header className="shrink-0 bg-background px-6 py-4">
+          <EditRunHeader
+            runPhase={runPhase}
+            breakdownComplete={effectiveBreakdownComplete}
+            canShowNextButton={canShowNextButton}
+            canShowExportButton={canShowExportButton}
+            isAdmin={!!isAdminQuery.data?.isAdmin}
+            onNext={handleFinalizeAll}
+            onExport={handleFinalizeAssets}
+            nextPending={finalizeAllMutation.isPending}
+            exportPending={finalizeAssetsMutation.isPending}
+          />
+        </header>
 
-        {selectedVideo && (
-          <>
-            {sourceText && <RawScriptCard sourceText={sourceText} />}
-            <h2 className="mb-4 text-lg font-semibold">
-              Video {selectedVideo.id.slice(0, 8)} — {scenes.length} scenes
-            </h2>
-            {feedbackPartial && (
-              <div className="mb-4 flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+        <div className="scrollbar-seamless min-h-0 flex-1 overflow-auto">
+          {selectedVideo && (
+            <div className="mx-auto max-w-2xl px-6 py-6 pb-8">
+              <div
+                className={
+                  description ? "mb-1 flex items-center gap-2" : "mb-4 flex items-center gap-2"
+                }
+              >
+                <h1 className="text-xl font-bold">
+                  {getVideoDisplayName(selectedVideo)}
+                </h1>
+                <Badge variant="secondary" className="text-xs">
+                  {scenes.length} scenes
+                </Badge>
+              </div>
+              {description && (
+                <p className="mb-4 text-sm text-muted-foreground">{description}</p>
+              )}
+              {sourceText && <RawScriptCard sourceText={sourceText} />}
+              <div className="mb-8">
+                <SceneList
+                  runId={runId}
+                  scenes={scenes}
+                  videoId={videoId}
+                  currentChunks={currentChunks}
+                  blockAcceptSuggestionField={isDecisionPending}
+                  scriptLocked={scriptLocked}
+                  imageryEditable={imageryEditable}
+                  onRegenerate={onRegenerateImagery}
+                  sceneUpdating={sceneUpdating}
+                />
+              </div>
+              {(runPhase === "asset_gen" || runPhase === "export") && (
+                <AssetGenStatusMessage runPhase={runPhase} />
+              )}
+            </div>
+          )}
+          {!selectedVideo && videos.length === 0 && (
+            <div className="px-6 py-6">
+              <MainContentSkeleton />
+            </div>
+          )}
+        </div>
+
+        {runPhase === "scripting" && selectedVideo && (
+          <footer className="shrink-0 bg-background px-6 py-4">
+            {sceneSuggestions ? (
+              <div className="mx-auto flex max-w-2xl items-center justify-center gap-2">
                 <span className="text-sm text-muted-foreground">
                   Revision ready — accept or decline
                 </span>
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={acceptSuggestion}
+                    onClick={acceptAllSceneSuggestions}
                     disabled={isDecisionPending}
                     className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                   >
-                    {isDecisionPending ? "Accepting…" : "Accept"}
+                    {isDecisionPending ? "Accepting…" : "Accept all suggestions"}
                   </button>
                   <button
                     type="button"
@@ -231,23 +266,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
                   </button>
                 </div>
               </div>
-            )}
-            <div className="mb-8">
-              <SceneList
-                scenes={scenes}
-                feedbackByScene={feedbackByScene}
-                suggestionScenes={feedbackPartial?.scenes}
-                suggestionDecisions={suggestionDecisions}
-                onSuggestionDecision={onSuggestionDecision}
-                onFeedbackChange={handleFeedbackChange!}
-                scriptLocked={scriptLocked}
-                imageryEditable={imageryEditable}
-                onRegenerate={onRegenerateImagery}
-                sceneUpdating={sceneUpdating}
-              />
-            </div>
-
-            {runPhase === "scripting" && (
+            ) : (
               <ScriptFeedbackSection
                 onApplyFeedback={handleApplyFeedback}
                 disabled={updateFeedbackMutation.isPending}
@@ -258,15 +277,9 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
                 }
               />
             )}
-
-            {(runPhase === "asset_gen" || runPhase === "export") && (
-              <AssetGenStatusMessage runPhase={runPhase} />
-            )}
-          </>
+          </footer>
         )}
-
-        {!selectedVideo && videos.length === 0 && <MainContentSkeleton />}
-      </main>
+      </div>
 
       <RunLogsModal
         open={logsModalOpen}

@@ -169,24 +169,7 @@ function ArtifactsTab({
   const utils = api.useUtils();
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
 
-  if (query.isLoading) {
-    return <p className="text-muted-foreground">Loading artifacts…</p>;
-  }
-  if (query.isError) {
-    const msg = query.error instanceof Error ? query.error.message : String(query.error);
-    return <p className="text-destructive">{msg}</p>;
-  }
-  if (query.data?.error) {
-    return <p className="text-destructive">{query.data.error}</p>;
-  }
   const keys = query.data?.keys ?? [];
-  if (keys.length === 0) {
-    return (
-      <p className="text-muted-foreground">
-        No artifacts found. Artifacts are uploaded as the pipeline runs.
-      </p>
-    );
-  }
 
   const handleClick = useCallback(
     async (path: string) => {
@@ -207,6 +190,24 @@ function ArtifactsTab({
     () => keysToTree(keys, handleClick, loadingPath),
     [keys, handleClick, loadingPath]
   );
+
+  if (query.isLoading) {
+    return <p className="text-muted-foreground">Loading artifacts…</p>;
+  }
+  if (query.isError) {
+    const msg = query.error instanceof Error ? query.error.message : String(query.error);
+    return <p className="text-destructive">{msg}</p>;
+  }
+  if (query.data?.error) {
+    return <p className="text-destructive">{query.data.error}</p>;
+  }
+  if (keys.length === 0) {
+    return (
+      <p className="text-muted-foreground">
+        No artifacts found. Artifacts are uploaded as the pipeline runs.
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-2">

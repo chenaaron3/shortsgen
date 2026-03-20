@@ -1,97 +1,54 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import type { ChunksOutput } from "@shortgen/types";
+import { useCallback } from "react";
 import { api } from "~/utils/api";
+import { mergeAllSceneSuggestions } from "~/lib/suggestionMerge";
+import { useRunStore } from "~/stores/useRunStore";
 
-export type SuggestionDecisions = Record<
-  number,
-  { text?: "accept" | "decline"; imagery?: "accept" | "decline" }
->;
-
-interface SceneLike {
-  text: string;
-  imagery: string;
-  section?: string;
-  [key: string]: unknown;
-}
+import type { ChunksOutput } from "@shortgen/types";
 
 interface UseSuggestionFeedbackOptions {
   runId: string;
   videoId: string;
-  feedbackPartial: ChunksOutput | null | undefined;
-  scenes: SceneLike[];
-  onAcceptSuccess?: () => void;
-  onDeclineSuccess?: () => void;
+  currentChunks: ChunksOutput;
+  sceneSuggestions: ChunksOutput | null | undefined;
+  onAcceptAllSuccess?: () => void;
 }
 
 export function useSuggestionFeedback({
   runId,
   videoId,
-  feedbackPartial,
-  scenes,
-  onAcceptSuccess,
-  onDeclineSuccess,
+  currentChunks,
+  sceneSuggestions,
+  onAcceptAllSuccess,
 }: UseSuggestionFeedbackOptions) {
-  const [suggestionDecisions, setSuggestionDecisions] = useState<SuggestionDecisions>({});
+  const clearSceneSuggestions = useRunStore((s) => s.clearSceneSuggestions);
+  const acceptSceneSuggestionsMutation =
+    api.runs.acceptSceneSuggestions.useMutation();
 
-  useEffect(() => {
-    setSuggestionDecisions({});
-  }, [feedbackPartial]);
-
-  const acceptFeedbackMutation = api.runs.acceptFeedbackChunks.useMutation({
-    onSuccess: onAcceptSuccess,
-  });
-
-  const onSuggestionDecision = useCallback(
-    (sceneIndex: number, field: "text" | "imagery", decision: "accept" | "decline") => {
-      setSuggestionDecisions((prev) => ({
-        ...prev,
-        [sceneIndex]: {
-          ...prev[sceneIndex],
-          [field]: decision,
-        },
-      }));
-    },
-    [],
-  );
-
-  const acceptSuggestion = useCallback(() => {
-    if (!runId || !videoId || !feedbackPartial?.scenes) return;
-    const sugScenes = feedbackPartial.scenes;
-    const mergedScenes = scenes.map((current, i) => {
-      const sug = sugScenes[i];
-      const dec = suggestionDecisions[i];
-      return {
-        ...current,
-        text: dec?.text === "accept" && sug ? sug.text : current.text,
-        imagery: dec?.imagery === "accept" && sug ? sug.imagery : current.imagery,
-      };
-    });
-    acceptFeedbackMutation.mutate({
-      runId,
-      videoId,
-      chunks: { ...feedbackPartial, scenes: mergedScenes } as ChunksOutput,
-    });
+  const acceptAllSceneSuggestions = useCallback(() => {
+    if (!runId || !videoId || !sceneSuggestions?.scenes) return;
+    const chunks = mergeAllSceneSuggestions(currentChunks, sceneSuggestions);
+    acceptSceneSuggestionsMutation.mutate(
+      { runId, videoId, chunks },
+      { onSuccess: onAcceptAllSuccess },
+    );
   }, [
     runId,
     videoId,
-    feedbackPartial,
-    scenes,
-    suggestionDecisions,
-    acceptFeedbackMutation,
+    currentChunks,
+    sceneSuggestions,
+    acceptSceneSuggestionsMutation,
+    onAcceptAllSuccess,
   ]);
 
   const declineSuggestion = useCallback(() => {
-    setSuggestionDecisions({});
-    onDeclineSuccess?.();
-  }, [onDeclineSuccess]);
+    clearSceneSuggestions(videoId);
+  }, [videoId, clearSceneSuggestions]);
 
   return {
-    suggestionDecisions,
-    onSuggestionDecision,
-    acceptSuggestion,
+    acceptAllSceneSuggestions,
     declineSuggestion,
-    isDecisionPending: acceptFeedbackMutation.isPending,
+    isDecisionPending: acceptSceneSuggestionsMutation.isPending,
   };
 }

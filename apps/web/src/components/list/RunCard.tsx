@@ -8,7 +8,12 @@ import type { RouterOutputs } from "~/utils/api";
 
 type RunFromList = RouterOutputs["runs"]["listRunsForUser"]["runs"][number];
 type RunWithVideos = RunFromList & {
-  videos: Array<{ id: string; status: string | null; run_id: string }>;
+  videos: Array<{
+    id: string;
+    status: string | null;
+    run_id: string;
+    chunks?: unknown;
+  }>;
 };
 
 interface RunCardProps {
@@ -49,6 +54,7 @@ export function RunCard({ run }: RunCardProps) {
                 runId={run.id}
                 videoId={v.id}
                 status={v.status ?? "preparing"}
+                chunks={v.chunks}
               />
             ))}
           </div>

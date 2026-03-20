@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { env } from "~/env";
+import { useRunStore } from "~/stores/useRunStore";
 
 import type { ChunksOutput, ProgressEventType } from "@shortgen/types";
-import { useRunStore } from "~/stores/useRunStore";
-import { env } from "~/env";
-
 /** Base shape for all progress events (runId, videoId, type, optional payload). */
 export interface ProgressMessageBase {
   runId: string;
@@ -38,11 +37,11 @@ export type ProgressMessage =
       payload?: { clips?: unknown[] };
     })
   | (ProgressMessageBase & {
-      type: "feedback_partial";
+      type: "suggestion_partial";
       payload?: { partial?: string };
     })
   | (ProgressMessageBase & {
-      type: "feedback_completed";
+      type: "suggestion_completed";
       payload?: { chunks?: unknown };
     })
   | (ProgressMessageBase & {
@@ -236,22 +235,21 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       setSourceText,
       setSceneUpdating,
       setVideoUpdating,
-      setFeedbackPartial,
-      clearFeedbackPartial,
+      setSceneSuggestions,
     } = useRunStore.getState();
 
     if (msg.type === "breakdown_completed") setBreakdownComplete(true);
 
-    if (msg.type === "feedback_partial" && msg.payload) {
+    if (msg.type === "suggestion_partial" && msg.payload) {
       const p = msg.payload as { partial?: string };
       if (p.partial !== undefined && msg.videoId) {
-        setFeedbackPartial(msg.videoId, p.partial);
+        setSceneSuggestions(msg.videoId, p.partial);
       }
     }
 
-    if (msg.type === "feedback_completed" && msg.videoId && msg.payload) {
+    if (msg.type === "suggestion_completed" && msg.videoId && msg.payload) {
       const p = msg.payload as { chunks?: ChunksOutput };
-      if (p.chunks) setFeedbackPartial(msg.videoId, p.chunks);
+      if (p.chunks) setSceneSuggestions(msg.videoId, p.chunks);
     }
 
     if (msg.type === "video_started" && msg.payload) {
@@ -268,7 +266,7 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       msg.type === "initial_processing_complete" ||
       msg.type === "script_created" ||
       msg.type === "video_completed" ||
-      msg.type === "feedback_completed"
+      msg.type === "suggestion_completed"
     ) {
       setSceneUpdating(null);
       refetch?.();
@@ -294,7 +292,7 @@ export interface UseRunProgressWithHandlerOptions {
  */
 export function useRunProgressWithHandler(
   runId: string,
-  options: UseRunProgressWithHandlerOptions = {}
+  options: UseRunProgressWithHandlerOptions = {},
 ) {
   const { refetch, enabled = true } = options;
   const refetchRef = useRef(refetch);
@@ -302,7 +300,7 @@ export function useRunProgressWithHandler(
 
   const onMessage = useMemo(
     () => createProgressHandler(() => refetchRef.current?.()),
-    []
+    [],
   );
 
   const wsUrl = useMemo(() => buildWsUrl(runId), [runId]);

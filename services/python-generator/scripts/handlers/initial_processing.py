@@ -171,4 +171,5 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
         payload={"clips": results},
     )
     log_info(f"[initial_processing] complete runId={run_id} clips={len(results)}")
-    return {"statusCode": 200, "body": json.dumps({"runId": run_id, "status": "scripting"})}
+    return {"statusCode": 200, "body": json.
+    dumps({"runId": run_id, "status": "scripting"})}

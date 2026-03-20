@@ -209,18 +209,18 @@ Create page: user pastes source text → creates Run in DB → triggers `initial
 - **Export** (asset gen): DB write to move all `assets` → `export` (tRPC only).
 - **updateImagery**: per-scene imagery regeneration (direct text or LLM from feedback); only overwrites the target scene's image.
 
-### Feedback suggestions (accept/decline)
+### LLM suggestions after user feedback (accept/decline)
 
-When the user submits script or per-scene feedback, `update-feedback` streams `feedback_partial` events (partial ChunksOutput JSON) and emits `feedback_completed` with the full chunks. **Chunks are not persisted until the user accepts.**
+When the user submits **feedback** (script or per-scene), `update-feedback` streams **`suggestion_partial`** events (partial ChunksOutput JSON from the LLM) and emits **`suggestion_completed`** with the full suggested chunks. **Chunks are not persisted until the user accepts.**
 
-- **Streaming:** Partial revisions appear as overlay suggestions on each scene (secondary text, dashed border).
-- **Complete:** "Revision ready — accept or decline" bar with Accept/Decline buttons.
-- **Accept:** tRPC `acceptFeedbackChunks` persists chunks to DB; suggestion cleared, run refetched.
+- **Streaming:** Partial suggestions appear as overlay diffs on each scene (secondary text, dashed border).
+- **Complete:** "Revision ready — accept or decline" bar with **Accept all suggestions** / Decline; per-scene Accept/Decline on each diff.
+- **Accept:** tRPC `acceptSceneSuggestions` persists chunks to DB; suggestion cleared, run refetched.
 - **Decline:** Suggestion cleared; DB unchanged.
 
-`feedbackPartialByVideo` in the run store is strongly typed as `ChunksOutput` (parsed from JSON via `chunksSchema`).
+`sceneSuggestionsByVideo` in the run store holds the LLM scene suggestions, strongly typed as `ChunksOutput` (parsed from JSON via `chunksSchema`).
 
-**API routes:** `POST /runs/initial-processing`, `POST /runs/update-feedback`, `POST /runs/update-imagery`, `POST /runs/finalize-all`. Node Lambdas in `functions/` invoke Python handlers in `scripts/handlers/`. These endpoints are protected by a shared secret; only the tRPC server (Next.js) can call them. Feedback persistence is via tRPC `runs.acceptFeedbackChunks` (direct DB write).
+**API routes:** `POST /runs/initial-processing`, `POST /runs/update-feedback`, `POST /runs/update-imagery`, `POST /runs/finalize-all`. Node Lambdas in `functions/` invoke Python handlers in `scripts/handlers/`. These endpoints are protected by a shared secret; only the tRPC server (Next.js) can call them. Accepted LLM scene suggestions are persisted via tRPC `runs.acceptSceneSuggestions` (direct DB write).
 
 ---
 

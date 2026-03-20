@@ -131,3 +131,32 @@
     @apply font-sans;
   }
 }
+
+/* Scrollbar matching theme */
+.scrollbar-seamless {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.45 0 0 / 0.35) transparent;
+}
+.dark .scrollbar-seamless {
+  scrollbar-color: oklch(0.6 0 0 / 0.35) transparent;
+}
+.scrollbar-seamless::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scrollbar-seamless::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-seamless::-webkit-scrollbar-thumb {
+  background: oklch(0.45 0 0 / 0.35);
+  border-radius: 4px;
+}
+.scrollbar-seamless::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0 0 / 0.45);
+}
+.dark .scrollbar-seamless::-webkit-scrollbar-thumb {
+  background: oklch(0.6 0 0 / 0.35);
+}
+.dark .scrollbar-seamless::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.65 0 0 / 0.45);
+}

@@ -127,8 +127,8 @@ export type UpdateImageryResponse = z.infer<typeof updateImageryResponseSchema>;
  * - script_created: Script generated and saved for a video. Display this in the UI.
  * - video_completed: Scenes generated for a video. Video transitions to scripts status.
  * - initial_processing_complete: All videos and scenes completed for the run.
- * - feedback_partial: Streaming partial LLM output while applying feedback. Client can optimistically show tokens. feedback_completed still used for final state.
- * - feedback_completed: Feedback complete; chunks ready to fetch.
+ * - suggestion_partial: Streaming partial LLM suggestion (ChunksOutput JSON) while applying user feedback. Client can show tokens/diff optimistically.
+ * - suggestion_completed: Full suggested chunks ready; client shows revision UI. DB chunks unchanged until user accepts.
  * - asset_gen_started: Asset generation (images, voice, captions) has started for a video.
  * - image_generated: Image generated for a scene (during asset_gen).
  * - voice_generated: Voice generated for a scene (during asset_gen).
@@ -143,8 +143,8 @@ export const progressEventTypeSchema = z.enum([
   "script_created",
   "video_completed",
   "initial_processing_complete",
-  "feedback_partial",
-  "feedback_completed",
+  "suggestion_partial",
+  "suggestion_completed",
   "asset_gen_started",
   "image_generated",
   "voice_generated",
@@ -172,11 +172,11 @@ export const clipCompletePayloadSchema = z.object({
   script: z.string(),
   chunks: chunksSchema,
 });
-export const feedbackPartialPayloadSchema = z.object({
+export const suggestionPartialPayloadSchema = z.object({
   /** Partial LLM output (raw tokens or partial JSON). */
   partial: z.string(),
 });
-export const feedbackCompletedPayloadSchema = z.object({
+export const suggestionCompletedPayloadSchema = z.object({
   chunks: chunksSchema,
 });
 export const assetGenCompletePayloadSchema = z.object({

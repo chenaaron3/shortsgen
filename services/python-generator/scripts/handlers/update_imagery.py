@@ -157,7 +157,7 @@ def _handler_impl(
 
     emit_event(
         run_id,
-        ProgressEventType.feedback_completed,
+        ProgressEventType.suggestion_completed,
         video_id=video_id,
         payload={"chunks": chunks.model_dump()},
     )

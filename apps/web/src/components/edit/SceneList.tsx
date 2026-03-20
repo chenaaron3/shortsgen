@@ -1,8 +1,8 @@
 "use client";
 
-import { sceneSchema } from "@shortgen/types";
-import type { z } from "zod";
-import { SceneRow } from "./SceneRow";
+import type { ChunksOutput } from "@shortgen/types";
+
+import { SceneRow } from './SceneRow';
 
 interface Scene {
   text: string;
@@ -12,32 +12,28 @@ interface Scene {
 
 interface SceneListProps {
   scenes: Scene[];
-  feedbackByScene: Record<number, string>;
-  onFeedbackChange: (sceneIndex: number, liked: boolean | null, feedback: string) => void;
-  /** Suggested scenes from feedback streaming. Rendered as overlay per scene. */
-  suggestionScenes?: z.infer<typeof sceneSchema>[] | undefined;
-  /** Per-scene per-field accept/decline. When declined, suggestion is hidden. */
-  suggestionDecisions?: Record<number, { text?: "accept" | "decline"; imagery?: "accept" | "decline" }>;
-  /** Called when user accepts or declines a suggestion. */
-  onSuggestionDecision?: (
-    sceneIndex: number,
-    field: "text" | "imagery",
-    decision: "accept" | "decline",
-  ) => void;
-  /** Assets phase: lock script, imagery editable, show regenerate. */
+  runId: string;
+  videoId: string;
+  currentChunks: ChunksOutput;
+  blockAcceptSuggestionField?: boolean;
   scriptLocked?: boolean;
   imageryEditable?: boolean;
-  onRegenerate?: (sceneIndex: number, imagery?: string, feedback?: string) => void;
+  onRegenerate?: (
+    sceneIndex: number,
+    imagery?: string,
+    feedback?: string,
+  ) => void;
   sceneUpdating?: number | null;
 }
 
+const SECTIONS = ["Hook", "Body", "Close"] as const;
+
 export function SceneList({
   scenes,
-  feedbackByScene,
-  onFeedbackChange,
-  suggestionScenes,
-  suggestionDecisions,
-  onSuggestionDecision,
+  runId,
+  videoId,
+  currentChunks,
+  blockAcceptSuggestionField = false,
   scriptLocked = false,
   imageryEditable = false,
   onRegenerate,
@@ -49,24 +45,48 @@ export function SceneList({
     );
   }
 
+  const grouped = scenes.reduce(
+    (acc, scene, i) => {
+      const section = SECTIONS.includes(scene.section as (typeof SECTIONS)[number])
+        ? (scene.section as (typeof SECTIONS)[number])
+        : "Body";
+      if (!acc[section]) acc[section] = [];
+      acc[section].push({ scene, index: i });
+      return acc;
+    },
+    {} as Record<(typeof SECTIONS)[number], { scene: Scene; index: number }[]>,
+  );
+
   return (
-    <div className="space-y-4">
-      {scenes.map((scene, i) => (
-        <SceneRow
-          key={i}
-          scene={scene}
-          sceneIndex={i}
-          feedback={feedbackByScene[i]}
-          suggestion={suggestionScenes?.[i]}
-          suggestionDecisions={suggestionDecisions?.[i]}
-          onSuggestionDecision={onSuggestionDecision}
-          onFeedbackChange={onFeedbackChange}
-          scriptLocked={scriptLocked}
-          imageryEditable={imageryEditable}
-          onRegenerate={onRegenerate}
-          isRegenerating={sceneUpdating === i}
-        />
-      ))}
+    <div className="space-y-2">
+      {SECTIONS.map((section) => {
+        const items = grouped[section];
+        if (!items?.length) return null;
+        return (
+          <div key={section}>
+            <h2 className="pt-4 text-base font-semibold text-foreground first:pt-0">
+              {section}
+            </h2>
+            <div className="mt-2 space-y-2">
+              {items.map(({ scene, index }) => (
+                <SceneRow
+                  key={index}
+                  scene={scene}
+                  runId={runId}
+                  videoId={videoId}
+                  sceneIndex={index}
+                  currentChunks={currentChunks}
+                  blockAcceptSuggestionField={blockAcceptSuggestionField}
+                  scriptLocked={scriptLocked}
+                  imageryEditable={imageryEditable}
+                  onRegenerate={onRegenerate}
+                  isRegenerating={sceneUpdating === index}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

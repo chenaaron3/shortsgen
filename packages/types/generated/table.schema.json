@@ -23,6 +23,12 @@
                 "null"
               ]
             },
+            "breakdown_messages": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "created_at": {
               "anyOf": [
                 {
@@ -45,7 +51,8 @@
             "id",
             "userId",
             "user_input",
-            "status"
+            "status",
+            "breakdown_messages"
           ],
           "additionalProperties": false
         },

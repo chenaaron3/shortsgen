@@ -168,6 +168,12 @@ importers:
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@radix-ui/react-dialog':
+        specifier: ^1.1.15
+        version: 1.1.15(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@radix-ui/react-popover':
+        specifier: ^1.1.15
+        version: 1.1.15(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-slot':
         specifier: ^1.2.4
         version: 1.2.4(@types/react@18.2.79)(react@19.2.4)
@@ -204,6 +210,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      diff:
+        specifier: ^8.0.3
+        version: 8.0.3
       drizzle-orm:
         specifier: ^0.41.0
         version: 0.41.0(gel@2.2.0)(postgres@3.4.8)
@@ -265,9 +274,6 @@ importers:
       '@types/react-dom':
         specifier: 18.2.25
         version: 18.2.25
-      drizzle-kit:
-        specifier: ^0.30.5
-        version: 0.30.6
       postcss:
         specifier: ^8.5.3
         version: 8.5.8
