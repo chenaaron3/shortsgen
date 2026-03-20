@@ -168,8 +168,8 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const imageryEditable = runPhase === "asset_gen" || runPhase === "export";
   const onRegenerateImagery =
     selectedVideo &&
-    (runPhase === "asset_gen" || runPhase === "export") &&
-    selectedVideo.status === "exported"
+      (runPhase === "asset_gen" || runPhase === "export") &&
+      selectedVideo.status === "exported"
       ? handleRegenerateImagery(selectedVideo.id)
       : undefined;
 
@@ -252,8 +252,8 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
                 </div>
               </div>
               {showPreview && (
-                <div className="sticky top-6 shrink-0 self-start">
-                  <div className="aspect-9/16 w-[360px] overflow-hidden rounded-lg border border-border bg-black">
+                <div className="sticky top-6 flex max-h-[calc(100dvh-6rem)] shrink-0 flex-col items-center justify-center self-start">
+                  <div className="flex aspect-9/16 w-[360px] min-h-0 max-h-[min(640px,calc(100dvh-10rem))] flex-col overflow-hidden rounded-lg border border-border bg-black">
                     <VideoPreview runId={runId} videoId={videoId} />
                   </div>
                 </div>

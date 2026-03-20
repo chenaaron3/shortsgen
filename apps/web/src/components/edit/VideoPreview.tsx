@@ -1,9 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { Download, Loader2 } from "lucide-react";
-import React, { useState } from "react";
-import { api } from "~/utils/api";
+import { Download, Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import React, { useState } from 'react';
+import { api } from '~/utils/api';
 
 function DownloadButton({ href }: { href: string }) {
   const [loading, setLoading] = useState(false);
@@ -113,29 +113,32 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
     videoAssets;
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="h-full w-full overflow-hidden rounded-lg border border-border bg-black">
+    <div className="flex h-full w-full min-h-0 min-w-0 flex-col gap-2">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-black">
         <Player
-        acknowledgeRemotionLicense
-        component={ShortVideo as React.ComponentType<Record<string, unknown>>}
-        inputProps={{
-          manifest,
-          assetBaseUrl,
-          backgroundMusicUrl,
-        }}
-        durationInFrames={manifest.durationInFrames}
-        compositionWidth={manifest.width}
-        compositionHeight={manifest.height}
-        fps={manifest.fps}
-        style={{
-          width: "100%",
-          height: "100%",
-          maxHeight: "100%",
-          objectFit: "contain",
-        }}
-        controls
-        loop
-      />
+          acknowledgeRemotionLicense
+          component={ShortVideo as React.ComponentType<Record<string, unknown>>}
+          inputProps={{
+            manifest,
+            assetBaseUrl,
+            backgroundMusicUrl,
+          }}
+          durationInFrames={manifest.durationInFrames}
+          compositionWidth={manifest.width}
+          compositionHeight={manifest.height}
+          fps={manifest.fps}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            minHeight: 0,
+            minWidth: 0,
+            objectFit: "contain",
+          }}
+          controls
+          loop
+        />
       </div>
       {exportUrl && (
         <DownloadButton href={exportUrl} />
