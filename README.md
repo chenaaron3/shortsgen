@@ -194,7 +194,7 @@ Python Lambdas use `dev: false` (run in deployed container) to avoid SST's Pytho
 
 ## Web app flow (apps/web)
 
-Create page: user pastes source text → creates Run in DB → triggers `initial-processing` Lambda → Python breakdown + pipeline per nugget → WebSocket progress → user reviews clips, adds feedback → `update-feedback` → batch finalize → `finalize-all` (Step Functions) → S3 → `asset_gen_completed` over WebSocket. **Export** (asset gen): user clicks Export → Remotion Lambda renders each video → webhook marks `exported` and saves `export_path`.
+Create page: user pastes source text → creates Run in DB → triggers `initial-processing` Lambda → Python breakdown + pipeline per nugget → WebSocket progress → user reviews clips, adds feedback → `update-feedback` → batch finalize → `finalize-all` (Step Functions) → S3 → `asset_gen_completed` over WebSocket. **Export** (asset gen): user clicks Export → Remotion Lambda renders each video → webhook marks `exported`.
 
 ### Run phases and video status
 
@@ -206,7 +206,7 @@ Create page: user pastes source text → creates Run in DB → triggers `initial
 | **Export** | `exporting` / `exported` | Run set to "export" instantly; each video: job started → `exporting` → webhook → `exported` |
 
 - **Next** (scripting): batch finalize all videos with `status="scripts"` via Step Functions.
-- **Export** (asset gen or export): Run → "export" instantly. For each video in `assets` or `exported`, start Remotion Lambda job and set video to `exporting`; webhook marks `exported` and sets `export_path` when done. See [Remotion Lambda setup](docs/REMOTION_LAMBDA_SETUP.md).
+- **Export** (asset gen or export): Run → "export" instantly. For each video in `assets` or `exported`, start Remotion Lambda job and set video to `exporting`; webhook marks `exported`. Path derived as `{s3_prefix}/short.mp4`. See [Remotion Lambda setup](docs/REMOTION_LAMBDA_SETUP.md).
 - **updateImagery**: per-scene imagery regeneration (direct text or LLM from feedback); only overwrites the target scene's image.
 
 ### LLM suggestions after user feedback (accept/decline)

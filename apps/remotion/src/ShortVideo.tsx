@@ -1,25 +1,13 @@
 // @ts-nocheck
 import React from 'react';
-import {
-  AbsoluteFill,
-  Audio,
-  Composition,
-  interpolate,
-  Series,
-  staticFile,
-} from 'remotion';
+import { AbsoluteFill, Audio, Composition, interpolate, Series, staticFile } from 'remotion';
+
+import { manifestSchema, type, VideoManifest } from '@shortgen/types';
 
 import { CaptionsOverlay } from './CaptionsOverlay';
-import {
-  ChromaticAberration,
-  LightLeak,
-  ProgressBar,
-  VignetteEffect,
-} from './effects';
+import { ChromaticAberration, LightLeak, ProgressBar, VignetteEffect } from './effects';
 import { defaultEffectsConfig } from './effectsConfig';
 import { SceneSlide } from './SceneSlide';
-
-import { manifestSchema, type VideoManifest } from "@shortgen/types";
 
 const FPS = 60;
 const WIDTH = 1080;

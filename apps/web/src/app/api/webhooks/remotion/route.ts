@@ -22,19 +22,14 @@ async function onSuccess(payload: {
     return;
   }
 
-  const exportPath = payload.outputFile ?? null;
   await db
     .update(videos)
-    .set({
-      status: "exported",
-      ...(exportPath != null && { export_path: exportPath }),
-    })
+    .set({ status: "exported" })
     .where(and(eq(videos.id, videoId), eq(videos.run_id, runId)));
 
   // Run stays "export"; no run-level status change when videos complete
-  console.log(
-    `[remotion-webhook] video ${videoId} exported, path=${exportPath ?? "n/a"}`,
-  );
+  // Export path is derived: {s3_prefix}/short.mp4 (relative to CDN)
+  console.log(`[remotion-webhook] video ${videoId} exported`);
 }
 
 async function onError(payload: {

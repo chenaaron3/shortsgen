@@ -261,7 +261,7 @@ export const runsRouter = createTRPCRouter({
   /**
    * Trigger Remotion Lambda render for exportable videos in a run.
    * Run: set to "export" instantly. Videos: exportable = assets | exported; each gets job + status "exporting".
-   * Webhook marks each video "exported" and sets export_path when done.
+   * Webhook marks each video "exported". Path derived as {s3_prefix}/short.mp4.
    */
   triggerExport: protectedProcedure
     .input(z.object({ runId: z.string().uuid() }))
@@ -510,7 +510,7 @@ export const runsRouter = createTRPCRouter({
         const [video] = await ctx.db
           .select({
             s3Prefix: videos.s3_prefix,
-            exportPath: videos.export_path,
+            status: videos.status,
           })
           .from(videos)
           .where(
@@ -536,9 +536,10 @@ export const runsRouter = createTRPCRouter({
           if (!res.ok) return null;
           const data = (await res.json()) as unknown;
           const manifest = manifestSchema.parse(data);
-          const exportUrl = video.exportPath
-            ? `${cdnBase}/${video.exportPath.replace(/\/$/, "")}`
-            : undefined;
+          const exportUrl =
+            video.status === "exported"
+              ? `${cdnBase}/${prefix}/short.mp4`
+              : undefined;
           const backgroundMusicUrl = `${cdnBase}/assets/background_music.mp3`;
           return {
             manifest,

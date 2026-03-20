@@ -114,8 +114,6 @@ export const videos = pgTable(t("videos"), {
     .notNull()
     .references(() => runs.id, { onDelete: "cascade" }),
   s3_prefix: text("s3_prefix"),
-  /** S3 key of rendered video (e.g. runs/{runId}/{videoId}/short.mp4). Null = not yet exported. */
-  export_path: text("export_path"),
   source_text: text("source_text"), // Raw source chunk for this clip (nugget.original_text)
   status: text("status")
     .$type<"created" | "scripts" | "assets" | "exporting" | "exported" | "failed">()

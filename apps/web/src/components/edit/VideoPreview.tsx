@@ -1,9 +1,56 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Download } from "lucide-react";
-import React from "react";
+import { Download, Loader2 } from "lucide-react";
+import React, { useState } from "react";
 import { api } from "~/utils/api";
+
+function DownloadButton({ href }: { href: string }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleClick(e: React.MouseEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(href);
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "short.mp4";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Download failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={loading}
+        className="flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Download className="h-4 w-4" />
+        )}
+        {loading ? "Downloading…" : "Download"}
+      </button>
+      {error && (
+        <p className="text-xs text-destructive">{error}</p>
+      )}
+    </div>
+  );
+}
 
 const Player = dynamic(
   () => import("@remotion/player").then((mod) => mod.Player),
@@ -91,16 +138,7 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
       />
       </div>
       {exportUrl && (
-        <a
-          href={exportUrl}
-          download="short.mp4"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
-        >
-          <Download className="h-4 w-4" />
-          Download
-        </a>
+        <DownloadButton href={exportUrl} />
       )}
     </div>
   );

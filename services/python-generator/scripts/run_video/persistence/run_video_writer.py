@@ -61,7 +61,6 @@ def update_video(
     video_id: str,
     *,
     s3_prefix: str | None = None,
-    export_path: str | None = None,
     source_text: str | None = None,
     status: VideoStatus | None = None,
     script: str | None = None,
@@ -73,8 +72,6 @@ def update_video(
     updates: list[tuple[str, object]] = []
     if s3_prefix is not None:
         updates.append(("s3_prefix", s3_prefix))
-    if export_path is not None:
-        updates.append(("export_path", export_path))
     if source_text is not None:
         updates.append(("source_text", source_text))
     if status is not None:
@@ -141,7 +138,7 @@ def get_video(video_id: str) -> Video | None:
     with _conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                f"SELECT id, run_id, s3_prefix, export_path, source_text, status, script, chunks, cache_key, config_hash, created_at FROM {VIDEOS_TABLE} WHERE id = %s",
+                f"SELECT id, run_id, s3_prefix, source_text, status, script, chunks, cache_key, config_hash, created_at FROM {VIDEOS_TABLE} WHERE id = %s",
                 (video_id,),
             )
             row = cur.fetchone()
