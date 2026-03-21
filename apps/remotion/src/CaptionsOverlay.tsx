@@ -130,8 +130,9 @@ export const CaptionsOverlay: React.FC<CaptionsOverlayProps> = ({
     const sentenceGroups = splitCaptionsBySentence(captions);
     const allPages: TikTokPage[] = [];
     for (const group of sentenceGroups) {
+      const normalized = group.map((c) => ({ ...c, confidence: c.confidence ?? null }));
       const { pages: groupPages } = createTikTokStyleCaptions({
-        captions: group,
+        captions: normalized,
         combineTokensWithinMilliseconds: COMBINE_TOKENS_MS,
       });
       allPages.push(...groupPages);
