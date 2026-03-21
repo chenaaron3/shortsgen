@@ -3,16 +3,22 @@ import Stripe from "stripe";
 import { z } from "zod";
 import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import {
-  creditBalance,
-  subscription,
-  user,
-  type Tier,
-} from "@shortgen/db";
 
-const stripe = env.STRIPE_SECRET_KEY
-  ? new Stripe(env.STRIPE_SECRET_KEY)
-  : null;
+import { creditBalance, subscription, user } from "@shortgen/db";
+
+import type { Tier } from "@shortgen/db";
+
+const stripe = env.STRIPE_SECRET_KEY ? new Stripe(env.STRIPE_SECRET_KEY) : null;
+
+const PRICE_TO_TIER: Record<string, Tier> = {
+  [env.STRIPE_PRICE_BASIC ?? ""]: "basic",
+  [env.STRIPE_PRICE_PRO ?? ""]: "pro",
+  [env.STRIPE_PRICE_BUSINESS ?? ""]: "business",
+};
+
+function getTierFromPriceId(priceId: string): Tier {
+  return PRICE_TO_TIER[priceId] ?? "free";
+}
 
 export const billingRouter = createTRPCRouter({
   /** Get subscription and credit balance for current user. */
@@ -27,12 +33,18 @@ export const billingRouter = createTRPCRouter({
       .from(creditBalance)
       .where(eq(creditBalance.userId, ctx.session.user.id));
 
-    const effectiveTier: Tier =
-      sub?.status === "active" && sub.currentPeriodEnd
-        ? sub.currentPeriodEnd > new Date()
-          ? (sub.tier as Tier)
-          : "free"
-        : "free";
+    const notExpired = !sub?.currentPeriodEnd || sub.currentPeriodEnd > new Date();
+    const isActive =
+      (sub?.status === "active" || sub?.status === "trialing") && notExpired;
+
+    const dbTier = sub?.tier as Tier | undefined;
+    const resolvedTier =
+      dbTier && dbTier !== "free"
+        ? dbTier
+        : sub?.priceId
+          ? getTierFromPriceId(sub.priceId)
+          : "free";
+    const effectiveTier: Tier = isActive ? resolvedTier : "free";
 
     return {
       tier: effectiveTier,
@@ -68,6 +80,22 @@ export const billingRouter = createTRPCRouter({
         throw new Error(`Price not configured for ${input.priceId}`);
       }
 
+      const [existingSub] = await ctx.db
+        .select({ status: subscription.status, currentPeriodEnd: subscription.currentPeriodEnd })
+        .from(subscription)
+        .where(eq(subscription.userId, ctx.session.user.id));
+
+      const hasActiveSub =
+        existingSub &&
+        (existingSub.status === "active" || existingSub.status === "trialing") &&
+        (!existingSub.currentPeriodEnd || existingSub.currentPeriodEnd > new Date());
+
+      if (hasActiveSub) {
+        throw new Error(
+          "You already have an active subscription. Use Manage subscription to change your plan.",
+        );
+      }
+
       const [dbUser] = await ctx.db
         .select({ stripeCustomerId: user.stripeCustomerId })
         .from(user)
@@ -78,7 +106,9 @@ export const billingRouter = createTRPCRouter({
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer: customerId,
-        customer_email: customerId ? undefined : ctx.session.user.email ?? undefined,
+        customer_email: customerId
+          ? undefined
+          : (ctx.session.user.email ?? undefined),
         line_items: [{ price: priceId, quantity: 1 }],
         success_url: input.successUrl,
         cancel_url: input.cancelUrl,
@@ -88,7 +118,11 @@ export const billingRouter = createTRPCRouter({
         },
       });
 
-      if (session.customer && typeof session.customer === "string" && !customerId) {
+      if (
+        session.customer &&
+        typeof session.customer === "string" &&
+        !customerId
+      ) {
         await ctx.db
           .update(user)
           .set({ stripeCustomerId: session.customer })
@@ -127,14 +161,20 @@ export const billingRouter = createTRPCRouter({
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         customer: customerId,
-        customer_email: customerId ? undefined : ctx.session.user.email ?? undefined,
+        customer_email: customerId
+          ? undefined
+          : (ctx.session.user.email ?? undefined),
         line_items: [{ price: priceId, quantity: input.quantity }],
         success_url: input.successUrl,
         cancel_url: input.cancelUrl,
         metadata: { userId: ctx.session.user.id },
       });
 
-      if (session.customer && typeof session.customer === "string" && !customerId) {
+      if (
+        session.customer &&
+        typeof session.customer === "string" &&
+        !customerId
+      ) {
         await ctx.db
           .update(user)
           .set({ stripeCustomerId: session.customer })

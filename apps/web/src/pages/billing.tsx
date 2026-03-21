@@ -1,17 +1,22 @@
 "use client";
 
-import { useSession } from 'next-auth/react';
-import Head from 'next/head';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useState } from 'react';
-import { Button } from '~/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
-import { Input } from '~/components/ui/input';
-import { useUserConfig } from '~/hooks/useUserConfig';
-import { api } from '~/utils/api';
+import { useSession } from "next-auth/react";
+import Head from "next/head";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { BuyCreditsForm } from "~/components/billing/BuyCreditsForm";
+import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import { useUserConfig } from "~/hooks/useUserConfig";
+import { api } from "~/utils/api";
 
-import { CREDITS_PER_DOLLAR, formatTierPrice } from '@shortgen/db';
+import { formatTierPrice } from "@shortgen/db";
 
 const TIER_LABELS: Record<string, string> = {
   free: "Free",
@@ -30,11 +35,6 @@ export default function BillingPage() {
       if (data.url) window.location.href = data.url;
     },
   });
-  const createCreditPurchase = api.billing.createCreditPurchase.useMutation({
-    onSuccess: (data) => {
-      if (data.url) window.location.href = data.url;
-    },
-  });
   const createPortal = api.billing.createPortalSession.useMutation({
     onSuccess: (data) => {
       if (data.url) window.location.href = data.url;
@@ -42,7 +42,6 @@ export default function BillingPage() {
   });
 
   const success = router.query.success === "true";
-  const [creditQuantity, setCreditQuantity] = useState(1);
 
   if (status === "loading" || !session) {
     return (
@@ -85,44 +84,19 @@ export default function BillingPage() {
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Credit balance</CardTitle>
-              <CardDescription>Use credits to create and refine videos</CardDescription>
+              <CardDescription>
+                Use credits to create and refine videos
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{creditsBalance}</p>
               <p className="mt-1 text-sm text-muted-foreground">credits</p>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-2 text-sm">
-                  <span>Quantity:</span>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={creditQuantity}
-                    onChange={(e) =>
-                      setCreditQuantity(
-                        Math.min(100, Math.max(1, parseInt(e.target.value, 10) || 1)),
-                      )
-                    }
-                    className="w-20"
-                  />
-                  <span className="text-muted-foreground">
-                    × {CREDITS_PER_DOLLAR} = {creditQuantity * CREDITS_PER_DOLLAR} credits
-                  </span>
-                </label>
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    createCreditPurchase.mutate({
-                      quantity: creditQuantity,
-                      successUrl: `${baseUrl}/billing?success=true`,
-                      cancelUrl: `${baseUrl}/billing`,
-                    })
-                  }
-                  disabled={createCreditPurchase.isPending}
-                >
-                  Buy ${(creditQuantity * CREDITS_PER_DOLLAR) / 100}
-                </Button>
-              </div>
+              <BuyCreditsForm
+                successUrl={`${baseUrl}/billing?success=true`}
+                cancelUrl={`${baseUrl}/billing`}
+                session={session}
+                className="mt-4"
+              />
             </CardContent>
           </Card>
 
@@ -199,9 +173,9 @@ export default function BillingPage() {
             </CardContent>
           </Card>
 
-          {(createCheckout.isError || createCreditPurchase.isError || createPortal.isError) && (
+          {(createCheckout.isError || createPortal.isError) && (
             <p className="text-destructive">
-              {(createCheckout.error ?? createCreditPurchase.error ?? createPortal.error)?.message}
+              {(createCheckout.error ?? createPortal.error)?.message}
             </p>
           )}
         </div>

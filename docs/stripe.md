@@ -64,6 +64,23 @@ Create products and prices in [Stripe Dashboard](https://dashboard.stripe.com/pr
 
 ---
 
+## Customer Portal (upgrade / downgrade)
+
+Upgrade and downgrade are handled by Stripe's [Customer Portal](https://dashboard.stripe.com/settings/billing/portal). Users click **Manage subscription** on the billing page → Stripe hosts the flow (plan change, cancel, payment method).
+
+**Configuration:**
+
+1. [Stripe Dashboard → Settings → Billing → Customer portal](https://dashboard.stripe.com/settings/billing/portal)
+2. Turn on **Customers can switch plans**
+3. Under **Products**, add Basic, Pro, and Business (or the product that contains these prices). Stripe will show these as options when the customer updates their subscription.
+4. Optionally: **Customers can cancel subscriptions** (if you allow cancels)
+
+**Backend:** No extra code. `customer.subscription.updated` already updates our subscription row and grants credit deltas for upgrades (`webhooks/stripe/route.ts`).
+
+**Best practice:** Put Basic, Pro, and Business as prices on a single Product (e.g. "Shortgen Subscription") so the portal offers them as plan choices.
+
+---
+
 ## Webhooks
 
 ### Local development (localhost)
@@ -102,6 +119,16 @@ Use a persistent webhook in Stripe:
 | `customer.subscription.deleted` | Mark subscription canceled                        |
 
 Handler: `apps/web/src/app/api/webhooks/stripe/route.ts`
+
+---
+
+## Invariant
+
+**subscription exists ⇒ user.stripeCustomerId is set**
+
+The webhook always updates `user.stripeCustomerId` when processing subscription events (`invoice.paid`, `customer.subscription.created`/`updated`) and `checkout.session.completed` (payment mode). Billing procedures read only from `user.stripeCustomerId`; no fallback to the subscription table.
+
+To backfill legacy data: `UPDATE shortgen_user u SET "stripeCustomerId" = s."stripeCustomerId" FROM shortgen_subscription s WHERE s."userId" = u.id AND u."stripeCustomerId" IS NULL AND s."stripeCustomerId" IS NOT NULL;`
 
 ---
 

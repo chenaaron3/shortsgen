@@ -15,7 +15,6 @@ export function useUserConfig(): {
   const { data, isLoading } = api.billing.getSubscription.useQuery(undefined, {
     enabled: true,
   });
-
   const tier = data?.tier ?? "free";
   const creditsBalance = data?.creditsBalance ?? 0;
 

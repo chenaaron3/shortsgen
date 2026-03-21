@@ -7,6 +7,7 @@ import {
   CREDITS_PER_DOLLAR,
   subscription,
   TIER_CREDIT_ALLOWANCE,
+  user,
   type Tier,
 } from "@shortgen/db";
 
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
     console.error("[stripe-webhook] Signature verification failed:", err);
     return new Response("Invalid signature", { status: 400 });
   }
+
+  console.log("[stripe-webhook]", event.type);
 
   try {
     switch (event.type) {
@@ -97,6 +100,11 @@ export async function POST(request: Request) {
               updated_at: new Date(),
             },
           });
+
+        await db
+          .update(user)
+          .set({ stripeCustomerId: sub.customer as string })
+          .where(eq(user.id, userId));
         break;
       }
 
@@ -121,11 +129,19 @@ export async function POST(request: Request) {
             await grantCredits(db, userId, credits, "purchase", event.id);
           }
         }
+
+        if (session.customer && typeof session.customer === "string") {
+          await db
+            .update(user)
+            .set({ stripeCustomerId: session.customer })
+            .where(eq(user.id, userId));
+        }
         break;
       }
 
       case "customer.subscription.created": {
-        const sub = event.data.object as Stripe.Subscription;
+        const subPayload = event.data.object as Stripe.Subscription;
+        const sub = await stripe.subscriptions.retrieve(subPayload.id);
         const userId = sub.metadata?.userId as string | undefined;
         if (!userId) break;
 
@@ -159,11 +175,17 @@ export async function POST(request: Request) {
               updated_at: new Date(),
             },
           });
+
+        await db
+          .update(user)
+          .set({ stripeCustomerId: sub.customer as string })
+          .where(eq(user.id, userId));
         break;
       }
 
       case "customer.subscription.updated": {
-        const sub = event.data.object as Stripe.Subscription;
+        const subPayload = event.data.object as Stripe.Subscription;
+        const sub = await stripe.subscriptions.retrieve(subPayload.id);
         const userId = sub.metadata?.userId as string | undefined;
         if (!userId) break;
 
@@ -211,6 +233,11 @@ export async function POST(request: Request) {
               updated_at: new Date(),
             },
           });
+
+        await db
+          .update(user)
+          .set({ stripeCustomerId: sub.customer as string })
+          .where(eq(user.id, userId));
         break;
       }
 

@@ -4,6 +4,7 @@ import { type AppType } from "next/app";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
 
+import { Navbar } from "~/components/layouts/Navbar";
 import { api } from "~/utils/api";
 
 import "~/styles/globals.css";
@@ -18,7 +19,8 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <div className={`${geist.className} dark`}>
+      <div className={geist.className}>
+        <Navbar />
         <Component {...pageProps} />
       </div>
       <Toaster richColors />

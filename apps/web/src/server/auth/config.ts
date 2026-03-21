@@ -41,6 +41,9 @@ const providers = [
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+  pages: {
+    signIn: "/login",
+  },
   providers,
   adapter: DrizzleAdapter(db, {
     usersTable: user,
