@@ -1,19 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useState } from "react";
-import { signIn, useSession } from "next-auth/react";
-import { api } from "~/utils/api";
-import { useUserConfig } from "~/hooks/useUserConfig";
-import { InspirationCard } from "./InspirationCard";
-import { Button } from "~/components/ui/button";
-import { Textarea } from "~/components/ui/textarea";
-import {
-  YOUTUBE_SAMPLE,
-  ARTICLE_SAMPLE,
-  BOOK_SAMPLE,
-} from "~/constants/inspirationSamples";
+import { signIn, useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Button } from '~/components/ui/button';
+import { Textarea } from '~/components/ui/textarea';
+import { ARTICLE_SAMPLE, BOOK_SAMPLE, YOUTUBE_SAMPLE } from '~/constants/inspirationSamples';
+import { useUserConfig } from '~/hooks/useUserConfig';
+import { api } from '~/utils/api';
+
+import { InspirationCard } from './InspirationCard';
 
 export function CreateForm() {
   const router = useRouter();

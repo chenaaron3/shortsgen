@@ -4,9 +4,18 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { debitCredits } from "~/server/credits";
 
-import { runs, videos } from "@shortgen/db";
+import {
+  CREDITS_ASSETS_PER_VIDEO,
+  CREDITS_IMAGE_REGEN,
+  CREDITS_INGEST_PER_RUN,
+  runs,
+  SCRIPT_REGEN_FREE_LIMIT,
+  videos,
+} from "@shortgen/db";
 import { chunksSchema, manifestSchema } from "@shortgen/types";
+import { TRPCError } from "@trpc/server";
 
 import type { VideoManifest } from "@shortgen/types";
 import type { InferSelectModel } from "drizzle-orm";
@@ -113,6 +122,21 @@ export const runsRouter = createTRPCRouter({
 
       if (!run) throw new Error("Failed to create run");
 
+      const debitResult = await debitCredits(
+        ctx.db,
+        ctx.session.user.id,
+        CREDITS_INGEST_PER_RUN,
+        `run:${run.id}`,
+      );
+
+      if (!debitResult.ok) {
+        await ctx.db.delete(runs).where(eq(runs.id, run.id));
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: debitResult.error,
+        });
+      }
+
       const [, breakdown] = await Promise.all([
         (async () => {
           const res = await fetch(
@@ -187,6 +211,19 @@ export const runsRouter = createTRPCRouter({
       if (!run || run.userId !== ctx.session.user.id) {
         throw new Error("Run not found");
       }
+
+      const regenCount = (run.script_regen_count ?? 0) + 1;
+      if (regenCount > SCRIPT_REGEN_FREE_LIMIT) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: `Script regeneration limit reached (${SCRIPT_REGEN_FREE_LIMIT} free per run). Upgrade for more.`,
+        });
+      }
+
+      await ctx.db
+        .update(runs)
+        .set({ script_regen_count: regenCount })
+        .where(eq(runs.id, input.runId));
 
       const res = await fetch(
         `${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/update-feedback`,
@@ -394,6 +431,20 @@ export const runsRouter = createTRPCRouter({
         throw new Error("Run not found");
       }
 
+      const debitResult = await debitCredits(
+        ctx.db,
+        ctx.session.user.id,
+        CREDITS_IMAGE_REGEN,
+        `imagery:${input.videoId}:${input.sceneIndex}`,
+      );
+
+      if (!debitResult.ok) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: debitResult.error,
+        });
+      }
+
       const body: Record<string, unknown> = {
         runId: input.runId,
         videoId: input.videoId,
@@ -449,6 +500,21 @@ export const runsRouter = createTRPCRouter({
       const videoIds = scriptsVideos.map((v) => v.id);
       if (videoIds.length === 0) {
         throw new Error("No videos in scripts phase to finalize");
+      }
+
+      const cost = scriptsVideos.length * CREDITS_ASSETS_PER_VIDEO;
+      const debitResult = await debitCredits(
+        ctx.db,
+        ctx.session.user.id,
+        cost,
+        `finalize:${input.runId}`,
+      );
+
+      if (!debitResult.ok) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: debitResult.error,
+        });
       }
 
       await ctx.db

@@ -8,6 +8,8 @@ import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
+import { createElement } from "react";
+import { toast } from "sonner";
 
 import { type AppRouter } from "~/server/api/root";
 
@@ -42,6 +44,30 @@ export const api = createTRPCNext<AppRouter>({
           url: `${getBaseUrl()}/api/trpc`,
         }),
       ],
+      queryClientConfig: {
+        defaultOptions: {
+          mutations: {
+            onError: (err: unknown) => {
+              const trpcErr = err as { data?: { code?: string } };
+              if (
+                trpcErr?.data?.code === "PRECONDITION_FAILED" &&
+                typeof window !== "undefined"
+              ) {
+                toast.error("Insufficient credits", {
+                  description: createElement(
+                    "a",
+                    {
+                      href: "/billing",
+                      className: "font-medium text-primary hover:underline",
+                    },
+                    "Buy credits or upgrade →",
+                  ),
+                });
+              }
+            },
+          },
+        },
+      },
     };
   },
   /**

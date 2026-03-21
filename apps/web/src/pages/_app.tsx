@@ -2,6 +2,7 @@ import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { type AppType } from "next/app";
 import { Geist } from "next/font/google";
+import { Toaster } from "sonner";
 
 import { api } from "~/utils/api";
 
@@ -20,6 +21,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
       <div className={`${geist.className} dark`}>
         <Component {...pageProps} />
       </div>
+      <Toaster richColors />
     </SessionProvider>
   );
 };

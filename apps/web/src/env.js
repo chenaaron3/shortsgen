@@ -28,9 +28,17 @@ export const env = createEnv({
     REMOTION_WEBHOOK_URL: z.string().url(),
     /** Webhook secret for validating Remotion callbacks */
     REMOTION_WEBHOOK_SECRET: z.string().min(1),
+    /** Stripe (optional - billing disabled when not set) */
+    STRIPE_SECRET_KEY: z.string().min(1).optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+    STRIPE_PRICE_BASIC: z.string().min(1).optional(),
+    STRIPE_PRICE_PRO: z.string().min(1).optional(),
+    STRIPE_PRICE_BUSINESS: z.string().min(1).optional(),
+    STRIPE_PRICE_CREDITS_100: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_SHORTGEN_WS_URL: z.string().url(),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().min(1).optional(),
   },
   runtimeEnv: {
     AUTH_SECRET: process.env.AUTH_SECRET,
@@ -49,7 +57,15 @@ export const env = createEnv({
     REMOTION_LAMBDA_SERVE_URL: process.env.REMOTION_LAMBDA_SERVE_URL,
     REMOTION_WEBHOOK_URL: process.env.REMOTION_WEBHOOK_URL,
     REMOTION_WEBHOOK_SECRET: process.env.REMOTION_WEBHOOK_SECRET,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_PRICE_BASIC: process.env.STRIPE_PRICE_BASIC,
+    STRIPE_PRICE_PRO: process.env.STRIPE_PRICE_PRO,
+    STRIPE_PRICE_BUSINESS: process.env.STRIPE_PRICE_BUSINESS,
+    STRIPE_PRICE_CREDITS_100: process.env.STRIPE_PRICE_CREDITS_100,
     NEXT_PUBLIC_SHORTGEN_WS_URL: process.env.NEXT_PUBLIC_SHORTGEN_WS_URL,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,

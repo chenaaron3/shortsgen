@@ -1,14 +1,31 @@
 "use client";
 
+import { api } from "~/utils/api";
+
 /**
- * Returns pipeline config based on user tier.
+ * Returns pipeline config and billing state based on user tier.
  * Free → prototype (gpt-4o-mini, cheap images). Paid → default (gpt-4o, full quality).
- * For now, all users use prototype.
  */
-export function useUserConfig(): { config: "prototype" | "default" } {
-  // TODO: Check session.user.tier or subscription when billing is added
-  // const { data: session } = useSession();
-  // const tier = session?.user?.tier ?? "free";
-  // return { config: tier === "paid" ? "default" : "prototype" };
-  return { config: "prototype" };
+export function useUserConfig(): {
+  config: "prototype" | "default";
+  tier: "free" | "basic" | "pro" | "business";
+  creditsBalance: number;
+  isLoading: boolean;
+} {
+  const { data, isLoading } = api.billing.getSubscription.useQuery(undefined, {
+    enabled: true,
+  });
+
+  const tier = data?.tier ?? "free";
+  const creditsBalance = data?.creditsBalance ?? 0;
+
+  const config: "prototype" | "default" =
+    tier === "free" ? "prototype" : "default";
+
+  return {
+    config,
+    tier,
+    creditsBalance,
+    isLoading,
+  };
 }

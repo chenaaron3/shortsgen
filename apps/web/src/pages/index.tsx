@@ -1,8 +1,19 @@
-import { signIn, signOut, useSession } from "next-auth/react";
-import Head from "next/head";
-import Link from "next/link";
-import { RunList } from "~/components/list/RunList";
-import { Button } from "~/components/ui/button";
+import { signIn, signOut, useSession } from 'next-auth/react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { RunList } from '~/components/list/RunList';
+import { Button } from '~/components/ui/button';
+import { useUserConfig } from '~/hooks/useUserConfig';
+
+function NavCredits() {
+  const { creditsBalance, isLoading } = useUserConfig();
+  if (isLoading) return null;
+  return (
+    <Link href="/billing" className="text-sm text-muted-foreground hover:text-foreground">
+      {creditsBalance} credits
+    </Link>
+  );
+}
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -45,8 +56,14 @@ export default function Home() {
             <h1 className="text-2xl font-bold">Your Runs</h1>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">{session.user?.name}</span>
+              <NavCredits />
               <Link href="/create">
                 <Button size="lg">Create video</Button>
+              </Link>
+              <Link href="/billing">
+                <Button variant="ghost" size="sm">
+                  Billing
+                </Button>
               </Link>
               <Button variant="outline" size="sm" onClick={() => void signOut()}>
                 Sign out

@@ -25,7 +25,8 @@
     "logs:ws-connect": "aws logs tail $(aws logs describe-log-groups --log-group-name-prefix /aws/lambda --query \"logGroups[?contains(logGroupName, 'ShortgenProgressApiRouteConnect')].logGroupName | [0]\" --output text) --follow --format short",
     "db:push": "pnpm --filter @shortgen/db db:push",
     "db:studio": "pnpm --filter @shortgen/db db:studio",
-    "upload:assets": "sh -c 'set -a; [ -f apps/web/.env ] && . apps/web/.env; set +a; [ -z \"$SHORTGEN_BUCKET_NAME\" ] && { echo \"SHORTGEN_BUCKET_NAME not set\"; exit 1; }; aws s3 cp public/background_music.mp3 s3://$SHORTGEN_BUCKET_NAME/assets/background_music.mp3 --acl bucket-owner-full-control'"
+    "upload:assets": "sh -c 'set -a; [ -f apps/web/.env ] && . apps/web/.env; set +a; [ -z \"$SHORTGEN_BUCKET_NAME\" ] && { echo \"SHORTGEN_BUCKET_NAME not set\"; exit 1; }; aws s3 cp public/background_music.mp3 s3://$SHORTGEN_BUCKET_NAME/assets/background_music.mp3 --acl bucket-owner-full-control'",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.700.0",
@@ -36,6 +37,9 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.145",
     "@types/node": "^25.5.0",
-    "sst": "^3.19.3"
+    "dotenv": "^16.6.1",
+    "sst": "^3.19.3",
+    "stripe": "^17.5.0",
+    "tsx": "^4.19.0"
   }
 }

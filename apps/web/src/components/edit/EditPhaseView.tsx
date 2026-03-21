@@ -165,7 +165,8 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   );
 
   const scriptLocked = runPhase === "asset_gen" || runPhase === "export";
-  const imageryEditable = runPhase === "asset_gen" || runPhase === "export";
+  const inAssetPhase = runPhase === "asset_gen" || runPhase === "export";
+  const imageryEditable = inAssetPhase;
   const onRegenerateImagery =
     selectedVideo &&
       (runPhase === "asset_gen" || runPhase === "export") &&
@@ -193,6 +194,19 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     return map;
   }, [videoAssets]);
 
+  const displayError = useMemo(() => {
+    const err =
+      finalizeAllMutation.error ??
+      updateImageryMutation.error ??
+      triggerExportMutation.error;
+    if (!err || err.data?.code === "PRECONDITION_FAILED") return null;
+    return err.message;
+  }, [
+    finalizeAllMutation.error,
+    updateImageryMutation.error,
+    triggerExportMutation.error,
+  ]);
+
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground lg:flex-row">
       <VideoSidebar
@@ -206,6 +220,11 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
         }
       />
       <div className="flex min-h-0 flex-1 flex-col">
+        {displayError && (
+          <div className="shrink-0 border-b border-destructive/50 bg-destructive/10 px-6 py-3 text-sm text-destructive">
+            {displayError}
+          </div>
+        )}
         <header className="shrink-0 bg-background px-6 py-4">
           <EditRunHeader
             runPhase={runPhase}
