@@ -20,3 +20,5 @@ token.json
 services/python-generator/cache/
 public/shortgen/
 apps/eval-ui/public/eval-assets/
+
+apps/remotion/build

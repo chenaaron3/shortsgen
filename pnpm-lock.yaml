@@ -13,8 +13,10 @@ overrides:
   '@remotion/bundler': 4.0.300
   '@remotion/cli': 4.0.300
   '@remotion/lambda': 4.0.300
+  '@remotion/media-parser': 4.0.300
   '@remotion/player': 4.0.300
   '@remotion/renderer': 4.0.300
+  '@remotion/webcodecs': 4.0.300
 
 importers:
 
@@ -2806,9 +2808,6 @@ packages:
   '@remotion/media-parser@4.0.300':
     resolution: {integrity: sha512-1WLHPjLVn+HsUuOgfnbJ6HVy6I/aXiGwjskyQQ4U5vYiwhlGiaK/6du5oC1nEzIkndAPCtBrpRGxz+io6ujJsg==}
 
-  '@remotion/media-parser@4.0.429':
-    resolution: {integrity: sha512-wWKdVsq+ex142ylJuCMHGh9wc4mjXNXXEMFPONZciIbOa5wxm8TF+OG9sQfjDBRcCfxxSScHYYszl8P7SvlQ5A==}
-
   '@remotion/media-utils@4.0.300':
     resolution: {integrity: sha512-2oFwBOlix8jTg8lwMPzyCXwSLRXa18rVT8+Zc76qQqzayskc4+aIYDeI2iXs5nPvPSJ5EEt7SAeTVhjyUMBDPQ==}
     peerDependencies:
@@ -2869,8 +2868,8 @@ packages:
       react: ^19.0.0
       react-dom: ^19.0.0
 
-  '@remotion/webcodecs@4.0.429':
-    resolution: {integrity: sha512-2bBZftrnXCNOdZiqYZBUTPgJolCgEKpBdnkYEc4tEeIzmVmtVtx88Ts2fUXBE6UvQ5bwaf2KohFYyQXH3/rYrg==}
+  '@remotion/webcodecs@4.0.300':
+    resolution: {integrity: sha512-b0SJ8VHXh/seBA3wGRpVfxAxI2u9Mz8klaFCHUbmhuzaBF+k0QSoV2mwVBgvMGA8XaQeJYRV+bbuDxckDFWsAw==}
 
   '@remotion/zod-types@4.0.300':
     resolution: {integrity: sha512-PjgBnq5kG4UvMiX2/vgCGnEJ5qW8pSW3T858M+6yNPQHADzJqxAcO8aOUzvqt6JxqJbT152h77nSqekLHmTR1w==}
@@ -9705,7 +9704,7 @@ snapshots:
 
   '@remotion/bundler@4.0.430(@swc/helpers@0.5.15)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@remotion/media-parser': 4.0.429
+      '@remotion/media-parser': 4.0.300
       '@remotion/studio': 4.0.429(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@remotion/studio-shared': 4.0.429(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@rspack/core': 1.7.6(@swc/helpers@0.5.15)
@@ -9857,8 +9856,6 @@ snapshots:
 
   '@remotion/media-parser@4.0.300': {}
 
-  '@remotion/media-parser@4.0.429': {}
-
   '@remotion/media-utils@4.0.300(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       react: 19.2.4
@@ -9867,8 +9864,8 @@ snapshots:
 
   '@remotion/media-utils@4.0.429(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@remotion/media-parser': 4.0.429
-      '@remotion/webcodecs': 4.0.429
+      '@remotion/media-parser': 4.0.300
+      '@remotion/webcodecs': 4.0.300
       mediabunny: 1.34.5
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
@@ -10010,9 +10007,10 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
       remotion: 4.0.300(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
-  '@remotion/webcodecs@4.0.429':
+  '@remotion/webcodecs@4.0.300':
     dependencies:
-      '@remotion/media-parser': 4.0.429
+      '@remotion/licensing': 4.0.300
+      '@remotion/media-parser': 4.0.300
 
   '@remotion/zod-types@4.0.300(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@3.22.3)':
     dependencies:

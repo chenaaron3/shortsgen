@@ -13,8 +13,10 @@
       "@remotion/bundler": "4.0.300",
       "@remotion/cli": "4.0.300",
       "@remotion/lambda": "4.0.300",
+      "@remotion/media-parser": "4.0.300",
       "@remotion/player": "4.0.300",
-      "@remotion/renderer": "4.0.300"
+      "@remotion/renderer": "4.0.300",
+      "@remotion/webcodecs": "4.0.300"
     }
   },
   "scripts": {
