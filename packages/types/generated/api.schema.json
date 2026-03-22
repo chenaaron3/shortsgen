@@ -26,9 +26,6 @@
                       "Close"
                     ]
                   },
-                  "transition_from_previous": {
-                    "type": "boolean"
-                  },
                   "image_path": {
                     "type": [
                       "string",

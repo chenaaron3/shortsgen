@@ -84,7 +84,6 @@ def _chunk_transcript(transcript: str, model: str, system_prompt: str) -> Chunks
                     text=s.text,
                     imagery=s.imagery,
                     section=s.section,
-                    transition_from_previous=s.transition_from_previous,
                     image_path=None,
                     voice_path=None,
                 )

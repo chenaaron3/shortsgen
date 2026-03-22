@@ -81,22 +81,9 @@ def _is_text_to_image_only(model: str | None) -> bool:
     return bool(model and "hyper-flux" in model)
 
 
-def _build_chains(scenes: list[Scene], text_to_image_only: bool = False) -> list[list[int]]:
-    """Build chains: [[0], [1,2], [3], ...]. Items in same list run in series; different lists run in parallel. When text_to_image_only, each scene is its own chain (max parallelism)."""
-    if text_to_image_only:
-        return [[i] for i in range(len(scenes))]
-    chains: list[list[int]] = []
-    current: list[int] = []
-    for i, scene in enumerate(scenes):
-        if getattr(scene, "transition_from_previous", False) and current:
-            current.append(i)
-        else:
-            if current:
-                chains.append(current)
-            current = [i]
-    if current:
-        chains.append(current)
-    return chains
+def _build_chains(scenes: list[Scene]) -> list[list[int]]:
+    """Build chains: each scene is its own chain (max parallelism)."""
+    return [[i] for i in range(len(scenes))]
 
 
 def _generate_one(
@@ -163,7 +150,7 @@ def run(
     effective_model = model
     config = get_config(model_override=effective_model)
 
-    work: list[tuple[int, str, Path, str, Path, bool]] = []
+    work: list[tuple[int, str, Path, str, Path]] = []
     cached_count = 0
     for i, scene in enumerate(to_process):
         if only_indices is not None and i not in only_indices:
@@ -185,8 +172,7 @@ def run(
             else f"{imagery}. {STYLE_PROMPT}"
         )
         request_path = images_dir / f"image_{i + 1}_request.json"
-        is_transition = getattr(scene, "transition_from_previous", False)
-        work.append((i, imagery, filename, full_prompt, request_path, is_transition))
+        work.append((i, imagery, filename, full_prompt, request_path))
 
     step_start("Images")
     extra = f"max={max_scenes}" if max_scenes else ""
@@ -203,26 +189,17 @@ def run(
         step_end("Images", outputs=[images_dir], cache_hits=cached_count, cache_misses=0)
         return chunks
 
-    work_by_idx = {i: (imagery, filename, full_prompt, request_path, is_transition) for i, imagery, filename, full_prompt, request_path, is_transition in work}
-    chains = _build_chains(to_process, text_to_image_only=text_to_image_only)
+    work_by_idx = {i: (imagery, filename, full_prompt, request_path) for i, imagery, filename, full_prompt, request_path in work}
+    chains = _build_chains(to_process)
 
     def _run_chain(chain: list[int]) -> None:
         """Run one chain sequentially. Siblings (other chains) run in parallel."""
-        prev_path: Path | None = None
         for i in chain:
             if i not in work_by_idx:
-                prev_path = images_dir / f"image_{i + 1}.png"
                 continue
-            imagery, filename, full_prompt, request_path, is_transition = work_by_idx[i]
-            if text_to_image_only:
-                source = None
-                fidelity = "low"
-            elif is_transition and prev_path is not None and prev_path.exists():
-                source = prev_path
-                fidelity = "low"
-            else:
-                source = None
-                fidelity = "low"
+            imagery, filename, full_prompt, request_path = work_by_idx[i]
+            source = None
+            fidelity = "low"
             try:
                 _, img_bytes, err = _generate_one(
                     i, mascot, full_prompt, effective_model, source_image=source, input_fidelity=fidelity, text_to_image_only=text_to_image_only
@@ -250,7 +227,6 @@ def run(
                 ),
                 encoding="utf-8",
             )
-            prev_path = filename
 
     chains_with_work = [c for c in chains if any(i in work_by_idx for i in c)]
     if len(chains_with_work) == 1 and len(chains_with_work[0]) == 1:

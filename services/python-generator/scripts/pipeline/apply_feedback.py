@@ -48,7 +48,7 @@ def _build_feedback_prompt(
     """Build the revision prompt from user feedback."""
     parts = [
         "You are revising a short-form video script and its scenes based on user feedback.",
-        "Output valid JSON matching the ChunksOutput schema: title, description, scenes (each with text, imagery, section, transition_from_previous).",
+        "Output valid JSON matching the ChunksOutput schema: title, description, scenes (each with text, imagery, section).",
         "",
         "--- SCRIPT ---",
         script,
@@ -95,7 +95,7 @@ def apply_feedback(
     model = config.chunk.model
     system_prompt = (
         "You revise short-form video scenes based on user feedback. "
-        "Output valid JSON matching the schema: title, description, scenes (each: text, imagery, section, transition_from_previous). "
+        "Output valid JSON matching the schema: title, description, scenes (each: text, imagery, section). "
         "Imagery must be under 200 chars. Section is Hook, Body, or Close."
     )
     user_content = _build_feedback_prompt(script, chunks, script_feedback, scene_feedback)
@@ -186,7 +186,6 @@ def _apply_feedback_streaming(
                     text=s.text,
                     imagery=s.imagery,
                     section=s.section,
-                    transition_from_previous=s.transition_from_previous,
                     image_path=None,
                     voice_path=None,
                 )

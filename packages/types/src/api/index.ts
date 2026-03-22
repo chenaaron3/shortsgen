@@ -28,7 +28,6 @@ export const sceneSchema = z.object({
   text: z.string(),
   imagery: z.string(),
   section: z.enum(["Hook", "Body", "Close"]),
-  transition_from_previous: z.boolean().optional(),
   image_path: z.string().nullable().optional(),
   voice_path: z.string().nullable().optional(),
 });

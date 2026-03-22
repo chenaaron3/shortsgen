@@ -13,10 +13,6 @@ class Scene(BaseModel):
     section: Literal["Hook", "Body", "Close"] = Field(
         ..., description="Section of the script"
     )
-    transition_from_previous: bool = Field(
-        default=False,
-        description="If true, generate from previous scene's image; imagery describes the modification only",
-    )
     image_path: str | None = Field(
         default=None,
         description="Path to generated image (set after generation)",
@@ -55,10 +51,6 @@ class SceneOutput(BaseModel):
     )
     section: Literal["Hook", "Body", "Close"] = Field(
         ..., description="Section of the script"
-    )
-    transition_from_previous: bool = Field(
-        default=False,
-        description="If true, generate from previous scene's image; imagery describes the modification only",
     )
 
 

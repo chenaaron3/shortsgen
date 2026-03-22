@@ -19,7 +19,6 @@ type ChunkScene = {
   text: string;
   imagery: string;
   section: string;
-  transition_from_previous?: boolean;
 };
 
 type ChunksData = {
@@ -245,11 +244,6 @@ export function TraceViewer({ trace, selectedModel, onModelChange, imageAnnotati
                                       <Badge variant="outline" className="text-[10px] shrink-0">
                                         {scene.section}
                                       </Badge>
-                                      {scene.transition_from_previous && (
-                                        <Badge variant="secondary" className="text-[10px]">
-                                          transition
-                                        </Badge>
-                                      )}
                                     </div>
                                     <p className="mt-1 font-medium">{scene.text}</p>
                                     <p className="mt-0.5 text-xs text-muted-foreground">
