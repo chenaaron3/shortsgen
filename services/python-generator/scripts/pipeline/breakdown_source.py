@@ -34,10 +34,20 @@ def _content_cache_key(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
-def _add_line_numbers(content: str) -> str:
-    """Prefix each line with its 1-indexed line number."""
+def _split_into_sentences(content: str) -> str:
+    """Split content so each line is at most one sentence (normalized line length)."""
+    # Split on sentence boundaries: . ! ? followed by whitespace (avoid "1. " in numbered lists)
+    parts = re.split(r"(?<=[.!?])(?<!\d\.)\s+", content)
+    sentences = [p.strip() for p in parts if p.strip()]
+    return "\n".join(sentences)
+
+
+def _add_line_numbers_and_word_counts(content: str) -> str:
+    """Prefix each line with line number and word count: line_num|word_count|sentence."""
     lines = content.splitlines()
-    return "\n".join(f"{i + 1}|{line}" for i, line in enumerate(lines))
+    return "\n".join(
+        f"{i + 1}|{_word_count(line)}|{line}" for i, line in enumerate(lines)
+    )
 
 
 def _extract_lines(content: str, start_line: int, end_line: int) -> str:
@@ -199,10 +209,11 @@ def _break_down_source(
     max_nuggets: int | None = None,
 ) -> BreakdownOutput:
     """Call the LLM to break down source into atomic nuggets (line ranges)."""
-    numbered_source = _add_line_numbers(source_content)
+    numbered_source = _add_line_numbers_and_word_counts(source_content)
     user_content = (
         "Break down this source into atomic idea nuggets. "
         "Each nugget must have at least 300 words of substantive content. "
+        "Format: each line is line_num|word_count|sentence — sum the word counts of selected lines to verify each nugget reaches the minimum. "
         "Output start_line, end_line, and is_meaningful_content for each (false for TOC, nav links, placeholder headings)."
     )
     if max_nuggets is not None:
@@ -270,10 +281,13 @@ def run(
         return nuggets
 
     cache_miss("breaking down...")
+    sentence_content = _split_into_sentences(source_content)
     system_prompt = _load_system_prompt(config.breakdown.system_prompt)
-    result = _break_down_source(source_content, config.breakdown.model, system_prompt, max_nuggets)
+    result = _break_down_source(
+        sentence_content, config.breakdown.model, system_prompt, max_nuggets
+    )
     for n in result.nuggets:
-        n.original_text = _extract_lines(source_content, n.start_line, n.end_line)
+        n.original_text = _extract_lines(sentence_content, n.start_line, n.end_line)
         n.cache_key = _content_cache_key(n.original_text)
 
     breakdown_path.parent.mkdir(parents=True, exist_ok=True)
@@ -283,7 +297,7 @@ def run(
         encoding="utf-8",
     )
 
-    result.nuggets = _post_process(result.nuggets, source_content)
+    result.nuggets = _post_process(result.nuggets, sentence_content)
 
     # Filter out nuggets with no source text (LLM can return invalid line ranges)
     valid_nuggets = []
