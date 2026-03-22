@@ -52,6 +52,7 @@ def _process_one_clip_impl(nugget: Nugget, config, config_hash: str, run_id: str
     emit_event(
         run_id,
         ProgressEventType.script_created,
+        status_message="Writing script...",
         video_id=video_id,
         workflow="initial_processing",
         payload={"videoId": video_id, "script": script},
@@ -93,7 +94,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     config_hash = config.hash
     log_info(f"[initial_processing] config_hash={config_hash}")
 
-    emit_event(run_id, ProgressEventType.breakdown_started)
+    emit_event(run_id, ProgressEventType.breakdown_started, status_message="Analysing your content...")
 
     # 1. Breakdown
     source_key = source_hash(source_content)
@@ -113,12 +114,13 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     emit_event(
         run_id,
         ProgressEventType.breakdown_completed,
+        status_message="",
         payload={"nuggets": breakdown_json},
     )
 
     if not nuggets:
         update_run_status(run_id, "failed")
-        emit_event(run_id, ProgressEventType.error, payload={"error": "No meaningful nuggets from breakdown"})
+        emit_event(run_id, ProgressEventType.error, status_message="", payload={"error": "No meaningful nuggets from breakdown"})
         return {"statusCode": 200, "body": json.dumps({"runId": run_id, "status": "failed"})}
 
     # 2. Create video per nugget, process in parallel (script -> scenes)
@@ -132,6 +134,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
             emit_event(
                 run_id,
                 ProgressEventType.video_started,
+                status_message="Writing script...",
                 video_id=video_id,
                 workflow="initial_processing",
                 payload={"videoId": video_id, "sourceText": nugget.original_text or ""},
@@ -155,6 +158,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                 emit_event(
                     run_id,
                     ProgressEventType.video_completed,
+                    status_message="",
                     video_id=video_id,
                     workflow="initial_processing",
                     payload=result.model_dump(),
@@ -171,6 +175,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                 emit_event(
                     run_id,
                     ProgressEventType.error,
+                    status_message="",
                     video_id=video_id,
                     payload={"error": str(e)},
                 )
@@ -181,6 +186,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     emit_event(
         run_id,
         ProgressEventType.initial_processing_complete,
+        status_message="",
         payload={"clips": results},
     )
     log_info(f"[initial_processing] complete runId={run_id} clips={len(results)}")

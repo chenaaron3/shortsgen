@@ -68,48 +68,60 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     chunks = Chunks.model_validate(json.loads(chunks_json))
 
     total_scenes = len(chunks.scenes)
+    images_done: list[int] = [0]
+    voice_done: list[int] = [0]
+
+    def _asset_progress() -> float:
+        if total_scenes <= 0:
+            return 0.0
+        return (images_done[0] + voice_done[0]) / (2 * total_scenes)
+
     emit_event(
         run_id,
         ProgressEventType.asset_gen_started,
+        status_message=f"Images 0/{total_scenes}, Voice 0/{total_scenes}",
         video_id=video_id,
         workflow="finalize_clip",
+        progress=0.0,
         payload={"step": "images_voice", "totalScenes": total_scenes},
     )
 
+    def _emit_asset_progress() -> None:
+        emit_event(
+            run_id,
+            ProgressEventType.asset_gen_progress,
+            status_message=f"Images {images_done[0]}/{total_scenes}, Voice {voice_done[0]}/{total_scenes}",
+            video_id=video_id,
+            workflow="finalize_clip",
+            progress=_asset_progress(),
+            payload={"imagesDone": images_done[0], "voiceDone": voice_done[0], "totalScenes": total_scenes},
+        )
+
     def on_step_complete(step: str) -> None:
-        event_type = {
-            "image": ProgressEventType.image_generated,
-            "voice": ProgressEventType.voice_generated,
-            "prepare": ProgressEventType.caption_generated,
-        }.get(step)
-        if event_type:
-            payload: dict | None = None
-            if step == "image":
-                payload = {"imagesDone": total_scenes}
-            elif step == "voice":
-                payload = {"voiceDone": total_scenes}
+        if step == "image":
+            images_done[0] = total_scenes
+            _emit_asset_progress()
+        elif step == "voice":
+            voice_done[0] = total_scenes
+            _emit_asset_progress()
+        elif step == "prepare":
             emit_event(
-                run_id, event_type, video_id=video_id,
-                workflow="finalize_clip", payload=payload or {},
+                run_id,
+                ProgressEventType.caption_generated,
+                status_message="Generating captions...",
+                video_id=video_id,
+                workflow="finalize_clip",
+                progress=1.0,
+                payload={},
             )
 
     def on_image_scene(done_count: int, total: int) -> None:
-        emit_event(
-            run_id,
-            ProgressEventType.image_generated,
-            video_id=video_id,
-            workflow="finalize_clip",
-            payload={"imagesDone": done_count, "totalScenes": total},
-        )
+        images_done[0] = done_count
+        _emit_asset_progress()
 
     def on_voice_scene(done_count: int, total: int) -> None:
-        emit_event(
-            run_id,
-            ProgressEventType.voice_generated,
-            video_id=video_id,
-            workflow="finalize_clip",
-            payload={"voiceDone": done_count, "totalScenes": total},
-        )
+        voice_done[0] = done_count
+        _emit_asset_progress()
 
     run_pipeline(
         cache_key=cache_key,
@@ -131,8 +143,10 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     emit_event(
         run_id,
         ProgressEventType.asset_gen_completed,
+        status_message="",
         video_id=video_id,
         workflow="finalize_clip",
+        progress=1.0,
         payload={"videoId": video_id, "s3Prefix": s3_prefix},
     )
     return {"statusCode": 200, "body": json.dumps({"videoId": video_id, "s3Prefix": s3_prefix})}

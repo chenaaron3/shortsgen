@@ -61,6 +61,7 @@ def emit_event(
     run_id: str,
     event_type: ProgressEventType | str,
     *,
+    status_message: str,
     video_id: str = "",
     workflow: str | None = None,
     progress: float | None = None,
@@ -70,6 +71,7 @@ def emit_event(
     """
     Emit a typed progress event. Higher-level API that understands runId and videoId.
     Use ProgressEventType enum for type safety (shared with React via packages/types).
+    status_message: Required human-readable status (e.g. "Images 2/5, Voice 4/5", "Streaming…").
     workflow: Enables client to route and derive progress (initial_processing, update_feedback, update_imagery, finalize_clip).
     progress: Optional 0-1 server-estimated progress. Generic across events.
     """
@@ -78,6 +80,7 @@ def emit_event(
         "runId": run_id,
         "videoId": video_id,
         "type": type_val,
+        "statusMessage": status_message,
     }
     if workflow and workflow in WORKFLOW_TYPES:
         message["workflow"] = workflow

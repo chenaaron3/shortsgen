@@ -13,9 +13,9 @@
         "suggestion_started",
         "suggestion_partial",
         "suggestion_completed",
+        "request_sent",
         "asset_gen_started",
-        "image_generated",
-        "voice_generated",
+        "asset_gen_progress",
         "caption_generated",
         "asset_gen_completed",
         "error"

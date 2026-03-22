@@ -9,15 +9,12 @@ import type { ChunksOutput, ProgressEventType, WorkflowType } from "@shortgen/ty
 
 import type { SceneFeedback } from "~/lib/sceneFeedback";
 
-/** Per-video progress for sidebar (step label + background bar). Input to workflow's progressFromState/stepLabelFromState. */
+/** Per-video progress for sidebar. Aligns with server progress event display fields. */
 export interface VideoProgress {
   workflow: WorkflowType | "export";
-  step?: string;
+  type?: ProgressEventType;
   progress?: number;
-  imagesDone?: number;
-  voiceDone?: number;
-  totalScenes?: number;
-  lastEvent?: ProgressEventType;
+  statusMessage: string;
 }
 
 export interface RunStoreUi {

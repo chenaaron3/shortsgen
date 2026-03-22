@@ -130,9 +130,9 @@ export type UpdateImageryResponse = z.infer<typeof updateImageryResponseSchema>;
  * - initial_processing_complete: All videos and scenes completed for the run.
  * - suggestion_partial: Streaming partial LLM suggestion (ChunksOutput JSON) while applying user feedback. Client can show tokens/diff optimistically.
  * - suggestion_completed: Full suggested chunks ready; client shows revision UI. DB chunks unchanged until user accepts.
+ * - request_sent: Client-only. Set when tRPC mutation succeeds; request accepted, waiting for first server event.
  * - asset_gen_started: Asset generation (images, voice, captions) has started for a video.
- * - image_generated: Image generated for a scene (during asset_gen).
- * - voice_generated: Voice generated for a scene (during asset_gen).
+ * - asset_gen_progress: Cumulative progress during images+voice phase (replaces image_generated/voice_generated).
  * - caption_generated: Captions generated (during asset_gen).
  * - asset_gen_completed: Asset generation done; video ready for export.
  * - error: Pipeline error.
@@ -156,9 +156,9 @@ export const progressEventTypeSchema = z.enum([
   "suggestion_started",
   "suggestion_partial",
   "suggestion_completed",
+  "request_sent",
   "asset_gen_started",
-  "image_generated",
-  "voice_generated",
+  "asset_gen_progress",
   "caption_generated",
   "asset_gen_completed",
   "error",
@@ -172,6 +172,8 @@ export const progressEventSchema = z.object({
   workflow: workflowTypeSchema.optional(),
   /** Server-estimated progress 0–1. Generic across events (e.g. suggestion_partial, streaming). */
   progress: z.number().min(0).max(1).optional(),
+  /** Server-computed human-readable status (e.g. "Images 2/5, Voice 4/5", "Streaming…"). Required. */
+  statusMessage: z.string(),
   payload: z.unknown().optional(),
 });
 

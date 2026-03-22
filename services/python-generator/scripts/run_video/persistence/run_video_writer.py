@@ -138,7 +138,7 @@ def get_video(video_id: str) -> Video | None:
     with _conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                f"SELECT id, run_id, s3_prefix, source_text, status, script, chunks, cache_key, config_hash, created_at FROM {VIDEOS_TABLE} WHERE id = %s",
+                f"SELECT id, run_id, s3_prefix, render_id, source_text, status, script, chunks, cache_key, config_hash, created_at FROM {VIDEOS_TABLE} WHERE id = %s",
                 (video_id,),
             )
             row = cur.fetchone()

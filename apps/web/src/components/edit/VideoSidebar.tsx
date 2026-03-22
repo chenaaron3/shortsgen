@@ -70,6 +70,16 @@ export function VideoSidebar({
               !!progress ||
               revisionLoadingVideoId === v.id;
 
+            if (inProgress) {
+              console.log("[VideoSidebar] progress", {
+                videoId: v.id,
+                progressPct,
+                workflow: progress?.workflow,
+                type: progress?.type,
+                serverProgress: progress?.progress,
+              });
+            }
+
             return (
               <Link
                 key={v.id}
@@ -82,13 +92,14 @@ export function VideoSidebar({
               >
                 {inProgress && (
                   <div
-                    className="absolute inset-0 -z-[1] transition-[background] duration-300"
+                    className="absolute inset-0 z-0 transition-[background] duration-300"
+                    aria-hidden
                     style={{
-                      background: `linear-gradient(to right, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.15) ${progressPct * 100}%, transparent ${progressPct * 100}%, transparent 100%)`,
+                      background: `linear-gradient(to right, color-mix(in oklch, var(--primary) 30%, transparent) 0%, color-mix(in oklch, var(--primary) 30%, transparent) ${progressPct * 100}%, transparent ${progressPct * 100}%, transparent 100%)`,
                     }}
                   />
                 )}
-                <div className="flex w-full flex-col gap-0.5 px-3 py-2">
+                <div className="relative z-10 flex w-full flex-col gap-0.5 px-3 py-2">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="min-w-0 flex-1 truncate font-mono">
                       {getVideoDisplayName(v)}

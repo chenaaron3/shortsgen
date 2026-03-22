@@ -63,6 +63,7 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
     emit_event(
         run_id,
         ProgressEventType.suggestion_started,
+        status_message="Applying feedback…",
         video_id=video_id,
         workflow="update_feedback",
     )
@@ -74,6 +75,7 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
         emit_event(
             run_id,
             ProgressEventType.suggestion_partial,
+            status_message="Applying feedback…",
             video_id=video_id,
             workflow="update_feedback",
             progress=progress_val,
@@ -92,6 +94,7 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
     emit_event(
         run_id,
         ProgressEventType.suggestion_completed,
+        status_message="",
         video_id=video_id,
         workflow="update_feedback",
         payload={"chunks": revised.model_dump()},

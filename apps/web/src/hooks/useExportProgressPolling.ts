@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { api } from "~/utils/api";
 import { useRunStore } from "~/stores/useRunStore";
+import { api } from "~/utils/api";
 
 interface Video {
   id: string;
@@ -23,8 +23,7 @@ export function useExportProgressPolling(
   const setVideoProgress = useRunStore((s) => s.setVideoProgress);
 
   const toPoll = useMemo(
-    () =>
-      videos.filter((v) => v.status === "exporting" && v.render_id),
+    () => videos.filter((v) => v.status === "exporting" && v.render_id),
     [videos],
   );
   const toPollKey = toPoll.map((v) => v.id).join(",");
@@ -39,12 +38,17 @@ export function useExportProgressPolling(
             runId,
             videoId: v.id,
           });
+          const p = data.overallProgress;
           setVideoProgress(v.id, {
             workflow: "export",
-            progress: data.overallProgress,
+            progress: p,
+            statusMessage:
+              p < 1 ? `Rendering ${Math.round(p * 100)}%` : "Rendering…",
           });
           if (data.done || data.fatalErrorEncountered) {
             setVideoProgress(v.id, null);
+            refetch();
+          } else if ("_retrySync" in data && data._retrySync) {
             refetch();
           }
         } catch {

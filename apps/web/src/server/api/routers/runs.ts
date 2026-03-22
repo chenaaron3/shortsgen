@@ -448,21 +448,42 @@ export const runsRouter = createTRPCRouter({
         SHORTGEN_BUCKET_NAME,
       } = env;
 
-      const { getRenderProgress } = await import("@remotion/lambda/client");
-      const progress = await getRenderProgress({
-        renderId: video.render_id,
-        bucketName: SHORTGEN_BUCKET_NAME,
-        functionName: REMOTION_LAMBDA_FUNCTION_NAME,
-        region: REMOTION_LAMBDA_REGION as Parameters<
-          typeof import("@remotion/lambda/client").getRenderProgress
-        >[0]["region"],
-      });
+      try {
+        const { getRenderProgress } = await import("@remotion/lambda/client");
+        const progress = await getRenderProgress({
+          renderId: video.render_id,
+          bucketName: SHORTGEN_BUCKET_NAME,
+          functionName: REMOTION_LAMBDA_FUNCTION_NAME,
+          region: REMOTION_LAMBDA_REGION as Parameters<
+            typeof import("@remotion/lambda/client").getRenderProgress
+          >[0]["region"],
+        });
 
-      return {
-        overallProgress: progress.overallProgress,
-        done: progress.done,
-        fatalErrorEncountered: progress.fatalErrorEncountered ?? false,
-      };
+        return {
+          overallProgress: progress.overallProgress,
+          done: progress.done,
+          fatalErrorEncountered: progress.fatalErrorEncountered ?? false,
+        };
+      } catch (e) {
+        console.warn(
+          "[getExportProgress] Remotion getRenderProgress failed:",
+          video.render_id,
+          String(e),
+        );
+        await ctx.db
+          .update(videos)
+          .set({ status: "assets", render_id: null })
+          .where(
+            and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
+          );
+        return {
+          overallProgress: 0,
+          done: false,
+          fatalErrorEncountered: false,
+          /** Client should refetch run data; status reverted to assets to stop polling. */
+          _retrySync: true,
+        };
+      }
     }),
 
   /**

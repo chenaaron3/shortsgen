@@ -120,8 +120,10 @@ def _handler_impl(
     emit_event(
         run_id,
         ProgressEventType.asset_gen_started,
+        status_message="Regenerating image…",
         video_id=video_id,
         workflow="update_imagery",
+        progress=0.0,
         payload={"step": "images_voice", "totalScenes": 1},
     )
 
@@ -135,9 +137,11 @@ def _handler_impl(
     )
     emit_event(
         run_id,
-        ProgressEventType.image_generated,
+        ProgressEventType.asset_gen_progress,
+        status_message="Regenerating image…",
         video_id=video_id,
         workflow="update_imagery",
+        progress=1.0,
         payload={"sceneIndex": scene_index},
     )
 
@@ -162,6 +166,7 @@ def _handler_impl(
     emit_event(
         run_id,
         ProgressEventType.asset_gen_completed,
+        status_message="",
         video_id=video_id,
         workflow="update_imagery",
         payload={"videoId": video_id, "chunks": chunks.model_dump()},

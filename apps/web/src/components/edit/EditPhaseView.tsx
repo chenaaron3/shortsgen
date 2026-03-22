@@ -84,7 +84,9 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
       setScriptFeedback("");
       setVideoProgress(variables.videoId, {
         workflow: "update_feedback",
-        step: "request_sent",
+        type: "request_sent",
+        progress: 0,
+        statusMessage: "Starting…",
       });
     },
   });
@@ -96,7 +98,9 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
         .forEach((v) =>
           setVideoProgress(v.id, {
             workflow: "finalize_clip",
-            step: "request_sent",
+            type: "request_sent",
+            progress: 0,
+            statusMessage: "Starting…",
           })
         );
       void runQuery.refetch();
@@ -107,7 +111,10 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
       videos
         .filter((v) => v.status === "assets" || v.status === "exported")
         .forEach((v) =>
-          setVideoProgress(v.id, { workflow: "export", step: "request_sent" }),
+          setVideoProgress(v.id, {
+            workflow: "export",
+            statusMessage: "Rendering…",
+          }),
         );
       void runQuery.refetch();
     },
@@ -119,7 +126,9 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
       setSceneUpdating(variables.sceneIndex);
       setVideoProgress(variables.videoId, {
         workflow: "update_imagery",
-        step: "request_sent",
+        type: "request_sent",
+        progress: 0,
+        statusMessage: "Starting…",
       });
     },
   });

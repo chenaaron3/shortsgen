@@ -4,8 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { env } from "~/env";
 import { useRunStore } from "~/stores/useRunStore";
 
-import type { ChunksOutput, ProgressEventType, WorkflowType } from "@shortgen/types";
-/** Base shape for all progress events (runId, videoId, type, workflow, optional progress, payload). */
+import type {
+  ChunksOutput,
+  ProgressEventType,
+  WorkflowType,
+} from "@shortgen/types";
+/** Base shape for all progress events (runId, videoId, type, workflow, progress, statusMessage, payload). */
 export interface ProgressMessageBase {
   runId: string;
   videoId: string;
@@ -13,6 +17,8 @@ export interface ProgressMessageBase {
   workflow?: WorkflowType;
   /** Server-estimated progress 0–1. Generic across events. */
   progress?: number;
+  /** Server-computed human-readable status. Required. */
+  statusMessage: string;
   payload?: unknown;
 }
 
@@ -53,12 +59,13 @@ export type ProgressMessage =
       payload?: { step?: string; totalScenes?: number };
     })
   | (ProgressMessageBase & {
-      type: "image_generated";
-      payload?: { sceneIndex?: number };
-    })
-  | (ProgressMessageBase & {
-      type: "voice_generated";
-      payload?: { sceneIndex?: number };
+      type: "asset_gen_progress";
+      payload?: {
+        imagesDone?: number;
+        voiceDone?: number;
+        totalScenes?: number;
+        sceneIndex?: number;
+      };
     })
   | (ProgressMessageBase & {
       type: "caption_generated";
@@ -289,7 +296,6 @@ function createProgressHandler(refetch: (() => void) | undefined) {
     // Update videoProgressByVideo (workflow state for sidebar)
     const vid = msg.videoId;
     const workflow = msg.workflow;
-    const current = vid ? progress.videoProgressByVideo[vid] : undefined;
 
     const COMPLETED_EVENTS: ProgressEventType[] = [
       "video_completed",
@@ -302,27 +308,12 @@ function createProgressHandler(refetch: (() => void) | undefined) {
     }
 
     if (!vid || !workflow) return;
-    const p = msg.payload as Record<string, unknown> | undefined;
-    const update: Parameters<typeof setVideoProgress>[1] = {
+    setVideoProgress(vid, {
       workflow,
-      step: msg.type,
-      lastEvent: msg.type,
-      ...current,
-    };
-    if (msg.progress !== undefined) update.progress = msg.progress;
-    if (p?.totalScenes !== undefined) update.totalScenes = p.totalScenes as number;
-    if (msg.type === "asset_gen_started") {
-      update.totalScenes = (p?.totalScenes as number) ?? current?.totalScenes;
-      update.imagesDone = 0;
-      update.voiceDone = 0;
-    } else if (msg.type === "image_generated") {
-      update.imagesDone =
-        (p?.imagesDone as number) ?? (current?.imagesDone ?? 0) + 1;
-    } else if (msg.type === "voice_generated") {
-      update.voiceDone =
-        (p?.voiceDone as number) ?? (current?.voiceDone ?? 0) + 1;
-    }
-    setVideoProgress(vid, update);
+      type: msg.type,
+      progress: msg.progress,
+      statusMessage: msg.statusMessage ?? "",
+    });
   };
 }
 
