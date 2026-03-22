@@ -53,14 +53,19 @@ def cache_base() -> Path:
     return _GENERATION_ROOT / "cache"
 
 
+def breakdown_dir(source_hash: str) -> Path:
+    """Directory for breakdown artifacts: cache/_breakdown/{source_hash}/."""
+    return cache_base() / "_breakdown" / source_hash
+
+
 def breakdown_cache_path(source_hash: str) -> Path:
     """Path to shared breakdown cache: cache/_breakdown/{source_hash}/breakdown.json. Shared across configs."""
-    return cache_base() / "_breakdown" / source_hash / "breakdown.json"
+    return breakdown_dir(source_hash) / "breakdown.json"
 
 
 def breakdown_raw_path(source_hash: str) -> Path:
     """Path to raw LLM breakdown before post-processing: cache/_breakdown/{source_hash}/breakdown_pre_post_process.json."""
-    return cache_base() / "_breakdown" / source_hash / "breakdown_pre_post_process.json"
+    return breakdown_dir(source_hash) / "breakdown_pre_post_process.json"
 
 
 def breakdown_output_dir(source_hash: str, config_hash: str) -> Path:

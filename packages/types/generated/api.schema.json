@@ -114,8 +114,8 @@
             "cache_key": {
               "type": "string"
             },
-            "is_meaningful_content": {
-              "type": "boolean"
+            "word_count": {
+              "type": "number"
             }
           },
           "required": [

@@ -4,7 +4,7 @@
 You partition source material (books, podcast transcripts) into **atomic idea nuggets**. Each nugget becomes input for a short-form video script. Your job is to identify where to split the content—not to rewrite it.
 
 **Input**  
-You receive source text with **line numbers prefixed** (format: `LINE_NUM|content`). Use the line numbers to specify nugget boundaries.
+You receive source text with **line numbers and word counts prefixed** (format: `line_num|word_count|sentence`). Sum the word counts of selected lines to verify each nugget reaches the minimum. Use the line numbers to specify nugget boundaries.
 
 ---
 
@@ -21,12 +21,12 @@ You are NOT summarizing or paraphrasing. The actual text will be extracted from 
 
 ## Nugget Rules
 
-- **Full coverage:** Nuggets must cover every line from 1 through the last line of the source. No gaps. No overlaps.
-- **CRITICAL—Contiguous:** Nugget N's `end_line + 1` MUST equal Nugget N+1's `start_line`. First nugget starts at 1; last nugget ends at the final line. No gaps. No overlaps.
+- **Selective coverage:** Extract only substantive sections. You may skip TOC, intros, tangents, filler, and repetitive content. Gaps between nuggets are allowed—skipped content will not become videos.
+- **No overlaps:** Nugget line ranges must not overlap. Nugget N's `end_line` must be less than Nugget N+1's `start_line`.
 - **Sequential:** Output nuggets in order by `start_line`.
 - **Atomic:** One clear concept per nugget. If a passage has two distinct ideas, split into two nuggets.
 - **Self-contained:** Each nugget should work as standalone content. Avoid splitting mid-paragraph or mid-thought.
-- **300-word minimum (mandatory):** Each nugget MUST have at least 300 words of substantive content. If a section is shorter, merge it with the next section. Never output a nugget under 300 words.
+- **500-word target:** Aim for at least 500 words per nugget. Post-processing will extend short nuggets into gaps or merge with adjacent nuggets as needed.
 - **Title:** One phrase capturing the single most important idea in that section (~40 chars).
 
 ---
@@ -40,29 +40,28 @@ Return structured JSON with a list of nuggets. Each nugget has:
 - **start_line:** First line number of this nugget (1-indexed, inclusive).
 - **end_line:** Last line number of this nugget (1-indexed, inclusive).
 - **source_ref:** Optional object with `chapter`, `section`, `timestamp` (any can be null).
-- **is_meaningful_content:** Boolean. `true` if the nugget contains substantive ideas, explanations, examples, or narrative worth turning into a video. `false` for table-of-contents headings, "See all articles", category labels, navigation links, placeholders, or section titles with no body (e.g. "## Accelerated Learning" alone, "Mental Models" as a standalone header). Non-meaningful nuggets are excluded from video generation.
 
 ---
 
 ## Example
 
-**Source (with line numbers):**
+**Source (format: line_num|word_count|sentence):**
 
 ```
-1|# Atomic Habits
-2|
-3|## Chapter 2: Identity
-4|
-5|Goals are about what you want to achieve.
-6|Identity is about who you become.
-7|The author argues that focusing on outcomes—like running a marathon—is less effective than focusing on identity: "I am a runner."
-8|Each small action is a vote for that identity.
-9|Over time, those votes compound.
-10|
-11|## Chapter 3: Systems
-12|
-13|You do not rise to the level of your goals.
-14|You fall to the level of your systems.
+1|2|# Atomic Habits
+2|0|
+3|4|## Chapter 2: Identity
+4|0|
+5|7|Goals are about what you want to achieve.
+6|6|Identity is about who you become.
+7|18|The author argues that focusing on outcomes—like running a marathon—is less effective than focusing on identity: "I am a runner."
+8|8|Each small action is a vote for that identity.
+9|5|Over time, those votes compound.
+10|0|
+11|4|## Chapter 3: Systems
+12|0|
+13|9|You do not rise to the level of your goals.
+14|7|You fall to the level of your systems.
 ```
 
 **Output:**
@@ -79,8 +78,7 @@ Return structured JSON with a list of nuggets. Each nugget has:
         "chapter": "2",
         "section": "Identity",
         "timestamp": null
-      },
-      "is_meaningful_content": true
+      }
     },
     {
       "id": "atomic-habits-002",
@@ -91,21 +89,19 @@ Return structured JSON with a list of nuggets. Each nugget has:
         "chapter": "3",
         "section": "Systems",
         "timestamp": null
-      },
-      "is_meaningful_content": true
+      }
     }
   ]
 }
 ```
 
-Note: Nuggets cover lines 1-9 and 10-14 contiguously. No gaps. The actual text will be extracted from these line ranges.
+Note: Nuggets cover lines 1-9 and 10-14. Gaps are allowed; the actual text will be extracted from these line ranges.
 
 ---
 
 ## Edge Cases
 
-- **Non-meaningful content:** Mark `is_meaningful_content: false` for TOC blocks, "See all articles", category headers with no body, navigation links, or placeholders. These will not become videos.
-- **Thin passages:** If a section has no distinct idea, include it in an adjacent nugget. Never leave gaps.
-- **Redundant ideas:** If the same idea appears in multiple places, assign each occurrence to a nugget; coverage is required.
+- **Skip filler:** Do not feel obligated to include every paragraph. Skip tangents, banter, or sections that don't add to the core ideas.
+- **Redundant ideas:** If the same idea appears in multiple places, you may include one or more occurrences as nuggets—prioritize the clearest or most substantive.
 - **No clear structure:** If the source lacks chapters/sections, use `source_ref` sparingly; `id` and `title` still required.
-- **Long source:** Process the full source. Output nuggets covering every line from 1 to the last line.
+- **Long source:** Extract the most important ideas. You do not need to cover every line.

@@ -20,7 +20,7 @@ export const nuggetSchema = z.object({
   source_ref: sourceRefSchema.nullable().optional(),
   original_text: z.string().optional(),
   cache_key: z.string().optional(),
-  is_meaningful_content: z.boolean().optional(),
+  word_count: z.number().optional(),
 });
 
 // --- Scene (from chunker) ---

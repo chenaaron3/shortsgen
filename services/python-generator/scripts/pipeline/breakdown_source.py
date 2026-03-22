@@ -17,7 +17,7 @@ from litellm import completion
 from models import BreakdownOutput, Nugget
 from schema_utils import schema_for_openai
 
-from path_utils import env_path, prompts_dir, breakdown_cache_path, breakdown_raw_path
+from path_utils import env_path, prompts_dir, breakdown_cache_path, breakdown_dir, breakdown_raw_path
 from logger import cache_hit, cache_miss, error, info, step_end, step_start, warn
 from usage_trace import record_llm
 
@@ -76,7 +76,7 @@ def _extract_json(content: str) -> str:
     return content
 
 
-MIN_WORDS_PER_NUGGET = 300
+MIN_WORDS_PER_NUGGET = 250
 
 
 def _word_count(text: str) -> int:
@@ -84,83 +84,91 @@ def _word_count(text: str) -> int:
     return len((text or "").split())
 
 
-def _fix_line_gaps(
+def _ensure_min_words(
     nuggets: list[Nugget],
     source_content: str,
 ) -> list[Nugget]:
-    """Ensure nuggets are contiguous: no gaps, no overlaps. Re-extract original_text from source."""
+    """Extend short nuggets until each reaches MIN_WORDS. May extend into other nuggets and create overlaps."""
     if not nuggets:
         return nuggets
     num_lines = len(source_content.splitlines())
     if num_lines == 0:
         return nuggets
 
-    before = [(n.id, n.start_line, n.end_line, n.original_text or "") for n in nuggets]
-    work = list(nuggets)
-    for i in range(len(work) - 1):
-        curr = work[i]
-        next_n = work[i + 1]
-        if curr.end_line + 1 < next_n.start_line:
-            curr.end_line = min(next_n.start_line - 1, num_lines)
-        elif curr.end_line >= next_n.start_line:
-            next_n.start_line = min(curr.end_line + 1, num_lines)
-            if next_n.start_line > next_n.end_line:
-                next_n.end_line = next_n.start_line
-
-    work[0].start_line = max(1, min(work[0].start_line, num_lines))
-    work[-1].end_line = min(num_lines, max(work[-1].end_line, work[-1].start_line))
+    work = sorted(nuggets, key=lambda n: n.start_line)
+    lines = source_content.splitlines()
+    extended = 0
 
     for n in work:
-        n.original_text = _extract_lines(source_content, n.start_line, n.end_line)
-        n.cache_key = _content_cache_key(n.original_text)
-    after = [(n.id, n.start_line, n.end_line, n.original_text or "") for n in work]
-    if before != after:
-        info("  post_process: _fix_line_gaps modified nuggets (contiguity/line re-extraction)")
+        words_needed = MIN_WORDS_PER_NUGGET - _word_count(n.original_text or "")
+        if words_needed <= 0:
+            continue
+
+        range_after = (n.end_line + 1, num_lines)
+        if range_after[0] > range_after[1]:
+            continue
+
+        new_end = n.end_line
+        for line_num in range(range_after[0], range_after[1] + 1):
+            if words_needed <= 0:
+                break
+            new_end = line_num
+            words_needed -= _word_count(lines[line_num - 1])
+
+        if new_end != n.end_line:
+            n.end_line = new_end
+            n.original_text = _extract_lines(source_content, n.start_line, n.end_line)
+            n.cache_key = _content_cache_key(n.original_text)
+            n.word_count = _word_count(n.original_text or "")
+            extended += 1
+
+    if extended:
+        info(f"  post_process: _ensure_min_words extended {extended} nugget(s)")
     return work
 
 
-def _merge_short_nuggets(
+def _merge_overlaps(
     nuggets: list[Nugget],
     source_content: str,
 ) -> list[Nugget]:
-    """Merge consecutive nuggets under MIN_WORDS until each meets the minimum."""
+    """Merge overlapping nuggets into single nuggets."""
     if not nuggets:
         return nuggets
 
+    work = sorted(nuggets, key=lambda n: n.start_line)
     result: list[Nugget] = []
-    i = 0
-    while i < len(nuggets):
-        n = nuggets[i]
-        combined_text = (n.original_text or "").strip()
-        combined_lines_start = n.start_line
-        combined_lines_end = n.end_line
-        combined_meaningful = getattr(n, "is_meaningful_content", True)
-        j = i + 1
 
-        while _word_count(combined_text) < MIN_WORDS_PER_NUGGET and j < len(nuggets):
-            next_n = nuggets[j]
-            next_text = (next_n.original_text or "").strip()
-            combined_text = f"{combined_text}\n\n{next_text}" if combined_text else next_text
-            combined_lines_end = next_n.end_line
-            combined_meaningful = combined_meaningful or getattr(next_n, "is_meaningful_content", True)
-            j += 1
+    for n in work:
+        if not result or result[-1].end_line < n.start_line:
+            result.append(
+                Nugget(
+                    id=n.id,
+                    title=n.title,
+                    start_line=n.start_line,
+                    end_line=n.end_line,
+                    source_ref=n.source_ref,
+                    original_text=n.original_text,
+                    cache_key=n.cache_key,
+                    word_count=_word_count(n.original_text or ""),
+                )
+            )
+        else:
+            last = result[-1]
+            merged_end = max(last.end_line, n.end_line)
+            merged_text = _extract_lines(source_content, last.start_line, merged_end)
+            result[-1] = Nugget(
+                id=last.id,
+                title=last.title,
+                start_line=last.start_line,
+                end_line=merged_end,
+                source_ref=last.source_ref,
+                original_text=merged_text,
+                cache_key=_content_cache_key(merged_text),
+                word_count=_word_count(merged_text),
+            )
 
-        merged_text = _extract_lines(source_content, combined_lines_start, combined_lines_end)
-        merged = Nugget(
-            id=n.id,
-            title=n.title,
-            start_line=combined_lines_start,
-            end_line=combined_lines_end,
-            source_ref=n.source_ref,
-            original_text=merged_text,
-            cache_key=_content_cache_key(merged_text),
-            is_meaningful_content=combined_meaningful,
-        )
-        result.append(merged)
-        i = j
-
-    if len(result) < len(nuggets):
-        info(f"  post_process: _merge_short_nuggets merged {len(nuggets)} -> {len(result)} nuggets")
+    if len(result) < len(work):
+        info(f"  post_process: _merge_overlaps merged {len(work)} -> {len(result)} nuggets")
     return result
 
 
@@ -182,7 +190,7 @@ def _reassign_ids(nuggets: list[Nugget]) -> list[Nugget]:
                 source_ref=n.source_ref,
                 original_text=n.original_text,
                 cache_key=n.cache_key,
-                is_meaningful_content=getattr(n, "is_meaningful_content", True),
+                word_count=getattr(n, "word_count", None) or _word_count(n.original_text or ""),
             )
         )
     new_ids = [n.id for n in result]
@@ -195,9 +203,9 @@ def _post_process(
     nuggets: list[Nugget],
     source_content: str,
 ) -> list[Nugget]:
-    """Post-process LLM nuggets: fix line gaps, merge short nuggets, reassign ids."""
-    nuggets = _fix_line_gaps(nuggets, source_content)
-    nuggets = _merge_short_nuggets(nuggets, source_content)
+    """Post-process LLM nuggets: ensure min words (extend, may create overlaps), merge overlaps, reassign ids."""
+    nuggets = _ensure_min_words(nuggets, source_content)
+    nuggets = _merge_overlaps(nuggets, source_content)
     nuggets = _reassign_ids(nuggets)
     return nuggets
 
@@ -207,15 +215,10 @@ def _break_down_source(
     model: str,
     system_prompt: str,
     max_nuggets: int | None = None,
-) -> BreakdownOutput:
+) -> tuple[BreakdownOutput, str]:
     """Call the LLM to break down source into atomic nuggets (line ranges)."""
     numbered_source = _add_line_numbers_and_word_counts(source_content)
-    user_content = (
-        "Break down this source into atomic idea nuggets. "
-        "Each nugget must have at least 300 words of substantive content. "
-        "Format: each line is line_num|word_count|sentence — sum the word counts of selected lines to verify each nugget reaches the minimum. "
-        "Output start_line, end_line, and is_meaningful_content for each (false for TOC, nav links, placeholder headings)."
-    )
+    user_content = "Break down this source. Format: each line is line_num|word_count|sentence.\n\n"
     if max_nuggets is not None:
         user_content += f"\n\nOutput at most {max_nuggets} nugget(s). Prioritize the most important or representative ideas."
     user_content += f"\n\n{numbered_source}"
@@ -235,13 +238,14 @@ def _break_down_source(
     }
 
     try:
+        user_message = f"{user_content}\n\nRespond with valid JSON only."
         response = cast(
             Any,
             completion(
                 model=model,
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"{user_content}\n\nRespond with valid JSON only."},
+                    {"role": "user", "content": user_message},
                 ],
                 response_format=response_format,
                 temperature=0.5,
@@ -253,7 +257,7 @@ def _break_down_source(
         if getattr(response, "usage", None):
             u = response.usage
             record_llm("Breakdown", model, u.prompt_tokens, u.completion_tokens)
-        return parsed
+        return parsed, user_content
     except Exception as e:
         error(f"Error calling LLM: {e}")
         sys.exit(1)
@@ -283,14 +287,20 @@ def run(
     cache_miss("breaking down...")
     sentence_content = _split_into_sentences(source_content)
     system_prompt = _load_system_prompt(config.breakdown.system_prompt)
-    result = _break_down_source(
+    result, user_content = _break_down_source(
         sentence_content, config.breakdown.model, system_prompt, max_nuggets
+    )
+    breakdown_path.parent.mkdir(parents=True, exist_ok=True)
+    prompt_path = breakdown_dir(source_key) / "breakdown_llm_prompt.md"
+    prompt_path.write_text(
+        f"# System\n\n{system_prompt}\n\n# User\n\n{user_content}",
+        encoding="utf-8",
     )
     for n in result.nuggets:
         n.original_text = _extract_lines(sentence_content, n.start_line, n.end_line)
         n.cache_key = _content_cache_key(n.original_text)
+        n.word_count = _word_count(n.original_text or "")
 
-    breakdown_path.parent.mkdir(parents=True, exist_ok=True)
     pre_post_process_path = breakdown_raw_path(source_key)
     pre_post_process_path.write_text(
         BreakdownOutput(nuggets=result.nuggets).model_dump_json(indent=2),
@@ -318,6 +328,5 @@ def run(
     result.nuggets = valid_nuggets
 
     breakdown_path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
-    meaningful_nuggets = [n for n in valid_nuggets if getattr(n, "is_meaningful_content", True)]
     step_end("Breakdown", outputs=[breakdown_path], cache_hits=0, cache_misses=1)
-    return meaningful_nuggets
+    return valid_nuggets

@@ -18,7 +18,6 @@ Usage:
 
 import argparse
 import hashlib
-import json
 import sys
 from pathlib import Path
 
@@ -175,6 +174,7 @@ def main():
                 source_ref=None,
                 original_text=source_content,
                 cache_key=cache_key,
+                word_count=len(source_content.split()),
             )
         ]
         info("  --no-breakdown: using entire source as one nugget")
@@ -198,8 +198,6 @@ def main():
 
     if args.break_at == "breakdown":
         nugget_dicts = [n.model_dump() if hasattr(n, "model_dump") else n for n in nuggets]
-        out = {"nuggets": nugget_dicts}
-        print(json.dumps(out, indent=2))
         flush_traces_to_disk()
         print_batch_summary(nugget_dicts, configs)
         info("")
