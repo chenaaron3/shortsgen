@@ -88,6 +88,10 @@ class Nugget(BaseModel):
     source_ref: SourceRef | None = Field(default=None, description="Location in source")
     original_text: str | None = Field(default=None, description="Extracted text from source (populated after LLM output)")
     cache_key: str | None = Field(default=None, description="Pipeline cache key: first 16 chars of SHA256(original_text); set when writing breakdown.json")
+    is_meaningful_content: bool = Field(
+        default=True,
+        description="True if nugget contains substantive content; false for TOC, nav links, placeholder headings",
+    )
 
 
 class BreakdownOutput(BaseModel):

@@ -113,6 +113,9 @@
             },
             "cache_key": {
               "type": "string"
+            },
+            "is_meaningful_content": {
+              "type": "boolean"
             }
           },
           "required": [

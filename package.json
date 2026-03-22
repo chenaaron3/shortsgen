@@ -17,7 +17,7 @@
     "build": "pnpm types:sync && pnpm --filter @shortgen/remotion build",
     "render": "pnpm --filter @shortgen/remotion render",
     "upgrade": "pnpm --filter @shortgen/remotion upgrade",
-    "pipeline": "python services/python-generator/scripts/run.py",
+    "pipeline": "services/python-generator/.venv/bin/python services/python-generator/scripts/run.py",
     "types:build": "pnpm --filter @shortgen/types build",
     "types:sync": "pnpm types:build && services/python-generator/.venv/bin/datamodel-codegen --input packages/types/generated/manifest.schema.json --input-file-type jsonschema --output services/python-generator/scripts/schemas/video_manifest.py && services/python-generator/.venv/bin/datamodel-codegen --input packages/types/generated/api.schema.json --input-file-type jsonschema --output services/python-generator/scripts/schemas/api_models.py && services/python-generator/.venv/bin/datamodel-codegen --input packages/types/generated/table.schema.json --input-file-type jsonschema --output services/python-generator/scripts/schemas/table_models.py && services/python-generator/.venv/bin/datamodel-codegen --input packages/types/generated/progress-event-type.schema.json --input-file-type jsonschema --output services/python-generator/scripts/schemas/progress_event_type.py",
     "sst:dev": "sst dev",

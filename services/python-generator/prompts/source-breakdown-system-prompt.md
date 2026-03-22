@@ -22,11 +22,11 @@ You are NOT summarizing or paraphrasing. The actual text will be extracted from 
 ## Nugget Rules
 
 - **Full coverage:** Nuggets must cover every line from 1 through the last line of the source. No gaps. No overlaps.
-- **Contiguous:** Each nugget's `end_line + 1` must equal the next nugget's `start_line`. First nugget starts at 1; last nugget ends at the final line.
+- **CRITICAL—Contiguous:** Nugget N's `end_line + 1` MUST equal Nugget N+1's `start_line`. First nugget starts at 1; last nugget ends at the final line. No gaps. No overlaps.
 - **Sequential:** Output nuggets in order by `start_line`.
 - **Atomic:** One clear concept per nugget. If a passage has two distinct ideas, split into two nuggets.
 - **Self-contained:** Each nugget should work as standalone content. Avoid splitting mid-paragraph or mid-thought.
-- **Prefer 300+ words:** Aim for substantial chunks. Include full paragraphs and examples. Short clips (~1-2 sentences) are too thin.
+- **300-word minimum (mandatory):** Each nugget MUST have at least 300 words of substantive content. If a section is shorter, merge it with the next section. Never output a nugget under 300 words.
 - **Title:** One phrase capturing the single most important idea in that section (~40 chars).
 
 ---
@@ -40,6 +40,7 @@ Return structured JSON with a list of nuggets. Each nugget has:
 - **start_line:** First line number of this nugget (1-indexed, inclusive).
 - **end_line:** Last line number of this nugget (1-indexed, inclusive).
 - **source_ref:** Optional object with `chapter`, `section`, `timestamp` (any can be null).
+- **is_meaningful_content:** Boolean. `true` if the nugget contains substantive ideas, explanations, examples, or narrative worth turning into a video. `false` for table-of-contents headings, "See all articles", category labels, navigation links, placeholders, or section titles with no body (e.g. "## Accelerated Learning" alone, "Mental Models" as a standalone header). Non-meaningful nuggets are excluded from video generation.
 
 ---
 
@@ -78,7 +79,8 @@ Return structured JSON with a list of nuggets. Each nugget has:
         "chapter": "2",
         "section": "Identity",
         "timestamp": null
-      }
+      },
+      "is_meaningful_content": true
     },
     {
       "id": "atomic-habits-002",
@@ -89,7 +91,8 @@ Return structured JSON with a list of nuggets. Each nugget has:
         "chapter": "3",
         "section": "Systems",
         "timestamp": null
-      }
+      },
+      "is_meaningful_content": true
     }
   ]
 }
@@ -101,6 +104,7 @@ Note: Nuggets cover lines 1-9 and 10-14 contiguously. No gaps. The actual text w
 
 ## Edge Cases
 
+- **Non-meaningful content:** Mark `is_meaningful_content: false` for TOC blocks, "See all articles", category headers with no body, navigation links, or placeholders. These will not become videos.
 - **Thin passages:** If a section has no distinct idea, include it in an adjacent nugget. Never leave gaps.
 - **Redundant ideas:** If the same idea appears in multiple places, assign each occurrence to a nugget; coverage is required.
 - **No clear structure:** If the source lacks chapters/sections, use `source_ref` sparingly; `id` and `title` still required.

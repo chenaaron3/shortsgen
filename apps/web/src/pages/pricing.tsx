@@ -1,30 +1,20 @@
 "use client";
 
-import { Check } from "lucide-react";
-import { signIn, useSession } from "next-auth/react";
-import Head from "next/head";
-import Link from "next/link";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
+import { Check } from 'lucide-react';
+import { signIn, useSession } from 'next-auth/react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { BuyCreditsForm } from '~/components/billing/BuyCreditsForm';
+import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import { BuyCreditsForm } from "~/components/billing/BuyCreditsForm";
-import { useUserConfig } from "~/hooks/useUserConfig";
-import { cn } from "~/lib/utils";
-import { api } from "~/utils/api";
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
+} from '~/components/ui/card';
+import { useUserConfig } from '~/hooks/useUserConfig';
+import { cn } from '~/lib/utils';
+import { api } from '~/utils/api';
 
-import {
-  SIGNUP_CREDITS,
-  TIER_CREDIT_ALLOWANCE,
-  TIER_NAMES,
-  TIER_PRICE_CENTS,
-} from "@shortgen/db";
+import { SIGNUP_CREDITS, TIER_CREDIT_ALLOWANCE, TIER_NAMES, TIER_PRICE_CENTS } from '@shortgen/db';
 
 const TIER_ORDER = { free: 0, basic: 1, pro: 2, business: 3 } as const;
 
@@ -170,7 +160,7 @@ function PricingCard({
       className={cn(
         "relative flex flex-col",
         plan.popular &&
-          "overflow-visible border-primary shadow-lg shadow-primary/10 ring-2 ring-primary",
+        "overflow-visible border-primary shadow-lg shadow-primary/10 ring-2 ring-primary",
         isCheaper && "opacity-60",
       )}
     >
@@ -273,7 +263,7 @@ export default function PricingPage() {
                 <CardTitle className="text-lg">Buy credits</CardTitle>
                 <CardDescription>
                   Need more credits without a subscription? Purchase a one-time
-                  pack. Choose quantity (1–100) below.
+                  pack.
                 </CardDescription>
               </CardHeader>
               <CardContent>

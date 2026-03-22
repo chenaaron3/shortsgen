@@ -97,7 +97,9 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     # 1. Breakdown
     source_key = source_hash(source_content)
     log_info(f"[initial_processing] running breakdown source_key={source_key}")
-    nuggets = run_breakdown(source_content, source_key, config=config, skip_cache=True)
+    nuggets = run_breakdown(source_content, source_key, config=config, skip_cache=True, max_nuggets=10)
+    if not nuggets:
+        log_warn("[initial_processing] no meaningful nuggets from breakdown; 0 videos will be created")
     log_info(f"[initial_processing] breakdown complete nuggets={len(nuggets)}")
 
     breakdown_path = breakdown_cache_path(source_key)
@@ -109,6 +111,11 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
         ProgressEventType.breakdown_completed,
         payload={"nuggets": breakdown_json},
     )
+
+    if not nuggets:
+        update_run_status(run_id, "failed")
+        emit_event(run_id, ProgressEventType.error, payload={"error": "No meaningful nuggets from breakdown"})
+        return {"statusCode": 200, "body": json.dumps({"runId": run_id, "status": "failed"})}
 
     # 2. Create video per nugget, process in parallel (script -> scenes)
     log_info(f"[initial_processing] processing {len(nuggets)} clips in parallel")
@@ -171,5 +178,4 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
         payload={"clips": results},
     )
     log_info(f"[initial_processing] complete runId={run_id} clips={len(results)}")
-    return {"statusCode": 200, "body": json.
-    dumps({"runId": run_id, "status": "scripting"})}
+    return {"statusCode": 200, "body": json.dumps({"runId": run_id, "status": "scripting"})}

@@ -35,6 +35,12 @@
                 "null"
               ]
             },
+            "script_regen_count": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
             "created_at": {
               "anyOf": [
                 {
@@ -59,7 +65,8 @@
             "user_input",
             "title",
             "status",
-            "breakdown_messages"
+            "breakdown_messages",
+            "script_regen_count"
           ],
           "additionalProperties": false
         },

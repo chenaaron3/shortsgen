@@ -18,8 +18,8 @@ export function useUserConfig(): {
   const tier = data?.tier ?? "free";
   const creditsBalance = data?.creditsBalance ?? 0;
 
-  const config: "prototype" | "default" =
-    tier === "free" ? "prototype" : "default";
+  const config: "prototype" | "default" = "prototype";
+  // tier === "free" ? "prototype" : "default";
 
   return {
     config,

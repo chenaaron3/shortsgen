@@ -258,7 +258,7 @@ export function SceneRow({
                   e.stopPropagation();
                   setImageDialogOpen(true);
                 }}
-                className="relative z-10 shrink-0 cursor-pointer overflow-hidden rounded border border-border bg-muted/30 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="relative z-10 shrink-0 cursor-pointer overflow-hidden rounded border border-border bg-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="View scene image"
               >
                 <img
@@ -331,13 +331,13 @@ export function SceneRow({
       {imageUrl && (
         <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
           <DialogContent
-            className="w-fit max-w-[90vw] border-none bg-transparent p-0 shadow-none"
+            className="w-fit max-w-[90vw] border-none bg-white p-2 shadow-none"
             onPointerDownOutside={() => setImageDialogOpen(false)}
           >
             <img
               src={imageUrl}
               alt="Scene (full size)"
-              className="block max-h-[85vh] max-w-[90vw]"
+              className="block max-h-[85vh] max-w-[90vw] object-contain"
             />
           </DialogContent>
         </Dialog>

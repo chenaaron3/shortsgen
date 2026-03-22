@@ -2,8 +2,30 @@
 
 import { Download, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React, { useState } from 'react';
+import React, { Component, type ReactNode, useState } from 'react';
 import { api } from '~/utils/api';
+
+class PlayerErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  state = { hasError: false, error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error("[VideoPreview] Remotion Player error:", error);
+  }
+
+  render() {
+    if (this.state.hasError && this.state.error) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 function DownloadButton({ href }: { href: string }) {
   const [loading, setLoading] = useState(false);
@@ -87,13 +109,6 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
 
   if (!videoAssets?.manifest?.scenes?.length) {
     if (isFetched && !videoAssets) {
-      console.log("videoAssets", videoAssets);
-      console.log("isFetched", isFetched);
-      console.log("isError", isError);
-      console.log("runId", runId);
-      console.log("videoId", videoId);
-      console.log("videoAssets", videoAssets);
-      console.log("videoAssets", videoAssets);
       return (
         <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4">
           <p className="text-center text-sm text-muted-foreground">
@@ -112,10 +127,23 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
   const { manifest, assetBaseUrl, exportUrl, backgroundMusicUrl } =
     videoAssets;
 
+  const playerFallback = (
+    <div className="flex h-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/10 p-4">
+      <p className="text-center text-sm font-medium text-amber-700 dark:text-amber-400">
+        Preview failed to load
+      </p>
+      <p className="text-center text-xs text-muted-foreground">
+        This can happen in production if the CDN blocks cross-origin requests.
+        Check the browser console for details.
+      </p>
+    </div>
+  );
+
   return (
     <div className="flex h-full w-full min-h-0 min-w-0 flex-col gap-2">
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-black">
-        <Player
+        <PlayerErrorBoundary fallback={playerFallback}>
+          <Player
           {...({
             acknowledgeRemotionLicense: true,
             component: ShortVideo as React.ComponentType<Record<string, unknown>>,
@@ -137,6 +165,7 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
             loop: true,
           } as React.ComponentProps<typeof Player>)}
         />
+        </PlayerErrorBoundary>
       </div>
       {exportUrl && (
         <DownloadButton href={exportUrl} />
