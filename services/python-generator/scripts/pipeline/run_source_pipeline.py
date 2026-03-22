@@ -26,7 +26,7 @@ from typing import cast
 from dotenv import load_dotenv
 
 from config_loader import load_config
-from path_utils import env_path, breakdown_output_dir, video_cache_path
+from path_utils import breakdown_cache_path, env_path, breakdown_output_dir, video_cache_path
 from logger import error, info
 from usage_trace import flush_traces_to_disk, print_batch_summary, set_context as usage_set_context
 from models import Nugget
@@ -260,6 +260,19 @@ def main():
         except (RuntimeError, FileNotFoundError) as e:
             error(f"Upload failed: {e}")
             sys.exit(1)
+
+    info("")
+    info("── Breakdown artifacts (index) ──")
+    if not no_breakdown:
+        bd_path = breakdown_cache_path(source_key)
+        if bd_path.exists():
+            info(f"   📄 breakdown.json: {bd_path}")
+            info("")
+    for cfg in configs:
+        md_path = breakdown_output_dir(source_key, cfg.hash) / "videos.md"
+        if md_path.exists():
+            info(f"   📄 videos.md ({cfg.name}): {md_path}")
+            info("")
 
     info("")
     info("✅ Done")
