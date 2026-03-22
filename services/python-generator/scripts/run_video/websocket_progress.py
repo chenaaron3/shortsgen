@@ -54,17 +54,24 @@ def emit_by_run_id(
         log_warn(f"[websocket_progress] no connectionId for runId={run_id}, WebSocket not connected")
 
 
+WORKFLOW_TYPES = ("initial_processing", "update_feedback", "update_imagery", "finalize_clip")
+
+
 def emit_event(
     run_id: str,
     event_type: ProgressEventType | str,
     *,
     video_id: str = "",
+    workflow: str | None = None,
+    progress: float | None = None,
     payload: dict[str, Any] | None = None,
     table_name: str | None = None,
 ) -> None:
     """
     Emit a typed progress event. Higher-level API that understands runId and videoId.
     Use ProgressEventType enum for type safety (shared with React via packages/types).
+    workflow: Enables client to route and derive progress (initial_processing, update_feedback, update_imagery, finalize_clip).
+    progress: Optional 0-1 server-estimated progress. Generic across events.
     """
     type_val = event_type.value if isinstance(event_type, ProgressEventType) else event_type
     message: dict[str, Any] = {
@@ -72,6 +79,10 @@ def emit_event(
         "videoId": video_id,
         "type": type_val,
     }
+    if workflow and workflow in WORKFLOW_TYPES:
+        message["workflow"] = workflow
+    if progress is not None and 0 <= progress <= 1:
+        message["progress"] = progress
     if payload:
         message["payload"] = payload
     emit_by_run_id(run_id, message, table_name=table_name)

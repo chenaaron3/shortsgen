@@ -118,6 +118,8 @@ export const videos = pgTable(t("videos"), {
     .notNull()
     .references(() => runs.id, { onDelete: "cascade" }),
   s3_prefix: text("s3_prefix"),
+  /** Remotion Lambda render ID; used to poll getRenderProgress during export. */
+  render_id: text("render_id"),
   source_text: text("source_text"), // Raw source chunk for this clip (nugget.original_text)
   status: text("status")
     .$type<"created" | "scripts" | "assets" | "exporting" | "exported" | "failed">()

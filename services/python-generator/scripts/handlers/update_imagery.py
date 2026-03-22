@@ -121,7 +121,8 @@ def _handler_impl(
         run_id,
         ProgressEventType.asset_gen_started,
         video_id=video_id,
-        payload={"step": "images_voice"},
+        workflow="update_imagery",
+        payload={"step": "images_voice", "totalScenes": 1},
     )
 
     run_images(
@@ -132,7 +133,13 @@ def _handler_impl(
         skip_cache=True,
         model=config.image.model if config.image else None,
     )
-    emit_event(run_id, ProgressEventType.image_generated, video_id=video_id)
+    emit_event(
+        run_id,
+        ProgressEventType.image_generated,
+        video_id=video_id,
+        workflow="update_imagery",
+        payload={"sceneIndex": scene_index},
+    )
 
     composite_key = remotion_composite_key(config_hash, cache_key)
     cache_images_dir = video_cache_path(cache_key, config_hash, "images")
@@ -154,9 +161,10 @@ def _handler_impl(
 
     emit_event(
         run_id,
-        ProgressEventType.suggestion_completed,
+        ProgressEventType.asset_gen_completed,
         video_id=video_id,
-        payload={"chunks": chunks.model_dump()},
+        workflow="update_imagery",
+        payload={"videoId": video_id, "chunks": chunks.model_dump()},
     )
 
     log_info(f"[update_imagery] done runId={run_id} videoId={video_id} sceneIndex={scene_index}")

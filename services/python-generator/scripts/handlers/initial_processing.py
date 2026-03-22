@@ -53,6 +53,7 @@ def _process_one_clip_impl(nugget: Nugget, config, config_hash: str, run_id: str
         run_id,
         ProgressEventType.script_created,
         video_id=video_id,
+        workflow="initial_processing",
         payload={"videoId": video_id, "script": script},
     )
     log_info(f"[initial_processing] script updated videoId={video_id}")
@@ -97,7 +98,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     # 1. Breakdown
     source_key = source_hash(source_content)
     log_info(f"[initial_processing] running breakdown source_key={source_key}")
-    max_nuggets = event.get("maxNuggets", 10)  # 10 for legacy callers that omit the key
+    max_nuggets = event.get("maxNuggets", 5)
     nuggets = run_breakdown(
         source_content, source_key, config=config, skip_cache=True, max_nuggets=max_nuggets
     )
@@ -132,6 +133,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                 run_id,
                 ProgressEventType.video_started,
                 video_id=video_id,
+                workflow="initial_processing",
                 payload={"videoId": video_id, "sourceText": nugget.original_text or ""},
             )
             future = executor.submit(_process_one_clip, nugget, config, config_hash, run_id, video_id)
@@ -154,6 +156,7 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
                     run_id,
                     ProgressEventType.video_completed,
                     video_id=video_id,
+                    workflow="initial_processing",
                     payload=result.model_dump(),
                 )
                 # Upload per-video artifacts for debugging

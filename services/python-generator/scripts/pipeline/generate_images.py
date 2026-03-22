@@ -7,6 +7,8 @@ Called by run_pipeline. Outputs to cache/{cache_key}/images/.
 
 import json
 import sys
+import threading
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -122,6 +124,7 @@ def run(
     concurrency: int = DEFAULT_CONCURRENCY,
     model: str | None = None,
     skip_cache: bool = False,
+    on_image_complete: Callable[[int, int], None] | None = None,
 ) -> Chunks:
     """
     Generate images from chunks. Uses per-image cache.
@@ -132,6 +135,7 @@ def run(
     concurrency: max parallel chains (default 10).
     model: image model from config (e.g. hyper-flux for text-to-image only). Uses backend default if None.
     skip_cache: if True, regenerate all images even when cached (for --step image iteration).
+    on_image_complete: optional callback(done_count, total) invoked after each image is generated.
     """
     images_dir = video_cache_path(cache_key, config_hash, "images")
     mascot = mascot_path or default_mascot_path()
@@ -191,6 +195,8 @@ def run(
 
     work_by_idx = {i: (imagery, filename, full_prompt, request_path) for i, imagery, filename, full_prompt, request_path in work}
     chains = _build_chains(to_process)
+    images_done_lock = threading.Lock()
+    images_done = [0]  # mutable for closure
 
     def _run_chain(chain: list[int]) -> None:
         """Run one chain sequentially. Siblings (other chains) run in parallel."""
@@ -215,6 +221,11 @@ def run(
             to_process[i].image_path = str(filename)
             record_image("Images", config["model"], 1)
             progress(i + 1, total, f"saved -> {filename.name}")
+            if on_image_complete:
+                with images_done_lock:
+                    images_done[0] += 1
+                    done = images_done[0]
+                on_image_complete(done, total)
             request_path.write_text(
                 json.dumps(
                     {

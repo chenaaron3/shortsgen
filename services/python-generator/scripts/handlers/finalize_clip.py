@@ -67,21 +67,49 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     config = load_config(config_hash)
     chunks = Chunks.model_validate(json.loads(chunks_json))
 
+    total_scenes = len(chunks.scenes)
     emit_event(
         run_id,
         ProgressEventType.asset_gen_started,
         video_id=video_id,
-        payload={"step": "images_voice"},
+        workflow="finalize_clip",
+        payload={"step": "images_voice", "totalScenes": total_scenes},
     )
 
     def on_step_complete(step: str) -> None:
-        event = {
+        event_type = {
             "image": ProgressEventType.image_generated,
             "voice": ProgressEventType.voice_generated,
             "prepare": ProgressEventType.caption_generated,
         }.get(step)
-        if event:
-            emit_event(run_id, event, video_id=video_id)
+        if event_type:
+            payload: dict | None = None
+            if step == "image":
+                payload = {"imagesDone": total_scenes}
+            elif step == "voice":
+                payload = {"voiceDone": total_scenes}
+            emit_event(
+                run_id, event_type, video_id=video_id,
+                workflow="finalize_clip", payload=payload or {},
+            )
+
+    def on_image_scene(done_count: int, total: int) -> None:
+        emit_event(
+            run_id,
+            ProgressEventType.image_generated,
+            video_id=video_id,
+            workflow="finalize_clip",
+            payload={"imagesDone": done_count, "totalScenes": total},
+        )
+
+    def on_voice_scene(done_count: int, total: int) -> None:
+        emit_event(
+            run_id,
+            ProgressEventType.voice_generated,
+            video_id=video_id,
+            workflow="finalize_clip",
+            payload={"voiceDone": done_count, "totalScenes": total},
+        )
 
     run_pipeline(
         cache_key=cache_key,
@@ -90,6 +118,8 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
         config_hash=config_hash,
         break_at="prepare",
         on_step_complete=on_step_complete,
+        on_image_scene=on_image_scene,
+        on_voice_scene=on_voice_scene,
     )
 
     composite_key = remotion_composite_key(config_hash, cache_key)
@@ -102,6 +132,7 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
         run_id,
         ProgressEventType.asset_gen_completed,
         video_id=video_id,
+        workflow="finalize_clip",
         payload={"videoId": video_id, "s3Prefix": s3_prefix},
     )
     return {"statusCode": 200, "body": json.dumps({"videoId": video_id, "s3Prefix": s3_prefix})}

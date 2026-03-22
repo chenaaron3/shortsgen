@@ -137,6 +137,15 @@ export type UpdateImageryResponse = z.infer<typeof updateImageryResponseSchema>;
  * - asset_gen_completed: Asset generation done; video ready for export.
  * - error: Pipeline error.
  */
+/** Workflow that emitted the event. Enables client to route and derive progress. */
+export const workflowTypeSchema = z.enum([
+  "initial_processing",
+  "update_feedback",
+  "update_imagery",
+  "finalize_clip",
+]);
+export type WorkflowType = z.infer<typeof workflowTypeSchema>;
+
 export const progressEventTypeSchema = z.enum([
   "breakdown_started",
   "breakdown_completed",
@@ -144,6 +153,7 @@ export const progressEventTypeSchema = z.enum([
   "script_created",
   "video_completed",
   "initial_processing_complete",
+  "suggestion_started",
   "suggestion_partial",
   "suggestion_completed",
   "asset_gen_started",
@@ -159,6 +169,9 @@ export const progressEventSchema = z.object({
   runId: z.string(),
   videoId: z.string(),
   type: progressEventTypeSchema,
+  workflow: workflowTypeSchema.optional(),
+  /** Server-estimated progress 0–1. Generic across events (e.g. suggestion_partial, streaming). */
+  progress: z.number().min(0).max(1).optional(),
   payload: z.unknown().optional(),
 });
 

@@ -138,9 +138,12 @@ export const runsRouter = createTRPCRouter({
       }
 
       const balance = await getBalance(ctx.db, ctx.session.user.id);
-      const maxNuggets = Math.max(
-        1,
-        Math.floor(balance / CREDITS_ASSETS_PER_VIDEO),
+      const maxNuggets = Math.min(
+        5,
+        Math.max(
+          1,
+          Math.floor(balance / CREDITS_ASSETS_PER_VIDEO),
+        ),
       );
 
       const [, breakdown] = await Promise.all([
@@ -387,7 +390,7 @@ export const runsRouter = createTRPCRouter({
 
           await ctx.db
             .update(videos)
-            .set({ status: "exporting" })
+            .set({ status: "exporting", render_id: result.renderId })
             .where(eq(videos.id, v.id));
 
           return result;
@@ -405,6 +408,60 @@ export const runsRouter = createTRPCRouter({
       return {
         triggeredCount: results.filter((r) => r.status === "fulfilled").length,
         failedCount: failed.length,
+      };
+    }),
+
+  /**
+   * Poll export progress for a video being rendered via Remotion Lambda.
+   * Returns { overallProgress, done, fatalErrorEncountered }.
+   */
+  getExportProgress: protectedProcedure
+    .input(z.object({ runId: z.string().uuid(), videoId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const [run] = await ctx.db
+        .select()
+        .from(runs)
+        .where(eq(runs.id, input.runId));
+
+      if (!run || run.userId !== ctx.session.user.id) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Run not found" });
+      }
+
+      const [video] = await ctx.db
+        .select({ render_id: videos.render_id, status: videos.status })
+        .from(videos)
+        .where(
+          and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
+        );
+
+      if (!video || !video.render_id || video.status !== "exporting") {
+        return {
+          overallProgress: 0,
+          done: false,
+          fatalErrorEncountered: false,
+        };
+      }
+
+      const {
+        REMOTION_LAMBDA_FUNCTION_NAME,
+        REMOTION_LAMBDA_REGION,
+        SHORTGEN_BUCKET_NAME,
+      } = env;
+
+      const { getRenderProgress } = await import("@remotion/lambda/client");
+      const progress = await getRenderProgress({
+        renderId: video.render_id,
+        bucketName: SHORTGEN_BUCKET_NAME,
+        functionName: REMOTION_LAMBDA_FUNCTION_NAME,
+        region: REMOTION_LAMBDA_REGION as Parameters<
+          typeof import("@remotion/lambda/client").getRenderProgress
+        >[0]["region"],
+      });
+
+      return {
+        overallProgress: progress.overallProgress,
+        done: progress.done,
+        fatalErrorEncountered: progress.fatalErrorEncountered ?? false,
       };
     }),
 

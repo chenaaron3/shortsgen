@@ -106,7 +106,7 @@ def main():
     parser.add_argument(
         "--max-nuggets",
         type=int,
-        default=10,
+        default=5,
         metavar="N",
         help="Only process first N nuggets (for testing)",
     )

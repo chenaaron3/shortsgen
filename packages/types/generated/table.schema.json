@@ -87,6 +87,12 @@
                 "null"
               ]
             },
+            "render_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "source_text": {
               "type": [
                 "string",
@@ -145,6 +151,7 @@
             "id",
             "run_id",
             "s3_prefix",
+            "render_id",
             "source_text",
             "status",
             "script",

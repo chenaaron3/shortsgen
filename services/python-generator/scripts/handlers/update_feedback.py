@@ -60,11 +60,23 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
     config = load_config(config_hash)
     log_info(f"[update-feedback] applying feedback config={config_hash} scriptFeedback={bool(script_feedback)} sceneFeedback={len(scene_feedback or [])} scenes")
 
+    emit_event(
+        run_id,
+        ProgressEventType.suggestion_started,
+        video_id=video_id,
+        workflow="update_feedback",
+    )
+
+    estimated_output_len = len(chunks.model_dump_json()) * 1.2
+
     def on_partial(partial: str) -> None:
+        progress_val = min(0.95, len(partial) / estimated_output_len) if estimated_output_len > 0 else 0.5
         emit_event(
             run_id,
             ProgressEventType.suggestion_partial,
             video_id=video_id,
+            workflow="update_feedback",
+            progress=progress_val,
             payload={"partial": partial},
         )
 
@@ -81,6 +93,7 @@ def _handler_impl(run_id: str, video_id: str, script_feedback, scene_feedback) -
         run_id,
         ProgressEventType.suggestion_completed,
         video_id=video_id,
+        workflow="update_feedback",
         payload={"chunks": revised.model_dump()},
     )
     log_info(f"[update-feedback] done runId={run_id} videoId={video_id}")

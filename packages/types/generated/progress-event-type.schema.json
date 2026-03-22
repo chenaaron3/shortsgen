@@ -10,6 +10,7 @@
         "script_created",
         "video_completed",
         "initial_processing_complete",
+        "suggestion_started",
         "suggestion_partial",
         "suggestion_completed",
         "asset_gen_started",

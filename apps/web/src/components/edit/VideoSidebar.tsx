@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { getVideoDisplayName } from "~/lib/parseVideoChunks";
+import { getProgressValue, getStepLabel } from "~/lib/videoProgress";
+import { useRunStore } from "~/stores/useRunStore";
 import { Skeleton } from "~/components/ui/skeleton";
 
 interface Video {
@@ -29,6 +31,8 @@ export function VideoSidebar({
   wsCloseInfo,
   revisionLoadingVideoId,
 }: VideoSidebarProps) {
+  const videoProgressByVideo = useRunStore((s) => s.progress.videoProgressByVideo);
+
   return (
     <aside className="scrollbar-seamless w-56 shrink-0 overflow-y-auto bg-card p-4 lg:w-64">
       <div className="mb-3 flex items-center gap-2">
@@ -58,22 +62,48 @@ export function VideoSidebar({
         </div>
       ) : (
         <nav className="space-y-1">
-          {videos.map((v) => (
-            <Link
-              key={v.id}
-              href={`/runs/${runId}/videos/${v.id}`}
-              className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
-                activeVideoId === v.id
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <span className="font-mono">{getVideoDisplayName(v)}</span>
-              {revisionLoadingVideoId === v.id && (
-                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
-              )}
-            </Link>
-          ))}
+          {videos.map((v) => {
+            const progress = videoProgressByVideo[v.id];
+            const stepLabel = getStepLabel(progress);
+            const progressPct = getProgressValue(progress);
+            const inProgress =
+              !!progress ||
+              revisionLoadingVideoId === v.id;
+
+            return (
+              <Link
+                key={v.id}
+                href={`/runs/${runId}/videos/${v.id}`}
+                className={`relative block overflow-hidden rounded-lg ${
+                  activeVideoId === v.id
+                    ? "bg-accent/80 text-accent-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {inProgress && (
+                  <div
+                    className="absolute inset-0 -z-[1] transition-[background] duration-300"
+                    style={{
+                      background: `linear-gradient(to right, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.15) ${progressPct * 100}%, transparent ${progressPct * 100}%, transparent 100%)`,
+                    }}
+                  />
+                )}
+                <div className="flex w-full flex-col gap-0.5 px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="min-w-0 flex-1 truncate font-mono">
+                      {getVideoDisplayName(v)}
+                    </span>
+                    {(!!progress || revisionLoadingVideoId === v.id) && (
+                      <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+                    )}
+                  </div>
+                  {stepLabel && (
+                    <span className="text-xs opacity-80">{stepLabel}</span>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
         </nav>
       )}
     </aside>

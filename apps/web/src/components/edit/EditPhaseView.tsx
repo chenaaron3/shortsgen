@@ -8,6 +8,7 @@ import { sceneFeedbackToApiString } from '~/lib/sceneFeedback';
 import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
+import { useExportProgressPolling } from "~/hooks/useExportProgressPolling";
 import { AssetGenStatusMessage } from './AssetGenStatusMessage';
 import { EditRunHeader } from './EditRunHeader';
 import { RawScriptCard } from './RawScriptCard';
@@ -35,7 +36,8 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const runQuery = api.runs.getById.useQuery({ runId });
   const isAdminQuery = api.admin.isAdmin.useQuery();
 
-  const { setSceneUpdating, setVideoUpdating, setScriptFeedback } = useRunStore();
+  const { setSceneUpdating, setVideoUpdating, setScriptFeedback, setVideoProgress } =
+    useRunStore();
 
   const sourceTextByVideo = useRunStore((s) => s.ui.sourceTextByVideo);
   const feedbackByVideo = useRunStore((s) => s.feedback.feedbackByVideo);
@@ -78,19 +80,48 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   });
 
   const updateFeedbackMutation = api.runs.updateClipFeedback.useMutation({
-    onSuccess: () => setScriptFeedback(""),
+    onSuccess: (_, variables) => {
+      setScriptFeedback("");
+      setVideoProgress(variables.videoId, {
+        workflow: "update_feedback",
+        step: "request_sent",
+      });
+    },
   });
   const finalizeAllMutation = api.runs.finalizeAll.useMutation({
     onSuccess: () => {
       setVideoUpdating(true);
+      videos
+        .filter((v) => v.status === "scripts")
+        .forEach((v) =>
+          setVideoProgress(v.id, {
+            workflow: "finalize_clip",
+            step: "request_sent",
+          })
+        );
       void runQuery.refetch();
     },
   });
   const triggerExportMutation = api.runs.triggerExport.useMutation({
-    onSuccess: () => void runQuery.refetch(),
+    onSuccess: () => {
+      videos
+        .filter((v) => v.status === "assets" || v.status === "exported")
+        .forEach((v) =>
+          setVideoProgress(v.id, { workflow: "export", step: "request_sent" }),
+        );
+      void runQuery.refetch();
+    },
   });
+
+  useExportProgressPolling(runId, videos, () => void runQuery.refetch());
   const updateImageryMutation = api.runs.updateImagery.useMutation({
-    onSuccess: (_, variables) => setSceneUpdating(variables.sceneIndex),
+    onSuccess: (_, variables) => {
+      setSceneUpdating(variables.sceneIndex);
+      setVideoProgress(variables.videoId, {
+        workflow: "update_imagery",
+        step: "request_sent",
+      });
+    },
   });
 
   const runPhase: RunPhase = (runData.status ?? "breakdown") as RunPhase;

@@ -85,6 +85,8 @@ def run(
     step: str | None = None,
     break_at: str | None = None,
     on_step_complete: Callable[[str], None] | None = None,
+    on_image_scene: Callable[[int, int], None] | None = None,
+    on_voice_scene: Callable[[int, int], None] | None = None,
 ) -> Path | None:
     """
     Run the full pipeline for raw content, an existing cache, or in-memory chunks.
@@ -100,6 +102,8 @@ def run(
         break_at: Stop after completing this step (script, chunker, image, prepare, video).
                   image covers both image and voice phase.
         on_step_complete: Optional callback invoked when a step finishes. Step names: "script", "chunker", "image", "voice", "caption".
+        on_image_scene: Optional callback(done_count, total) invoked after each image is generated.
+        on_voice_scene: Optional callback(done_count, total) invoked after each voice clip is written.
 
     Returns:
         Path to output video when full pipeline completes, else None.
@@ -169,6 +173,7 @@ def run(
                 max_scenes=max_scenes,
                 skip_cache="image" in invalidate_steps,
                 model=image_model,
+                on_image_complete=on_image_scene,
             )
         )
 
@@ -182,6 +187,7 @@ def run(
                 max_scenes=max_scenes,
                 skip_cache="voice" in invalidate_steps,
                 voice_backend=voice_backend,
+                on_voice_complete=on_voice_scene,
             )
         )
 

@@ -5,9 +5,20 @@ import { create } from "zustand";
 
 import { chunksSchema } from "@shortgen/types";
 
-import type { ChunksOutput } from "@shortgen/types";
+import type { ChunksOutput, ProgressEventType, WorkflowType } from "@shortgen/types";
 
 import type { SceneFeedback } from "~/lib/sceneFeedback";
+
+/** Per-video progress for sidebar (step label + background bar). Input to workflow's progressFromState/stepLabelFromState. */
+export interface VideoProgress {
+  workflow: WorkflowType | "export";
+  step?: string;
+  progress?: number;
+  imagesDone?: number;
+  voiceDone?: number;
+  totalScenes?: number;
+  lastEvent?: ProgressEventType;
+}
 
 export interface RunStoreUi {
   runId: string | null;
@@ -31,6 +42,7 @@ export interface RunStoreProgress {
   sceneUpdating: number | null;
   videoUpdating: boolean;
   sceneSuggestionsByVideo: SceneSuggestionsByVideo;
+  videoProgressByVideo: Record<string, VideoProgress>;
 }
 
 interface RunStore {
@@ -51,6 +63,7 @@ interface RunStore {
   setBreakdownComplete: (complete: boolean) => void;
   setSceneUpdating: (index: number | null) => void;
   setVideoUpdating: (updating: boolean) => void;
+  setVideoProgress: (videoId: string, progress: VideoProgress | null) => void;
   init: (runId: string) => void;
   reset: () => void;
 }
@@ -71,6 +84,7 @@ const initialProgress: RunStoreProgress = {
   sceneUpdating: null,
   videoUpdating: false,
   sceneSuggestionsByVideo: {},
+  videoProgressByVideo: {},
 };
 
 export const useRunStore = create<RunStore>((set) => ({
@@ -149,6 +163,16 @@ export const useRunStore = create<RunStore>((set) => ({
     set((s) =>
       produce(s, (draft) => {
         draft.progress.videoUpdating = updating;
+      }),
+    ),
+  setVideoProgress: (videoId, progress) =>
+    set((s) =>
+      produce(s, (draft) => {
+        if (progress === null) {
+          delete draft.progress.videoProgressByVideo[videoId];
+        } else {
+          draft.progress.videoProgressByVideo[videoId] = progress;
+        }
       }),
     ),
 
