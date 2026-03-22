@@ -5,7 +5,7 @@ Calls run_pipeline with in-memory chunks from DB (skips script + chunker).
 Config flow (single source of truth):
 - createRun passes config ("prototype" | "default") to initial-processing
 - initial_processing stores config_hash on each video (from config.hash)
-- finalize_clip reads video.config_hash → load_config() for YAML, prototype=(config_hash=="prototype")
+- finalize_clip loads config via load_config(config_hash); image/voice from config.
 """
 
 import json
@@ -67,9 +67,6 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     config = load_config(config_hash)
     chunks = Chunks.model_validate(json.loads(chunks_json))
 
-    # prototype = cheap images/fast whisper; derived from video's config (set at create)
-    prototype = config_hash == "prototype"
-
     emit_event(
         run_id,
         ProgressEventType.asset_gen_started,
@@ -92,7 +89,6 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
         config=config,
         config_hash=config_hash,
         break_at="prepare",
-        prototype=prototype,
         on_step_complete=on_step_complete,
     )
 

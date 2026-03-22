@@ -61,14 +61,13 @@ def generate_image(
     source_image: Path | None = None,
     model: str | None = None,
     input_fidelity: str = "low",
-    prototype: bool = False,
+    text_to_image_only: bool = False,
     **kwargs,
 ) -> bytes:
-    """Generate an image. When source_image is set, use it as img2img input (for transitions); else use mascot_path. When prototype, use Replicate text-to-image only (no mascot)."""
-    if prototype:
-        # Prototype mode requires Replicate (text-to-image only)
+    """Generate an image. When source_image is set, use it as img2img input (for transitions); else use mascot_path. When text_to_image_only, use Replicate text-to-image only (no mascot)."""
+    if text_to_image_only:
         if _get_backend() != "replicate":
-            raise RuntimeError("Prototype mode requires IMAGE_GENERATOR=replicate")
+            raise RuntimeError("Text-to-image only mode requires IMAGE_GENERATOR=replicate")
     backend = _get_backend()
     model_to_use = model or DEFAULT_MODEL[backend]
     if input_fidelity == "high" and "mini" in model_to_use:
@@ -92,6 +91,6 @@ def generate_image(
             api_token=os.environ["REPLICATE_API_TOKEN"],
             model=model_to_use,
             input_fidelity=input_fidelity,
-            prototype=prototype,
+            text_to_image_only=text_to_image_only,
             **kwargs,
         )

@@ -1,5 +1,5 @@
 """
-Voice generators for TTS. Use prototype=True or VOICE_GENERATOR env to select backend.
+Voice generators for TTS. Use voice_backend from config or VOICE_GENERATOR env.
 """
 
 import os
@@ -11,26 +11,28 @@ from .ttsvibes import generate_for_scenes as ttsvibes_generate_for_scenes
 from .ttsvibes import DEFAULT_VOICE as TTSVIBES_DEFAULT_VOICE
 
 
-def _get_backend(prototype: bool) -> str:
+def _get_backend(voice_backend: str | None = None) -> str:
+    if voice_backend and voice_backend.strip().lower() in ("elevenlabs", "readaloud", "ttsvibes"):
+        return voice_backend.strip().lower()
     override = (os.getenv("VOICE_GENERATOR") or "").strip().lower()
     if override in ("elevenlabs", "readaloud", "ttsvibes"):
         return override
-    return "readaloud" if prototype else "elevenlabs"
+    return voice_backend.strip().lower() if voice_backend else "elevenlabs"
 
 
-def get_backend(prototype: bool) -> str:
+def get_backend(voice_backend: str | None = None) -> str:
     """Return the active voice backend name (elevenlabs, readaloud, or ttsvibes)."""
-    return _get_backend(prototype)
+    return _get_backend(voice_backend)
 
 
-def _validate_credentials(prototype: bool) -> None:
-    backend = _get_backend(prototype)
+def _validate_credentials(voice_backend: str | None = None) -> None:
+    backend = _get_backend(voice_backend)
     if backend == "elevenlabs":
         api_key = (os.getenv("ELEVENLABS_API_KEY") or os.getenv("XI_API_KEY") or "").strip()
         if not api_key:
             raise RuntimeError(
                 "ELEVENLABS_API_KEY (or XI_API_KEY) not found. "
-                "Add it to .env or use --prototype for free readaloud TTS."
+                "Add it to .env or use voice.backend: readaloud in config for free TTS."
             )
 
 
@@ -38,14 +40,14 @@ def generate_for_scenes(
     scenes: list,
     *,
     cache_key: str = "",
-    prototype: bool = False,
+    voice_backend: str | None = None,
     whisper_model: str = "base.en",
     temp_dir=None,
     **kwargs,
 ) -> list[bytes]:
     """Generate TTS audio for each scene. Returns list of MP3 bytes, one per scene."""
-    _validate_credentials(prototype)
-    backend = _get_backend(prototype)
+    _validate_credentials(voice_backend)
+    backend = _get_backend(voice_backend)
 
     if backend == "readaloud":
         voice = (os.getenv("READALOUD_VOICE") or "").strip() or READALOUD_DEFAULT_VOICE

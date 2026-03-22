@@ -84,7 +84,6 @@ def run(
     max_scenes: int | None = None,
     step: str | None = None,
     break_at: str | None = None,
-    prototype: bool = False,
     on_step_complete: Callable[[str], None] | None = None,
 ) -> Path | None:
     """
@@ -100,7 +99,6 @@ def run(
         step: Invalidate cache for STEP and all subsequent steps, then run full pipeline.
         break_at: Stop after completing this step (script, chunker, image, prepare, video).
                   image covers both image and voice phase.
-        prototype: Use cheap text-to-image only (Replicate FLUX Schnell); no mascot, no img2img transitions.
         on_step_complete: Optional callback invoked when a step finishes. Step names: "script", "chunker", "image", "voice", "caption".
 
     Returns:
@@ -134,8 +132,6 @@ def run(
         cache_dir = video_cache_path(cache_key, config_hash)
         cache_dir.mkdir(parents=True, exist_ok=True)
         (cache_dir / "chunks.json").write_text(chunks.model_dump_json(indent=2), encoding="utf-8")
-    if prototype:
-        info("  Prototype mode: cheap text-to-image (no mascot) + free readaloud TTS")
 
     if not chunks_mode:
         set_step_context(1, 6)
@@ -160,6 +156,9 @@ def run(
     assert chunks is not None  # chunks_mode or assigned from run_chunker above
     set_step_context(3, 6)
     # ThreadPoolExecutor workers don't inherit contextvars; each worker needs its own context copy
+    image_model = config.image.model if config.image else None
+    voice_backend = config.voice.backend if config.voice else None
+
     def _run_images():
         run_ctx = contextvars.copy_context()
         return run_ctx.run(
@@ -169,8 +168,7 @@ def run(
                 config_hash,
                 max_scenes=max_scenes,
                 skip_cache="image" in invalidate_steps,
-                prototype=prototype,
-                model=config.image.model if config.image else None,
+                model=image_model,
             )
         )
 
@@ -183,7 +181,7 @@ def run(
                 config_hash,
                 max_scenes=max_scenes,
                 skip_cache="voice" in invalidate_steps,
-                prototype=prototype,
+                voice_backend=voice_backend,
             )
         )
 
@@ -222,7 +220,7 @@ def run(
 
     set_step_context(6, 6)
     try:
-        output_path = run_render(cache_key, config_hash, skip_cache="video" in invalidate_steps, prototype=prototype)
+        output_path = run_render(cache_key, config_hash, skip_cache="video" in invalidate_steps)
     except Exception as e:
         error(str(e))
         raise

@@ -97,7 +97,10 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     # 1. Breakdown
     source_key = source_hash(source_content)
     log_info(f"[initial_processing] running breakdown source_key={source_key}")
-    nuggets = run_breakdown(source_content, source_key, config=config, skip_cache=True, max_nuggets=10)
+    max_nuggets = event.get("maxNuggets", 10)  # 10 for legacy callers that omit the key
+    nuggets = run_breakdown(
+        source_content, source_key, config=config, skip_cache=True, max_nuggets=max_nuggets
+    )
     if not nuggets:
         log_warn("[initial_processing] no meaningful nuggets from breakdown; 0 videos will be created")
     log_info(f"[initial_processing] breakdown complete nuggets={len(nuggets)}")

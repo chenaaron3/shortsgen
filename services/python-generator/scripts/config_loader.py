@@ -32,6 +32,12 @@ class ImageConfig(BaseModel):
     model: str = Field(..., description="Model alias (e.g. gpt-image-mini, gemini-flash)")
 
 
+class VoiceConfig(BaseModel):
+    """Voice generation: TTS backend."""
+
+    backend: str = Field(..., description="Backend name (e.g. elevenlabs, readaloud, ttsvibes)")
+
+
 class Config(BaseModel):
     """Pipeline config: model and system prompt per LLM step."""
 
@@ -40,6 +46,7 @@ class Config(BaseModel):
     script: StepConfig = Field(..., description="Script step (raw content → short script)")
     chunk: StepConfig = Field(..., description="Chunk step (script → scenes)")
     image: ImageConfig | None = Field(default=None, description="Image model alias; if absent, use backend default")
+    voice: VoiceConfig | None = Field(default=None, description="Voice backend; if absent, use elevenlabs")
 
     @computed_field
     @property

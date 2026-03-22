@@ -19,7 +19,6 @@ def run(
     config_hash: str,
     *,
     skip_cache: bool = False,
-    prototype: bool = False,
 ) -> Path:
     """Render the ShortVideo composition. Returns output path."""
     root = remotion_app_root()
@@ -34,12 +33,11 @@ def run(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     info(f"  Rendering to {output_path}...")
     props = json.dumps({"cacheKey": composite_key})
-    composition_id = f"ShortVideo-{composite_key.replace('_', '-')}"
     cmd = [
         "npx",
         "remotion",
         "render",
-        composition_id,
+        "ShortVideo",
         "--props",
         props,
         "--public-dir",
@@ -49,8 +47,6 @@ def run(
         "--output",
         str(output_path),
     ]
-    # if prototype:
-    #     cmd.extend(["--scale", "0.5", "--crf", "28"])
     result = subprocess.run(cmd, cwd=root)
     if result.returncode != 0:
         sys.exit(result.returncode)

@@ -14,12 +14,14 @@ Usage:
   python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c default --step breakdown
   python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c default --step image
   python generation/scripts/pipeline/run_source_pipeline.py -f content.txt -c default --no-breakdown  # single content (run_pipeline equivalent)
+  python generation/scripts/pipeline/run_source_pipeline.py -f content.txt -c prototype --no-breakdown  # cheap/fast config (flux + readaloud)
 """
 
 import argparse
 import hashlib
 import sys
 from pathlib import Path
+from typing import cast
 
 from dotenv import load_dotenv
 
@@ -31,6 +33,7 @@ from models import Nugget
 from pipeline.breakdown_source import run as run_breakdown, source_hash
 from pipeline.run_pipeline import run_batch
 from pipeline.write_eval_dataset import write_eval_dataset
+from upload.upload_youtube import upload_nuggets_to_youtube
 
 
 def content_hash(content: str) -> str:
@@ -130,9 +133,9 @@ def main():
         help="Invalidate cache for STEP and all subsequent (breakdown=shared breakdown; script/...=per-nugget)",
     )
     parser.add_argument(
-        "--prototype",
+        "--upload",
         action="store_true",
-        help="Pass through to run_pipeline: cheap text-to-image only (no mascot, no transitions)",
+        help="After rendering, upload each video to YouTube (requires credentials.json, token.json)",
     )
     args = parser.parse_args()
 
@@ -222,7 +225,6 @@ def main():
         max_scenes=args.max_scenes,
         step=per_nugget_step,
         break_at=args.break_at,
-        prototype=args.prototype,
     )
 
     flush_traces_to_disk()
@@ -234,9 +236,30 @@ def main():
     eval_path = write_eval_dataset(
         configs=configs,
         source_hash_val=source_key if not no_breakdown else None,
-        nuggets=nugget_dicts if no_breakdown else None,
+        nuggets=cast(list[dict], nugget_dicts) if no_breakdown else None,
     )
     info(f"   📋 Eval dataset: {eval_path}")
+
+    # Optional: upload to YouTube after rendering
+    if args.upload:
+        if len(configs) > 1:
+            info("")
+            info("── Upload to YouTube (using first config only) ──")
+        else:
+            info("")
+            info("── Upload to YouTube ──")
+        config = configs[0]
+        try:
+            info(f"  Config: {config.name}")
+            upload_nuggets_to_youtube(
+                nuggets,
+                config.hash,
+                source_key,
+                no_breakdown=no_breakdown,
+            )
+        except (RuntimeError, FileNotFoundError) as e:
+            error(f"Upload failed: {e}")
+            sys.exit(1)
 
     info("")
     info("✅ Done")

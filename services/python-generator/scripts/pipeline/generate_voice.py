@@ -40,15 +40,14 @@ def run(
     max_scenes: int | None = None,
     skip_cache: bool = False,
     whisper_model: str = "base.en",
-    prototype: bool = False,
+    voice_backend: str | None = None,
 ) -> Chunks:
     """
-    Generate voice via voice_generator (ElevenLabs or readaloud when prototype).
-    Output: cache/{config_hash}/videos/{cache_key}/voice/voice_1.mp3 (or voice_prototype/ when prototype).
+    Generate voice via voice_generator (ElevenLabs, readaloud, or ttsvibes).
+    Output: cache/{config_hash}/videos/{cache_key}/voice/voice_1.mp3
+    voice_backend: from config.voice.backend; if absent, defaults to elevenlabs.
     """
-    voice_dir = video_cache_path(
-        cache_key, config_hash, "voice_prototype" if prototype else "voice"
-    )
+    voice_dir = video_cache_path(cache_key, config_hash, "voice")
 
     scenes = chunks.scenes
     if max_scenes is not None:
@@ -85,7 +84,7 @@ def run(
     extra = f"max={max_scenes}" if max_scenes else ""
     cache_stats_summary(0, len(scenes), len(scenes), extra)
 
-    backend = get_backend(prototype)
+    backend = get_backend(voice_backend)
     if backend == "elevenlabs":
         info("  Generating full script with eleven_v3 (single call for continuity)...")
     else:
@@ -95,7 +94,7 @@ def run(
         clips = generate_for_scenes(
             scenes,
             cache_key=cache_key,
-            prototype=prototype,
+            voice_backend=voice_backend,
             whisper_model=whisper_model,
             temp_dir=voice_dir,
         )

@@ -4,7 +4,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { debitCredits } from "~/server/credits";
+import { debitCredits, getBalance } from "~/server/credits";
 
 import {
   CREDITS_ASSETS_PER_VIDEO,
@@ -137,6 +137,12 @@ export const runsRouter = createTRPCRouter({
         });
       }
 
+      const balance = await getBalance(ctx.db, ctx.session.user.id);
+      const maxNuggets = Math.max(
+        1,
+        Math.floor(balance / CREDITS_ASSETS_PER_VIDEO),
+      );
+
       const [, breakdown] = await Promise.all([
         (async () => {
           const res = await fetch(
@@ -151,6 +157,7 @@ export const runsRouter = createTRPCRouter({
                 runId: run.id,
                 sourceContent: input.userInput,
                 config: input.config,
+                maxNuggets,
               }),
             },
           );

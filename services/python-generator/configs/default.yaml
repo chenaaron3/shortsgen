@@ -11,3 +11,7 @@ script:
 chunk:
   model: gpt-4o
   system_prompt: transcript-chunker-system-prompt.md
+image:
+  model: openai/gpt-image-1-mini
+voice:
+  backend: elevenlabs

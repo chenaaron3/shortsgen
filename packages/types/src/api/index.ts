@@ -50,6 +50,7 @@ export const initialProcessingRequestSchema = z.object({
   runId: z.string().uuid(),
   sourceContent: z.string().min(1),
   config: z.string().optional().default("default"),
+  maxNuggets: z.number().int().min(0).optional(),
 });
 export type InitialProcessingRequest = z.infer<
   typeof initialProcessingRequestSchema

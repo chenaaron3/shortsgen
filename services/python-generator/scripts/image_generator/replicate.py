@@ -9,6 +9,7 @@ import json
 import os
 import time
 from pathlib import Path
+from typing import Any
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
@@ -54,14 +55,15 @@ def generate_image(
     api_token: str,
     model: str = DEFAULT_MODEL,
     input_fidelity: str = "low",
-    prototype: bool = False,
+    text_to_image_only: bool = False,
     **kwargs,
 ) -> bytes:
-    """Call Replicate HTTP API. When prototype, text-to-image only (no mascot). Otherwise img2img."""
+    """Call Replicate HTTP API. When text_to_image_only, text-to-image only (no mascot). Otherwise img2img."""
     model = _resolve_model(model)
     disable_safety = _disable_safety_checker()
 
-    if prototype:
+    input_payload: dict[str, Any]
+    if text_to_image_only:
         # Text-to-image only (Hyper Flux 8Step)
         input_payload = {
             "prompt": prompt,
@@ -203,3 +205,5 @@ def generate_image(
                 time.sleep(DEFAULT_RETRY_AFTER)
                 continue
             raise
+
+    raise RuntimeError("Replicate request failed after all retries")

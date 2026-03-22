@@ -34,19 +34,9 @@ STYLE_PROMPT = (
     "Result must look like crisp pen or chalk drawing, not rendered or shaded."
 )
 
-# Used when prototype=True (text-to-image only, no mascot reference image)
+# Used for text-to-image-only models (e.g. hyper-flux): no mascot reference
 MASCOT_DESCRIPTION = (
     "A minimalist, cute, gender-neutral stick-figure mascot with a very large perfectly round head and a very small simple body underneath it. "
-    "The design is extremely clean and iconic: white fill, bold smooth black outline, flat black-and-white 2D vector style, no shading, no texture, no sketch lines, no realism. "
-    "The head is the defining feature: a near-perfect circle that takes up most of the character, making the mascot feel instantly recognizable and easy to read at a glance. "
-    "The face is very simple and centered, with two large circular eyes, black pupils, tiny white highlights, and a tiny simple mouth that can change slightly for expression. "
-    "The mascot always wears perfectly round eyeglasses with thin black rims; the glasses are symmetrical, sit low and centered on the face, and are the main identity trait of the character. "
-    "The body is tiny, smooth, and understated compared to the head, with a narrow rounded torso and very simple proportions. "
-    "The arms and legs are short, thin, rounded, and tube-like, like soft noodle limbs rather than realistic anatomy. "
-    "The hands and feet are extremely simplified, with no visible fingers, no separated toes, and no detailed joints. "
-    "The mascot has no hair, no eyebrows unless only minimally suggested for expression, no nose, no ears, no eyelashes, no clothing, no accessories other than the glasses, and NO TAIL. "
-    "The silhouette should feel closer to a clean cartoon stick mascot than to a bean, plush toy, animal, ghost, or blob creature. "
-    "The overall vibe is playful, wholesome, friendly, expressive, nerdy, and highly readable, with consistent simple proportions and a clean mascot-sheet appearance. "
 )
 
 def _update_chunks_json(
@@ -86,9 +76,14 @@ def load_chunks(path: Path) -> Chunks:
         sys.exit(1)
 
 
-def _build_chains(scenes: list[Scene], prototype: bool = False) -> list[list[int]]:
-    """Build chains: [[0], [1,2], [3], ...]. Items in same list run in series; different lists run in parallel. When prototype, each scene is its own chain (max parallelism)."""
-    if prototype:
+def _is_text_to_image_only(model: str | None) -> bool:
+    """True when model uses text-to-image only (no mascot, no img2img)."""
+    return bool(model and "hyper-flux" in model)
+
+
+def _build_chains(scenes: list[Scene], text_to_image_only: bool = False) -> list[list[int]]:
+    """Build chains: [[0], [1,2], [3], ...]. Items in same list run in series; different lists run in parallel. When text_to_image_only, each scene is its own chain (max parallelism)."""
+    if text_to_image_only:
         return [[i] for i in range(len(scenes))]
     chains: list[list[int]] = []
     current: list[int] = []
@@ -104,9 +99,6 @@ def _build_chains(scenes: list[Scene], prototype: bool = False) -> list[list[int
     return chains
 
 
-PROTOTYPE_MODEL = "bytedance/hyper-flux-8step:16084e9731223a4367228928a6cb393b21736da2a0ca6a5a492ce311f0a97143"
-
-
 def _generate_one(
     i: int,
     mascot: Path,
@@ -115,9 +107,9 @@ def _generate_one(
     *,
     source_image: Path | None = None,
     input_fidelity: str = "low",
-    prototype: bool = False,
+    text_to_image_only: bool = False,
 ) -> tuple[int, bytes | None, str | None]:
-    """Worker: generate one image. When source_image is set, use it (transition); else use mascot. When prototype, use text-to-image only."""
+    """Worker: generate one image. When source_image is set, use it (transition); else use mascot. When text_to_image_only, use text-to-image only."""
     try:
         img_bytes = generate_image_impl(
             mascot_path=mascot,
@@ -125,7 +117,7 @@ def _generate_one(
             source_image=source_image,
             model=model,
             input_fidelity=input_fidelity,
-            prototype=prototype,
+            text_to_image_only=text_to_image_only,
         )
         return (i, img_bytes, None)
     except Exception as e:
@@ -143,7 +135,6 @@ def run(
     concurrency: int = DEFAULT_CONCURRENCY,
     model: str | None = None,
     skip_cache: bool = False,
-    prototype: bool = False,
 ) -> Chunks:
     """
     Generate images from chunks. Uses per-image cache.
@@ -152,13 +143,13 @@ def run(
     max_scenes: if set, only generate this many scenes (for testing).
     scene_indices: if set, only process these scene indices (0-based). Forces skip_cache for those.
     concurrency: max parallel chains (default 10).
-    model: optional override for image generator (uses backend default if None).
+    model: image model from config (e.g. hyper-flux for text-to-image only). Uses backend default if None.
     skip_cache: if True, regenerate all images even when cached (for --step image iteration).
-    prototype: use cheap text-to-image only (no mascot, no img2img transitions).
     """
-    images_dir = video_cache_path(cache_key, config_hash, "images_prototype" if prototype else "images")
+    images_dir = video_cache_path(cache_key, config_hash, "images")
     mascot = mascot_path or default_mascot_path()
-    if not prototype and not mascot.exists():
+    text_to_image_only = _is_text_to_image_only(model)
+    if not text_to_image_only and not mascot.exists():
         raise RuntimeError(f"Mascot not found at {mascot}")
 
     scenes = chunks.scenes
@@ -169,7 +160,7 @@ def run(
     total = len(scenes)
     to_process = scenes[:max_scenes] if max_scenes is not None else scenes
     only_indices = set(scene_indices) if scene_indices is not None else None
-    effective_model = PROTOTYPE_MODEL if prototype else model
+    effective_model = model
     config = get_config(model_override=effective_model)
 
     work: list[tuple[int, str, Path, str, Path, bool]] = []
@@ -190,7 +181,7 @@ def run(
 
         full_prompt = (
             f"{MASCOT_DESCRIPTION}{imagery}. {STYLE_PROMPT}"
-            if prototype
+            if text_to_image_only
             else f"{imagery}. {STYLE_PROMPT}"
         )
         request_path = images_dir / f"image_{i + 1}_request.json"
@@ -213,7 +204,7 @@ def run(
         return chunks
 
     work_by_idx = {i: (imagery, filename, full_prompt, request_path, is_transition) for i, imagery, filename, full_prompt, request_path, is_transition in work}
-    chains = _build_chains(to_process, prototype=prototype)
+    chains = _build_chains(to_process, text_to_image_only=text_to_image_only)
 
     def _run_chain(chain: list[int]) -> None:
         """Run one chain sequentially. Siblings (other chains) run in parallel."""
@@ -223,7 +214,7 @@ def run(
                 prev_path = images_dir / f"image_{i + 1}.png"
                 continue
             imagery, filename, full_prompt, request_path, is_transition = work_by_idx[i]
-            if prototype:
+            if text_to_image_only:
                 source = None
                 fidelity = "low"
             elif is_transition and prev_path is not None and prev_path.exists():
@@ -234,7 +225,7 @@ def run(
                 fidelity = "low"
             try:
                 _, img_bytes, err = _generate_one(
-                    i, mascot, full_prompt, effective_model, source_image=source, input_fidelity=fidelity, prototype=prototype
+                    i, mascot, full_prompt, effective_model, source_image=source, input_fidelity=fidelity, text_to_image_only=text_to_image_only
                 )
             except Exception as e:
                 progress(i + 1, total, f"failed: {e}")
@@ -252,7 +243,7 @@ def run(
                     {
                         "imagery": imagery,
                         "full_prompt": full_prompt,
-                        "source": "text-only" if prototype else (str(source) if source else str(mascot)),
+                        "source": "text-only" if text_to_image_only else (str(source) if source else str(mascot)),
                         **config,
                     },
                     indent=2,

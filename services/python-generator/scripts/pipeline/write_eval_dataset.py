@@ -32,17 +32,14 @@ def _copy_assets(cache_key: str, config, assets_base: Path) -> bool:
         shutil.copy2(chunks_src, dst_dir / "chunks.json")
         copied = True
 
-    # Check images first, then images_prototype (for --prototype runs)
-    for images_subdir in ("images", "images_prototype"):
-        images_src = src_dir / images_subdir
-        if images_src.exists() and images_src.is_dir():
-            dst_images = dst_dir / "images"
-            dst_images.mkdir(parents=True, exist_ok=True)
-            for f in images_src.iterdir():
-                if f.suffix.lower() in (".png", ".jpg", ".jpeg"):
-                    shutil.copy2(f, dst_images / f.name)
-                    copied = True
-            break
+    images_src = src_dir / "images"
+    if images_src.exists() and images_src.is_dir():
+        dst_images = dst_dir / "images"
+        dst_images.mkdir(parents=True, exist_ok=True)
+        for f in images_src.iterdir():
+            if f.suffix.lower() in (".png", ".jpg", ".jpeg"):
+                shutil.copy2(f, dst_images / f.name)
+                copied = True
 
     video_src = src_dir / "short.mp4"
     if video_src.exists():

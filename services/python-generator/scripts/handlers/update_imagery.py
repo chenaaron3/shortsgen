@@ -82,7 +82,6 @@ def _handler_impl(
         return {"statusCode": 400, "body": json.dumps({"error": "sceneIndex out of range"})}
 
     config = load_config(config_hash)
-    prototype = config_hash == "prototype"
 
     if imagery is not None and imagery.strip():
         # Path A: direct imagery
@@ -131,14 +130,12 @@ def _handler_impl(
         config_hash,
         scene_indices=[scene_index],
         skip_cache=True,
-        prototype=prototype,
         model=config.image.model if config.image else None,
     )
     emit_event(run_id, ProgressEventType.image_generated, video_id=video_id)
 
     composite_key = remotion_composite_key(config_hash, cache_key)
-    images_subdir = "images_prototype" if prototype else "images"
-    cache_images_dir = video_cache_path(cache_key, config_hash, images_subdir)
+    cache_images_dir = video_cache_path(cache_key, config_hash, "images")
     image_filename = f"image_{scene_index + 1}.png"
     cache_image_path = cache_images_dir / image_filename
 

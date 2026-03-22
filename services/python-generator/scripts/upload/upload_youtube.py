@@ -11,7 +11,7 @@ Modes:
   Skips videos already marked as scheduled in upload_state.json (per config: cache/{config_hash}/breakdowns/{hash}/).
   Schedules uploads one day after another in nugget order.
 
-Keep separate from pipeline: user chooses which videos to upload.
+Also callable from run_source_pipeline via upload_nuggets_to_youtube().
 Run from project root or generation/scripts/.
 """
 
@@ -21,6 +21,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 from models import BreakdownOutput, Chunks, UploadState, UploadStateEntry
 from config_loader import load_config
@@ -109,14 +110,25 @@ def list_my_videos_recent(youtube) -> tuple[set[str], list[datetime]]:
     return titles, times
 
 
+def _require_google_api() -> None:
+    """Raise if Google API client is not installed. Narrows types for checker."""
+    if build is None or Credentials is None or Request is None:
+        raise RuntimeError(
+            "Install Google API client: pip install google-api-python-client google-auth-oauthlib google-auth-httplib2"
+        )
+
+
 def check_token_valid() -> bool:
     """
     Check if token.json exists and refresh token is valid (can obtain a new access token).
     Prints result and returns True if valid, False otherwise. Does not write token.json.
     """
-    if build is None:
-        error("Install Google API client: pip install google-api-python-client google-auth-oauthlib google-auth-httplib2")
+    try:
+        _require_google_api()
+    except RuntimeError as e:
+        error(str(e))
         return False
+    assert Credentials is not None and Request is not None  # Narrowed by _require_google_api
     token_path = generation_root() / "token.json"
     if not token_path.exists():
         error("token.json not found. Run an upload once to create it.")
@@ -150,10 +162,12 @@ def check_token_valid() -> bool:
 
 def get_authenticated_service():
     """OAuth2 desktop flow; returns YouTube API service."""
-    if build is None:
+    _require_google_api()
+    if InstalledAppFlow is None:
         raise RuntimeError(
             "Install Google API client: pip install google-api-python-client google-auth-oauthlib google-auth-httplib2"
         )
+    assert Credentials is not None and Request is not None and build is not None  # Narrowed by _require_google_api
     creds = None
     token_path = generation_root() / "token.json"
     credentials_path = generation_root() / "credentials.json"
@@ -351,19 +365,31 @@ def build_upload_list(args) -> tuple[list[UploadItem], str | None, tuple[Path, d
     return ([UploadItem(None, video_path, args.title, args.description or "")], args.publish_at, None)
 
 
+def _default_upload_opts() -> SimpleNamespace:
+    """Default upload options for programmatic use (e.g. from run_source_pipeline)."""
+    return SimpleNamespace(
+        privacy="private",
+        tags="",
+        default_time=DEFAULT_TIME_OF_DAY,
+    )
+
+
 def upload_one(
     youtube,
     video_path: Path,
     title: str,
     description: str,
     publish_at_rfc: str,
-    args,
+    opts,
 ) -> str | None:
     """
     Upload one video; return video_id on success, None on failure.
     Caller handles duplicate title check and state persistence.
+    opts: object with .tags, .privacy (e.g. from argparse args or _default_upload_opts).
     """
-    tags_list = [t.strip() for t in (args.tags or "").split(",") if t.strip()]
+    tags_str = getattr(opts, "tags", None) or ""
+    tags_list = [t.strip() for t in tags_str.split(",") if t.strip()]
+    privacy = getattr(opts, "privacy", "private")
     body = {
         "snippet": {
             "title": title[:100],
@@ -371,10 +397,14 @@ def upload_one(
             "tags": tags_list,
         },
         "status": {
-            "privacyStatus": args.privacy,
+            "privacyStatus": privacy,
             "publishAt": publish_at_rfc,
         },
     }
+    if MediaFileUpload is None:
+        raise RuntimeError(
+            "Install Google API client: pip install google-api-python-client google-auth-oauthlib google-auth-httplib2"
+        )
     try:
         media = MediaFileUpload(str(video_path), mimetype="video/*", resumable=True)
         request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
@@ -387,6 +417,118 @@ def upload_one(
     except Exception as e:
         error(f"Upload failed: {e}")
         return None
+
+
+def _run_upload_loop(
+    items: list[UploadItem],
+    opts: argparse.Namespace | SimpleNamespace,
+    first_publish_at_str: str | None = None,
+    persist_context: tuple[Path, dict[str, UploadStateEntry]] | None = None,
+    *,
+    raise_on_failure: bool = False,
+) -> None:
+    """
+    Shared upload loop: YouTube auth, dedupe, schedule, upload each item, persist state.
+    first_publish_at_str: If set, use for first item (--publish-at); else deduce from API.
+    raise_on_failure: If True, raise RuntimeError on upload failure; else sys.exit(1).
+    """
+    if not items:
+        info("No videos to upload (all already scheduled or no short.mp4 found).")
+        return
+
+    youtube = get_authenticated_service()
+    existing_titles, publish_times = list_my_videos_recent(youtube)
+    total = len(items)
+    if total > 1:
+        info(f"Uploading {total} video(s) (sequential schedule, one per day).")
+
+    for i, item in enumerate(items):
+        if item.title in existing_titles:
+            label = item.cache_key or item.video_path.name
+            warn(f"Title {item.title!r} already on channel; skipping {label}.")
+            continue
+        if i == 0 and first_publish_at_str:
+            try:
+                publish_dt = parse_publish_at(first_publish_at_str)
+            except ValueError as e:
+                error(str(e))
+                sys.exit(1)
+            publish_at_rfc = to_rfc3339(publish_dt)
+        else:
+            publish_dt = next_publish_time(publish_times, getattr(opts, "default_time", DEFAULT_TIME_OF_DAY))
+            publish_at_rfc = to_rfc3339(publish_dt)
+        if total == 1:
+            info(f"Next publish slot: {publish_at_rfc}")
+        progress(i + 1, total, f"{item.title!r} @ {publish_at_rfc}")
+        info(f"Uploading {item.video_path.name} as {item.title!r} (scheduled {publish_at_rfc})...")
+        video_id = upload_one(youtube, item.video_path, item.title, item.description, publish_at_rfc, opts)
+        if video_id is None:
+            error("Upload failed; stopping.")
+            if raise_on_failure:
+                raise RuntimeError("YouTube upload failed")
+            sys.exit(1)
+        info(f"  https://youtube.com/shorts/{video_id}")
+        if persist_context and item.cache_key:
+            breakdown_dir, upload_state = persist_context
+            upload_state[item.cache_key] = UploadStateEntry(scheduled_at=publish_at_rfc, video_id=video_id)
+            save_upload_state(breakdown_dir, upload_state)
+        publish_times.append(publish_dt)
+        existing_titles.add(item.title)
+
+    if total > 1:
+        info(f"Done — {total} video(s) scheduled.")
+
+
+def upload_nuggets_to_youtube(
+    nuggets: list,
+    config_hash: str,
+    source_key: str,
+    no_breakdown: bool,
+) -> None:
+    """
+    Upload rendered videos to YouTube (programmatic entry point for run_source_pipeline).
+
+    nuggets: List of nuggets (with cache_key, title).
+    config_hash: Config hash for cache paths.
+    source_key: Source hash (for breakdown_output_dir).
+    no_breakdown: If True, use in-memory nuggets; else load from breakdown.json.
+
+    Uses default options: privacy=private, next slot from list API.
+    Fails with clear error if OAuth credentials are missing.
+    """
+    opts = _default_upload_opts()
+    if no_breakdown:
+        breakdown_dir = breakdown_output_dir(source_key, config_hash)
+        state = load_upload_state(breakdown_dir)
+        items = []
+        for i, n in enumerate(nuggets, 1):
+            ck = getattr(n, "cache_key", None) or (n.get("cache_key") if isinstance(n, dict) else None)
+            if not ck or ck in state:
+                continue
+            video_path = video_cache_path(ck, config_hash, "short.mp4")
+            if not video_path.exists():
+                warn(f"Video missing for {ck}, skipping")
+                continue
+            title, description = load_metadata_from_chunks(ck, config_hash)
+            title = title or getattr(n, "title", None) or (n.get("title") if isinstance(n, dict) else None) or f"Short {i}"
+            items.append(UploadItem(cache_key=ck, video_path=video_path, title=title, description=description or ""))
+        persist_context = (breakdown_dir, state)
+    else:
+        try:
+            to_upload, breakdown_dir, state = get_breakdown_nuggets_to_upload(source_key, config_hash)
+        except FileNotFoundError as e:
+            error(str(e))
+            raise
+        items = []
+        for i, nugget in enumerate(to_upload, 1):
+            ck = nugget.cache_key
+            video_path = video_cache_path(ck, config_hash, "short.mp4")
+            title, description = load_metadata_from_chunks(ck, config_hash)
+            title = title or nugget.title or f"Short {i}"
+            items.append(UploadItem(cache_key=ck, video_path=video_path, title=title, description=description or ""))
+        persist_context = (breakdown_dir, state)
+
+    _run_upload_loop(items, opts, persist_context=persist_context, raise_on_failure=True)
 
 
 def main() -> None:
@@ -429,51 +571,12 @@ def main() -> None:
         sys.exit(1)
 
     items, first_publish_at_str, persist_context = build_upload_list(args)
-    if not items:
-        info("No videos to upload (all already scheduled or no short.mp4 found).")
-        return
-
-    youtube = get_authenticated_service()
-    existing_titles, publish_times = list_my_videos_recent(youtube)
-    total = len(items)
-    if total > 1:
-        info(f"Uploading {total} video(s) (sequential schedule, one per day).")
-
-    for i, item in enumerate(items):
-        if item.title in existing_titles:
-            label = item.cache_key or item.video_path.name
-            warn(f"Title {item.title!r} already on channel; skipping {label}.")
-            continue
-        if i == 0 and first_publish_at_str:
-            try:
-                publish_dt = parse_publish_at(first_publish_at_str)
-            except ValueError as e:
-                error(str(e))
-                sys.exit(1)
-            publish_at_rfc = to_rfc3339(publish_dt)
-            if total == 1:
-                info(f"Next publish slot: {publish_at_rfc}")
-        else:
-            publish_dt = next_publish_time(publish_times, args.default_time)
-            publish_at_rfc = to_rfc3339(publish_dt)
-            if total == 1:
-                info(f"Next publish slot: {publish_at_rfc}")
-        progress(i + 1, total, f"{item.title!r} @ {publish_at_rfc}")
-        info(f"Uploading {item.video_path.name} as {item.title!r} (scheduled {publish_at_rfc})...")
-        video_id = upload_one(youtube, item.video_path, item.title, item.description, publish_at_rfc, args)
-        if video_id is None:
-            error("Upload failed; stopping.")
-            sys.exit(1)
-        info(f"  https://youtube.com/shorts/{video_id}")
-        if persist_context and item.cache_key:
-            breakdown_dir, upload_state = persist_context
-            upload_state[item.cache_key] = UploadStateEntry(scheduled_at=publish_at_rfc, video_id=video_id)
-            save_upload_state(breakdown_dir, upload_state)
-        publish_times.append(publish_dt)
-        existing_titles.add(item.title)
-
-    if total > 1:
-        info(f"Done — {total} video(s) scheduled.")
+    _run_upload_loop(
+        items,
+        args,
+        first_publish_at_str=first_publish_at_str,
+        persist_context=persist_context,
+    )
 
 
 if __name__ == "__main__":
