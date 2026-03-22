@@ -7,8 +7,8 @@
   },
   "scripts": {
     "dev": "remotion studio --public-dir=../../public",
-    "build": "remotion build",
-    "build:web": "remotion build --out-dir=../web/public/remotion",
+    "build": "remotion bundle src/index.ts",
+    "build:web": "remotion bundle src/index.ts --out-dir=../web/public/remotion",
     "render": "remotion render",
     "upgrade": "remotion upgrade",
     "lambda:deploy-function": "remotion lambda functions deploy",
@@ -22,12 +22,12 @@
     "@remotion/captions": "4.0.300",
     "@remotion/media-utils": "4.0.300",
     "@remotion/renderer": "4.0.300",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "remotion": "4.0.300"
   },
   "devDependencies": {
-    "@types/react": "18.2.0",
+    "@types/react": "^19.0.0",
     "typescript": "^5.0.0"
   }
 }

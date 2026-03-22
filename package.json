@@ -5,8 +5,16 @@
   "description": "Remotion-based short video generator",
   "pnpm": {
     "overrides": {
-      "@types/react": "18.2.79",
-      "@types/react-dom": "18.2.25"
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0",
+      "@types/react": "^19.0.0",
+      "@types/react-dom": "^19.0.0",
+      "remotion": "4.0.300",
+      "@remotion/bundler": "4.0.300",
+      "@remotion/cli": "4.0.300",
+      "@remotion/lambda": "4.0.300",
+      "@remotion/player": "4.0.300",
+      "@remotion/renderer": "4.0.300"
     }
   },
   "scripts": {
