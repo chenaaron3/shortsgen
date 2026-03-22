@@ -22,7 +22,6 @@ RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/huggingface \
     HF_HOME=/root/.cache/huggingface python -c "\
 from faster_whisper import WhisperModel; \
-WhisperModel('distil-large-v3', device='cpu', compute_type='int8'); \
 WhisperModel('base', device='cpu', compute_type='int8'); \
 " && \
     mkdir -p ${LAMBDA_TASK_ROOT}/whisper-models && \

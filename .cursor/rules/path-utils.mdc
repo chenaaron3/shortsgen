@@ -11,25 +11,26 @@ Use `path_utils` for all paths. Do not hardcode paths or construct them manually
 ## Imports
 
 ```python
-from path_utils import video_cache_path, breakdown_cache_path, breakdown_output_dir, remotion_composite_key, video_public, project_root, prompts_dir, assets_dir, mascot_path, env_path
+from path_utils import video_cache_path, breakdown_cache_path, breakdown_raw_path, breakdown_output_dir, remotion_composite_key, video_public, project_root, prompts_dir, assets_dir, mascot_path, env_path
 ```
 
 ## Key Functions
 
-| Function | Returns |
-|----------|---------|
-| `video_cache_path(cache_key, config_key, *parts)` | `cache/{config_name}/videos/{cache_key}/parts` — config_key = sanitized config name |
-| `breakdown_cache_path(source_hash)` | `cache/_breakdown/{hash}/breakdown.json` (shared across configs) |
-| `breakdown_output_dir(source_hash, config_hash)` | `cache/{config_hash}/breakdowns/{hash}/` (videos.md, upload_state.json) |
-| `remotion_composite_key(config_hash, cache_key)` | `{config_hash}_{cache_key}` for public/shortgen/ and manifest.cacheKey |
-| `video_public()` | `public/` — Remotion static assets |
-| `project_root()` | Monorepo root |
-| `eval_ui_public()` | `apps/eval-ui/public` (or `eval-ui/public` fallback) |
-| `remotion_app_root()` | `apps/remotion` (for npx remotion render cwd) |
-| `prompts_dir()` | `generation/prompts/` |
-| `assets_dir()` | `generation/assets/` |
-| `mascot_path()` | Default mascot canvas |
-| `env_path()` | Project .env |
+| Function                                          | Returns                                                                                           |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `video_cache_path(cache_key, config_key, *parts)` | `cache/{config_name}/videos/{cache_key}/parts` — config_key = sanitized config name               |
+| `breakdown_cache_path(source_hash)`               | `cache/_breakdown/{hash}/breakdown.json` (shared across configs)                                  |
+| `breakdown_raw_path(source_hash)`                 | `cache/_breakdown/{hash}/breakdown_pre_post_process.json` (raw LLM output before post-processing) |
+| `breakdown_output_dir(source_hash, config_hash)`  | `cache/{config_hash}/breakdowns/{hash}/` (videos.md, upload_state.json)                           |
+| `remotion_composite_key(config_hash, cache_key)`  | `{config_hash}_{cache_key}` for public/shortgen/ and manifest.cacheKey                            |
+| `video_public()`                                  | `public/` — Remotion static assets                                                                |
+| `project_root()`                                  | Monorepo root                                                                                     |
+| `eval_ui_public()`                                | `apps/eval-ui/public` (or `eval-ui/public` fallback)                                              |
+| `remotion_app_root()`                             | `apps/remotion` (for npx remotion render cwd)                                                     |
+| `prompts_dir()`                                   | `generation/prompts/`                                                                             |
+| `assets_dir()`                                    | `generation/assets/`                                                                              |
+| `mascot_path()`                                   | Default mascot canvas                                                                             |
+| `env_path()`                                      | Project .env                                                                                      |
 
 ## Rules
 

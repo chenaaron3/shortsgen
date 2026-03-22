@@ -17,8 +17,8 @@ from litellm import completion
 from models import BreakdownOutput, Nugget
 from schema_utils import schema_for_openai
 
-from path_utils import env_path, prompts_dir, breakdown_cache_path
-from logger import cache_hit, cache_miss, error, step_end, step_start, warn
+from path_utils import env_path, prompts_dir, breakdown_cache_path, breakdown_raw_path
+from logger import cache_hit, cache_miss, error, info, step_end, step_start, warn
 from usage_trace import record_llm
 
 load_dotenv(env_path())
@@ -85,6 +85,7 @@ def _fix_line_gaps(
     if num_lines == 0:
         return nuggets
 
+    before = [(n.id, n.start_line, n.end_line, n.original_text or "") for n in nuggets]
     work = list(nuggets)
     for i in range(len(work) - 1):
         curr = work[i]
@@ -102,6 +103,9 @@ def _fix_line_gaps(
     for n in work:
         n.original_text = _extract_lines(source_content, n.start_line, n.end_line)
         n.cache_key = _content_cache_key(n.original_text)
+    after = [(n.id, n.start_line, n.end_line, n.original_text or "") for n in work]
+    if before != after:
+        info("  post_process: _fix_line_gaps modified nuggets (contiguity/line re-extraction)")
     return work
 
 
@@ -145,6 +149,8 @@ def _merge_short_nuggets(
         result.append(merged)
         i = j
 
+    if len(result) < len(nuggets):
+        info(f"  post_process: _merge_short_nuggets merged {len(nuggets)} -> {len(result)} nuggets")
     return result
 
 
@@ -152,6 +158,7 @@ def _reassign_ids(nuggets: list[Nugget]) -> list[Nugget]:
     """Reassign consecutive ids (e.g. source-slug-001, source-slug-002)."""
     if not nuggets:
         return nuggets
+    old_ids = [n.id for n in nuggets]
     base = re.sub(r"-\d+$", "", nuggets[0].id) if nuggets else "nugget"
     result = []
     for i, n in enumerate(nuggets, 1):
@@ -168,6 +175,9 @@ def _reassign_ids(nuggets: list[Nugget]) -> list[Nugget]:
                 is_meaningful_content=getattr(n, "is_meaningful_content", True),
             )
         )
+    new_ids = [n.id for n in result]
+    if old_ids != new_ids:
+        info("  post_process: _reassign_ids modified nugget ids")
     return result
 
 
@@ -267,7 +277,7 @@ def run(
         n.cache_key = _content_cache_key(n.original_text)
 
     breakdown_path.parent.mkdir(parents=True, exist_ok=True)
-    pre_post_process_path = breakdown_path.parent / "breakdown_pre_post_process.json"
+    pre_post_process_path = breakdown_raw_path(source_key)
     pre_post_process_path.write_text(
         BreakdownOutput(nuggets=result.nuggets).model_dump_json(indent=2),
         encoding="utf-8",

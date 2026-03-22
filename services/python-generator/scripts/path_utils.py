@@ -58,6 +58,11 @@ def breakdown_cache_path(source_hash: str) -> Path:
     return cache_base() / "_breakdown" / source_hash / "breakdown.json"
 
 
+def breakdown_raw_path(source_hash: str) -> Path:
+    """Path to raw LLM breakdown before post-processing: cache/_breakdown/{source_hash}/breakdown_pre_post_process.json."""
+    return cache_base() / "_breakdown" / source_hash / "breakdown_pre_post_process.json"
+
+
 def breakdown_output_dir(source_hash: str, config_hash: str) -> Path:
     """Per-config output dir for breakdown: cache/{config_hash}/breakdowns/{source_hash}/. videos.md, upload_state.json."""
     return cache_base() / config_hash / "breakdowns" / source_hash

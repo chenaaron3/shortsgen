@@ -17,7 +17,7 @@ if str(_SCRIPTS) not in sys.path:
 from config_loader import load_config
 from logger import error as log_error, info as log_info, run_context, video_context, warn as log_warn
 from models import Nugget, ProcessedClip
-from path_utils import breakdown_cache_path, video_cache_path
+from path_utils import breakdown_cache_path, breakdown_raw_path, video_cache_path
 from pipeline.breakdown_source import run as run_breakdown, source_hash
 from pipeline.generate_script import run as run_script
 from pipeline.run_chunker import run as run_chunker
@@ -105,6 +105,9 @@ def _handler_impl(event: dict, run_id: str, source_content: str, config_name: st
     breakdown_path = breakdown_cache_path(source_key)
     if breakdown_path.exists():
         upload_to_run(run_id, breakdown_path, path="breakdown.json")
+    raw_breakdown_path = breakdown_raw_path(source_key)
+    if raw_breakdown_path.exists():
+        upload_to_run(run_id, raw_breakdown_path, path="breakdown_pre_post_process.json")
     breakdown_json = json.dumps([n.model_dump() for n in nuggets])
     emit_event(
         run_id,

@@ -1,10 +1,11 @@
 "use client";
 
-import { Download, Loader2 } from 'lucide-react';
+import { Download } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React, { Component, type ReactNode, useState } from 'react';
+import React, { Component } from 'react';
 import { api } from '~/utils/api';
 
+import type { ReactNode } from 'react';
 class PlayerErrorBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
   { hasError: boolean; error: Error | null }
@@ -28,49 +29,15 @@ class PlayerErrorBoundary extends Component<
 }
 
 function DownloadButton({ href }: { href: string }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleClick(e: React.MouseEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(href);
-      if (!res.ok) throw new Error("Download failed");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "short.mp4";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Download failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <div className="flex flex-col gap-1">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={loading}
-        className="flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
-      >
-        {loading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Download className="h-4 w-4" />
-        )}
-        {loading ? "Downloading…" : "Download"}
-      </button>
-      {error && (
-        <p className="text-xs text-destructive">{error}</p>
-      )}
-    </div>
+    <a
+      href={href}
+      download="short.mp4"
+      className="flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
+    >
+      <Download className="h-4 w-4" />
+      Download
+    </a>
   );
 }
 
@@ -141,34 +108,36 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
 
   return (
     <div className="flex h-full w-full min-h-0 min-w-0 flex-col gap-2">
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-black">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg bg-black">
         <PlayerErrorBoundary fallback={playerFallback}>
           <Player
-          {...({
-            acknowledgeRemotionLicense: true,
-            component: ShortVideo as React.ComponentType<Record<string, unknown>>,
-            inputProps: { manifest, assetBaseUrl, backgroundMusicUrl },
-            durationInFrames: manifest.durationInFrames,
-            compositionWidth: manifest.width,
-            compositionHeight: manifest.height,
-            fps: manifest.fps,
-            style: {
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              minHeight: 0,
-              minWidth: 0,
-              objectFit: "contain",
-            },
-            controls: true,
-            loop: true,
-          } as React.ComponentProps<typeof Player>)}
-        />
+            {...({
+              acknowledgeRemotionLicense: true,
+              component: ShortVideo as React.ComponentType<Record<string, unknown>>,
+              inputProps: { manifest, assetBaseUrl, backgroundMusicUrl },
+              durationInFrames: manifest.durationInFrames,
+              compositionWidth: manifest.width,
+              compositionHeight: manifest.height,
+              fps: manifest.fps,
+              style: {
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                minHeight: 0,
+                minWidth: 0,
+                objectFit: "contain",
+              },
+              controls: true,
+              loop: true,
+            } as React.ComponentProps<typeof Player>)}
+          />
         </PlayerErrorBoundary>
       </div>
       {exportUrl && (
-        <DownloadButton href={exportUrl} />
+        <DownloadButton
+          href={`/api/download-video?path=${encodeURIComponent(`runs/${runId}/${videoId}/short.mp4`)}`}
+        />
       )}
     </div>
   );
