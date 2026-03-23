@@ -26,6 +26,8 @@ interface SceneListProps {
   sceneUpdating?: number | null;
   /** When assets exist: scene index -> image URL for thumbnail */
   imageUrlByIndex?: Record<number, string>;
+  /** When assets exist: scene index -> voice URL for play button */
+  voiceUrlByIndex?: Record<number, string>;
 }
 
 const SECTIONS = ["Hook", "Body", "Close"] as const;
@@ -41,6 +43,7 @@ export function SceneList({
   onRegenerate,
   sceneUpdating = null,
   imageUrlByIndex,
+  voiceUrlByIndex,
 }: SceneListProps) {
   if (scenes.length === 0) {
     return (
@@ -85,6 +88,7 @@ export function SceneList({
                   onRegenerate={onRegenerate}
                   isRegenerating={sceneUpdating === index}
                   imageUrl={imageUrlByIndex?.[index]}
+                  voiceUrl={voiceUrlByIndex?.[index]}
                 />
               ))}
             </div>

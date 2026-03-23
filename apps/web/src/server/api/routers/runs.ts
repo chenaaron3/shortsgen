@@ -6,6 +6,7 @@ import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { debitCredits, getBalance } from "~/server/credits";
 
+import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import {
   CREDITS_ASSETS_PER_VIDEO,
   CREDITS_IMAGE_REGEN,
@@ -636,6 +637,91 @@ export const runsRouter = createTRPCRouter({
       );
       return { jobId: data.jobId, status: data.status };
     }),
+
+  /**
+   * List partial video assets (images/voice) from S3. For progressive display and refresh.
+   * Returns scene index -> path map. No manifest required. Uses naming convention images/image_N.png, voice/voice_N.mp3.
+   */
+  listVideoAssets: protectedProcedure
+    .input(
+      z.object({
+        runId: z.string().uuid(),
+        videoId: z.string().uuid(),
+      }),
+    )
+    .query(
+      async ({
+        ctx,
+        input,
+      }): Promise<{
+        assetBaseUrl: string;
+        imageByIndex: Record<number, string>;
+        voiceByIndex: Record<number, string>;
+      } | null> => {
+        const [video] = await ctx.db
+          .select({ s3Prefix: videos.s3_prefix })
+          .from(videos)
+          .where(
+            and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
+          );
+
+        if (!video?.s3Prefix) return null;
+
+        const [run] = await ctx.db
+          .select({ userId: runs.userId })
+          .from(runs)
+          .where(eq(runs.id, input.runId));
+
+        if (!run || run.userId !== ctx.session.user.id) return null;
+
+        const prefix = video.s3Prefix.replace(/\/$/, "") + "/";
+        const cdnBase = env.SHORTGEN_CDN_URL.replace(/\/$/, "");
+        const assetBaseUrl = `${cdnBase}/${prefix.replace(/\/$/, "")}`;
+        const bucket = env.SHORTGEN_BUCKET_NAME;
+
+        const imageByIndex: Record<number, string> = {};
+        const voiceByIndex: Record<number, string> = {};
+
+        try {
+          const client = new S3Client({});
+          for (const subPrefix of ["images/", "voice/"]) {
+            const fullPrefix = prefix + subPrefix;
+            let continuationToken: string | undefined;
+            do {
+              const resp = await client.send(
+                new ListObjectsV2Command({
+                  Bucket: bucket,
+                  Prefix: fullPrefix,
+                  ContinuationToken: continuationToken,
+                }),
+              );
+              for (const obj of resp.Contents ?? []) {
+                if (!obj.Key || !obj.Key.startsWith(fullPrefix)) continue;
+                const rel = obj.Key.slice(fullPrefix.length);
+                const match = rel.match(
+                  subPrefix === "images/"
+                    ? /^image_(\d+)\.png$/
+                    : /^voice_(\d+)\.mp3$/,
+                );
+                if (match) {
+                  const sceneIndex = parseInt(match[1]!, 10) - 1;
+                  const path = subPrefix + rel;
+                  if (subPrefix === "images/") {
+                    imageByIndex[sceneIndex] = path;
+                  } else {
+                    voiceByIndex[sceneIndex] = path;
+                  }
+                }
+              }
+              continuationToken = resp.NextContinuationToken;
+            } while (continuationToken);
+          }
+          return { assetBaseUrl, imageByIndex, voiceByIndex };
+        } catch {
+          return { assetBaseUrl, imageByIndex, voiceByIndex };
+        }
+      },
+    ),
 
   /**
    * Get video assets (manifest + CDN base URL) for preview. All asset reads go through CDN.

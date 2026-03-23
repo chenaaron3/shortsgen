@@ -85,8 +85,9 @@ def run(
     step: str | None = None,
     break_at: str | None = None,
     on_step_complete: Callable[[str], None] | None = None,
-    on_image_scene: Callable[[int, int], None] | None = None,
-    on_voice_scene: Callable[[int, int], None] | None = None,
+    on_image_scene: Callable[[int, int, str | None], None] | None = None,
+    on_voice_scene: Callable[[int, int, str | None], None] | None = None,
+    on_caption_scene: Callable[[float], None] | None = None,
 ) -> Path | None:
     """
     Run the full pipeline for raw content, an existing cache, or in-memory chunks.
@@ -104,6 +105,7 @@ def run(
         on_step_complete: Optional callback invoked when a step finishes. Step names: "script", "chunker", "image", "voice", "caption".
         on_image_scene: Optional callback(done_count, total) invoked after each image is generated.
         on_voice_scene: Optional callback(done_count, total) invoked after each voice clip is written.
+        on_caption_scene: Optional callback(progress) invoked during Whisper transcription; progress is 0.0–1.0 by audio duration.
 
     Returns:
         Path to output video when full pipeline completes, else None.
@@ -213,6 +215,7 @@ def run(
             use_whisper=True,
             whisper_model="base",
             skip_cache="prepare" in invalidate_steps,
+            on_caption_progress=on_caption_scene,
         )
         if on_step_complete:
             on_step_complete("prepare")

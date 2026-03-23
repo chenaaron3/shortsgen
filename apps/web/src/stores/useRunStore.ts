@@ -34,12 +34,22 @@ export interface RunStoreFeedback {
 /** Maps video ID → ChunksOutput (LLM scene suggestions: streaming partial or final). From suggestion_partial / suggestion_completed WS events. */
 export type SceneSuggestionsByVideo = { [videoId: string]: ChunksOutput };
 
+/** Per-video progressive assets from WebSocket (image_uploaded, voice_uploaded). Used before manifest exists. */
+export interface VideoAssets {
+  assetBaseUrl: string;
+  imageByIndex: Record<number, string>;
+  voiceByIndex: Record<number, string>;
+}
+
 export interface RunStoreProgress {
   breakdownComplete: boolean;
   sceneUpdating: number | null;
   videoUpdating: boolean;
   sceneSuggestionsByVideo: SceneSuggestionsByVideo;
   videoProgressByVideo: Record<string, VideoProgress>;
+  assetsByVideo: Record<string, VideoAssets>;
+  /** Bumped when update_imagery completes; used as cache-buster for image URLs */
+  assetsRefreshKeyByVideo: Record<string, number>;
 }
 
 interface RunStore {
@@ -61,6 +71,14 @@ interface RunStore {
   setSceneUpdating: (index: number | null) => void;
   setVideoUpdating: (updating: boolean) => void;
   setVideoProgress: (videoId: string, progress: VideoProgress | null) => void;
+  setAssetsBaseUrl: (videoId: string, assetBaseUrl: string) => void;
+  setAssetUploaded: (
+    videoId: string,
+    kind: "image" | "voice",
+    sceneIndex: number,
+    path: string,
+  ) => void;
+  bumpAssetsRefreshKey: (videoId: string) => void;
   init: (runId: string) => void;
   reset: () => void;
 }
@@ -82,6 +100,8 @@ const initialProgress: RunStoreProgress = {
   videoUpdating: false,
   sceneSuggestionsByVideo: {},
   videoProgressByVideo: {},
+  assetsByVideo: {},
+  assetsRefreshKeyByVideo: {},
 };
 
 export const useRunStore = create<RunStore>((set) => ({
@@ -172,18 +192,59 @@ export const useRunStore = create<RunStore>((set) => ({
         }
       }),
     ),
+  setAssetsBaseUrl: (videoId, assetBaseUrl) =>
+    set((s) =>
+      produce(s, (draft) => {
+        if (!draft.progress.assetsByVideo[videoId]) {
+          draft.progress.assetsByVideo[videoId] = {
+            assetBaseUrl,
+            imageByIndex: {},
+            voiceByIndex: {},
+          };
+        } else {
+          draft.progress.assetsByVideo[videoId]!.assetBaseUrl = assetBaseUrl;
+        }
+      }),
+    ),
+  setAssetUploaded: (videoId, kind, sceneIndex, path) =>
+    set((s) =>
+      produce(s, (draft) => {
+        const entry = draft.progress.assetsByVideo[videoId];
+        if (!entry) return;
+        if (kind === "image") {
+          entry.imageByIndex[sceneIndex] = path;
+        } else {
+          entry.voiceByIndex[sceneIndex] = path;
+        }
+      }),
+    ),
+  bumpAssetsRefreshKey: (videoId) =>
+    set((s) =>
+      produce(s, (draft) => {
+        const key = draft.progress.assetsRefreshKeyByVideo[videoId] ?? 0;
+        draft.progress.assetsRefreshKeyByVideo[videoId] = key + 1;
+      }),
+    ),
 
   init: (runId) =>
     set({
       ui: { ...initialUi, runId },
       feedback: initialFeedback,
-      progress: initialProgress,
+      progress: {
+        ...initialProgress,
+        assetsByVideo: {},
+        assetsRefreshKeyByVideo: {},
+      },
     }),
 
   reset: () =>
     set({
       ui: initialUi,
       feedback: initialFeedback,
-      progress: initialProgress,
+      progress: {
+        ...initialProgress,
+        assetsByVideo: {},
+        assetsRefreshKeyByVideo: {},
+      },
     }),
 }));

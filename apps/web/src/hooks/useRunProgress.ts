@@ -56,7 +56,12 @@ export type ProgressMessage =
     })
   | (ProgressMessageBase & {
       type: "asset_gen_started";
-      payload?: { step?: string; totalScenes?: number };
+      payload?: {
+        step?: string;
+        totalScenes?: number;
+        s3Prefix?: string;
+        assetBaseUrl?: string;
+      };
     })
   | (ProgressMessageBase & {
       type: "asset_gen_progress";
@@ -66,6 +71,14 @@ export type ProgressMessage =
         totalScenes?: number;
         sceneIndex?: number;
       };
+    })
+  | (ProgressMessageBase & {
+      type: "image_uploaded";
+      payload?: { sceneIndex?: number; path?: string };
+    })
+  | (ProgressMessageBase & {
+      type: "voice_uploaded";
+      payload?: { sceneIndex?: number; path?: string };
     })
   | (ProgressMessageBase & {
       type: "caption_generated";
@@ -248,7 +261,9 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       setVideoUpdating,
       setSceneSuggestions,
       setVideoProgress,
-      progress,
+      setAssetsBaseUrl,
+      setAssetUploaded,
+      bumpAssetsRefreshKey,
     } = useRunStore.getState();
 
     if (msg.type === "breakdown_completed") setBreakdownComplete(true);
@@ -285,9 +300,46 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       refetch?.();
     }
 
+    if (msg.type === "asset_gen_started" && msg.videoId && msg.payload) {
+      const p = msg.payload as {
+        assetBaseUrl?: string;
+        s3Prefix?: string;
+      };
+      if (p.assetBaseUrl && p.assetBaseUrl.length > 0) {
+        setAssetsBaseUrl(msg.videoId, p.assetBaseUrl);
+      }
+      refetch?.();
+    }
+
+    if (msg.type === "image_uploaded" && msg.videoId && msg.payload) {
+      const p = msg.payload as { sceneIndex?: number; path?: string };
+      if (
+        typeof p.sceneIndex === "number" &&
+        typeof p.path === "string"
+      ) {
+        setAssetUploaded(msg.videoId, "image", p.sceneIndex, p.path);
+      }
+    }
+
+    if (msg.type === "voice_uploaded" && msg.videoId && msg.payload) {
+      const p = msg.payload as { sceneIndex?: number; path?: string };
+      if (
+        typeof p.sceneIndex === "number" &&
+        typeof p.path === "string"
+      ) {
+        setAssetUploaded(msg.videoId, "voice", p.sceneIndex, p.path);
+      }
+    }
+
     if (msg.type === "asset_gen_completed" && msg.payload) {
       const p = msg.payload as { videoId?: string; s3Prefix?: string };
-      if (p.videoId && p.s3Prefix) {
+      const vid = p.videoId ?? msg.videoId;
+      const isUpdateImagery = msg.workflow === "update_imagery";
+      if (vid && (p.s3Prefix || isUpdateImagery)) {
+        if (isUpdateImagery) {
+          setSceneUpdating(null);
+          bumpAssetsRefreshKey(vid);
+        }
         setVideoUpdating(false);
         refetch?.();
       }

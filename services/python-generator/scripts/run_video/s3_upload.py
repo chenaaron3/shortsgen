@@ -17,6 +17,31 @@ def _s3_prefix(run_id: str, video_id: str | None) -> str:
     return prefix
 
 
+def upload_single_file(
+    run_id: str,
+    video_id: str,
+    local_path: Path | str,
+    s3_relative_key: str,
+    *,
+    extra_args: dict | None = None,
+) -> None:
+    """Upload a single file to S3 under runs/{run_id}/{video_id}/{s3_relative_key}.
+    No-op when BUCKET_NAME is unset (e.g. local dev)."""
+    bucket_name = os.environ.get("BUCKET_NAME")
+    prefix = _s3_prefix(run_id, video_id)
+    if not bucket_name:
+        return
+
+    if boto3 is None:
+        raise RuntimeError("boto3 required. pip install boto3")
+    local_path = Path(local_path)
+    if not local_path.exists():
+        return
+
+    key = prefix + s3_relative_key.lstrip("/")
+    _upload_file(local_path, bucket_name, key, extra_args=extra_args)
+
+
 def upload_to_run(
     run_id: str,
     local_path: Path | str,

@@ -9,6 +9,7 @@ Config flow (single source of truth):
 """
 
 import json
+import os
 import sys
 import traceback
 from pathlib import Path
@@ -23,7 +24,7 @@ from models import Chunks
 from path_utils import remotion_composite_key, video_public
 from pipeline.run_pipeline import run as run_pipeline
 from run_video.persistence.run_video_writer import get_video, update_video
-from run_video.s3_upload import upload_to_run
+from run_video.s3_upload import upload_single_file, upload_to_run
 from run_video.websocket_progress import emit_event
 from schemas.progress_event_type import ProgressEventType
 
@@ -68,6 +69,12 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
     chunks = Chunks.model_validate(json.loads(chunks_json))
 
     total_scenes = len(chunks.scenes)
+    s3_prefix = f"runs/{run_id}/{video_id}/"
+    update_video(video_id, s3_prefix=s3_prefix)
+
+    cdn_url = os.environ.get("SHORTGEN_CDN_URL", "")
+    asset_base_url = (cdn_url.rstrip("/") + "/" + s3_prefix.rstrip("/")) if cdn_url else ""
+
     images_done: list[int] = [0]
     voice_done: list[int] = [0]
 
@@ -83,7 +90,12 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
         video_id=video_id,
         workflow="finalize_clip",
         progress=0.0,
-        payload={"step": "images_voice", "totalScenes": total_scenes},
+        payload={
+            "step": "images_voice",
+            "totalScenes": total_scenes,
+            "s3Prefix": s3_prefix,
+            "assetBaseUrl": asset_base_url,
+        },
     )
 
     def _emit_asset_progress() -> None:
@@ -105,22 +117,70 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
             voice_done[0] = total_scenes
             _emit_asset_progress()
         elif step == "prepare":
+            # Captions done (covers cache-hit case when on_caption_scene never fired)
             emit_event(
                 run_id,
                 ProgressEventType.caption_generated,
-                status_message="Generating captions...",
+                status_message="Captions generated",
                 video_id=video_id,
                 workflow="finalize_clip",
                 progress=1.0,
                 payload={},
             )
 
-    def on_image_scene(done_count: int, total: int) -> None:
+    def on_caption_scene(progress: float) -> None:
+        status = (
+            "Captions generated"
+            if progress >= 1.0
+            else f"Transcribing captions... {int(progress * 100)}%"
+        )
+        emit_event(
+            run_id,
+            ProgressEventType.caption_generated,
+            status_message=status,
+            video_id=video_id,
+            workflow="finalize_clip",
+            progress=progress,
+            payload={"captionProgress": progress},
+        )
+
+    def _s3_key_from_path(local_path: str) -> str | None:
+        """Derive S3 key from local path; expects images/image_N.png or voice/voice_N.mp3."""
+        p = Path(local_path)
+        if len(p.parts) >= 2:
+            return f"{p.parent.name}/{p.name}"
+        return None
+
+    def on_image_scene(done_count: int, total: int, path: str | None = None) -> None:
         images_done[0] = done_count
+        if path:
+            s3_key = _s3_key_from_path(path)
+            if s3_key:
+                upload_single_file(run_id, video_id, path, s3_key)
+                emit_event(
+                    run_id,
+                    ProgressEventType.image_uploaded,
+                    status_message=f"Image {done_count}/{total}",
+                    video_id=video_id,
+                    workflow="finalize_clip",
+                    payload={"sceneIndex": done_count - 1, "path": s3_key},
+                )
         _emit_asset_progress()
 
-    def on_voice_scene(done_count: int, total: int) -> None:
+    def on_voice_scene(done_count: int, total: int, path: str | None = None) -> None:
         voice_done[0] = done_count
+        if path:
+            s3_key = _s3_key_from_path(path)
+            if s3_key:
+                upload_single_file(run_id, video_id, path, s3_key)
+                emit_event(
+                    run_id,
+                    ProgressEventType.voice_uploaded,
+                    status_message=f"Voice {done_count}/{total}",
+                    video_id=video_id,
+                    workflow="finalize_clip",
+                    payload={"sceneIndex": done_count - 1, "path": s3_key},
+                )
         _emit_asset_progress()
 
     run_pipeline(
@@ -132,11 +192,16 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
         on_step_complete=on_step_complete,
         on_image_scene=on_image_scene,
         on_voice_scene=on_voice_scene,
+        on_caption_scene=on_caption_scene,
     )
 
     composite_key = remotion_composite_key(config_hash, cache_key)
     output_dir = video_public() / "shortgen" / composite_key
-    s3_prefix = upload_to_run(run_id, output_dir, video_id=video_id)
+    # Images and voice were uploaded incrementally; only upload manifest (avoids double-upload)
+    manifest_path = output_dir / "manifest.json"
+    if manifest_path.exists():
+        upload_to_run(run_id, manifest_path, video_id=video_id, path="manifest.json")
+    # s3_prefix already set at start of handler
 
     # don't change to export yet since user can still iterate on assets
     update_video(video_id, s3_prefix=s3_prefix, status="assets")

@@ -159,6 +159,8 @@ export const progressEventTypeSchema = z.enum([
   "request_sent",
   "asset_gen_started",
   "asset_gen_progress",
+  "image_uploaded",
+  "voice_uploaded",
   "caption_generated",
   "asset_gen_completed",
   "error",

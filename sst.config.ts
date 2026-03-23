@@ -66,6 +66,7 @@ export default $config({
       CONNECTIONS_TABLE_NAME: connectionsTable.name,
       WEBSOCKET_ENDPOINT: wsApi.managementEndpoint,
       BUCKET_NAME: bucket.name,
+      SHORTGEN_CDN_URL: assetsRouter.url,
       DATABASE_URL: databaseUrl.value,
       OPENAI_API_KEY: openaiApiKey.value,
       REPLICATE_API_TOKEN: replicateApiToken.value,

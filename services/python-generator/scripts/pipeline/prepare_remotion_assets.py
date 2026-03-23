@@ -7,6 +7,7 @@ Called by run_pipeline. Outputs to public/shortgen/{cache_key}/manifest.json.
 import json
 import shutil
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from PIL import Image
@@ -48,27 +49,43 @@ def get_audio_duration_seconds(path: Path) -> float:
 
 
 def transcribe_audio_with_whisper(
-    voice_paths: list[Path], output_captions: list[dict], model_size: str = "distil-large-v3"
+    voice_paths: list[Path],
+    output_captions: list[dict],
+    model_size: str = "distil-large-v3",
+    on_caption_progress: Callable[[float], None] | None = None,
 ) -> None:
     """
     Transcribe each voice file with Whisper and append word-level captions.
     Offsets each file's timestamps by the cumulative duration of prior files.
+    on_caption_progress(progress) is invoked at start and after each segment;
+    progress is 0.0–1.0 estimated from cumulative audio time / total duration.
     """
     if WhisperModel is None:
         raise RuntimeError(
             "faster-whisper is required for word-level captions. Run: pip install faster-whisper"
         )
 
+    existing_paths = [p for p in voice_paths if p.exists()]
+    total_duration_sec = sum(get_audio_duration_seconds(p) for p in existing_paths)
+    if on_caption_progress:
+        on_caption_progress(0.0)
+
     model = WhisperModel(model_size, device="cpu", compute_type="int8")
     cumulative_offset_ms = 0.0
+    cumulative_transcribed_sec = 0.0
 
-    for voice_path in voice_paths:
-        if not voice_path.exists():
-            continue
+    for voice_path in existing_paths:
         segments, _ = model.transcribe(
             str(voice_path), word_timestamps=True, language="en"
         )
+        file_transcribed_sec = 0.0
+
         for segment in segments:
+            file_transcribed_sec = max(file_transcribed_sec, segment.end)
+            if total_duration_sec > 0 and on_caption_progress:
+                progress = (cumulative_transcribed_sec + file_transcribed_sec) / total_duration_sec
+                on_caption_progress(min(1.0, progress))
+
             if not hasattr(segment, "words") or not segment.words:
                 # Fallback: treat whole segment as one caption
                 start_ms = segment.start * 1000 + cumulative_offset_ms
@@ -102,6 +119,10 @@ def transcribe_audio_with_whisper(
 
         duration = get_audio_duration_seconds(voice_path)
         cumulative_offset_ms += duration * 1000
+        cumulative_transcribed_sec += duration
+
+    if on_caption_progress:
+        on_caption_progress(1.0)
 
 
 def prepare(
@@ -111,6 +132,7 @@ def prepare(
     use_whisper: bool = True,
     whisper_model: str = "distil-large-v3",
     skip_cache: bool = False,
+    on_caption_progress: Callable[[float], None] | None = None,
 ) -> Path:
     """Copy assets to public and create manifest. Returns path to manifest.
     skip_cache: if True, regenerate Whisper captions even when cached (for --step 4 iteration).
@@ -189,7 +211,10 @@ def prepare(
             info("  ○ Transcribing with Whisper (word-level)...")
             captions = []
             transcribe_audio_with_whisper(
-                voice_paths_for_whisper, captions, model_size=whisper_model
+                voice_paths_for_whisper,
+                captions,
+                model_size=whisper_model,
+                on_caption_progress=on_caption_progress,
             )
             captions_path.write_text(json.dumps(captions, indent=2), encoding="utf-8")
     else:

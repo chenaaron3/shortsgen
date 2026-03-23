@@ -42,7 +42,7 @@ def run(
     skip_cache: bool = False,
     whisper_model: str = "base.en",
     voice_backend: str | None = None,
-    on_voice_complete: Callable[[int, int], None] | None = None,
+    on_voice_complete: Callable[[int, int, str | None], None] | None = None,
 ) -> Chunks:
     """
     Generate voice via voice_generator (ElevenLabs, readaloud, or ttsvibes).
@@ -77,9 +77,10 @@ def run(
     if all_cached:
         step_start("Voice")
         for i, scene in enumerate(scenes):
-            scene.voice_path = str(voice_dir / f"voice_{i+1}.mp3")
+            path = voice_dir / f"voice_{i+1}.mp3"
+            scene.voice_path = str(path)
             if on_voice_complete:
-                on_voice_complete(i + 1, len(scenes))
+                on_voice_complete(i + 1, len(scenes), str(path))
         _update_chunks_json(cache_key, config_hash, chunks, "voice_path")
         cache_stats_summary(len(scenes), 0, 0, f"max={max_scenes}" if max_scenes else "")
         step_end("Voice", outputs=[voice_dir], cache_hits=len(scenes), cache_misses=0)
@@ -112,7 +113,7 @@ def run(
         path.write_bytes(clip_bytes)
         scene.voice_path = str(path)
         if on_voice_complete:
-            on_voice_complete(i + 1, len(scenes))
+            on_voice_complete(i + 1, len(scenes), str(path))
         preview = (scene.text[:40] + "…") if len(scene.text) > 40 else scene.text
         progress(i + 1, len(scenes), f"saved -> {path.name} \"{preview}\"")
 

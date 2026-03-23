@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Pause, Play, ThumbsDown, ThumbsUp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,8 @@ interface SceneRowProps {
   isRegenerating?: boolean;
   /** When assets exist: URL for scene image thumbnail */
   imageUrl?: string;
+  /** When assets exist: URL for scene voice (audio play button) */
+  voiceUrl?: string;
 }
 
 export function SceneRow({
@@ -59,8 +61,38 @@ export function SceneRow({
   onRegenerate,
   isRegenerating = false,
   imageUrl,
+  voiceUrl,
 }: SceneRowProps) {
   const utils = api.useUtils();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlayPause = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      void audio.play();
+    }
+    setIsPlaying(!isPlaying);
+  }, [isPlaying]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onEnded = () => setIsPlaying(false);
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('pause', onPause);
+    return () => {
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('play', onPlay);
+      audio.removeEventListener('pause', onPause);
+    };
+  }, [voiceUrl]);
   const acceptFieldMutation = api.runs.acceptSceneSuggestions.useMutation({
     onSuccess: () => {
       void utils.runs.getById.invalidate({ runId });
@@ -219,7 +251,30 @@ export function SceneRow({
               </div>
             ) : (
               <>
-                <p className="text-foreground text-sm leading-snug">{scene.text}</p>
+                <div className="flex items-center gap-2">
+                  {voiceUrl && (
+                    <>
+                      <audio ref={audioRef} src={voiceUrl} preload="metadata" />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={handlePlayPause}
+                        className="shrink-0 text-muted-foreground hover:text-foreground"
+                        aria-label={isPlaying ? 'Pause' : 'Play scene audio'}
+                      >
+                        {isPlaying ? (
+                          <Pause className="size-3.5" />
+                        ) : (
+                          <Play className="size-3.5" />
+                        )}
+                      </Button>
+                    </>
+                  )}
+                  <p className="min-w-0 flex-1 text-foreground text-sm leading-snug">
+                    {scene.text}
+                  </p>
+                </div>
                 <div>
                   {imageryEditable ? (
                     <Textarea

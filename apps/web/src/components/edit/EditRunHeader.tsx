@@ -8,6 +8,8 @@ import { RunProgressSteps, type RunPhase } from "./RunProgressSteps";
 interface EditRunHeaderProps {
   runPhase: RunPhase;
   breakdownComplete: boolean;
+  /** When true, the export step shows as completed. */
+  exportComplete?: boolean;
   canShowNextButton: boolean;
   canShowExportButton: boolean;
   isAdmin: boolean;
@@ -20,6 +22,7 @@ interface EditRunHeaderProps {
 export function EditRunHeader({
   runPhase,
   breakdownComplete,
+  exportComplete = false,
   canShowNextButton,
   canShowExportButton,
   isAdmin,
@@ -38,6 +41,7 @@ export function EditRunHeader({
         <RunProgressSteps
           phase={runPhase}
           breakdownComplete={breakdownComplete}
+          exportComplete={exportComplete}
           compact
         />
       </div>

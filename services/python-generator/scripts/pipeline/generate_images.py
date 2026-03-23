@@ -124,7 +124,7 @@ def run(
     concurrency: int = DEFAULT_CONCURRENCY,
     model: str | None = None,
     skip_cache: bool = False,
-    on_image_complete: Callable[[int, int], None] | None = None,
+    on_image_complete: Callable[[int, int, str | None], None] | None = None,
 ) -> Chunks:
     """
     Generate images from chunks. Uses per-image cache.
@@ -225,7 +225,7 @@ def run(
                 with images_done_lock:
                     images_done[0] += 1
                     done = images_done[0]
-                on_image_complete(done, total)
+                on_image_complete(done, total, str(filename))
             request_path.write_text(
                 json.dumps(
                     {

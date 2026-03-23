@@ -2,14 +2,13 @@
 
 import { useCallback, useMemo } from 'react';
 import { Badge } from '~/components/ui/badge';
+import { useExportProgressPolling } from '~/hooks/useExportProgressPolling';
 import { useSuggestionFeedback } from '~/hooks/useSuggestionFeedback';
 import { getVideoDisplayName, parseVideoChunks } from '~/lib/parseVideoChunks';
 import { sceneFeedbackToApiString } from '~/lib/sceneFeedback';
 import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
-import { useExportProgressPolling } from "~/hooks/useExportProgressPolling";
-import { AssetGenStatusMessage } from './AssetGenStatusMessage';
 import { EditRunHeader } from './EditRunHeader';
 import { RawScriptCard } from './RawScriptCard';
 import { RunLogsModal } from './RunLogsModal';
@@ -45,6 +44,10 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const breakdownComplete = useRunStore((s) => s.progress.breakdownComplete);
   const sceneUpdating = useRunStore((s) => s.progress.sceneUpdating);
   const videoUpdating = useRunStore((s) => s.progress.videoUpdating);
+  const assetsByVideo = useRunStore((s) => s.progress.assetsByVideo);
+  const assetsRefreshKeyByVideo = useRunStore(
+    (s) => s.progress.assetsRefreshKeyByVideo,
+  );
   const setLogsModalOpen = useRunStore((s) => s.setLogsModalOpen);
   const logsModalOpen = useRunStore((s) => s.ui.logsModalOpen);
 
@@ -123,7 +126,6 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   useExportProgressPolling(runId, videos, () => void runQuery.refetch());
   const updateImageryMutation = api.runs.updateImagery.useMutation({
     onSuccess: (_, variables) => {
-      setSceneUpdating(variables.sceneIndex);
       setVideoProgress(variables.videoId, {
         workflow: "update_imagery",
         type: "request_sent",
@@ -131,6 +133,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
         statusMessage: "Starting…",
       });
     },
+    onError: () => setSceneUpdating(null),
   });
 
   const runPhase: RunPhase = (runData.status ?? "breakdown") as RunPhase;
@@ -144,6 +147,10 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     !finalizeAllMutation.isPending;
   const allVideosHaveAssets =
     videos.length > 0 && videos.every((v) => v.status === "assets");
+  const allVideosExported =
+    runPhase === "export" &&
+    videos.length > 0 &&
+    videos.every((v) => v.status === "exported");
   const hasExportableVideos = videos.some(
     (v) => v.status === "assets" || v.status === "exported",
   );
@@ -193,6 +200,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     (videoId: string) =>
       (sceneIndex: number, imagery?: string, feedback?: string) => {
         if (!runId) return;
+        setSceneUpdating(sceneIndex);
         updateImageryMutation.mutate({
           runId,
           videoId,
@@ -201,7 +209,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
           ...(feedback !== undefined && { feedback }),
         });
       },
-    [runId, updateImageryMutation]
+    [runId, updateImageryMutation, setSceneUpdating]
   );
 
   const scriptLocked = runPhase === "asset_gen" || runPhase === "export";
@@ -210,7 +218,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const onRegenerateImagery =
     selectedVideo &&
       (runPhase === "asset_gen" || runPhase === "export") &&
-      selectedVideo.status === "exported"
+      (selectedVideo.status === "assets" || selectedVideo.status === "exported")
       ? handleRegenerateImagery(selectedVideo.id)
       : undefined;
 
@@ -223,16 +231,60 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     { runId, videoId },
     { enabled: !!runId && !!videoId && !!showPreview }
   );
+  const { data: listedAssets } = api.runs.listVideoAssets.useQuery(
+    { runId, videoId },
+    {
+      enabled:
+        !!runId &&
+        !!videoId &&
+        (runPhase === "asset_gen" || runPhase === "export") &&
+        !videoAssets?.manifest,
+    }
+  );
 
-  const imageUrlByIndex = useMemo(() => {
-    if (!videoAssets?.manifest?.scenes || !videoAssets.assetBaseUrl) return undefined;
-    const base = videoAssets.assetBaseUrl.replace(/\/$/, "");
-    const map: Record<number, string> = {};
-    videoAssets.manifest.scenes.forEach((scene, i) => {
-      if (scene.imagePath) map[i] = `${base}/${scene.imagePath}`;
-    });
-    return map;
-  }, [videoAssets]);
+  const { imageUrlByIndex, voiceUrlByIndex } = useMemo(() => {
+    const base =
+      videoAssets?.assetBaseUrl ??
+      listedAssets?.assetBaseUrl ??
+      assetsByVideo[videoId]?.assetBaseUrl;
+    if (!base) return { imageUrlByIndex: undefined, voiceUrlByIndex: undefined };
+
+    const baseNorm = base.replace(/\/$/, "");
+    const refreshKey = assetsRefreshKeyByVideo[videoId];
+    const imageSuffix = refreshKey != null ? `?v=${refreshKey}` : "";
+    const imageMap: Record<number, string> = {};
+    const voiceMap: Record<number, string> = {};
+
+    if (videoAssets?.manifest?.scenes) {
+      videoAssets.manifest.scenes.forEach((scene, i) => {
+        if (scene.imagePath)
+          imageMap[i] = `${baseNorm}/${scene.imagePath}${imageSuffix}`;
+        if (scene.voicePath) voiceMap[i] = `${baseNorm}/${scene.voicePath}`;
+      });
+    } else {
+      const imgSrc =
+        assetsByVideo[videoId]?.imageByIndex ?? listedAssets?.imageByIndex ?? {};
+      const voiceSrc =
+        assetsByVideo[videoId]?.voiceByIndex ?? listedAssets?.voiceByIndex ?? {};
+      Object.entries(imgSrc).forEach(([k, path]) => {
+        imageMap[Number(k)] = `${baseNorm}/${path}${imageSuffix}`;
+      });
+      Object.entries(voiceSrc).forEach(([k, path]) => {
+        voiceMap[Number(k)] = `${baseNorm}/${path}`;
+      });
+    }
+
+    return {
+      imageUrlByIndex: Object.keys(imageMap).length > 0 ? imageMap : undefined,
+      voiceUrlByIndex: Object.keys(voiceMap).length > 0 ? voiceMap : undefined,
+    };
+  }, [
+    videoAssets,
+    listedAssets,
+    assetsByVideo,
+    assetsRefreshKeyByVideo,
+    videoId,
+  ]);
 
   const displayError = useMemo(() => {
     const err =
@@ -269,6 +321,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
           <EditRunHeader
             runPhase={runPhase}
             breakdownComplete={effectiveBreakdownComplete}
+            exportComplete={allVideosExported}
             canShowNextButton={canShowNextButton}
             canShowExportButton={canShowExportButton}
             isAdmin={!!isAdminQuery.data?.isAdmin}
@@ -312,18 +365,9 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
                       onRegenerate={onRegenerateImagery}
                       sceneUpdating={sceneUpdating}
                       imageUrlByIndex={imageUrlByIndex}
+                      voiceUrlByIndex={voiceUrlByIndex}
                     />
                   </div>
-                  {(runPhase === "asset_gen" || runPhase === "export") && (
-                    <AssetGenStatusMessage
-                      runPhase={runPhase}
-                      allVideosExported={
-                        runPhase === "export" &&
-                        videos.length > 0 &&
-                        videos.every((v) => v.status === "exported")
-                      }
-                    />
-                  )}
                 </div>
               </div>
               {showPreview && (
