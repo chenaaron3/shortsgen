@@ -1,22 +1,18 @@
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
-import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
-import { z } from "zod";
-import { env } from "~/env";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { debitCredits, getBalance } from "~/server/credits";
+import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
+import OpenAI from 'openai';
+import { zodResponseFormat } from 'openai/helpers/zod';
+import { z } from 'zod';
+import { env } from '~/env';
+import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import { debitCredits, getBalance } from '~/server/credits';
 
-import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import {
-  CREDITS_ASSETS_PER_VIDEO,
-  CREDITS_IMAGE_REGEN,
-  CREDITS_INGEST_PER_RUN,
-  runs,
-  SCRIPT_REGEN_FREE_LIMIT,
-  videos,
-} from "@shortgen/db";
-import { chunksSchema, manifestSchema } from "@shortgen/types";
-import { TRPCError } from "@trpc/server";
+    CREDITS_ASSETS_PER_VIDEO, CREDITS_IMAGE_REGEN, CREDITS_INGEST_PER_RUN, runs,
+    SCRIPT_REGEN_FREE_LIMIT, videos
+} from '@shortgen/db';
+import { chunksSchema, manifestSchema } from '@shortgen/types';
+import { TRPCError } from '@trpc/server';
 
 import type { VideoManifest } from "@shortgen/types";
 import type { InferSelectModel } from "drizzle-orm";
@@ -141,10 +137,7 @@ export const runsRouter = createTRPCRouter({
       const balance = await getBalance(ctx.db, ctx.session.user.id);
       const maxNuggets = Math.min(
         5,
-        Math.max(
-          1,
-          Math.floor(balance / CREDITS_ASSETS_PER_VIDEO),
-        ),
+        Math.max(1, Math.floor(balance / CREDITS_ASSETS_PER_VIDEO)),
       );
 
       const [, breakdown] = await Promise.all([
@@ -446,14 +439,19 @@ export const runsRouter = createTRPCRouter({
       const {
         REMOTION_LAMBDA_FUNCTION_NAME,
         REMOTION_LAMBDA_REGION,
-        SHORTGEN_BUCKET_NAME,
+        REMOTION_LAMBDA_SERVE_URL,
       } = env;
+
+      // Progress lives in the site bucket, NOT the output bucket. See:
+      // https://www.remotion.dev/docs/lambda/custom-destination
+      const siteBucket =
+        new URL(REMOTION_LAMBDA_SERVE_URL).hostname.split(".")[0] ?? "";
 
       try {
         const { getRenderProgress } = await import("@remotion/lambda/client");
         const progress = await getRenderProgress({
           renderId: video.render_id,
-          bucketName: SHORTGEN_BUCKET_NAME,
+          bucketName: siteBucket,
           functionName: REMOTION_LAMBDA_FUNCTION_NAME,
           region: REMOTION_LAMBDA_REGION as Parameters<
             typeof import("@remotion/lambda/client").getRenderProgress
@@ -471,12 +469,6 @@ export const runsRouter = createTRPCRouter({
           video.render_id,
           String(e),
         );
-        await ctx.db
-          .update(videos)
-          .set({ status: "assets", render_id: null })
-          .where(
-            and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
-          );
         return {
           overallProgress: 0,
           done: false,

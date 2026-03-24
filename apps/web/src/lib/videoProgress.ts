@@ -66,7 +66,7 @@ export function getProgressValue(progress: VideoProgress | undefined): number {
   const { workflow, type } = progress;
 
   if (workflow === "export") {
-    return typeof progress.progress === "number" ? progress.progress : 0.5;
+    return typeof progress.progress === "number" ? progress.progress : 0.1;
   }
 
   const steps = WORKFLOW_STEPS[workflow];

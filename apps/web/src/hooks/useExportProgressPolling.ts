@@ -38,18 +38,20 @@ export function useExportProgressPolling(
             runId,
             videoId: v.id,
           });
-          const p = data.overallProgress;
-          setVideoProgress(v.id, {
-            workflow: "export",
-            progress: p,
-            statusMessage:
-              p < 1 ? `Rendering ${Math.round(p * 100)}%` : "Rendering…",
-          });
           if (data.done || data.fatalErrorEncountered) {
             setVideoProgress(v.id, null);
             refetch();
+            void utils.runs.getVideoAssets.invalidate({ runId, videoId: v.id });
           } else if ("_retrySync" in data && data._retrySync) {
             refetch();
+          } else {
+            const p = data.overallProgress;
+            setVideoProgress(v.id, {
+              workflow: "export",
+              progress: p,
+              statusMessage:
+                p < 1 ? `Rendering ${Math.round(p * 100)}%` : "Rendering…",
+            });
           }
         } catch {
           // Ignore transient errors; will retry next interval
