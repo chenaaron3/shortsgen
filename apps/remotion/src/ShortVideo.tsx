@@ -19,15 +19,19 @@ type ShortVideoProps = {
   assetBaseUrl?: string;
   /** When set (e.g. for web Player), use this URL for background music instead of staticFile. */
   backgroundMusicUrl?: string;
+  /** Cache-buster for images (e.g. after regenerate). Appended as ?v=N to image URLs. */
+  assetsRefreshKey?: number;
 };
 
 function resolveAssetUrl(
   basePath: string,
   relativePath: string,
-  assetBaseUrl?: string
+  assetBaseUrl?: string,
+  assetsRefreshKey?: number
 ): string {
   if (assetBaseUrl) {
-    return `${assetBaseUrl.replace(/\/$/, "")}/${relativePath}`;
+    const base = `${assetBaseUrl.replace(/\/$/, "")}/${relativePath}`;
+    return assetsRefreshKey != null ? `${base}?v=${assetsRefreshKey}` : base;
   }
   return staticFile(`${basePath}/${relativePath}`);
 }
@@ -36,6 +40,7 @@ export function ShortVideo({
   manifest,
   assetBaseUrl,
   backgroundMusicUrl,
+  assetsRefreshKey,
 }: ShortVideoProps) {
   const effectsConfig = defaultEffectsConfig;
 
@@ -88,7 +93,8 @@ export function ShortVideo({
           const imageSrc = resolveAssetUrl(
             basePath,
             scene.imagePath,
-            assetBaseUrl
+            assetBaseUrl,
+            assetsRefreshKey
           );
           const voiceSrc = resolveAssetUrl(
             basePath,

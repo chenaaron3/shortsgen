@@ -3,6 +3,7 @@
 import { Download } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { Component } from 'react';
+import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
 import type { ReactNode } from 'react';
@@ -57,6 +58,9 @@ interface VideoPreviewProps {
 }
 
 export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
+  const assetsRefreshKey = useRunStore(
+    (s) => s.progress.assetsRefreshKeyByVideo[videoId],
+  );
   const {
     data: videoAssets,
     isFetched,
@@ -114,7 +118,12 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
             {...({
               acknowledgeRemotionLicense: true,
               component: ShortVideo as React.ComponentType<Record<string, unknown>>,
-              inputProps: { manifest, assetBaseUrl, backgroundMusicUrl },
+              inputProps: {
+                manifest,
+                assetBaseUrl,
+                backgroundMusicUrl,
+                assetsRefreshKey,
+              },
               durationInFrames: manifest.durationInFrames,
               compositionWidth: manifest.width,
               compositionHeight: manifest.height,
