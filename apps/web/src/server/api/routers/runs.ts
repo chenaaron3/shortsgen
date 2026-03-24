@@ -17,6 +17,8 @@ import { TRPCError } from '@trpc/server';
 import type { VideoManifest } from "@shortgen/types";
 import type { InferSelectModel } from "drizzle-orm";
 
+import { triggerRemotionExports } from "./runs.utils";
+
 const BREAKDOWN_SYSTEM = `You generate a short title and playful loading messages for a video creation app. The user pasted content and the app is analyzing it to create short-form videos.
 
 Title:
@@ -300,8 +302,8 @@ export const runsRouter = createTRPCRouter({
     }),
 
   /**
-   * Trigger Remotion Lambda render for exportable videos in a run.
-   * Run: set to "export" instantly. Videos: exportable = assets | exported; each gets job + status "exporting".
+   * Trigger Remotion Lambda render for videos in a run that need export.
+   * Only exports videos with status "assets". Run: set to "export" instantly.
    * Webhook marks each video "exported". Path derived as {s3_prefix}/short.mp4.
    */
   triggerExport: protectedProcedure
@@ -322,7 +324,7 @@ export const runsRouter = createTRPCRouter({
         .where(
           and(
             eq(videos.run_id, input.runId),
-            inArray(videos.status, ["assets", "exported"]),
+            eq(videos.status, "assets"),
             isNotNull(videos.s3_prefix),
           ),
         );
@@ -331,64 +333,10 @@ export const runsRouter = createTRPCRouter({
         throw new Error("No videos ready to export");
       }
 
-      const {
-        REMOTION_LAMBDA_FUNCTION_NAME,
-        REMOTION_LAMBDA_REGION,
-        REMOTION_LAMBDA_SERVE_URL,
-        REMOTION_WEBHOOK_URL,
-        REMOTION_WEBHOOK_SECRET,
-        SHORTGEN_CDN_URL,
-        SHORTGEN_BUCKET_NAME,
-      } = env;
-
-      // Run: set to "export" instantly
-      await ctx.db
-        .update(runs)
-        .set({ status: "export" })
-        .where(eq(runs.id, input.runId));
-
-      const cdnBase = SHORTGEN_CDN_URL.replace(/\/$/, "");
-      const { renderMediaOnLambda } = await import("@remotion/lambda/client");
-
-      const webhook = {
-        url: REMOTION_WEBHOOK_URL,
-        secret: REMOTION_WEBHOOK_SECRET,
-      };
-
-      const results = await Promise.allSettled(
-        videosToExport.map(async (v) => {
-          const s3Prefix = v.s3_prefix!.replace(/\/$/, "");
-          const assetBaseUrl = `${cdnBase}/${s3Prefix}`;
-          const outKey = `${s3Prefix}/short.mp4`;
-          const backgroundMusicUrl = `${cdnBase}/assets/background_music.mp3`;
-
-          const result = await renderMediaOnLambda({
-            region: REMOTION_LAMBDA_REGION as Parameters<
-              typeof import("@remotion/lambda/client").renderMediaOnLambda
-            >[0]["region"],
-            functionName: REMOTION_LAMBDA_FUNCTION_NAME,
-            serveUrl: REMOTION_LAMBDA_SERVE_URL,
-            composition: "ShortVideo-AssetBase",
-            inputProps: { assetBaseUrl, backgroundMusicUrl },
-            codec: "h264",
-            webhook: {
-              ...webhook,
-              customData: { runId: input.runId, videoId: v.id },
-            },
-            outName: {
-              key: outKey,
-              bucketName: SHORTGEN_BUCKET_NAME,
-            },
-            privacy: "no-acl",
-          });
-
-          await ctx.db
-            .update(videos)
-            .set({ status: "exporting", render_id: result.renderId })
-            .where(eq(videos.id, v.id));
-
-          return result;
-        }),
+      const { results } = await triggerRemotionExports(
+        ctx.db,
+        input.runId,
+        videosToExport.map((v) => ({ id: v.id, s3_prefix: v.s3_prefix! })),
       );
 
       const failed = results.filter((r) => r.status === "rejected");
@@ -403,6 +351,62 @@ export const runsRouter = createTRPCRouter({
         triggeredCount: results.filter((r) => r.status === "fulfilled").length,
         failedCount: failed.length,
       };
+    }),
+
+  /**
+   * Trigger Remotion Lambda render for a single video. Video must have status "assets".
+   */
+  triggerExportVideo: protectedProcedure
+    .input(
+      z.object({ runId: z.string().uuid(), videoId: z.string().uuid() }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [run] = await ctx.db
+        .select()
+        .from(runs)
+        .where(eq(runs.id, input.runId));
+
+      if (!run || run.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Run not found",
+        });
+      }
+
+      const [video] = await ctx.db
+        .select({ id: videos.id, s3_prefix: videos.s3_prefix, status: videos.status })
+        .from(videos)
+        .where(
+          and(
+            eq(videos.id, input.videoId),
+            eq(videos.run_id, input.runId),
+          ),
+        );
+
+      if (!video || video.status !== "assets" || !video.s3_prefix) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Video not ready to export (must have status assets)",
+        });
+      }
+
+      const { results } = await triggerRemotionExports(ctx.db, input.runId, [
+        { id: video.id, s3_prefix: video.s3_prefix },
+      ]);
+
+      const fulfilled = results.find((r) => r.status === "fulfilled");
+      if (fulfilled?.status !== "fulfilled") {
+        const rejected = results.find((r) => r.status === "rejected");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            rejected?.status === "rejected"
+              ? String(rejected.reason)
+              : "Export failed",
+        });
+      }
+
+      return { renderId: fulfilled.value.renderId };
     }),
 
   /**

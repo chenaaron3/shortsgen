@@ -1,12 +1,14 @@
 "use client";
 
-import { Download } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import React, { Component } from 'react';
-import { useRunStore } from '~/stores/useRunStore';
-import { api } from '~/utils/api';
+import { Download, Video } from "lucide-react";
+import dynamic from "next/dynamic";
+import React, { Component } from "react";
+import { useRunStore } from "~/stores/useRunStore";
+import { api } from "~/utils/api";
 
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
+
+import type { RunPhase } from "./RunProgressSteps";
 class PlayerErrorBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
   { hasError: boolean; error: Error | null }
@@ -42,6 +44,26 @@ function DownloadButton({ href }: { href: string }) {
   );
 }
 
+function ExportButton({
+  onClick,
+  disabled,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+    >
+      <Video className="h-4 w-4" />
+      Export
+    </button>
+  );
+}
+
 const Player = dynamic(
   () => import("@remotion/player").then((mod) => mod.Player),
   { ssr: false }
@@ -55,12 +77,31 @@ const ShortVideo = dynamic(
 interface VideoPreviewProps {
   runId: string;
   videoId: string;
+  videoStatus: string | null;
+  runPhase: RunPhase;
 }
 
-export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
+export function VideoPreview({
+  runId,
+  videoId,
+  videoStatus,
+  runPhase,
+}: VideoPreviewProps) {
+  const utils = api.useUtils();
+  const setVideoProgress = useRunStore((s) => s.setVideoProgress);
   const assetsRefreshKey = useRunStore(
     (s) => s.progress.assetsRefreshKeyByVideo[videoId],
   );
+  const triggerExportVideoMutation = api.runs.triggerExportVideo.useMutation({
+    onSuccess: () => {
+      setVideoProgress(videoId, {
+        workflow: "export",
+        statusMessage: "Rendering…",
+      });
+      void utils.runs.getById.invalidate({ runId });
+      void utils.runs.getVideoAssets.invalidate({ runId, videoId });
+    },
+  });
   const {
     data: videoAssets,
     isFetched,
@@ -148,6 +189,16 @@ export function VideoPreview({ runId, videoId }: VideoPreviewProps) {
           href={`/api/download-video?path=${encodeURIComponent(`runs/${runId}/${videoId}/short.mp4`)}`}
         />
       )}
+      {!exportUrl &&
+        videoStatus === "assets" &&
+        runPhase === "export" && (
+          <ExportButton
+            onClick={() =>
+              triggerExportVideoMutation.mutate({ runId, videoId })
+            }
+            disabled={triggerExportVideoMutation.isPending}
+          />
+        )}
     </div>
   );
 }

@@ -112,7 +112,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const triggerExportMutation = api.runs.triggerExport.useMutation({
     onSuccess: () => {
       videos
-        .filter((v) => v.status === "assets" || v.status === "exported")
+        .filter((v) => v.status === "assets")
         .forEach((v) =>
           setVideoProgress(v.id, {
             workflow: "export",
@@ -151,9 +151,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     runPhase === "export" &&
     videos.length > 0 &&
     videos.every((v) => v.status === "exported");
-  const hasExportableVideos = videos.some(
-    (v) => v.status === "assets" || v.status === "exported",
-  );
+  const hasExportableVideos = videos.some((v) => v.status === "assets");
   const canShowExportButton =
     ((runPhase === "asset_gen" && allVideosHaveAssets) ||
       (runPhase === "export" && hasExportableVideos)) &&
@@ -373,7 +371,12 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
               {showPreview && (
                 <div className="sticky top-6 flex max-h-[calc(100dvh-6rem)] shrink-0 flex-col items-center justify-center self-start">
                   <div className="flex aspect-9/16 w-[360px] min-h-0 max-h-[min(640px,calc(100dvh-10rem))] flex-col overflow-hidden rounded-lg border border-border bg-black">
-                    <VideoPreview runId={runId} videoId={videoId} />
+                    <VideoPreview
+                      runId={runId}
+                      videoId={videoId}
+                      videoStatus={selectedVideo?.status ?? null}
+                      runPhase={runPhase}
+                    />
                   </div>
                 </div>
               )}

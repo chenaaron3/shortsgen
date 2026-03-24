@@ -172,5 +172,9 @@ def _handler_impl(
         payload={"videoId": video_id, "chunks": chunks.model_dump()},
     )
 
+    # Invalidate export when imagery changes: exported -> assets
+    if video.status == "exported":
+        update_video(video_id, status="assets")
+
     log_info(f"[update_imagery] done runId={run_id} videoId={video_id} sceneIndex={scene_index}")
     return {"statusCode": 200, "body": json.dumps({"chunks": chunks.model_dump()})}
