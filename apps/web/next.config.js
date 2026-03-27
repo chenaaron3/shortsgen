@@ -35,7 +35,11 @@ const config = {
   },
 
   // AWS SDK packages use Node.js-specific code; exclude from bundling
-  serverExternalPackages: ["@aws-sdk/client-cloudwatch-logs"],
+  serverExternalPackages: [
+    "@aws-sdk/client-cloudwatch-logs",
+    "jsdom",
+    "youtube-transcript",
+  ],
 
   /**
    * If you are using `appDir` then you must comment the below `i18n` config out.

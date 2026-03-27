@@ -18,6 +18,7 @@ import type { VideoManifest } from "@shortgen/types";
 import type { InferSelectModel } from "drizzle-orm";
 
 import { triggerRemotionExports } from "./runs.utils";
+import { resolveUserInput } from "~/server/ingest/resolveSource";
 
 const BREAKDOWN_SYSTEM = `You generate a short title and playful loading messages for a video creation app. The user pasted content and the app is analyzing it to create short-form videos.
 
@@ -110,11 +111,23 @@ export const runsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      let resolvedInput: string;
+      try {
+        resolvedInput = await resolveUserInput(input.userInput);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Could not load that source.";
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message,
+        });
+      }
+
       const [run] = await ctx.db
         .insert(runs)
         .values({
           userId: ctx.session.user.id,
-          user_input: input.userInput,
+          user_input: resolvedInput,
           status: "breakdown",
         })
         .returning();
@@ -154,7 +167,7 @@ export const runsRouter = createTRPCRouter({
               },
               body: JSON.stringify({
                 runId: run.id,
-                sourceContent: input.userInput,
+                sourceContent: resolvedInput,
                 config: input.config,
                 maxNuggets,
               }),
@@ -176,7 +189,7 @@ export const runsRouter = createTRPCRouter({
           await res.json();
           console.log(`[initial-processing] runId=${run.id} triggered`);
         })(),
-        generateBreakdownContent(input.userInput),
+        generateBreakdownContent(resolvedInput),
       ]);
       if (breakdown && breakdown.messages.length > 0) {
         await ctx.db

@@ -1,22 +1,35 @@
 "use client";
 
-import { signIn, useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { Button } from '~/components/ui/button';
-import { Textarea } from '~/components/ui/textarea';
-import { ARTICLE_SAMPLE, BOOK_SAMPLE, YOUTUBE_SAMPLE } from '~/constants/inspirationSamples';
-import { useUserConfig } from '~/hooks/useUserConfig';
-import { api } from '~/utils/api';
+import { signIn, useSession } from "next-auth/react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Button } from "~/components/ui/button";
+import { Textarea } from "~/components/ui/textarea";
+import {
+  ARTICLE_SAMPLE,
+  BOOK_SAMPLE,
+  YOUTUBE_SAMPLE,
+} from "~/constants/inspirationSamples";
+import { SHORTGEN_PENDING_SOURCE_KEY } from "~/constants/pendingSource";
+import { useUserConfig } from "~/hooks/useUserConfig";
+import { api } from "~/utils/api";
 
-import { InspirationCard } from './InspirationCard';
+import { InspirationCard } from "./InspirationCard";
 
 export function CreateForm() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { config } = useUserConfig();
   const [input, setInput] = useState("");
+
+  useEffect(() => {
+    const draft = sessionStorage.getItem(SHORTGEN_PENDING_SOURCE_KEY);
+    if (draft) {
+      setInput(draft);
+      sessionStorage.removeItem(SHORTGEN_PENDING_SOURCE_KEY);
+    }
+  }, []);
 
   const createRunMutation = api.runs.createRun.useMutation({
     onSuccess: (data) => {
@@ -54,13 +67,17 @@ export function CreateForm() {
   return (
     <div className="space-y-6">
       <p className="text-muted-foreground">
-        Paste your content below. We&apos;ll break it into clips, generate scripts and
-        scenes, then you can refine before generating images and voice.
+        Paste a <strong className="font-medium text-foreground">YouTube</strong>{" "}
+        or <strong className="font-medium text-foreground">article</strong> link,
+        or your own text. When you click{" "}
+        <strong className="font-medium text-foreground">Create</strong>, we load
+        captions or the article when needed, then break content into clips. You
+        refine scripts and scenes before images and voice.
       </p>
       <Textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Paste your article, transcript, or notes here…"
+        placeholder="https://… or paste article, transcript, or notes"
         rows={8}
         disabled={createRunMutation.isPending}
         className="min-h-[200px] resize-y"
