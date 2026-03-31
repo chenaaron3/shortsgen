@@ -1,8 +1,13 @@
 "use client";
 
 import type { ChunksOutput } from "@shortgen/types";
+import { expectsSceneAssetsForVideo } from "~/lib/sceneAssetLoading";
 
-import { SceneRow } from './SceneRow';
+import type { RunPhase } from "./RunProgressSteps";
+import { ScriptingScenesSkeleton } from "./RunPageSkeleton";
+import { SceneRow } from "./SceneRow";
+
+import type { VideoProgress } from "~/stores/useRunStore";
 
 interface Scene {
   text: string;
@@ -15,6 +20,10 @@ interface SceneListProps {
   runId: string;
   videoId: string;
   currentChunks: ChunksOutput;
+  runPhase: RunPhase;
+  videoStatus: string | null;
+  /** Active WS/pipeline progress for this clip (image finalize, imagery regen, etc.). */
+  videoProgress?: VideoProgress | null;
   blockAcceptSuggestionField?: boolean;
   scriptLocked?: boolean;
   imageryEditable?: boolean;
@@ -37,6 +46,9 @@ export function SceneList({
   runId,
   videoId,
   currentChunks,
+  runPhase,
+  videoStatus,
+  videoProgress = null,
   blockAcceptSuggestionField = false,
   scriptLocked = false,
   imageryEditable = false,
@@ -46,10 +58,16 @@ export function SceneList({
   voiceUrlByIndex,
 }: SceneListProps) {
   if (scenes.length === 0) {
+    if (runPhase === "scripting" && videoStatus !== "failed") {
+      return <ScriptingScenesSkeleton />;
+    }
     return (
       <p className="text-muted-foreground">No scenes yet. Processing…</p>
     );
   }
+
+  const expectsAssetMedia = expectsSceneAssetsForVideo(runPhase, videoStatus);
+  const assetPipelineActive = videoProgress != null;
 
   const grouped = scenes.reduce(
     (acc, scene, i) => {
@@ -74,23 +92,34 @@ export function SceneList({
               {section}
             </h2>
             <div className="mt-2 space-y-2">
-              {items.map(({ scene, index }) => (
-                <SceneRow
-                  key={index}
-                  scene={scene}
-                  runId={runId}
-                  videoId={videoId}
-                  sceneIndex={index}
-                  currentChunks={currentChunks}
-                  blockAcceptSuggestionField={blockAcceptSuggestionField}
-                  scriptLocked={scriptLocked}
-                  imageryEditable={imageryEditable}
-                  onRegenerate={onRegenerate}
-                  isRegenerating={sceneUpdating === index}
-                  imageUrl={imageUrlByIndex?.[index]}
-                  voiceUrl={voiceUrlByIndex?.[index]}
-                />
-              ))}
+              {items.map(({ scene, index }) => {
+                const imageUrl = imageUrlByIndex?.[index];
+                const voiceUrl = voiceUrlByIndex?.[index];
+                const isRegenerating = sceneUpdating === index;
+                const expectImage =
+                  isRegenerating ||
+                  (!imageUrl && assetPipelineActive && expectsAssetMedia);
+                const expectVoice = expectsAssetMedia;
+                return (
+                  <SceneRow
+                    key={index}
+                    scene={scene}
+                    runId={runId}
+                    videoId={videoId}
+                    sceneIndex={index}
+                    currentChunks={currentChunks}
+                    blockAcceptSuggestionField={blockAcceptSuggestionField}
+                    scriptLocked={scriptLocked}
+                    imageryEditable={imageryEditable}
+                    onRegenerate={onRegenerate}
+                    isRegenerating={isRegenerating}
+                    imageUrl={imageUrl}
+                    voiceUrl={voiceUrl}
+                    expectImage={expectImage}
+                    expectVoice={expectVoice}
+                  />
+                );
+              })}
             </div>
           </div>
         );

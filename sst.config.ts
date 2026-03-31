@@ -13,7 +13,8 @@ export default $config({
       access: "cloudfront",
       cors: {
         allowOrigins: ["*"],
-        allowMethods: ["GET", "HEAD"],
+        // PUT: browser presigned uploads (e.g. brand avatar). GET/HEAD: CDN reads.
+        allowMethods: ["GET", "HEAD", "PUT"],
         allowHeaders: ["*"],
       },
     });

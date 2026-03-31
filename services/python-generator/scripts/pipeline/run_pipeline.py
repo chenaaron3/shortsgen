@@ -88,6 +88,9 @@ def run(
     on_image_scene: Callable[[int, int, str | None], None] | None = None,
     on_voice_scene: Callable[[int, int, str | None], None] | None = None,
     on_caption_scene: Callable[[float], None] | None = None,
+    image_style_prompt: str | None = None,
+    image_mascot_description: str | None = None,
+    image_mascot_path: Path | None = None,
 ) -> Path | None:
     """
     Run the full pipeline for raw content, an existing cache, or in-memory chunks.
@@ -172,6 +175,9 @@ def run(
                 chunks,
                 cache_key,
                 config_hash,
+                image_mascot_path,
+                style_prompt=image_style_prompt,
+                mascot_description=image_mascot_description,
                 max_scenes=max_scenes,
                 skip_cache="image" in invalidate_steps,
                 model=image_model,

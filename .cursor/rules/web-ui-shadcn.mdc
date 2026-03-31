@@ -1,0 +1,14 @@
+---
+description: Use shadcn/ui for apps/web UI (base-nova)
+globs: apps/web/**/*.tsx
+alwaysApply: false
+---
+
+# Web UI — shadcn
+
+For **`apps/web`** pages and components, build UI with **shadcn/ui** primitives from `~/components/ui/`, not ad‑hoc styled `<select>`, `<button>` lookalikes, or one-off patterns when a component already exists.
+
+- **Imports**: `import { Button } from "~/components/ui/button"`, `~/components/ui/select`, `~/components/ui/dialog`, etc.
+- **Adding components**: from `apps/web`, run `pnpm exec shadcn add <name>` (e.g. `select`, `dropdown-menu`, `tabs`). Respect **`components.json`** (style **base-nova**, aliases `~/components`, `~/lib/utils`).
+- **Styling**: Use the exported components’ variants and `className` with `cn()` from `~/lib/utils`; match existing buttons/inputs.
+- **Exceptions**: Plain semantic HTML is fine when there is no shadcn equivalent yet; prefer adding the shadcn component if it’s a standard control (form fields, overlays, menus).

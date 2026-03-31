@@ -112,6 +112,19 @@ export const runs = pgTable(t("runs"), {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+/** Append-only brand versions per user (style, mascot copy, optional avatar S3 key). */
+export const brand = pgTable(t("brand"), {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  created_at: timestamp("created_at").defaultNow(),
+  style_prompt: text("style_prompt"),
+  mascot_description: text("mascot_description"),
+  /** S3 object key for custom reference avatar (e.g. users/{userId}/brand/{id}/avatar.png). */
+  avatar_s3_key: text("avatar_s3_key"),
+});
+
 export const videos = pgTable(t("videos"), {
   id: uuid("id").primaryKey().defaultRandom(),
   run_id: uuid("run_id")
@@ -128,6 +141,8 @@ export const videos = pgTable(t("videos"), {
   chunks: text("chunks"), // JSON: Chunks from pipeline
   cache_key: text("cache_key"),
   config_hash: text("config_hash"),
+  /** FK to brand row used for this clip’s visuals (set on first asset generation). */
+  brand_id: uuid("brand_id").references(() => brand.id, { onDelete: "set null" }),
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -144,6 +159,18 @@ export const videosRelations = relations(videos, ({ one }) => ({
     fields: [videos.run_id],
     references: [runs.id],
   }),
+  brand: one(brand, {
+    fields: [videos.brand_id],
+    references: [brand.id],
+  }),
+}));
+
+export const brandRelations = relations(brand, ({ one, many }) => ({
+  user: one(user, {
+    fields: [brand.userId],
+    references: [user.id],
+  }),
+  videos: many(videos),
 }));
 
 // Billing: tier from priceId
@@ -207,5 +234,9 @@ export const runSchema = createSelectSchema(runs, {
 export const videoSchema = createSelectSchema(videos, {
   created_at: timestampSchema,
 });
+export const brandSchema = createSelectSchema(brand, {
+  created_at: timestampSchema,
+});
 export type Run = z.infer<typeof runSchema>;
 export type Video = z.infer<typeof videoSchema>;
+export type Brand = z.infer<typeof brandSchema>;

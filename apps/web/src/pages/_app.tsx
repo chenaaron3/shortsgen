@@ -2,6 +2,7 @@ import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { type AppType } from "next/app";
 import { Geist } from "next/font/google";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { Toaster } from "sonner";
 
@@ -10,8 +11,10 @@ import { api } from "~/utils/api";
 
 import "~/styles/globals.css";
 
+/** Variable + class on wrapper; :root --font-geist-sans so portals (shadcn Select, etc.) match Geist. */
 const geist = Geist({
   subsets: ["latin"],
+  variable: "--font-geist-sans",
 });
 
 function AppContent({
@@ -38,7 +41,14 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <div className={geist.className}>
+      <Head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `:root { --font-geist-sans: ${geist.style.fontFamily}; }`,
+          }}
+        />
+      </Head>
+      <div className={`${geist.variable} ${geist.className}`}>
         <AppContent Component={Component} pageProps={pageProps} />
       </div>
       <Toaster richColors />

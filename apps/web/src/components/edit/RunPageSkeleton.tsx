@@ -1,6 +1,43 @@
 "use client";
 
+import { Card, CardContent } from "~/components/ui/card";
 import { Skeleton } from "~/components/ui/skeleton";
+
+const DEFAULT_SCRIPTING_PLACEHOLDER_ROWS = 4;
+
+/** Single row matching SceneRow layout (script + imagery lines + thumbnail sliver). */
+export function SceneRowSkeleton() {
+  return (
+    <Card size="sm" className="py-2 ring-0">
+      <CardContent className="pt-2">
+        <div className="flex items-stretch gap-2">
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+            <Skeleton className="min-h-[48px] w-full rounded-md" />
+          </div>
+          <Skeleton className="h-20 w-14 shrink-0 rounded-md border border-border" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Stacked scene placeholders while scripting and chunks are not ready yet. */
+export function ScriptingScenesSkeleton({ rowCount = DEFAULT_SCRIPTING_PLACEHOLDER_ROWS }: { rowCount?: number }) {
+  return (
+    <div
+      className="space-y-2"
+      role="status"
+      aria-live="polite"
+    >
+      <span className="sr-only">Loading scenes…</span>
+      {Array.from({ length: rowCount }).map((_, i) => (
+        <SceneRowSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
 
 export function MainContentSkeleton() {
   return (

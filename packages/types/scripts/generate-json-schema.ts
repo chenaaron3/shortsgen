@@ -10,7 +10,7 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { manifestSchema } from "../src/manifest";
 import { chunksSchema, nuggetSchema, progressEventTypeSchema } from "../src/api";
-import { runSchema, videoSchema } from "../src/table";
+import { brandSchema, runSchema, videoSchema } from "../src/table";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const generatedDir = join(__dirname, "..", "generated");
@@ -48,6 +48,7 @@ console.log("Wrote generated/api.schema.json");
 const tableRootSchema = z.object({
   run: runSchema.optional(),
   video: videoSchema.optional(),
+  brand: brandSchema.optional(),
 });
 const tableJson = zodToJsonSchema(tableRootSchema, {
   name: "TableSchemas",

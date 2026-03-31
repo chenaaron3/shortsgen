@@ -46,7 +46,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-sans);
+  /* Do not set --font-sans here — it would override @theme and break font-sans (was self-referential). */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -117,4 +117,44 @@
 }
 .scrollbar-seamless::-webkit-scrollbar-thumb:hover {
   background: oklch(0.45 0.02 265 / 0.6);
+}
+
+@keyframes text-shimmer-shift {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+/* Inline-only: clip gradient to glyphs (block + flex-1 <p> paints a full-width bar). */
+.text-shimmer-inline {
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background: linear-gradient(
+    105deg,
+    var(--muted-foreground) 0%,
+    var(--muted-foreground) 38%,
+    oklch(0.88 0.02 265) 50%,
+    var(--muted-foreground) 62%,
+    var(--muted-foreground) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 100% center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer-shift 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-shimmer-inline {
+    animation: none;
+    background: none;
+    color: var(--muted-foreground);
+    -webkit-text-fill-color: var(--muted-foreground);
+  }
 }

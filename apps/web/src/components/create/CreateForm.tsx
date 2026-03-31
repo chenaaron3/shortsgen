@@ -5,6 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
 import {
   ARTICLE_SAMPLE,
@@ -17,11 +24,31 @@ import { api } from "~/utils/api";
 
 import { InspirationCard } from "./InspirationCard";
 
+const PIPELINE_CONFIG_OPTIONS: {
+  value: "prototype" | "default";
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "prototype",
+    label: "Prototype",
+    description: "Faster, lower cost models",
+  },
+  {
+    value: "default",
+    label: "Default",
+    description: "Full quality pipeline",
+  },
+];
+
 export function CreateForm() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { config } = useUserConfig();
+  const { config: suggestedConfig } = useUserConfig();
   const [input, setInput] = useState("");
+  const [pipelineConfig, setPipelineConfig] = useState<
+    "prototype" | "default"
+  >(suggestedConfig);
 
   useEffect(() => {
     const draft = sessionStorage.getItem(SHORTGEN_PENDING_SOURCE_KEY);
@@ -31,15 +58,21 @@ export function CreateForm() {
     }
   }, []);
 
+  const utils = api.useUtils();
   const createRunMutation = api.runs.createRun.useMutation({
     onSuccess: (data) => {
-      router.push(`/runs/${data.runId}`);
+      utils.runs.getById.setData({ runId: data.run.id }, data.run);
+      void utils.runs.listRunsForUser.invalidate();
+      router.push(`/runs/${data.run.id}`);
     },
   });
 
   const handleStart = () => {
     if (!input.trim()) return;
-    createRunMutation.mutate({ userInput: input.trim(), config });
+    createRunMutation.mutate({
+      userInput: input.trim(),
+      config: pipelineConfig,
+    });
   };
 
   if (status === "loading") {
@@ -82,6 +115,38 @@ export function CreateForm() {
         disabled={createRunMutation.isPending}
         className="min-h-[200px] resize-y"
       />
+      <div className="space-y-2">
+        <label
+          htmlFor="create-pipeline-config"
+          className="text-sm font-medium text-foreground"
+        >
+          Pipeline config
+        </label>
+        <Select
+          value={pipelineConfig}
+          onValueChange={(v) =>
+            setPipelineConfig(v as "prototype" | "default")
+          }
+          disabled={createRunMutation.isPending}
+        >
+          <SelectTrigger
+            id="create-pipeline-config"
+            className="w-full max-w-md"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PIPELINE_CONFIG_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                <span className="font-medium">{opt.label}</span>
+                <span className="text-muted-foreground">
+                  — {opt.description}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <Button
         onClick={handleStart}
         disabled={!input.trim() || createRunMutation.isPending}

@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from image_generator import generate_image as generate_image_impl, get_config
 from models import Chunks, Scene
 from path_utils import env_path, mascot_path as default_mascot_path, video_cache_path
+from pipeline.image_style_defaults import effective_prompts_for_pipeline
 from logger import cache_stats_summary, error, progress, step_end, step_start
 from usage_trace import record_image, set_context as usage_set_context
 
@@ -24,22 +25,6 @@ load_dotenv(env_path())
 
 DEFAULT_CONCURRENCY = 10
 
-STYLE_PROMPT = (
-    "Hand-drawn stick figure style. Black line art on transparent background. "
-    "Crisp, clean linework. Thin solid black outlines only. "
-    "Flat style: no soft shading, no gradients, no airbrush, no gray smudges, no blotchy texture, no halftones. "
-    "Optional: discrete hatching lines only where needed; never soft or blended shading. "
-    "Motion lines (speed lines, curved dashes) around hands and objects when action is implied. "
-    "Minimal or clean background. "
-    "A single accent color may highlight one focal prop if it supports the scene. "
-    "Use the reference for character design; place in the described scene. "
-    "Result must look like crisp pen or chalk drawing, not rendered or shaded."
-)
-
-# Used for text-to-image-only models (e.g. hyper-flux): no mascot reference
-MASCOT_DESCRIPTION = (
-    "A minimalist, cute, gender-neutral stick-figure mascot with a very large perfectly round head and a very small simple body underneath it. "
-)
 
 def _update_chunks_json(
     cache_key: str,
@@ -118,6 +103,9 @@ def run(
     cache_key: str,
     config_hash: str,
     mascot_path: Path | None = None,
+    *,
+    style_prompt: str | None = None,
+    mascot_description: str | None = None,
     skip_existing: bool = True,
     max_scenes: int | None = None,
     scene_indices: list[int] | None = None,
@@ -136,9 +124,12 @@ def run(
     model: image model from config (e.g. hyper-flux for text-to-image only). Uses backend default if None.
     skip_cache: if True, regenerate all images even when cached (for --step image iteration).
     on_image_complete: optional callback(done_count, total) invoked after each image is generated.
+    style_prompt: override global style suffix; None uses defaults from image_style_defaults (local CLI).
+    mascot_description: override text-only mascot lead-in; None uses defaults. Brand path passes resolved strings from brand_resolve.
     """
     images_dir = video_cache_path(cache_key, config_hash, "images")
     mascot = mascot_path or default_mascot_path()
+    effective_style, effective_mascot_desc = effective_prompts_for_pipeline(style_prompt, mascot_description)
     text_to_image_only = _is_text_to_image_only(model)
     if not text_to_image_only and not mascot.exists():
         raise RuntimeError(f"Mascot not found at {mascot}")
@@ -171,9 +162,9 @@ def run(
             continue
 
         full_prompt = (
-            f"{MASCOT_DESCRIPTION}{imagery}. {STYLE_PROMPT}"
+            f"{effective_mascot_desc}{imagery}. {effective_style}"
             if text_to_image_only
-            else f"{imagery}. {STYLE_PROMPT}"
+            else f"{imagery}. {effective_style}"
         )
         request_path = images_dir / f"image_{i + 1}_request.json"
         work.append((i, imagery, filename, full_prompt, request_path))

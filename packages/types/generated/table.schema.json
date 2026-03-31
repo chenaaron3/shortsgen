@@ -129,6 +129,17 @@
                 "null"
               ]
             },
+            "brand_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "created_at": {
               "anyOf": [
                 {
@@ -157,7 +168,63 @@
             "script",
             "chunks",
             "cache_key",
-            "config_hash"
+            "config_hash",
+            "brand_id"
+          ],
+          "additionalProperties": false
+        },
+        "brand": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "userId": {
+              "type": "string"
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "not": {}
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style_prompt": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "mascot_description": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "avatar_s3_key": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "userId",
+            "style_prompt",
+            "mascot_description",
+            "avatar_s3_key"
           ],
           "additionalProperties": false
         }

@@ -8,6 +8,7 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
+import { Skeleton } from '~/components/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Textarea } from '~/components/ui/textarea';
 import {
@@ -47,6 +48,10 @@ interface SceneRowProps {
   imageUrl?: string;
   /** When assets exist: URL for scene voice (audio play button) */
   voiceUrl?: string;
+  /** When true, show thumbnail skeleton (or hide thumb) while the scene image is not ready or is regenerating */
+  expectImage?: boolean;
+  /** When true, scene voice is part of the asset pipeline; script line shimmers until voice URL/buffer is ready */
+  expectVoice?: boolean;
 }
 
 export function SceneRow({
@@ -62,10 +67,16 @@ export function SceneRow({
   isRegenerating = false,
   imageUrl,
   voiceUrl,
+  expectImage = false,
+  expectVoice = false,
 }: SceneRowProps) {
   const utils = api.useUtils();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  /** Until first successful decode for this src; avoids shimmer flicker during playback stalls. */
+  const [voiceInitialLoadPending, setVoiceInitialLoadPending] = useState(
+    () => !!voiceUrl,
+  );
 
   const handlePlayPause = useCallback(() => {
     const audio = audioRef.current;
@@ -93,6 +104,11 @@ export function SceneRow({
       audio.removeEventListener('pause', onPause);
     };
   }, [voiceUrl]);
+
+  useEffect(() => {
+    setVoiceInitialLoadPending(!!voiceUrl);
+  }, [voiceUrl]);
+
   const acceptFieldMutation = api.runs.acceptSceneSuggestions.useMutation({
     onSuccess: () => {
       void utils.runs.getById.invalidate({ runId });
@@ -191,7 +207,7 @@ export function SceneRow({
   const canRegenerate =
     imageryEditable &&
     onRegenerate &&
-    (imageryText.trim() !== scene.imagery.trim() || hasSceneFeedback);
+    (imageryText.trim().length > 0 || hasSceneFeedback);
 
   const handleRegenerate = () => {
     if (!onRegenerate || !canRegenerate) return;
@@ -199,6 +215,8 @@ export function SceneRow({
       onRegenerate(sceneIndex, imageryText.trim());
     } else if (hasSceneFeedback) {
       onRegenerate(sceneIndex, undefined, sceneFeedbackToApiString(feedback));
+    } else {
+      onRegenerate(sceneIndex, imageryText.trim());
     }
   };
 
@@ -206,6 +224,11 @@ export function SceneRow({
   const hasDiffs =
     suggestion &&
     (suggestion.text !== scene.text || suggestion.imagery !== scene.imagery);
+
+  const scriptVoiceShimmer =
+    !showSuggestion &&
+    expectVoice &&
+    (!voiceUrl || voiceInitialLoadPending);
 
   return (
     <Card size="sm" className="py-2 ring-0">
@@ -251,16 +274,26 @@ export function SceneRow({
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-start gap-2"
+                  aria-busy={scriptVoiceShimmer || undefined}
+                >
                   {voiceUrl && (
                     <>
-                      <audio ref={audioRef} src={voiceUrl} preload="metadata" />
+                      <audio
+                        ref={audioRef}
+                        src={voiceUrl}
+                        preload="metadata"
+                        onLoadedData={() => setVoiceInitialLoadPending(false)}
+                        onCanPlay={() => setVoiceInitialLoadPending(false)}
+                        onError={() => setVoiceInitialLoadPending(false)}
+                      />
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon-xs"
                         onClick={handlePlayPause}
-                        className="shrink-0 text-muted-foreground hover:text-foreground"
+                        className="mt-0.5 shrink-0 text-muted-foreground hover:text-foreground"
                         aria-label={isPlaying ? 'Pause' : 'Play scene audio'}
                       >
                         {isPlaying ? (
@@ -271,8 +304,12 @@ export function SceneRow({
                       </Button>
                     </>
                   )}
-                  <p className="min-w-0 flex-1 text-foreground text-sm leading-snug">
-                    {scene.text}
+                  <p className="min-w-0 flex-1 text-sm leading-snug text-foreground">
+                    {scriptVoiceShimmer ? (
+                      <span className="text-shimmer-inline">{scene.text}</span>
+                    ) : (
+                      scene.text
+                    )}
                   </p>
                 </div>
                 <div>
@@ -305,7 +342,13 @@ export function SceneRow({
             )}
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1">
-            {imageUrl && (
+            {expectImage && (
+              <Skeleton
+                className="h-20 min-h-[48px] w-14 shrink-0 rounded-md border border-border"
+                aria-hidden
+              />
+            )}
+            {imageUrl && !isRegenerating && (
               <button
                 type="button"
                 onClick={(e) => {
@@ -383,7 +426,7 @@ export function SceneRow({
           </div>
         </div>
       </CardContent>
-      {imageUrl && (
+      {imageUrl && !isRegenerating && (
         <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
           <DialogContent
             className="w-fit max-w-[90vw] border-none bg-white p-2 shadow-none"

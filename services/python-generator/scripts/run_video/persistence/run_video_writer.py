@@ -11,6 +11,7 @@ import os
 TABLE_PREFIX = "shortgen_"
 RUNS_TABLE = f"{TABLE_PREFIX}runs"
 VIDEOS_TABLE = f"{TABLE_PREFIX}videos"
+BRAND_TABLE = f"{TABLE_PREFIX}brand"
 import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal, TypeVar
@@ -25,7 +26,7 @@ except ImportError:
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from schemas.table_models import Run, Video
+    from schemas.table_models import Brand, Run, Video
 
 T = TypeVar("T", bound=BaseModel)
 RunStatus = Literal["breakdown", "scripting", "asset_gen", "export", "failed"]
@@ -67,6 +68,7 @@ def update_video(
     chunks: str | None = None,
     cache_key: str | None = None,
     config_hash: str | None = None,
+    brand_id: str | None = None,
 ) -> None:
     """Update a Video record."""
     updates: list[tuple[str, object]] = []
@@ -84,6 +86,8 @@ def update_video(
         updates.append(("cache_key", cache_key))
     if config_hash is not None:
         updates.append(("config_hash", config_hash))
+    if brand_id is not None:
+        updates.append(("brand_id", brand_id))
     if not updates:
         return
     set_clause = ", ".join(f"{k} = %s" for k, _ in updates)
@@ -124,7 +128,7 @@ def get_run(run_id: str) -> Run | None:
     with _conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                f'SELECT id, "userId", user_input, status, created_at FROM {RUNS_TABLE} WHERE id = %s',
+                f'SELECT id, "userId", user_input, title, status, breakdown_messages, script_regen_count, created_at FROM {RUNS_TABLE} WHERE id = %s',
                 (run_id,),
             )
             row = cur.fetchone()
@@ -138,8 +142,36 @@ def get_video(video_id: str) -> Video | None:
     with _conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                f"SELECT id, run_id, s3_prefix, render_id, source_text, status, script, chunks, cache_key, config_hash, created_at FROM {VIDEOS_TABLE} WHERE id = %s",
+                f"SELECT id, run_id, s3_prefix, render_id, source_text, status, script, chunks, cache_key, config_hash, brand_id, created_at FROM {VIDEOS_TABLE} WHERE id = %s",
                 (video_id,),
             )
             row = cur.fetchone()
             return _row_to_model(dict(row), Video) if row else None
+
+
+def get_brand(brand_id: str) -> "Brand | None":
+    """Load a brand row by id."""
+    from schemas.table_models import Brand
+
+    with _conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                f'SELECT id, "userId", created_at, style_prompt, mascot_description, avatar_s3_key FROM {BRAND_TABLE} WHERE id = %s',
+                (brand_id,),
+            )
+            row = cur.fetchone()
+            return _row_to_model(dict(row), Brand) if row else None
+
+
+def get_latest_brand_for_user(user_id: str) -> "Brand | None":
+    """Latest brand row for user (append-only log), or None."""
+    from schemas.table_models import Brand
+
+    with _conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                f'SELECT id, "userId", created_at, style_prompt, mascot_description, avatar_s3_key FROM {BRAND_TABLE} WHERE "userId" = %s ORDER BY created_at DESC LIMIT 1',
+                (user_id,),
+            )
+            row = cur.fetchone()
+            return _row_to_model(dict(row), Brand) if row else None

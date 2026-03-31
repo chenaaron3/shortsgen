@@ -1,36 +1,47 @@
 ---
-description: Run type sync when schema changes (Zod → JSON Schema → Pydantic)
-globs: packages/types/**/*.ts, packages/types/generated/**/*.json
+description: Run type sync when schema changes (Zod → JSON Schema → Pydantic); keep Python raw SQL aligned
+globs: packages/types/**/*.ts, packages/types/generated/**/*.json, packages/db/schema.ts, services/python-generator/scripts/run_video/persistence/**/*.py, services/python-generator/scripts/schemas/table_models.py
 alwaysApply: false
 ---
 
 # Types Sync (Zod → Pydantic)
 
-Schemas are defined in Zod in `packages/types` and stay in sync with Python Pydantic models.
+Table row shapes (`Run`, `Video`, `Brand`) are defined by Drizzle in `packages/db/schema.ts`, exported through `@shortgen/types` / `packages/types`, and codegen’d to `services/python-generator/scripts/schemas/table_models.py` via `pnpm types:sync`. Manifest and API schemas live under `packages/types/src/`.
 
 ## When to Run
 
-**After editing** any schema in `packages/types/src/` (manifest, api, table), run:
+**After editing** Drizzle tables in `packages/db/schema.ts` or Zod in `packages/types/src/` (manifest, api), run:
 
 ```bash
 pnpm types:build   # Zod → JSON Schema (packages/types/generated/)
-pnpm types:sync    # JSON Schema → Pydantic (scripts/schemas/*.py)
+pnpm types:sync    # JSON Schema → Pydantic (services/python-generator/scripts/schemas/*.py)
 ```
 
 ## Agent Behavior
 
 When you **modify** any of:
 
+- `packages/db/schema.ts` (runs, videos, brand, …)
 - `packages/types/src/manifest/`
 - `packages/types/src/api/`
-- `packages/types/src/table/`
 
 — run `pnpm types:sync` and verify it succeeds. It runs `types:build` first.
+
+## Python raw SQL vs `table_models.py` (manual)
+
+`services/python-generator/scripts/run_video/persistence/run_video_writer.py` uses **explicit `SELECT` column lists** for Postgres. That is **not** generated. If you add/remove/rename columns on `runs`, `videos`, or `brand` in Drizzle:
+
+1. Run `pnpm types:sync` so `table_models.py` matches the new shape.
+2. Update every `SELECT` (and `INSERT`/`UPDATE` if needed) in `run_video_writer.py` so the row dict includes **all keys** required by the corresponding Pydantic model (`Run`, `Video`, `Brand`). Use the same column names as in the DB (snake_case; quote `"userId"` where Drizzle uses camelCase).
+
+Missing columns cause Pydantic validation errors at runtime (`Field required` for the absent key).
+
+There is no repo script today that derives those queries from the schema; keeping them aligned is a deliberate edit whenever the table changes.
 
 ## Generated Files (Do Not Edit)
 
 - `packages/types/generated/*.schema.json` — from Zod
 - `services/python-generator/scripts/schemas/video_manifest.py` — from manifest
 - `services/python-generator/scripts/schemas/api_models.py` — from api
-- `services/python-generator/scripts/schemas/table_models.py` — from table
+- `services/python-generator/scripts/schemas/table_models.py` — from table (synced to Drizzle `createSelectSchema`)
 - `services/python-generator/scripts/schemas/progress_event_type.py` — from progress event type (shared with React)

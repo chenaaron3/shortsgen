@@ -63,6 +63,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     : "";
   const sceneSuggestions = useRunStore((s) => s.progress.sceneSuggestionsByVideo[videoId]);
   const clearSceneSuggestions = useRunStore((s) => s.clearSceneSuggestions);
+  const videoProgress = useRunStore((s) => s.progress.videoProgressByVideo[videoId]);
   const effectiveBreakdownComplete = breakdownComplete || videos.length > 0;
 
   const onAcceptAllSuccess = useCallback(() => {
@@ -216,7 +217,9 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const onRegenerateImagery =
     selectedVideo &&
       (runPhase === "asset_gen" || runPhase === "export") &&
-      (selectedVideo.status === "assets" || selectedVideo.status === "exported")
+      (selectedVideo.status === "assets" ||
+        selectedVideo.status === "exporting" ||
+        selectedVideo.status === "exported")
       ? handleRegenerateImagery(selectedVideo.id)
       : undefined;
 
@@ -301,6 +304,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     <div className="flex h-screen overflow-hidden bg-background text-foreground lg:flex-row">
       <VideoSidebar
         runId={runId}
+        runPhase={runPhase}
         videos={videos}
         activeVideoId={videoId}
         wsStatus={wsStatus}
@@ -357,6 +361,9 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
                       scenes={scenes}
                       videoId={videoId}
                       currentChunks={currentChunks}
+                      runPhase={runPhase}
+                      videoStatus={selectedVideo?.status ?? null}
+                      videoProgress={videoProgress}
                       blockAcceptSuggestionField={isDecisionPending}
                       scriptLocked={scriptLocked}
                       imageryEditable={imageryEditable}

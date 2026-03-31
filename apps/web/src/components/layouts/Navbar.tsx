@@ -2,7 +2,7 @@
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { Coins, CreditCard, LogOut } from "lucide-react";
+import { Coins, CreditCard, LogOut, Palette } from "lucide-react";
 
 import { useUserConfig } from "~/hooks/useUserConfig";
 import {
@@ -65,6 +65,10 @@ function ProfileMenu() {
           <Link href="/billing" className={menuLink}>
             <CreditCard className="h-4 w-4 shrink-0" />
             Billing
+          </Link>
+          <Link href="/brand" className={menuLink}>
+            <Palette className="h-4 w-4 shrink-0" />
+            Brand
           </Link>
           <div className="my-1 h-px bg-border" />
           <button

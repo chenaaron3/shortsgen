@@ -97,7 +97,7 @@ export const runsRouter = createTRPCRouter({
 
   /**
    * Create a run and immediately trigger initial processing (breakdown + clip processing).
-   * Returns runId and wsUrl. Client should connect to WebSocket before redirecting to edit page.
+   * Returns the same run + videos shape as getById plus wsUrl for clients that need it.
    */
   createRun: protectedProcedure
     .input(
@@ -201,8 +201,16 @@ export const runsRouter = createTRPCRouter({
           .where(eq(runs.id, run.id));
       }
 
+      const runWithVideos = await ctx.db.query.runs.findFirst({
+        where: eq(runs.id, run.id),
+        with: { videos: true },
+      });
+      if (!runWithVideos || runWithVideos.userId !== ctx.session.user.id) {
+        throw new Error("Failed to load run after create");
+      }
+
       return {
-        runId: run.id,
+        run: runWithVideos as RunWithVideos,
         wsUrl: `${env.NEXT_PUBLIC_SHORTGEN_WS_URL}?runId=${run.id}`,
       };
     }),
@@ -312,6 +320,68 @@ export const runsRouter = createTRPCRouter({
         .where(eq(videos.id, input.videoId));
 
       return { ok: true };
+    }),
+
+  /**
+   * Remove a clip during the scripting (review) phase, before assets are generated.
+   * If this was the last video in the run, the run is deleted.
+   */
+  deleteVideo: protectedProcedure
+    .input(
+      z.object({
+        runId: z.string().uuid(),
+        videoId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [run] = await ctx.db
+        .select()
+        .from(runs)
+        .where(eq(runs.id, input.runId));
+
+      if (!run || run.userId !== ctx.session.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
+      }
+
+      if (run.status !== "scripting") {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "You can only delete videos during the review step.",
+        });
+      }
+
+      const [video] = await ctx.db
+        .select()
+        .from(videos)
+        .where(
+          and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
+        );
+
+      if (!video) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Video not found" });
+      }
+
+      const allowedDuringScripting = new Set(["created", "scripts", "failed"]);
+      if (!video.status || !allowedDuringScripting.has(video.status)) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "This video can no longer be removed.",
+        });
+      }
+
+      await ctx.db.delete(videos).where(eq(videos.id, input.videoId));
+
+      const remaining = await ctx.db
+        .select({ id: videos.id })
+        .from(videos)
+        .where(eq(videos.run_id, input.runId));
+
+      if (remaining.length === 0) {
+        await ctx.db.delete(runs).where(eq(runs.id, input.runId));
+        return { runDeleted: true as const };
+      }
+
+      return { runDeleted: false as const };
     }),
 
   /**

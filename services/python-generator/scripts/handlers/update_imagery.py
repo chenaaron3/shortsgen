@@ -22,6 +22,7 @@ from models import Chunks
 from path_utils import remotion_composite_key, video_cache_path, video_public
 from pipeline.generate_images import run as run_images
 from pipeline.revise_imagery import revise_single_scene_imagery
+from run_video.brand_resolve import resolve_brand_for_video_pipeline
 from run_video.persistence.run_video_writer import get_video, update_video
 from run_video.s3_upload import upload_to_run
 from run_video.websocket_progress import emit_event
@@ -127,10 +128,15 @@ def _handler_impl(
         payload={"step": "images_voice", "totalScenes": 1},
     )
 
+    resolved = resolve_brand_for_video_pipeline(run_id, video_id)
+
     run_images(
         chunks,
         cache_key,
         config_hash,
+        resolved.mascot_path,
+        style_prompt=resolved.style_prompt,
+        mascot_description=resolved.mascot_description,
         scene_indices=[scene_index],
         skip_cache=True,
         model=config.image.model if config.image else None,

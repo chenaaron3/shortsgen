@@ -1,12 +1,32 @@
-"""Upload prepared Remotion assets to S3 for Run-Video flow."""
+"""Upload/download S3 helpers for Run-Video flow (bucket from BUCKET_NAME)."""
 
 import os
+import tempfile
 from pathlib import Path
 
 try:
     import boto3
 except ImportError:
     boto3 = None
+
+
+def download_s3_key_to_temp(s3_key: str, *, prefix: str = "s3_dl_") -> Path:
+    """Download an object by key to a temp file. Returns local path.
+
+    Uses BUCKET_NAME (same as uploads). Raises if bucket unset or boto3 missing.
+    """
+    bucket_name = os.environ.get("BUCKET_NAME")
+    if not bucket_name:
+        raise RuntimeError("BUCKET_NAME required for S3 download")
+    if boto3 is None:
+        raise RuntimeError("boto3 required. pip install boto3")
+    suffix = Path(s3_key).suffix or ".bin"
+    fd, path = tempfile.mkstemp(suffix=suffix, prefix=prefix)
+    os.close(fd)
+    dest = Path(path)
+    client = boto3.client("s3")
+    client.download_file(bucket_name, s3_key, str(dest))
+    return dest
 
 
 def _s3_prefix(run_id: str, video_id: str | None) -> str:
