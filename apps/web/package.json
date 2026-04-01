@@ -43,7 +43,7 @@
     "drizzle-orm": "^0.41.0",
     "framer-motion": "^12.38.0",
     "immer": "^11.1.4",
-    "jsdom": "^29.0.1",
+    "jsdom": "27.4.0",
     "lucide-react": "^0.574.0",
     "next": "^15.2.3",
     "next-auth": "5.0.0-beta.25",
@@ -66,7 +66,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.15",
-    "@types/jsdom": "^28.0.1",
+    "@types/jsdom": "^27.0.0",
     "@types/node": "^20.14.10",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

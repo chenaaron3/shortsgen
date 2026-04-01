@@ -7,7 +7,6 @@ import {
   YoutubeTranscriptVideoUnavailableError,
 } from "youtube-transcript/dist/youtube-transcript.esm.js";
 import { isIPv4, isIPv6 } from "node:net";
-import { JSDOM } from "jsdom";
 
 const MAX_RESOLVED_CHARS = 500_000;
 const MAX_ARTICLE_BYTES = 3 * 1024 * 1024;
@@ -201,7 +200,11 @@ async function fetchArticleHtml(url: string): Promise<{ html: string; url: strin
   throw new Error("Too many redirects.");
 }
 
-function extractReadableText(html: string, pageUrl: string): string {
+async function extractReadableText(
+  html: string,
+  pageUrl: string,
+): Promise<string> {
+  const { JSDOM } = await import("jsdom");
   const dom = new JSDOM(html, { url: pageUrl });
   const reader = new Readability(dom.window.document);
   const article = reader.parse();
@@ -256,6 +259,6 @@ export async function resolveUserInput(raw: string): Promise<string> {
   }
 
   const { html, url: finalUrl } = await fetchArticleHtml(trimmed);
-  const text = extractReadableText(html, finalUrl);
+  const text = await extractReadableText(html, finalUrl);
   return truncate(text);
 }

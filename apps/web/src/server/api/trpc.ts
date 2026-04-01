@@ -9,15 +9,14 @@
 
 import { initTRPC, TRPCError } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
-import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
-import { type Session } from "next-auth";
+import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
+import type { Session } from "next-auth";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { env } from "~/env";
-import { auth } from "~/server/auth";
+import { auth, authUncached } from "~/server/auth";
 import { db } from "~/server/db";
-
 /**
  * 1. CONTEXT
  *
@@ -64,11 +63,11 @@ export const createTRPCContext = async (opts: CreateNextContextOptions) => {
   });
 };
 
-/** App Router / fetch adapter (Next.js 15 + Vercel); uses `auth()` like other `app/api/*` routes. */
+/** App Router Route Handler — `authUncached` avoids React `cache()` outside RSC. */
 export const createTRPCContextFromFetch = async (
   _opts: FetchCreateContextFnOptions,
 ) => {
-  const session = await auth();
+  const session = await authUncached();
   return createInnerTRPCContext({ session });
 };
 
@@ -178,10 +177,18 @@ export const adminProcedure = t.procedure
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
-    const emails = env.ADMIN_EMAILS.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-    const isAdmin = emails.length > 0 && ctx.session.user.email && emails.includes(ctx.session.user.email.toLowerCase());
+    const emails = env.ADMIN_EMAILS.split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isAdmin =
+      emails.length > 0 &&
+      ctx.session.user.email &&
+      emails.includes(ctx.session.user.email.toLowerCase());
     if (!isAdmin) {
-      throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Admin access required",
+      });
     }
     return next({
       ctx: {

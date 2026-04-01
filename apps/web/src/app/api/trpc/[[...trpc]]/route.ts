@@ -1,10 +1,11 @@
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { env } from '~/env';
+import { appRouter } from '~/server/api/root';
+import { createTRPCContextFromFetch } from '~/server/api/trpc';
 
-import { env } from "~/env";
-import { appRouter } from "~/server/api/root";
-import { createTRPCContextFromFetch } from "~/server/api/trpc";
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function handler(req: Request) {
   return fetchRequestHandler({

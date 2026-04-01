@@ -1,18 +1,12 @@
 import type { DefaultSession, NextAuthConfig } from "next-auth";
-import GitHub from "next-auth/providers/github";
-import Google from "next-auth/providers/google";
-import { env } from "~/env";
-import { ensureCreditBalance } from "~/server/credits";
-import { db } from "~/server/db";
+import GitHub from 'next-auth/providers/github';
+import Google from 'next-auth/providers/google';
+import { env } from '~/env';
+import { ensureCreditBalance } from '~/server/credits';
+import { db } from '~/server/db';
 
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import {
-  account,
-  session,
-  SIGNUP_CREDITS,
-  user,
-  verificationToken,
-} from "@shortgen/db";
+import { DrizzleAdapter } from '@auth/drizzle-adapter';
+import { account, session, SIGNUP_CREDITS, user, verificationToken } from '@shortgen/db';
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -41,6 +35,7 @@ const providers = [
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
