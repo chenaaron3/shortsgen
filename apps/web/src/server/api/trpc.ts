@@ -8,6 +8,7 @@
  */
 
 import { initTRPC, TRPCError } from "@trpc/server";
+import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { type Session } from "next-auth";
 import superjson from "superjson";
@@ -63,6 +64,16 @@ export const createTRPCContext = async (opts: CreateNextContextOptions) => {
   });
 };
 
+/** App Router / fetch adapter (Next.js 15 + Vercel); uses `auth()` like other `app/api/*` routes. */
+export const createTRPCContextFromFetch = async (
+  _opts: FetchCreateContextFnOptions,
+) => {
+  const session = await auth();
+  return createInnerTRPCContext({ session });
+};
+
+type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>>;
+
 /**
  * 2. INITIALIZATION
  *
@@ -71,7 +82,7 @@ export const createTRPCContext = async (opts: CreateNextContextOptions) => {
  * errors on the backend.
  */
 
-const t = initTRPC.context<typeof createTRPCContext>().create({
+const t = initTRPC.context<TRPCContext>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
     return {
