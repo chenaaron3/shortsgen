@@ -54,8 +54,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Deploy
-        env:
-          SST_PASSPHRASE: ${{ secrets.SST_PASSPHRASE }}
         run: |
           STAGE="${{ github.event_name == 'workflow_dispatch' && inputs.stage || 'production' }}"
           pnpm exec sst deploy --stage "$STAGE"
