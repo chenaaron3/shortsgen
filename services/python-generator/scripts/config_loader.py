@@ -2,6 +2,7 @@
 
 import re
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, computed_field, Field
 
@@ -26,6 +27,15 @@ class StepConfig(BaseModel):
     judge_samples: int = Field(default=1, description="When >1, generate N scripts in parallel and pick best (no iteration). Used when judge_gate=true.")
 
 
+class BreakdownStepConfig(StepConfig):
+    """Breakdown step: optional chunker strategy (LLM vs deterministic line split)."""
+
+    chunker: Literal["llm", "line_split"] = Field(
+        default="llm",
+        description="llm: structured LLM breakdown; line_split: deterministic ~100-line segments (cap 10)",
+    )
+
+
 class ImageConfig(BaseModel):
     """Image generation: model alias (params are hardcoded per model in replicate.py)."""
 
@@ -42,7 +52,7 @@ class Config(BaseModel):
     """Pipeline config: model and system prompt per LLM step."""
 
     name: str = Field(default="default", description="Config display name")
-    breakdown: StepConfig = Field(..., description="Breakdown step (source → nuggets)")
+    breakdown: BreakdownStepConfig = Field(..., description="Breakdown step (source → nuggets)")
     script: StepConfig = Field(..., description="Script step (raw content → short script)")
     chunk: StepConfig = Field(..., description="Chunk step (script → scenes)")
     image: ImageConfig | None = Field(default=None, description="Image model alias; if absent, use backend default")

@@ -1,5 +1,6 @@
 name: prototype
 breakdown:
+  chunker: line_split
   model: gpt-4o-mini
   system_prompt: source-breakdown-system-prompt.md
 script:

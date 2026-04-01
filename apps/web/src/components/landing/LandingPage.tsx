@@ -5,7 +5,7 @@ import { Clapperboard, MousePointerClick, Share2, Sparkles, UserRoundCheck } fro
 import { signIn } from 'next-auth/react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { ComponentProps, type, useState } from 'react';
+import { useState } from 'react';
 import { Badge } from '~/components/ui/badge';
 import { Button, buttonVariants } from '~/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
@@ -15,6 +15,7 @@ import { cn } from '~/lib/utils';
 
 import { SIGNUP_CREDITS } from '@shortgen/db';
 
+import type { ComponentProps } from 'react';
 const STEPS = [
   {
     step: 1,

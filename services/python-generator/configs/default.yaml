@@ -1,5 +1,6 @@
 name: default
 breakdown:
+  chunker: line_split
   model: gpt-4o
   system_prompt: source-breakdown-system-prompt.md
 script:
