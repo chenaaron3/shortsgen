@@ -2,12 +2,6 @@ name: Deploy SST
 
 on:
   workflow_dispatch:
-    inputs:
-      stage:
-        description: SST stage (see sst.dev — resources are namespaced per stage)
-        required: true
-        default: production
-        type: string
   push:
     branches:
       - main
@@ -59,5 +53,10 @@ jobs:
 
       - name: Deploy
         run: |
-          STAGE="${{ github.event_name == 'workflow_dispatch' && inputs.stage || 'production' }}"
+          STAGE="${{ vars.SST_STAGE || secrets.SST_STAGE }}"
+          if [ -z "$STAGE" ]; then
+            echo "::error::Set the Actions environment or repository variable SST_STAGE to the same value as .sst/stage (run: cat .sst/stage)."
+            exit 1
+          fi
+          echo "Deploying stage: $STAGE"
           pnpm exec sst deploy --stage "$STAGE"
