@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, ThumbsDown, ThumbsUp } from 'lucide-react';
 import {
   Dialog,
@@ -10,7 +10,7 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { Skeleton } from '~/components/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { Textarea } from '~/components/ui/textarea';
+import { AutosizeTextarea } from "~/components/ui/autosize-textarea";
 import {
   EMPTY_SCENE_FEEDBACK, emptySceneFeedback, sceneFeedbackToApiString
 } from '~/lib/sceneFeedback';
@@ -351,11 +351,11 @@ export function SceneRow({
                     </>
                   )}
                   {showScriptEditor ? (
-                    <Textarea
+                    <AutosizeTextarea
                       value={scriptText}
                       onChange={(e) => setScriptText(e.target.value)}
                       placeholder="Scene script…"
-                      className="min-h-[60px] flex-1 resize-y text-sm leading-snug"
+                      className="max-h-80 min-w-0 flex-1 bg-transparent text-sm leading-snug dark:bg-transparent"
                     />
                   ) : (
                     <p className="min-w-0 flex-1 text-sm leading-snug text-foreground">
@@ -369,11 +369,11 @@ export function SceneRow({
                 </div>
                 <div>
                   {imageryEditable ? (
-                    <Textarea
+                    <AutosizeTextarea
                       value={imageryText}
                       onChange={(e) => setImageryText(e.target.value)}
                       placeholder="Image description…"
-                      className="min-h-[48px] resize-y text-xs"
+                      className="max-h-80 w-full bg-transparent text-xs dark:bg-transparent"
                     />
                   ) : (
                     <p className="text-xs text-muted-foreground">{scene.imagery}</p>
@@ -468,12 +468,13 @@ export function SceneRow({
                       ? "What did you like?"
                       : "What could improve?"}
                   </p>
-                  <Textarea
+                  <AutosizeTextarea
+                    maxHeightPx={192}
                     value={draftNote}
                     onChange={(e) => setDraftNote(e.target.value)}
                     onKeyDown={handleNoteKeyDown}
                     placeholder="Optional note…"
-                    className="min-h-[60px] resize-y text-sm"
+                    className="max-h-48 text-sm"
                   />
                 </PopoverContent>
               </Popover>
