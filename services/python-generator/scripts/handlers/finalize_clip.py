@@ -164,7 +164,7 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
                     status_message=f"Image {done_count}/{total}",
                     video_id=video_id,
                     workflow="finalize_clip",
-                    payload={"sceneIndex": done_count - 1, "path": s3_key},
+                    payload={"path": s3_key},
                 )
         _emit_asset_progress()
 
@@ -180,7 +180,7 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
                     status_message=f"Voice {done_count}/{total}",
                     video_id=video_id,
                     workflow="finalize_clip",
-                    payload={"sceneIndex": done_count - 1, "path": s3_key},
+                    payload={"path": s3_key},
                 )
         _emit_asset_progress()
 

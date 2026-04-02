@@ -33,7 +33,7 @@ const WORKFLOW_STEPS: Record<WorkflowType, ProgressEventType[][]> = {
   finalize_clip: [
     ["request_sent"],
     ["asset_gen_started"],
-    ["asset_gen_progress"],
+    ["asset_gen_progress", "image_uploaded", "voice_uploaded"],
     ["caption_generated"],
     ["asset_gen_completed"],
   ],

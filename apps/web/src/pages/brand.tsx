@@ -2,8 +2,8 @@
 
 import Head from "next/head";
 import Link from "next/link";
-import { CheckCircle2, Loader2, Upload, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { CheckCircle2, History, Loader2, Upload, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 import { AuthRequiredLayout } from "~/components/layouts/AuthRequiredLayout";
@@ -15,6 +15,13 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 import { Textarea } from "~/components/ui/textarea";
 import {
   DEFAULT_MASCOT_DESCRIPTION,
@@ -36,29 +43,52 @@ function avatarContentType(file: File): "image/png" | "image/jpeg" | "image/webp
   return "image/png";
 }
 
+/** Synthetic id for the built-in default row in the browse dialog. */
+const DEFAULT_BROWSE_ITEM_ID = "__default_mascot__";
+
 function BrandForm() {
+  const utils = api.useUtils();
   const { data: latest, isLoading, refetch } = api.brand.latest.useQuery();
   const create = api.brand.create.useMutation();
   const presign = api.brand.presignAvatarUpload.useMutation();
+  const [browseOpen, setBrowseOpen] = useState(false);
+  const { data: avatarHistory = [], isFetching: historyLoading } =
+    api.brand.avatarHistory.useQuery(undefined, { enabled: browseOpen });
+
+  const browseItems = useMemo(
+    () => [
+      {
+        id: DEFAULT_BROWSE_ITEM_ID,
+        avatarUrl: DEFAULT_MASCOT_IMAGE_SRC,
+        avatar_s3_key: null as string | null,
+        created_at: null as string | Date | null,
+      },
+      ...avatarHistory,
+    ],
+    [avatarHistory],
+  );
 
   const [stylePrompt, setStylePrompt] = useState("");
   const [mascotDescription, setMascotDescription] = useState("");
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [reuseAvatarS3Key, setReuseAvatarS3Key] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  /** Shown while save runs; drives button + status copy. */
   const [savePhase, setSavePhase] = useState<
     "idle" | "brand" | "presign" | "put"
   >("idle");
   const [showSaved, setShowSaved] = useState(false);
-  const [savedWithAvatar, setSavedWithAvatar] = useState(false);
+  const [lastSaveAvatar, setLastSaveAvatar] = useState<"upload" | "reuse" | null>(
+    null,
+  );
   const previewSrcRef = useRef<string | null>(null);
   previewSrcRef.current = previewSrc;
 
   useEffect(() => {
     if (hydrated || isLoading) return;
+    setReuseAvatarS3Key(null);
     if (!latest) {
       setStylePrompt(DEFAULT_STYLE_PROMPT);
       setMascotDescription(DEFAULT_MASCOT_DESCRIPTION);
@@ -75,6 +105,7 @@ function BrandForm() {
 
   const loadLatestIntoForm = () => {
     setSaveError(null);
+    setReuseAvatarS3Key(null);
     setPreviewSrc((prev) => {
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
       return null;
@@ -93,6 +124,7 @@ function BrandForm() {
   };
 
   const applyImageFile = useCallback((f: File) => {
+    setReuseAvatarS3Key(null);
     setPreviewSrc((prev) => {
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
       return URL.createObjectURL(f);
@@ -125,15 +157,17 @@ function BrandForm() {
       return null;
     });
     setPendingFile(null);
+    setReuseAvatarS3Key(null);
   };
 
   const onSave = async () => {
     setSaveError(null);
     setShowSaved(false);
-    setSavedWithAvatar(false);
+    setLastSaveAvatar(null);
     setIsSaving(true);
     setSavePhase("brand");
     const willUploadAvatar = !!pendingFile;
+    const willReuseAvatar = !pendingFile && reuseAvatarS3Key !== null;
     try {
       const created = await create.mutateAsync({
         style_prompt: stylePrompt || undefined,
@@ -141,6 +175,8 @@ function BrandForm() {
         avatarContentType: pendingFile
           ? avatarContentType(pendingFile)
           : undefined,
+        reuseAvatarS3Key:
+          !pendingFile && reuseAvatarS3Key ? reuseAvatarS3Key : undefined,
       });
 
       let avatarUrl = created.avatarUrl;
@@ -171,13 +207,17 @@ function BrandForm() {
         return avatarUrl ?? DEFAULT_MASCOT_IMAGE_SRC;
       });
       setPendingFile(null);
-      setSavedWithAvatar(willUploadAvatar);
+      setReuseAvatarS3Key(null);
+      setLastSaveAvatar(
+        willUploadAvatar ? "upload" : willReuseAvatar ? "reuse" : null,
+      );
       setShowSaved(true);
       void refetch();
+      void utils.brand.avatarHistory.invalidate();
     } catch (e) {
       const message =
         e instanceof TypeError && e.message === "Failed to fetch"
-          ? "Avatar upload failed (usually S3 CORS: the bucket must allow PUT). Redeploy with updated bucket CORS or add PUT to your bucket’s CORS in AWS."
+          ? "Avatar upload failed (usually S3 CORS: the bucket must allow PUT). Redeploy with updated bucket CORS or add PUT to your bucket's CORS in AWS."
           : e instanceof Error
             ? e.message
             : "Save failed";
@@ -315,6 +355,19 @@ function BrandForm() {
                 <span className="mt-1 text-xs text-muted-foreground">PNG, JPEG, or WebP</span>
               </div>
             )}
+            <div className="mt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                disabled={busy}
+                onClick={() => setBrowseOpen(true)}
+              >
+                <History className="h-4 w-4" aria-hidden />
+                Browse past avatars
+              </Button>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={() => void onSave()} disabled={busy}>
@@ -337,7 +390,11 @@ function BrandForm() {
           {!saveError && !busy && showSaved && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 dark:text-green-500" aria-hidden />
-              {savedWithAvatar ? "Saved. Avatar uploaded." : "Saved."}
+              {lastSaveAvatar === "upload"
+                ? "Saved. Avatar uploaded."
+                : lastSaveAvatar === "reuse"
+                  ? "Saved. Using a previous avatar."
+                  : "Saved."}
             </p>
           )}
           {saveError && (
@@ -345,6 +402,83 @@ function BrandForm() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={browseOpen} onOpenChange={setBrowseOpen}>
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Past avatars</DialogTitle>
+            <DialogDescription>
+              Pick the built-in default or an image you used before, then save the brand page to apply it.
+            </DialogDescription>
+          </DialogHeader>
+          {historyLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : (
+            <>
+              {avatarHistory.length === 0 && (
+                <p className="mb-3 text-sm text-muted-foreground">
+                  No custom uploads yet. You can still choose the default mascot below.
+                </p>
+              )}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {browseItems.map((item) => {
+                  const isDefault = item.id === DEFAULT_BROWSE_ITEM_ID;
+                  const isCurrent = isDefault
+                    ? !latest?.avatar_s3_key
+                    : latest?.id === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={cn(
+                        "group relative overflow-hidden rounded-md border border-border text-left transition-colors",
+                        "hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        isCurrent && "ring-2 ring-primary",
+                      )}
+                      onClick={() => {
+                        if (isDefault) {
+                          setPreviewSrc((prev) => {
+                            if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+                            return DEFAULT_MASCOT_IMAGE_SRC;
+                          });
+                          setPendingFile(null);
+                          setReuseAvatarS3Key(null);
+                        } else {
+                          setPreviewSrc((prev) => {
+                            if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+                            return item.avatarUrl ?? prev;
+                          });
+                          setPendingFile(null);
+                          setReuseAvatarS3Key(item.avatar_s3_key);
+                        }
+                        setBrowseOpen(false);
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- CDN thumbnails and static default */}
+                      <img
+                        src={item.avatarUrl ?? ""}
+                        alt=""
+                        className="aspect-square w-full object-cover"
+                      />
+                      <span className="block bg-muted/90 px-2 py-1 text-xs text-muted-foreground">
+                        {isDefault
+                          ? "Built-in default"
+                          : item.created_at
+                            ? new Date(item.created_at).toLocaleString(undefined, {
+                                dateStyle: "short",
+                                timeStyle: "short",
+                              })
+                            : ""}
+                        {isCurrent ? " · Current" : ""}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -74,11 +74,11 @@ export type ProgressMessage =
     })
   | (ProgressMessageBase & {
       type: "image_uploaded";
-      payload?: { sceneIndex?: number; path?: string };
+      payload?: { path?: string };
     })
   | (ProgressMessageBase & {
       type: "voice_uploaded";
-      payload?: { sceneIndex?: number; path?: string };
+      payload?: { path?: string };
     })
   | (ProgressMessageBase & {
       type: "caption_generated";
@@ -251,6 +251,17 @@ function buildWsUrl(runId: string): string {
   }
 }
 
+/** Zero-based scene index from S3 key path (image_N.png / voice_N.mp3). */
+function sceneIndexFromAssetPath(path: string | undefined): number | undefined {
+  if (!path) return undefined;
+  const norm = path.replace(/\\/g, "/");
+  const img = norm.match(/image_(\d+)\.png$/i);
+  if (img) return parseInt(img[1]!, 10) - 1;
+  const voice = norm.match(/voice_(\d+)\.mp3$/i);
+  if (voice) return parseInt(voice[1]!, 10) - 1;
+  return undefined;
+}
+
 /** Handler that updates zustand + optionally refetches. Used by useRunProgressWithHandler. */
 function createProgressHandler(refetch: (() => void) | undefined) {
   return (msg: ProgressMessage) => {
@@ -312,22 +323,22 @@ function createProgressHandler(refetch: (() => void) | undefined) {
     }
 
     if (msg.type === "image_uploaded" && msg.videoId && msg.payload) {
-      const p = msg.payload as { sceneIndex?: number; path?: string };
-      if (
-        typeof p.sceneIndex === "number" &&
-        typeof p.path === "string"
-      ) {
-        setAssetUploaded(msg.videoId, "image", p.sceneIndex, p.path);
+      const path = (msg.payload as { path?: string }).path;
+      if (typeof path === "string") {
+        const sceneIndex = sceneIndexFromAssetPath(path);
+        if (sceneIndex !== undefined) {
+          setAssetUploaded(msg.videoId, "image", sceneIndex, path);
+        }
       }
     }
 
     if (msg.type === "voice_uploaded" && msg.videoId && msg.payload) {
-      const p = msg.payload as { sceneIndex?: number; path?: string };
-      if (
-        typeof p.sceneIndex === "number" &&
-        typeof p.path === "string"
-      ) {
-        setAssetUploaded(msg.videoId, "voice", p.sceneIndex, p.path);
+      const path = (msg.payload as { path?: string }).path;
+      if (typeof path === "string") {
+        const sceneIndex = sceneIndexFromAssetPath(path);
+        if (sceneIndex !== undefined) {
+          setAssetUploaded(msg.videoId, "voice", sceneIndex, path);
+        }
       }
     }
 

@@ -1,13 +1,13 @@
 "use client";
 
 import type { ChunksOutput } from "@shortgen/types";
+import { useVideoSceneAssetUrls } from "~/hooks/useVideoSceneAssetUrls";
 import { expectsSceneAssetsForVideo } from "~/lib/sceneAssetLoading";
+import { useRunStore } from "~/stores/useRunStore";
 
 import type { RunPhase } from "./RunProgressSteps";
 import { ScriptingScenesSkeleton } from "./RunPageSkeleton";
 import { SceneRow } from "./SceneRow";
-
-import type { VideoProgress } from "~/stores/useRunStore";
 
 interface Scene {
   text: string;
@@ -16,47 +16,49 @@ interface Scene {
 }
 
 interface SceneListProps {
-  scenes: Scene[];
   runId: string;
   videoId: string;
+  scenes: Scene[];
   currentChunks: ChunksOutput;
   runPhase: RunPhase;
   videoStatus: string | null;
-  /** Active WS/pipeline progress for this clip (image finalize, imagery regen, etc.). */
-  videoProgress?: VideoProgress | null;
+  /** Parent “accept all” in flight — disables per-field Accept. */
   blockAcceptSuggestionField?: boolean;
-  scriptLocked?: boolean;
-  imageryEditable?: boolean;
   onRegenerate?: (
     sceneIndex: number,
     imagery?: string,
     feedback?: string,
   ) => void;
-  sceneUpdating?: number | null;
-  /** When assets exist: scene index -> image URL for thumbnail */
-  imageUrlByIndex?: Record<number, string>;
-  /** When assets exist: scene index -> voice URL for play button */
-  voiceUrlByIndex?: Record<number, string>;
 }
 
 const SECTIONS = ["Hook", "Body", "Close"] as const;
 
 export function SceneList({
-  scenes,
   runId,
   videoId,
+  scenes,
   currentChunks,
   runPhase,
   videoStatus,
-  videoProgress = null,
   blockAcceptSuggestionField = false,
-  scriptLocked = false,
-  imageryEditable = false,
   onRegenerate,
-  sceneUpdating = null,
-  imageUrlByIndex,
-  voiceUrlByIndex,
 }: SceneListProps) {
+  const sceneUpdating = useRunStore((s) => s.progress.sceneUpdating);
+  const videoProgress = useRunStore(
+    (s) => s.progress.videoProgressByVideo[videoId],
+  );
+
+  const scriptLocked = runPhase === "asset_gen" || runPhase === "export";
+  const inAssetPhase = scriptLocked;
+  const scriptLineEditable = runPhase === "scripting";
+
+  const { imageUrlByIndex, voiceUrlByIndex } = useVideoSceneAssetUrls({
+    runId,
+    videoId,
+    runPhase,
+    videoStatus,
+  });
+
   if (scenes.length === 0) {
     if (runPhase === "scripting" && videoStatus !== "failed") {
       return <ScriptingScenesSkeleton />;
@@ -95,11 +97,12 @@ export function SceneList({
               {items.map(({ scene, index }) => {
                 const imageUrl = imageUrlByIndex?.[index];
                 const voiceUrl = voiceUrlByIndex?.[index];
-                const isRegenerating = sceneUpdating === index;
                 const expectImage =
-                  isRegenerating ||
+                  sceneUpdating === index ||
                   (!imageUrl && assetPipelineActive && expectsAssetMedia);
                 const expectVoice = expectsAssetMedia;
+                const rowImageryEditable =
+                  scriptLineEditable || (inAssetPhase && !!imageUrl);
                 return (
                   <SceneRow
                     key={index}
@@ -110,9 +113,9 @@ export function SceneList({
                     currentChunks={currentChunks}
                     blockAcceptSuggestionField={blockAcceptSuggestionField}
                     scriptLocked={scriptLocked}
-                    imageryEditable={imageryEditable}
+                    scriptLineEditable={scriptLineEditable}
+                    imageryEditable={rowImageryEditable}
                     onRegenerate={onRegenerate}
-                    isRegenerating={isRegenerating}
                     imageUrl={imageUrl}
                     voiceUrl={voiceUrl}
                     expectImage={expectImage}

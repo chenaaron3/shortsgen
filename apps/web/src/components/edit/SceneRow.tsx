@@ -14,7 +14,10 @@ import { Textarea } from '~/components/ui/textarea';
 import {
   EMPTY_SCENE_FEEDBACK, emptySceneFeedback, sceneFeedbackToApiString
 } from '~/lib/sceneFeedback';
-import { mergeSceneSuggestionsForOneScene } from '~/lib/suggestionMerge';
+import {
+  mergeSceneSuggestionsForOneScene,
+  replaceSceneFields,
+} from '~/lib/suggestionMerge';
 import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
@@ -37,13 +40,14 @@ interface SceneRowProps {
   /** When true, per-field Accept is disabled (e.g. parent “accept all” in flight). */
   blockAcceptSuggestionField?: boolean;
   scriptLocked?: boolean;
+  /** Scripting: editable script line (and debounced chunk persist). */
+  scriptLineEditable?: boolean;
   imageryEditable?: boolean;
   onRegenerate?: (
     sceneIndex: number,
     imagery?: string,
     feedback?: string,
   ) => void;
-  isRegenerating?: boolean;
   /** When assets exist: URL for scene image thumbnail */
   imageUrl?: string;
   /** When assets exist: URL for scene voice (audio play button) */
@@ -61,15 +65,18 @@ export function SceneRow({
   sceneIndex,
   currentChunks,
   blockAcceptSuggestionField = false,
-  scriptLocked: _scriptLocked = false,
+  scriptLocked = false,
+  scriptLineEditable = false,
   imageryEditable = false,
   onRegenerate,
-  isRegenerating = false,
   imageUrl,
   voiceUrl,
   expectImage = false,
   expectVoice = false,
 }: SceneRowProps) {
+  const isRegenerating = useRunStore(
+    (s) => s.progress.sceneUpdating === sceneIndex,
+  );
   const utils = api.useUtils();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -115,6 +122,15 @@ export function SceneRow({
     },
   });
 
+  const persistChunksMutation = api.runs.acceptSceneSuggestions.useMutation({
+    onSuccess: () => {
+      void utils.runs.getById.invalidate({ runId });
+    },
+  });
+
+  const chunksRef = useRef(currentChunks);
+  chunksRef.current = currentChunks;
+
   const acceptSceneSuggestion = useCallback(() => {
     const sceneSuggestions =
       useRunStore.getState().progress.sceneSuggestionsByVideo[videoId];
@@ -147,10 +163,15 @@ export function SceneRow({
     "like",
   );
   const [draftNote, setDraftNote] = useState("");
+  const [scriptText, setScriptText] = useState(scene.text);
 
   useEffect(() => {
     setImageryText(scene.imagery);
   }, [scene.imagery]);
+
+  useEffect(() => {
+    setScriptText(scene.text);
+  }, [scene.text]);
 
   useEffect(() => {
     if (!suggestion) setDeclinedSuggestion(false);
@@ -220,22 +241,49 @@ export function SceneRow({
     }
   };
 
-  const showSuggestion = suggestion && !declinedSuggestion;
-  const hasDiffs =
-    suggestion &&
+  const blockingSuggestion =
+    !!suggestion &&
+    !declinedSuggestion &&
     (suggestion.text !== scene.text || suggestion.imagery !== scene.imagery);
 
+  const showScriptEditor = scriptLineEditable && !scriptLocked;
+
   const scriptVoiceShimmer =
-    !showSuggestion &&
+    !blockingSuggestion &&
     expectVoice &&
-    (!voiceUrl || voiceInitialLoadPending);
+    (!voiceUrl || voiceInitialLoadPending) &&
+    !showScriptEditor;
+
+  useEffect(() => {
+    if (!scriptLineEditable || blockingSuggestion) return;
+    if (scriptText === scene.text && imageryText === scene.imagery) return;
+    const id = window.setTimeout(() => {
+      const next = replaceSceneFields(chunksRef.current, sceneIndex, {
+        text: scriptText,
+        imagery: imageryText,
+      });
+      persistChunksMutation.mutate({ runId, videoId, chunks: next });
+    }, 450);
+    return () => window.clearTimeout(id);
+  }, [
+    scriptLineEditable,
+    blockingSuggestion,
+    scriptText,
+    imageryText,
+    scene.text,
+    scene.imagery,
+    sceneIndex,
+    runId,
+    videoId,
+    persistChunksMutation,
+  ]);
 
   return (
     <Card size="sm" className="py-2 ring-0">
       <CardContent className="pt-2">
         <div className="flex items-stretch gap-2">
           <div className="min-w-0 flex-1 space-y-2">
-            {showSuggestion ? (
+            {blockingSuggestion ? (
               <div className="space-y-2">
                 <WordDiff
                   before={scene.text}
@@ -247,30 +295,28 @@ export function SceneRow({
                   after={suggestion!.imagery}
                   variant="imagery"
                 />
-                {hasDiffs && (
-                  <div className="flex gap-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-6 text-xs"
-                      disabled={acceptSuggestionPending}
-                      onClick={acceptSceneSuggestion}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs"
-                      disabled={acceptSuggestionPending}
-                      onClick={() => setDeclinedSuggestion(true)}
-                    >
-                      Decline
-                    </Button>
-                  </div>
-                )}
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-6 text-xs"
+                    disabled={acceptSuggestionPending}
+                    onClick={acceptSceneSuggestion}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs"
+                    disabled={acceptSuggestionPending}
+                    onClick={() => setDeclinedSuggestion(true)}
+                  >
+                    Decline
+                  </Button>
+                </div>
               </div>
             ) : (
               <>
@@ -304,13 +350,22 @@ export function SceneRow({
                       </Button>
                     </>
                   )}
-                  <p className="min-w-0 flex-1 text-sm leading-snug text-foreground">
-                    {scriptVoiceShimmer ? (
-                      <span className="text-shimmer-inline">{scene.text}</span>
-                    ) : (
-                      scene.text
-                    )}
-                  </p>
+                  {showScriptEditor ? (
+                    <Textarea
+                      value={scriptText}
+                      onChange={(e) => setScriptText(e.target.value)}
+                      placeholder="Scene script…"
+                      className="min-h-[60px] flex-1 resize-y text-sm leading-snug"
+                    />
+                  ) : (
+                    <p className="min-w-0 flex-1 text-sm leading-snug text-foreground">
+                      {scriptVoiceShimmer ? (
+                        <span className="text-shimmer-inline">{scene.text}</span>
+                      ) : (
+                        scene.text
+                      )}
+                    </p>
+                  )}
                 </div>
                 <div>
                   {imageryEditable ? (
