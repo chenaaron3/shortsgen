@@ -15,7 +15,7 @@ interface BreakdownPhaseViewProps {
 
 export function BreakdownPhaseView({ isAdmin, breakdownMessages }: BreakdownPhaseViewProps) {
   const runId = useRunStore((s) => s.ui.runId);
-  const breakdownComplete = useRunStore((s) => s.progress.breakdownComplete);
+  const breakdownComplete = useRunStore((s) => s.ui.breakdownComplete);
   const logsModalOpen = useRunStore((s) => s.ui.logsModalOpen);
   const setLogsModalOpen = useRunStore((s) => s.setLogsModalOpen);
 

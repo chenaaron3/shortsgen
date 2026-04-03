@@ -267,7 +267,7 @@ function createProgressHandler(refetch: (() => void) | undefined) {
   return (msg: ProgressMessage) => {
     const {
       setBreakdownComplete,
-      setSourceText,
+      setActiveSourceText,
       setSceneUpdating,
       setVideoUpdating,
       setSceneSuggestions,
@@ -276,27 +276,33 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       setAssetUploaded,
       bumpAssetsRefreshKey,
     } = useRunStore.getState();
+    const activeVideoId = useRunStore.getState().ui.activeVideoId;
+    const payloadVideoId = (
+      msg.payload as { videoId?: string } | undefined
+    )?.videoId;
+    const eventVideoId = payloadVideoId ?? msg.videoId;
+    const isActiveVideo =
+      !!activeVideoId && !!eventVideoId && activeVideoId === eventVideoId;
 
     if (msg.type === "breakdown_completed") setBreakdownComplete(true);
 
     if (msg.type === "suggestion_partial" && msg.payload) {
       const p = msg.payload as { partial?: string };
-      if (p.partial !== undefined && msg.videoId) {
-        setSceneSuggestions(msg.videoId, p.partial);
+      if (p.partial !== undefined && isActiveVideo) {
+        setSceneSuggestions(p.partial);
       }
     }
 
-    if (msg.type === "suggestion_completed" && msg.videoId && msg.payload) {
+    if (msg.type === "suggestion_completed" && msg.payload && isActiveVideo) {
       const p = msg.payload as { chunks?: ChunksOutput };
-      if (p.chunks) setSceneSuggestions(msg.videoId, p.chunks);
+      if (p.chunks) setSceneSuggestions(p.chunks);
     }
 
     if (msg.type === "video_started" && msg.payload) {
       const p = msg.payload as { videoId?: string; sourceText?: string };
-      const vid = p.videoId ?? msg.videoId;
       const text = p.sourceText ?? "";
-      if (vid) {
-        setSourceText(vid, text);
+      if (isActiveVideo) {
+        setActiveSourceText(text);
         refetch?.();
       }
     }
@@ -307,37 +313,39 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       msg.type === "video_completed" ||
       msg.type === "suggestion_completed"
     ) {
-      setSceneUpdating(null);
-      refetch?.();
+      if (isActiveVideo) {
+        setSceneUpdating(null);
+        refetch?.();
+      }
     }
 
-    if (msg.type === "asset_gen_started" && msg.videoId && msg.payload) {
+    if (msg.type === "asset_gen_started" && msg.payload && isActiveVideo) {
       const p = msg.payload as {
         assetBaseUrl?: string;
         s3Prefix?: string;
       };
       if (p.assetBaseUrl && p.assetBaseUrl.length > 0) {
-        setAssetsBaseUrl(msg.videoId, p.assetBaseUrl);
+        setAssetsBaseUrl(p.assetBaseUrl);
       }
       refetch?.();
     }
 
-    if (msg.type === "image_uploaded" && msg.videoId && msg.payload) {
+    if (msg.type === "image_uploaded" && msg.payload && isActiveVideo) {
       const path = (msg.payload as { path?: string }).path;
       if (typeof path === "string") {
         const sceneIndex = sceneIndexFromAssetPath(path);
         if (sceneIndex !== undefined) {
-          setAssetUploaded(msg.videoId, "image", sceneIndex, path);
+          setAssetUploaded("image", sceneIndex, path);
         }
       }
     }
 
-    if (msg.type === "voice_uploaded" && msg.videoId && msg.payload) {
+    if (msg.type === "voice_uploaded" && msg.payload && isActiveVideo) {
       const path = (msg.payload as { path?: string }).path;
       if (typeof path === "string") {
         const sceneIndex = sceneIndexFromAssetPath(path);
         if (sceneIndex !== undefined) {
-          setAssetUploaded(msg.videoId, "voice", sceneIndex, path);
+          setAssetUploaded("voice", sceneIndex, path);
         }
       }
     }
@@ -346,10 +354,10 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       const p = msg.payload as { videoId?: string; s3Prefix?: string };
       const vid = p.videoId ?? msg.videoId;
       const isUpdateImagery = msg.workflow === "update_imagery";
-      if (vid && (p.s3Prefix || isUpdateImagery)) {
+      if (vid && isActiveVideo && (p.s3Prefix || isUpdateImagery)) {
         if (isUpdateImagery) {
           setSceneUpdating(null);
-          bumpAssetsRefreshKey(vid);
+          bumpAssetsRefreshKey();
         }
         setVideoUpdating(false);
         refetch?.();

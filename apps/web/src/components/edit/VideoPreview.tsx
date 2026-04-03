@@ -89,9 +89,7 @@ export function VideoPreview({
 }: VideoPreviewProps) {
   const utils = api.useUtils();
   const setVideoProgress = useRunStore((s) => s.setVideoProgress);
-  const assetsRefreshKey = useRunStore(
-    (s) => s.progress.assetsRefreshKeyByVideo[videoId],
-  );
+  const assetsRefreshKey = useRunStore((s) => s.ui.activeAssetsRefreshKey);
   const triggerExportVideoMutation = api.runs.triggerExportVideo.useMutation({
     onSuccess: () => {
       setVideoProgress(videoId, {

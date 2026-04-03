@@ -1,29 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play, ThumbsDown, ThumbsUp } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-} from '~/components/ui/dialog';
-import { Button } from '~/components/ui/button';
+import { useEffect } from 'react';
 import { Card, CardContent } from '~/components/ui/card';
-import { Skeleton } from '~/components/ui/skeleton';
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { AutosizeTextarea } from "~/components/ui/autosize-textarea";
-import {
-  EMPTY_SCENE_FEEDBACK, emptySceneFeedback, sceneFeedbackToApiString
-} from '~/lib/sceneFeedback';
-import {
-  mergeSceneSuggestionsForOneScene,
-  replaceSceneFields,
-} from '~/lib/suggestionMerge';
 import { useRunStore } from '~/stores/useRunStore';
-import { api } from '~/utils/api';
 
-import { WordDiff } from './WordDiff';
+import { useSceneAutosave } from './hooks/useSceneAutosave';
+import { SceneEditableContent } from './scene-row/SceneEditableContent';
+import { SceneFeedbackControls } from './scene-row/SceneFeedbackControls';
+import { SceneImagePreview } from './scene-row/SceneImagePreview';
+import { SceneSuggestionDiff } from './scene-row/SceneSuggestionDiff';
 
-import type { ChunksOutput } from "@shortgen/types";
 interface Scene {
   text: string;
   imagery: string;
@@ -32,250 +18,67 @@ interface Scene {
 
 interface SceneRowProps {
   scene: Scene;
-  runId: string;
-  videoId: string;
   sceneIndex: number;
-  /** DB chunks for this video (for merging one suggested field). */
-  currentChunks: ChunksOutput;
-  /** When true, per-field Accept is disabled (e.g. parent “accept all” in flight). */
-  blockAcceptSuggestionField?: boolean;
-  scriptLocked?: boolean;
-  /** Scripting: editable script line (and debounced chunk persist). */
-  scriptLineEditable?: boolean;
-  imageryEditable?: boolean;
-  onRegenerate?: (
-    sceneIndex: number,
-    imagery?: string,
-    feedback?: string,
-  ) => void;
-  /** When assets exist: URL for scene image thumbnail */
-  imageUrl?: string;
-  /** When assets exist: URL for scene voice (audio play button) */
-  voiceUrl?: string;
-  /** When true, show thumbnail skeleton (or hide thumb) while the scene image is not ready or is regenerating */
-  expectImage?: boolean;
-  /** When true, scene voice is part of the asset pipeline; script line shimmers until voice URL/buffer is ready */
-  expectVoice?: boolean;
 }
 
 export function SceneRow({
   scene,
-  runId,
-  videoId,
   sceneIndex,
-  currentChunks,
-  blockAcceptSuggestionField = false,
-  scriptLocked = false,
-  scriptLineEditable = false,
-  imageryEditable = false,
-  onRegenerate,
-  imageUrl,
-  voiceUrl,
-  expectImage = false,
-  expectVoice = false,
 }: SceneRowProps) {
-  const isRegenerating = useRunStore(
-    (s) => s.progress.sceneUpdating === sceneIndex,
+  const runId = useRunStore((s) => s.ui.runId) ?? "";
+  const videoId = useRunStore((s) => s.ui.activeVideoId) ?? "";
+  const runPhase = useRunStore((s) => s.ui.activeRunPhase) ?? "breakdown";
+  const acceptSuggestionPending = useRunStore(
+    (s) => s.ui.suggestionDecisionPending,
   );
-  const utils = api.useUtils();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  /** Until first successful decode for this src; avoids shimmer flicker during playback stalls. */
-  const [voiceInitialLoadPending, setVoiceInitialLoadPending] = useState(
-    () => !!voiceUrl,
-  );
-
-  const handlePlayPause = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      void audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  }, [isPlaying]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const onEnded = () => setIsPlaying(false);
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('play', onPlay);
-    audio.addEventListener('pause', onPause);
-    return () => {
-      audio.removeEventListener('ended', onEnded);
-      audio.removeEventListener('play', onPlay);
-      audio.removeEventListener('pause', onPause);
-    };
-  }, [voiceUrl]);
-
-  useEffect(() => {
-    setVoiceInitialLoadPending(!!voiceUrl);
-  }, [voiceUrl]);
-
-  const acceptFieldMutation = api.runs.acceptSceneSuggestions.useMutation({
-    onSuccess: () => {
-      void utils.runs.getById.invalidate({ runId });
-    },
-  });
-
-  const persistChunksMutation = api.runs.acceptSceneSuggestions.useMutation({
-    onSuccess: () => {
-      void utils.runs.getById.invalidate({ runId });
-    },
-  });
-
-  const chunksRef = useRef(currentChunks);
-  chunksRef.current = currentChunks;
-
-  const acceptSceneSuggestion = useCallback(() => {
-    const sceneSuggestions =
-      useRunStore.getState().progress.sceneSuggestionsByVideo[videoId];
-    if (!sceneSuggestions) return;
-    const chunks = mergeSceneSuggestionsForOneScene(
-      currentChunks,
-      sceneSuggestions,
-      sceneIndex,
-    );
-    acceptFieldMutation.mutate({ runId, videoId, chunks });
-  }, [acceptFieldMutation, currentChunks, sceneIndex, videoId, runId]);
-
-  const acceptSuggestionPending =
-    acceptFieldMutation.isPending || blockAcceptSuggestionField;
-  const feedback = useRunStore((s) => {
-    const v = s.feedback.feedbackByVideo[videoId]?.sceneFeedback?.[sceneIndex];
-    return v ?? EMPTY_SCENE_FEEDBACK;
-  });
-  const setSceneFeedback = useRunStore((s) => s.setSceneFeedback);
+  const syncSceneDraftFromSource = useRunStore((s) => s.syncSceneDraftFromSource);
+  const setSceneEditorOpen = useRunStore((s) => s.setSceneEditorOpen);
+  const sceneUi = useRunStore((s) => s.ui.activeSceneUiByIndex[sceneIndex]);
   const suggestion = useRunStore(
-    (s) => s.progress.sceneSuggestionsByVideo[videoId]?.scenes?.[sceneIndex],
+    (s) => s.ui.activeSceneSuggestions?.scenes?.[sceneIndex],
   );
+  const scriptLocked = runPhase === "asset_gen" || runPhase === "export";
+  const scriptLineEditable = runPhase === "scripting";
+  const scriptText = sceneUi?.draft.scriptText ?? scene.text;
+  const imageryText = sceneUi?.draft.imageryText ?? scene.imagery;
 
-  const { sentiment, note } = feedback;
-  const [imageryText, setImageryText] = useState(scene.imagery);
-  const [declinedSuggestion, setDeclinedSuggestion] = useState(false);
-  const [feedbackPopoverOpen, setFeedbackPopoverOpen] = useState(false);
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [pendingSentiment, setPendingSentiment] = useState<"like" | "dislike">(
-    "like",
-  );
-  const [draftNote, setDraftNote] = useState("");
-  const [scriptText, setScriptText] = useState(scene.text);
-
-  useEffect(() => {
-    setImageryText(scene.imagery);
-  }, [scene.imagery]);
-
-  useEffect(() => {
-    setScriptText(scene.text);
-  }, [scene.text]);
-
-  useEffect(() => {
-    if (!suggestion) setDeclinedSuggestion(false);
-  }, [suggestion]);
-
-  const handleLikeClick = (e: React.MouseEvent) => {
-    if (sentiment === "like") {
-      e.stopPropagation();
-      setSceneFeedback(videoId, sceneIndex, emptySceneFeedback());
-      setFeedbackPopoverOpen(false);
-      return;
-    }
-    setSceneFeedback(videoId, sceneIndex, { sentiment: "like", note });
-    setPendingSentiment("like");
-    setDraftNote(note);
-    setFeedbackPopoverOpen(true);
-  };
-
-  const handleDislikeClick = (e: React.MouseEvent) => {
-    if (sentiment === "dislike") {
-      e.stopPropagation();
-      setSceneFeedback(videoId, sceneIndex, emptySceneFeedback());
-      setFeedbackPopoverOpen(false);
-      return;
-    }
-    setSceneFeedback(videoId, sceneIndex, { sentiment: "dislike", note });
-    setPendingSentiment("dislike");
-    setDraftNote(note);
-    setFeedbackPopoverOpen(true);
-  };
-
-  const persistNoteAndClose = () => {
-    setSceneFeedback(videoId, sceneIndex, {
-      sentiment: pendingSentiment,
-      note: draftNote,
-    });
-    setFeedbackPopoverOpen(false);
-  };
-
-  const handlePopoverOpenChange = (open: boolean) => {
-    setFeedbackPopoverOpen(open);
-    if (!open) persistNoteAndClose();
-  };
-
-  const handleNoteKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      persistNoteAndClose();
-    }
-  };
-
-  const hasSceneFeedback = sceneFeedbackToApiString(feedback).length > 0;
-
-  const canRegenerate =
-    imageryEditable &&
-    onRegenerate &&
-    (imageryText.trim().length > 0 || hasSceneFeedback);
-
-  const handleRegenerate = () => {
-    if (!onRegenerate || !canRegenerate) return;
-    if (imageryText.trim() !== scene.imagery.trim()) {
-      onRegenerate(sceneIndex, imageryText.trim());
-    } else if (hasSceneFeedback) {
-      onRegenerate(sceneIndex, undefined, sceneFeedbackToApiString(feedback));
-    } else {
-      onRegenerate(sceneIndex, imageryText.trim());
-    }
-  };
-
+  // blockingSuggestion determines if the current scene has a pending suggestion (text or imagery) 
+  // that differs from the original scene content, which blocks direct editing until resolved.
   const blockingSuggestion =
     !!suggestion &&
-    !declinedSuggestion &&
     (suggestion.text !== scene.text || suggestion.imagery !== scene.imagery);
 
-  const showScriptEditor = scriptLineEditable && !scriptLocked;
-
-  const scriptVoiceShimmer =
-    !blockingSuggestion &&
-    expectVoice &&
-    (!voiceUrl || voiceInitialLoadPending) &&
-    !showScriptEditor;
-
-  useEffect(() => {
-    if (!scriptLineEditable || blockingSuggestion) return;
-    if (scriptText === scene.text && imageryText === scene.imagery) return;
-    const id = window.setTimeout(() => {
-      const next = replaceSceneFields(chunksRef.current, sceneIndex, {
-        text: scriptText,
-        imagery: imageryText,
-      });
-      persistChunksMutation.mutate({ runId, videoId, chunks: next });
-    }, 450);
-    return () => window.clearTimeout(id);
-  }, [
+  useSceneAutosave({
+    runId,
+    videoId,
     scriptLineEditable,
     blockingSuggestion,
     scriptText,
     imageryText,
-    scene.text,
-    scene.imagery,
+    sceneText: scene.text,
+    sceneImagery: scene.imagery,
+  });
+
+  useEffect(() => {
+    syncSceneDraftFromSource(sceneIndex, {
+      scriptText: scene.text,
+      imageryText: scene.imagery,
+    });
+  }, [sceneIndex, scene.text, scene.imagery, syncSceneDraftFromSource]);
+
+  useEffect(() => {
+    if (!scriptLineEditable || scriptLocked || blockingSuggestion) {
+      setSceneEditorOpen(sceneIndex, "scriptOpen", false);
+    }
+    if (scriptLocked || blockingSuggestion) {
+      setSceneEditorOpen(sceneIndex, "imageryOpen", false);
+    }
+  }, [
     sceneIndex,
-    runId,
-    videoId,
-    persistChunksMutation,
+    scriptLineEditable,
+    scriptLocked,
+    blockingSuggestion,
+    setSceneEditorOpen,
   ]);
 
   return (
@@ -283,219 +86,31 @@ export function SceneRow({
       <CardContent className="pt-2">
         <div className="flex items-stretch gap-2">
           <div className="min-w-0 flex-1 space-y-2">
-            {blockingSuggestion ? (
-              <div className="space-y-2">
-                <WordDiff
-                  before={scene.text}
-                  after={suggestion!.text}
-                  variant="script"
-                />
-                <WordDiff
-                  before={scene.imagery}
-                  after={suggestion!.imagery}
-                  variant="imagery"
-                />
-                <div className="flex gap-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-6 text-xs"
-                    disabled={acceptSuggestionPending}
-                    onClick={acceptSceneSuggestion}
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 text-xs"
-                    disabled={acceptSuggestionPending}
-                    onClick={() => setDeclinedSuggestion(true)}
-                  >
-                    Decline
-                  </Button>
-                </div>
-              </div>
+            {blockingSuggestion && suggestion ? (
+              <SceneSuggestionDiff
+                sceneIndex={sceneIndex}
+                sceneText={scene.text}
+                sceneImagery={scene.imagery}
+                suggestedText={suggestion.text}
+                suggestedImagery={suggestion.imagery}
+                acceptPending={acceptSuggestionPending}
+              />
             ) : (
-              <>
-                <div
-                  className="flex items-start gap-2"
-                  aria-busy={scriptVoiceShimmer || undefined}
-                >
-                  {voiceUrl && (
-                    <>
-                      <audio
-                        ref={audioRef}
-                        src={voiceUrl}
-                        preload="metadata"
-                        onLoadedData={() => setVoiceInitialLoadPending(false)}
-                        onCanPlay={() => setVoiceInitialLoadPending(false)}
-                        onError={() => setVoiceInitialLoadPending(false)}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={handlePlayPause}
-                        className="mt-0.5 shrink-0 text-muted-foreground hover:text-foreground"
-                        aria-label={isPlaying ? 'Pause' : 'Play scene audio'}
-                      >
-                        {isPlaying ? (
-                          <Pause className="size-3.5" />
-                        ) : (
-                          <Play className="size-3.5" />
-                        )}
-                      </Button>
-                    </>
-                  )}
-                  {showScriptEditor ? (
-                    <AutosizeTextarea
-                      value={scriptText}
-                      onChange={(e) => setScriptText(e.target.value)}
-                      placeholder="Scene script…"
-                      className="max-h-80 min-w-0 flex-1 bg-transparent text-sm leading-snug dark:bg-transparent"
-                    />
-                  ) : (
-                    <p className="min-w-0 flex-1 text-sm leading-snug text-foreground">
-                      {scriptVoiceShimmer ? (
-                        <span className="text-shimmer-inline">{scene.text}</span>
-                      ) : (
-                        scene.text
-                      )}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  {imageryEditable ? (
-                    <AutosizeTextarea
-                      value={imageryText}
-                      onChange={(e) => setImageryText(e.target.value)}
-                      placeholder="Image description…"
-                      className="max-h-80 w-full bg-transparent text-xs dark:bg-transparent"
-                    />
-                  ) : (
-                    <p className="text-xs text-muted-foreground">{scene.imagery}</p>
-                  )}
-                </div>
-                {imageryEditable && onRegenerate && (
-                  <div className="flex items-center gap-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-6 text-xs"
-                      onClick={handleRegenerate}
-                      disabled={!canRegenerate || isRegenerating}
-                    >
-                      {isRegenerating ? "…" : "Regenerate"}
-                    </Button>
-                  </div>
-                )}
-              </>
+              <SceneEditableContent
+                sceneIndex={sceneIndex}
+                sceneText={scene.text}
+                sceneImagery={scene.imagery}
+              />
             )}
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1">
-            {expectImage && (
-              <Skeleton
-                className="h-20 min-h-[48px] w-14 shrink-0 rounded-md border border-border"
-                aria-hidden
-              />
-            )}
-            {imageUrl && !isRegenerating && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setImageDialogOpen(true);
-                }}
-                className="relative z-10 shrink-0 cursor-pointer overflow-hidden rounded border border-border bg-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="View scene image"
-              >
-                <img
-                  src={imageUrl}
-                  alt="Scene"
-                  className="block max-h-20 min-h-[48px] w-auto object-contain"
-                />
-              </button>
-            )}
+            <SceneImagePreview sceneIndex={sceneIndex} />
             <div className="mt-auto shrink-0">
-              <Popover open={feedbackPopoverOpen} onOpenChange={handlePopoverOpenChange}>
-                <div className="flex flex-col items-end gap-0.5">
-                  <PopoverTrigger asChild>
-                    <div className="flex gap-0.5">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={handleLikeClick}
-                        className={
-                          sentiment === "like"
-                            ? "text-green-600 hover:bg-green-500/10 hover:text-green-600"
-                            : "text-muted-foreground hover:text-foreground"
-                        }
-                        aria-label="Like scene"
-                      >
-                        <ThumbsUp className="size-3" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={handleDislikeClick}
-                        className={
-                          sentiment === "dislike"
-                            ? "text-amber-600 hover:bg-amber-500/10 hover:text-amber-600"
-                            : "text-muted-foreground hover:text-foreground"
-                        }
-                        aria-label="Dislike scene"
-                      >
-                        <ThumbsDown className="size-3" />
-                      </Button>
-                    </div>
-                  </PopoverTrigger>
-                  {(sentiment === "like" || sentiment === "dislike") && note.trim() && (
-                    <p className="max-w-[120px] truncate text-right text-[10px] text-muted-foreground">
-                      {note.trim()}
-                    </p>
-                  )}
-                </div>
-                <PopoverContent side="bottom" align="end" className="w-72">
-                  <p className="mb-2 text-xs font-medium text-muted-foreground">
-                    {pendingSentiment === "like"
-                      ? "What did you like?"
-                      : "What could improve?"}
-                  </p>
-                  <AutosizeTextarea
-                    maxHeightPx={192}
-                    value={draftNote}
-                    onChange={(e) => setDraftNote(e.target.value)}
-                    onKeyDown={handleNoteKeyDown}
-                    placeholder="Optional note…"
-                    className="max-h-48 text-sm"
-                  />
-                </PopoverContent>
-              </Popover>
+              <SceneFeedbackControls sceneIndex={sceneIndex} />
             </div>
           </div>
         </div>
       </CardContent>
-      {imageUrl && !isRegenerating && (
-        <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-          <DialogContent
-            className="w-fit max-w-[90vw] border-none bg-white p-2 shadow-none"
-            onPointerDownOutside={() => setImageDialogOpen(false)}
-          >
-            <img
-              src={imageUrl}
-              alt="Scene (full size)"
-              className="block max-h-[85vh] max-w-[90vw] object-contain"
-            />
-          </DialogContent>
-        </Dialog>
-      )}
     </Card>
   );
 }

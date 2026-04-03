@@ -16,7 +16,7 @@ export function ScriptFeedbackSection({
   disabled = false,
   error,
 }: ScriptFeedbackSectionProps) {
-  const scriptFeedback = useRunStore((s) => s.feedback.scriptFeedback);
+  const scriptFeedback = useRunStore((s) => s.ui.scriptFeedback);
   const setScriptFeedback = useRunStore((s) => s.setScriptFeedback);
 
   return (

@@ -1,25 +1,24 @@
 "use client";
 
-import { useMemo } from "react";
-
-import type { RunPhase } from "~/components/edit/RunProgressSteps";
-import { useRunStore } from "~/stores/useRunStore";
-import { api } from "~/utils/api";
+import { useMemo } from 'react';
+import { useRunStore } from '~/stores/useRunStore';
+import { api } from '~/utils/api';
 
 /** CDN URLs per scene index for thumbnails/audio; merges manifest, S3 listing, and WS progressive assets. */
 export function useVideoSceneAssetUrls(opts: {
   runId: string;
   videoId: string;
-  runPhase: RunPhase;
   videoStatus: string | null;
 }) {
-  const { runId, videoId, runPhase, videoStatus } = opts;
-  const assetsByVideo = useRunStore((s) => s.progress.assetsByVideo);
-  const assetsRefreshKeyByVideo = useRunStore(
-    (s) => s.progress.assetsRefreshKeyByVideo,
+  const { runId, videoId, videoStatus } = opts;
+  const activeAssetBaseUrl = useRunStore((s) => s.ui.activeAssetBaseUrl);
+  const activeSceneUiByIndex = useRunStore((s) => s.ui.activeSceneUiByIndex);
+  const activeAssetsRefreshKey = useRunStore(
+    (s) => s.ui.activeAssetsRefreshKey,
   );
 
   const showPreview =
+    videoStatus === "scripts" ||
     videoStatus === "assets" ||
     videoStatus === "exporting" ||
     videoStatus === "exported";
@@ -28,26 +27,14 @@ export function useVideoSceneAssetUrls(opts: {
     { runId, videoId },
     { enabled: !!runId && !!videoId && showPreview },
   );
-  const { data: listedAssets } = api.runs.listVideoAssets.useQuery(
-    { runId, videoId },
-    {
-      enabled:
-        !!runId &&
-        !!videoId &&
-        (runPhase === "asset_gen" || runPhase === "export") &&
-        !videoAssets?.manifest,
-    },
-  );
 
   return useMemo(() => {
-    const base =
-      videoAssets?.assetBaseUrl ??
-      listedAssets?.assetBaseUrl ??
-      assetsByVideo[videoId]?.assetBaseUrl;
-    if (!base) return { imageUrlByIndex: undefined, voiceUrlByIndex: undefined };
+    const base = videoAssets?.assetBaseUrl ?? activeAssetBaseUrl;
+    if (!base)
+      return { imageUrlByIndex: undefined, voiceUrlByIndex: undefined };
 
     const baseNorm = base.replace(/\/$/, "");
-    const refreshKey = assetsRefreshKeyByVideo[videoId];
+    const refreshKey = activeAssetsRefreshKey;
     const imageSuffix = refreshKey != null ? `?v=${refreshKey}` : "";
     const imageMap: Record<number, string> = {};
     const voiceMap: Record<number, string> = {};
@@ -59,10 +46,30 @@ export function useVideoSceneAssetUrls(opts: {
         if (scene.voicePath) voiceMap[i] = `${baseNorm}/${scene.voicePath}`;
       });
     } else {
+      const activeImageByIndex = Object.entries(activeSceneUiByIndex).reduce<
+        Record<number, string>
+      >((acc, [sceneIndex, sceneUi]) => {
+        if (sceneUi?.assets.imagePath) {
+          acc[Number(sceneIndex)] = sceneUi.assets.imagePath;
+        }
+        return acc;
+      }, {});
+      const activeVoiceByIndex = Object.entries(activeSceneUiByIndex).reduce<
+        Record<number, string>
+      >((acc, [sceneIndex, sceneUi]) => {
+        if (sceneUi?.assets.voicePath) {
+          acc[Number(sceneIndex)] = sceneUi.assets.voicePath;
+        }
+        return acc;
+      }, {});
       const imgSrc =
-        assetsByVideo[videoId]?.imageByIndex ?? listedAssets?.imageByIndex ?? {};
+        Object.keys(activeImageByIndex).length > 0
+          ? activeImageByIndex
+          : (videoAssets?.imageByIndex ?? {});
       const voiceSrc =
-        assetsByVideo[videoId]?.voiceByIndex ?? listedAssets?.voiceByIndex ?? {};
+        Object.keys(activeVoiceByIndex).length > 0
+          ? activeVoiceByIndex
+          : (videoAssets?.voiceByIndex ?? {});
       Object.entries(imgSrc).forEach(([k, path]) => {
         imageMap[Number(k)] = `${baseNorm}/${path}${imageSuffix}`;
       });
@@ -77,9 +84,8 @@ export function useVideoSceneAssetUrls(opts: {
     };
   }, [
     videoAssets,
-    listedAssets,
-    assetsByVideo,
-    assetsRefreshKeyByVideo,
-    videoId,
+    activeAssetBaseUrl,
+    activeSceneUiByIndex,
+    activeAssetsRefreshKey,
   ]);
 }

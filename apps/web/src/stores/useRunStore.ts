@@ -1,11 +1,15 @@
 "use client";
 
-import { produce } from "immer";
-import { create } from "zustand";
+import { produce } from 'immer';
+import { create } from 'zustand';
 
-import { chunksSchema } from "@shortgen/types";
+import { chunksSchema } from '@shortgen/types';
 
-import type { ChunksOutput, ProgressEventType, WorkflowType } from "@shortgen/types";
+import type {
+  ChunksOutput,
+  ProgressEventType,
+  WorkflowType,
+} from "@shortgen/types";
 
 import type { SceneFeedback } from "~/lib/sceneFeedback";
 
@@ -17,112 +21,221 @@ export interface VideoProgress {
   statusMessage: string;
 }
 
+export interface SceneRowUiState {
+  draft: {
+    scriptText: string;
+    imageryText: string;
+    dirty: boolean;
+  };
+  feedback: SceneFeedback;
+  editor: {
+    scriptOpen: boolean;
+    imageryOpen: boolean;
+  };
+  assets: {
+    imagePath: string | null;
+    voicePath: string | null;
+  };
+}
+
 export interface RunStoreUi {
   runId: string | null;
-  sourceTextByVideo: Record<string, string>;
-  logsModalOpen: boolean;
-}
-
-export interface RunStoreFeedback {
+  activeVideoId: string | null;
+  activeRunPhase:
+    | "breakdown"
+    | "scripting"
+    | "asset_gen"
+    | "export"
+    | "failed"
+    | null;
+  activeVideoStatus: string | null;
+  activeSourceText: string;
   scriptFeedback: string;
-  feedbackByVideo: Record<
-    string,
-    { sceneFeedback?: Record<number, SceneFeedback> }
-  >;
-}
-
-/** Maps video ID → ChunksOutput (LLM scene suggestions: streaming partial or final). From suggestion_partial / suggestion_completed WS events. */
-export type SceneSuggestionsByVideo = { [videoId: string]: ChunksOutput };
-
-/** Per-video progressive assets from WebSocket (image_uploaded, voice_uploaded). Used before manifest exists. */
-export interface VideoAssets {
-  assetBaseUrl: string;
-  imageByIndex: Record<number, string>;
-  voiceByIndex: Record<number, string>;
-}
-
-export interface RunStoreProgress {
+  activeSceneSuggestions: ChunksOutput | null;
+  activeAssetBaseUrl: string | null;
+  /** Bumped when update_imagery completes; used as cache-buster for image URLs */
+  activeAssetsRefreshKey: number;
+  /** True if a manual decision is pending on a script suggestion (blocks accept/discard actions). */
+  suggestionDecisionPending: boolean;
+  activeSceneUiByIndex: Record<number, SceneRowUiState>;
   breakdownComplete: boolean;
   sceneUpdating: number | null;
   videoUpdating: boolean;
-  sceneSuggestionsByVideo: SceneSuggestionsByVideo;
+  logsModalOpen: boolean;
+}
+
+export interface RunStoreProgress {
   videoProgressByVideo: Record<string, VideoProgress>;
-  assetsByVideo: Record<string, VideoAssets>;
-  /** Bumped when update_imagery completes; used as cache-buster for image URLs */
-  assetsRefreshKeyByVideo: Record<string, number>;
 }
 
 interface RunStore {
   ui: RunStoreUi;
-  feedback: RunStoreFeedback;
   progress: RunStoreProgress;
+  setRunId: (runId: string) => void;
+  setActiveVideo: (videoId: string) => void;
+  setActiveRunPhase: (
+    phase: "breakdown" | "scripting" | "asset_gen" | "export" | "failed",
+  ) => void;
+  setActiveVideoStatus: (status: string | null) => void;
+  setActiveSourceText: (text: string) => void;
   setScriptFeedback: (s: string) => void;
   /** Set from suggestion_partial (parsed string) or suggestion_completed (chunks object). */
-  setSceneSuggestions: (videoId: string, data: string | ChunksOutput) => void;
-  clearSceneSuggestions: (videoId: string) => void;
-  setSceneFeedback: (
-    videoId: string,
+  setSceneSuggestions: (data: string | ChunksOutput) => void;
+  clearSceneSuggestions: () => void;
+  clearSceneSuggestionAt: (sceneIndex: number) => void;
+  setSceneFeedback: (sceneIndex: number, feedback: SceneFeedback) => void;
+  setSceneDraft: (
     sceneIndex: number,
-    feedback: SceneFeedback,
+    patch: Partial<SceneRowUiState["draft"]>,
+  ) => void;
+  syncSceneDraftFromSource: (
+    sceneIndex: number,
+    source: { scriptText: string; imageryText: string },
+  ) => void;
+  setSceneEditorOpen: (
+    sceneIndex: number,
+    field: keyof SceneRowUiState["editor"],
+    open: boolean,
   ) => void;
   setLogsModalOpen: (open: boolean) => void;
-  setSourceText: (videoId: string, text: string) => void;
   setBreakdownComplete: (complete: boolean) => void;
   setSceneUpdating: (index: number | null) => void;
   setVideoUpdating: (updating: boolean) => void;
+  setSuggestionDecisionPending: (pending: boolean) => void;
   setVideoProgress: (videoId: string, progress: VideoProgress | null) => void;
-  setAssetsBaseUrl: (videoId: string, assetBaseUrl: string) => void;
+  setAssetsBaseUrl: (assetBaseUrl: string) => void;
   setAssetUploaded: (
-    videoId: string,
     kind: "image" | "voice",
     sceneIndex: number,
     path: string,
   ) => void;
-  bumpAssetsRefreshKey: (videoId: string) => void;
+  bumpAssetsRefreshKey: () => void;
   init: (runId: string) => void;
   reset: () => void;
 }
 
 const initialUi: RunStoreUi = {
   runId: null,
-  sourceTextByVideo: {},
-  logsModalOpen: false,
-};
-
-const initialFeedback: RunStoreFeedback = {
+  activeVideoId: null,
+  activeRunPhase: null,
+  activeVideoStatus: null,
+  activeSourceText: "",
   scriptFeedback: "",
-  feedbackByVideo: {},
-};
-
-const initialProgress: RunStoreProgress = {
+  activeSceneSuggestions: null,
+  activeAssetBaseUrl: null,
+  activeAssetsRefreshKey: 0,
+  suggestionDecisionPending: false,
+  activeSceneUiByIndex: {},
   breakdownComplete: false,
   sceneUpdating: null,
   videoUpdating: false,
-  sceneSuggestionsByVideo: {},
-  videoProgressByVideo: {},
-  assetsByVideo: {},
-  assetsRefreshKeyByVideo: {},
+  logsModalOpen: false,
 };
+
+const initialProgress: RunStoreProgress = {
+  videoProgressByVideo: {},
+};
+
+function defaultSceneRowUiState(): SceneRowUiState {
+  return {
+    draft: { scriptText: "", imageryText: "", dirty: false },
+    feedback: { sentiment: null, note: "" },
+    editor: { scriptOpen: false, imageryOpen: false },
+    assets: { imagePath: null, voicePath: null },
+  };
+}
+
+function ensureSceneUi(draft: RunStoreUi, sceneIndex: number): SceneRowUiState {
+  if (!draft.activeSceneUiByIndex[sceneIndex]) {
+    draft.activeSceneUiByIndex[sceneIndex] = defaultSceneRowUiState();
+  }
+  return draft.activeSceneUiByIndex[sceneIndex]!;
+}
 
 export const useRunStore = create<RunStore>((set) => ({
   ui: initialUi,
-  feedback: initialFeedback,
   progress: initialProgress,
 
+  setRunId: (runId) =>
+    set((s) =>
+      produce(s, (draft) => {
+        draft.ui.runId = runId;
+      }),
+    ),
+  setActiveVideo: (videoId) =>
+    set((s) =>
+      produce(s, (draft) => {
+        if (draft.ui.activeVideoId === videoId) return;
+        draft.ui.activeVideoId = videoId;
+        draft.ui.activeVideoStatus = null;
+        draft.ui.activeSourceText = "";
+        draft.ui.scriptFeedback = "";
+        draft.ui.activeSceneSuggestions = null;
+        draft.ui.activeAssetBaseUrl = null;
+        draft.ui.activeAssetsRefreshKey = 0;
+        draft.ui.suggestionDecisionPending = false;
+        draft.ui.activeSceneUiByIndex = {};
+        draft.ui.sceneUpdating = null;
+        draft.ui.videoUpdating = false;
+      }),
+    ),
+  setActiveRunPhase: (phase) =>
+    set((s) =>
+      produce(s, (draft) => {
+        draft.ui.activeRunPhase = phase;
+      }),
+    ),
+  setActiveVideoStatus: (status) =>
+    set((s) =>
+      produce(s, (draft) => {
+        draft.ui.activeVideoStatus = status;
+      }),
+    ),
+  setActiveSourceText: (text) =>
+    set((s) =>
+      produce(s, (draft) => {
+        draft.ui.activeSourceText = text;
+      }),
+    ),
   setScriptFeedback: (val) =>
     set((s) =>
       produce(s, (draft) => {
-        draft.feedback.scriptFeedback = val;
+        draft.ui.scriptFeedback = val;
       }),
     ),
-  setSceneFeedback: (videoId, sceneIndex, feedback) =>
+  setSceneFeedback: (sceneIndex, feedback) =>
     set((s) =>
       produce(s, (draft) => {
-        const byVideo = draft.feedback.feedbackByVideo;
-        if (!byVideo[videoId]) byVideo[videoId] = {};
-        if (!byVideo[videoId].sceneFeedback)
-          byVideo[videoId].sceneFeedback = {};
-        byVideo[videoId].sceneFeedback![sceneIndex] = feedback;
+        const ui = ensureSceneUi(draft.ui, sceneIndex);
+        ui.feedback = feedback;
+      }),
+    ),
+  setSceneDraft: (sceneIndex, patch) =>
+    set((s) =>
+      produce(s, (draft) => {
+        const ui = ensureSceneUi(draft.ui, sceneIndex);
+        ui.draft = { ...ui.draft, ...patch };
+      }),
+    ),
+  syncSceneDraftFromSource: (sceneIndex, source) =>
+    set((s) =>
+      produce(s, (draft) => {
+        const ui = ensureSceneUi(draft.ui, sceneIndex);
+        const sourceChanged =
+          ui.draft.scriptText !== source.scriptText ||
+          ui.draft.imageryText !== source.imageryText;
+        if (!ui.draft.dirty || !sourceChanged) {
+          ui.draft.scriptText = source.scriptText;
+          ui.draft.imageryText = source.imageryText;
+          ui.draft.dirty = false;
+        }
+      }),
+    ),
+  setSceneEditorOpen: (sceneIndex, field, open) =>
+    set((s) =>
+      produce(s, (draft) => {
+        const ui = ensureSceneUi(draft.ui, sceneIndex);
+        ui.editor[field] = open;
       }),
     ),
   setLogsModalOpen: (open) =>
@@ -131,25 +244,19 @@ export const useRunStore = create<RunStore>((set) => ({
         draft.ui.logsModalOpen = open;
       }),
     ),
-  setSourceText: (videoId, text) =>
-    set((s) =>
-      produce(s, (draft) => {
-        draft.ui.sourceTextByVideo[videoId] = text;
-      }),
-    ),
   setBreakdownComplete: (complete) =>
     set((s) =>
       produce(s, (draft) => {
-        draft.progress.breakdownComplete = complete;
+        draft.ui.breakdownComplete = complete;
       }),
     ),
   setSceneUpdating: (index) =>
     set((s) =>
       produce(s, (draft) => {
-        draft.progress.sceneUpdating = index;
+        draft.ui.sceneUpdating = index;
       }),
     ),
-  setSceneSuggestions: (videoId, data) =>
+  setSceneSuggestions: (data) =>
     set((s) =>
       produce(s, (draft) => {
         const raw =
@@ -166,20 +273,40 @@ export const useRunStore = create<RunStore>((set) => ({
           ? chunksSchema.safeParse(raw)
           : { success: false as const, data: null };
         if (result.success) {
-          draft.progress.sceneSuggestionsByVideo[videoId] = result.data;
+          draft.ui.activeSceneSuggestions = result.data;
         }
       }),
     ),
-  clearSceneSuggestions: (videoId) =>
+  clearSceneSuggestions: () =>
     set((s) =>
       produce(s, (draft) => {
-        delete draft.progress.sceneSuggestionsByVideo[videoId];
+        draft.ui.activeSceneSuggestions = null;
+      }),
+    ),
+  clearSceneSuggestionAt: (sceneIndex) =>
+    set((s) =>
+      produce(s, (draft) => {
+        const current = draft.ui.activeSceneSuggestions;
+        if (!current?.scenes?.length) return;
+        const nextScenes = current.scenes.map((scene, idx) =>
+          idx === sceneIndex ? undefined : scene,
+        );
+        const hasRemaining = nextScenes.some((x) => !!x);
+        draft.ui.activeSceneSuggestions = hasRemaining
+          ? ({ ...current, scenes: nextScenes } as ChunksOutput)
+          : null;
       }),
     ),
   setVideoUpdating: (updating) =>
     set((s) =>
       produce(s, (draft) => {
-        draft.progress.videoUpdating = updating;
+        draft.ui.videoUpdating = updating;
+      }),
+    ),
+  setSuggestionDecisionPending: (pending) =>
+    set((s) =>
+      produce(s, (draft) => {
+        draft.ui.suggestionDecisionPending = pending;
       }),
     ),
   setVideoProgress: (videoId, progress) =>
@@ -192,59 +319,39 @@ export const useRunStore = create<RunStore>((set) => ({
         }
       }),
     ),
-  setAssetsBaseUrl: (videoId, assetBaseUrl) =>
+  setAssetsBaseUrl: (assetBaseUrl) =>
     set((s) =>
       produce(s, (draft) => {
-        if (!draft.progress.assetsByVideo[videoId]) {
-          draft.progress.assetsByVideo[videoId] = {
-            assetBaseUrl,
-            imageByIndex: {},
-            voiceByIndex: {},
-          };
-        } else {
-          draft.progress.assetsByVideo[videoId]!.assetBaseUrl = assetBaseUrl;
-        }
+        draft.ui.activeAssetBaseUrl = assetBaseUrl;
       }),
     ),
-  setAssetUploaded: (videoId, kind, sceneIndex, path) =>
+  setAssetUploaded: (kind, sceneIndex, path) =>
     set((s) =>
       produce(s, (draft) => {
-        const entry = draft.progress.assetsByVideo[videoId];
-        if (!entry) return;
+        const ui = ensureSceneUi(draft.ui, sceneIndex);
         if (kind === "image") {
-          entry.imageByIndex[sceneIndex] = path;
+          ui.assets.imagePath = path;
         } else {
-          entry.voiceByIndex[sceneIndex] = path;
+          ui.assets.voicePath = path;
         }
       }),
     ),
-  bumpAssetsRefreshKey: (videoId) =>
+  bumpAssetsRefreshKey: () =>
     set((s) =>
       produce(s, (draft) => {
-        const key = draft.progress.assetsRefreshKeyByVideo[videoId] ?? 0;
-        draft.progress.assetsRefreshKeyByVideo[videoId] = key + 1;
+        draft.ui.activeAssetsRefreshKey += 1;
       }),
     ),
 
   init: (runId) =>
     set({
       ui: { ...initialUi, runId },
-      feedback: initialFeedback,
-      progress: {
-        ...initialProgress,
-        assetsByVideo: {},
-        assetsRefreshKeyByVideo: {},
-      },
+      progress: initialProgress,
     }),
 
   reset: () =>
     set({
       ui: initialUi,
-      feedback: initialFeedback,
-      progress: {
-        ...initialProgress,
-        assetsByVideo: {},
-        assetsRefreshKeyByVideo: {},
-      },
+      progress: initialProgress,
     }),
 }));

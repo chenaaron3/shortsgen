@@ -282,15 +282,20 @@ export const runsRouter = createTRPCRouter({
     }),
 
   /**
-   * Persist accepted LLM scene suggestions (ChunksOutput) to DB. Call after user accepts
-   * the revision from suggestion_completed (stored in sceneSuggestionsByVideo until cleared).
+   * Persist active scene drafts to DB. Frontend sends draft text/imagery by scene index.
    */
   acceptSceneSuggestions: protectedProcedure
     .input(
       z.object({
         runId: z.string().uuid(),
         videoId: z.string().uuid(),
-        chunks: chunksSchema,
+        sceneDraftsByIndex: z.record(
+          z.string(),
+          z.object({
+            scriptText: z.string(),
+            imageryText: z.string(),
+          }),
+        ),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -314,9 +319,36 @@ export const runsRouter = createTRPCRouter({
         throw new Error("Video not found");
       }
 
+      const rawChunks =
+        typeof video.chunks === "string"
+          ? (JSON.parse(video.chunks) as unknown)
+          : video.chunks;
+      const parsedChunks = chunksSchema.safeParse(rawChunks);
+      if (!parsedChunks.success) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Video chunks are invalid and cannot be updated",
+        });
+      }
+
+      const nextScenes = parsedChunks.data.scenes.map((scene, idx) => {
+        const patch = input.sceneDraftsByIndex[String(idx)];
+        if (!patch) return scene;
+        return {
+          ...scene,
+          text: patch.scriptText,
+          imagery: patch.imageryText,
+        };
+      });
+
+      const nextChunks = {
+        ...parsedChunks.data,
+        scenes: nextScenes,
+      };
+
       await ctx.db
         .update(videos)
-        .set({ chunks: JSON.stringify(input.chunks) })
+        .set({ chunks: JSON.stringify(nextChunks) })
         .where(eq(videos.id, input.videoId));
 
       return { ok: true };
@@ -718,93 +750,10 @@ export const runsRouter = createTRPCRouter({
     }),
 
   /**
-   * List partial video assets (images/voice) from S3. For progressive display and refresh.
-   * Returns scene index -> path map. No manifest required. Uses naming convention images/image_N.png, voice/voice_N.mp3.
-   */
-  listVideoAssets: protectedProcedure
-    .input(
-      z.object({
-        runId: z.string().uuid(),
-        videoId: z.string().uuid(),
-      }),
-    )
-    .query(
-      async ({
-        ctx,
-        input,
-      }): Promise<{
-        assetBaseUrl: string;
-        imageByIndex: Record<number, string>;
-        voiceByIndex: Record<number, string>;
-      } | null> => {
-        const [video] = await ctx.db
-          .select({ s3Prefix: videos.s3_prefix })
-          .from(videos)
-          .where(
-            and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
-          );
-
-        if (!video?.s3Prefix) return null;
-
-        const [run] = await ctx.db
-          .select({ userId: runs.userId })
-          .from(runs)
-          .where(eq(runs.id, input.runId));
-
-        if (!run || run.userId !== ctx.session.user.id) return null;
-
-        const prefix = video.s3Prefix.replace(/\/$/, "") + "/";
-        const cdnBase = env.SHORTGEN_CDN_URL.replace(/\/$/, "");
-        const assetBaseUrl = `${cdnBase}/${prefix.replace(/\/$/, "")}`;
-        const bucket = env.SHORTGEN_BUCKET_NAME;
-
-        const imageByIndex: Record<number, string> = {};
-        const voiceByIndex: Record<number, string> = {};
-
-        try {
-          const client = new S3Client({});
-          for (const subPrefix of ["images/", "voice/"]) {
-            const fullPrefix = prefix + subPrefix;
-            let continuationToken: string | undefined;
-            do {
-              const resp = await client.send(
-                new ListObjectsV2Command({
-                  Bucket: bucket,
-                  Prefix: fullPrefix,
-                  ContinuationToken: continuationToken,
-                }),
-              );
-              for (const obj of resp.Contents ?? []) {
-                if (!obj.Key || !obj.Key.startsWith(fullPrefix)) continue;
-                const rel = obj.Key.slice(fullPrefix.length);
-                const match = rel.match(
-                  subPrefix === "images/"
-                    ? /^image_(\d+)\.png$/
-                    : /^voice_(\d+)\.mp3$/,
-                );
-                if (match) {
-                  const sceneIndex = parseInt(match[1]!, 10) - 1;
-                  const path = subPrefix + rel;
-                  if (subPrefix === "images/") {
-                    imageByIndex[sceneIndex] = path;
-                  } else {
-                    voiceByIndex[sceneIndex] = path;
-                  }
-                }
-              }
-              continuationToken = resp.NextContinuationToken;
-            } while (continuationToken);
-          }
-          return { assetBaseUrl, imageByIndex, voiceByIndex };
-        } catch {
-          return { assetBaseUrl, imageByIndex, voiceByIndex };
-        }
-      },
-    ),
-
-  /**
-   * Get video assets (manifest + CDN base URL) for preview. All asset reads go through CDN.
-   * When video is exported, includes exportUrl for download.
+   * Get video assets from a single endpoint:
+   * - Returns manifest when available
+   * - Falls back to S3 listing for partial images/voice when manifest is missing
+   * - Includes exportUrl when video is exported
    */
   getVideoAssets: protectedProcedure
     .input(
@@ -818,8 +767,10 @@ export const runsRouter = createTRPCRouter({
         ctx,
         input,
       }): Promise<{
-        manifest: VideoManifest;
+        manifest?: VideoManifest;
         assetBaseUrl: string;
+        imageByIndex: Record<number, string>;
+        voiceByIndex: Record<number, string>;
         exportUrl?: string;
         backgroundMusicUrl: string;
       } | null> => {
@@ -845,28 +796,75 @@ export const runsRouter = createTRPCRouter({
         const prefix = video.s3Prefix.replace(/\/$/, "");
         const cdnBase = env.SHORTGEN_CDN_URL.replace(/\/$/, "");
         const assetBaseUrl = `${cdnBase}/${prefix}`;
+        const bucket = env.SHORTGEN_BUCKET_NAME;
         const manifestUrl = `${assetBaseUrl}/manifest.json`;
+        const exportUrl =
+          video.status === "exported"
+            ? `${cdnBase}/${prefix}/short.mp4`
+            : undefined;
+        const backgroundMusicUrl = `${cdnBase}/assets/background_music.mp3`;
+        const imageByIndex: Record<number, string> = {};
+        const voiceByIndex: Record<number, string> = {};
+        let manifest: VideoManifest | undefined;
 
         try {
           const res = await fetch(manifestUrl);
-          if (!res.ok) return null;
-          const data = (await res.json()) as unknown;
-          const manifest = manifestSchema.parse(data);
-          const exportUrl =
-            video.status === "exported"
-              ? `${cdnBase}/${prefix}/short.mp4`
-              : undefined;
-          const backgroundMusicUrl = `${cdnBase}/assets/background_music.mp3`;
-          return {
-            manifest,
-            assetBaseUrl,
-            exportUrl,
-            backgroundMusicUrl,
-          };
+          if (res.ok) {
+            const data = (await res.json()) as unknown;
+            manifest = manifestSchema.parse(data);
+          }
         } catch {
           console.log("error fetching manifest", manifestUrl);
-          return null;
         }
+
+        if (!manifest) {
+          const s3Prefix = prefix + "/";
+          try {
+            const client = new S3Client({});
+            for (const subPrefix of ["images/", "voice/"] as const) {
+              const fullPrefix = s3Prefix + subPrefix;
+              let continuationToken: string | undefined;
+              do {
+                const resp = await client.send(
+                  new ListObjectsV2Command({
+                    Bucket: bucket,
+                    Prefix: fullPrefix,
+                    ContinuationToken: continuationToken,
+                  }),
+                );
+                for (const obj of resp.Contents ?? []) {
+                  if (!obj.Key || !obj.Key.startsWith(fullPrefix)) continue;
+                  const rel = obj.Key.slice(fullPrefix.length);
+                  const match = rel.match(
+                    subPrefix === "images/"
+                      ? /^image_(\d+)\.png$/
+                      : /^voice_(\d+)\.mp3$/,
+                  );
+                  if (!match) continue;
+                  const sceneIndex = parseInt(match[1]!, 10) - 1;
+                  const path = subPrefix + rel;
+                  if (subPrefix === "images/") {
+                    imageByIndex[sceneIndex] = path;
+                  } else {
+                    voiceByIndex[sceneIndex] = path;
+                  }
+                }
+                continuationToken = resp.NextContinuationToken;
+              } while (continuationToken);
+            }
+          } catch {
+            // Best-effort listing; return what we have.
+          }
+        }
+
+        return {
+          manifest,
+          assetBaseUrl,
+          imageByIndex,
+          voiceByIndex,
+          exportUrl,
+          backgroundMusicUrl,
+        };
       },
     ),
 });
