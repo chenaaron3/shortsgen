@@ -33,13 +33,15 @@ export function useSceneRowMutations({
   const setVideoProgress = useRunStore((s) => s.setVideoProgress);
   const utils = api.useUtils();
   const updateImageryMutation = api.runs.updateImagery.useMutation({
-    onSuccess: (_, variables) => {
+    onMutate: (variables) => {
       setVideoProgress(variables.videoId, {
         workflow: "update_imagery",
         type: "request_sent",
         progress: 0,
         statusMessage: "Starting…",
       });
+    },
+    onSuccess: (_, variables) => {
       void utils.runs.getById.invalidate({ runId: variables.runId });
     },
     onError: () => setSceneUpdating(null),

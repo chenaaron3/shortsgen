@@ -115,6 +115,12 @@ export function SceneEditableContent({
             }
             onBlur={() => setSceneEditorOpen(sceneIndex, "scriptOpen", false)}
             onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setSceneEditorOpen(sceneIndex, "scriptOpen", false);
+                e.currentTarget.blur();
+                return;
+              }
               if (e.key === "Escape") {
                 e.preventDefault();
                 setSceneEditorOpen(sceneIndex, "scriptOpen", false);
@@ -129,20 +135,20 @@ export function SceneEditableContent({
           <button
             type="button"
             onClick={() => setSceneEditorOpen(sceneIndex, "scriptOpen", true)}
-            className="min-w-0 flex-1 text-left text-sm leading-snug text-foreground"
+            className="min-w-0 flex-1 text-left text-sm leading-snug text-foreground transition-colors hover:underline cursor-text"
           >
             {scriptVoiceShimmer ? (
-              <span className="text-shimmer-inline">{sceneText}</span>
+              <span className="text-shimmer-inline">{scriptText}</span>
             ) : (
-              sceneText
+              scriptText
             )}
           </button>
         ) : (
           <p className="min-w-0 flex-1 text-sm leading-snug text-foreground">
             {scriptVoiceShimmer ? (
-              <span className="text-shimmer-inline">{sceneText}</span>
+              <span className="text-shimmer-inline">{scriptText}</span>
             ) : (
-              sceneText
+              scriptText
             )}
           </p>
         )}
@@ -156,6 +162,12 @@ export function SceneEditableContent({
             }
             onBlur={() => setSceneEditorOpen(sceneIndex, "imageryOpen", false)}
             onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setSceneEditorOpen(sceneIndex, "imageryOpen", false);
+                e.currentTarget.blur();
+                return;
+              }
               if (e.key === "Escape") {
                 e.preventDefault();
                 setSceneEditorOpen(sceneIndex, "imageryOpen", false);
@@ -170,12 +182,12 @@ export function SceneEditableContent({
           <button
             type="button"
             onClick={() => setSceneEditorOpen(sceneIndex, "imageryOpen", true)}
-            className="w-full text-left text-xs text-muted-foreground"
+            className="w-full text-left text-xs text-muted-foreground transition-colors hover:underline cursor-text"
           >
-            {sceneImagery}
+            {imageryText}
           </button>
         ) : (
-          <p className="text-xs text-muted-foreground">{sceneImagery}</p>
+          <p className="text-xs text-muted-foreground">{imageryText}</p>
         )}
       </div>
       {imageryEditable && regenerateAllowed && (

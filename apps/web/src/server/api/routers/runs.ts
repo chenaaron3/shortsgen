@@ -549,8 +549,8 @@ export const runsRouter = createTRPCRouter({
 
       if (!video || !video.render_id || video.status !== "exporting") {
         return {
-          overallProgress: 0,
-          done: false,
+          overallProgress: video?.status === "exported" ? 1 : 0,
+          done: true,
           fatalErrorEncountered: false,
         };
       }

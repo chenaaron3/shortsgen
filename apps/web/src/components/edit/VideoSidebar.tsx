@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Loader2, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { useState } from "react";
 import { getVideoDisplayName } from "~/lib/parseVideoChunks";
 import { getProgressValue, getStepLabel } from "~/lib/videoProgress";
@@ -128,12 +129,12 @@ export function VideoSidebar({
                   }`}
                 >
                   {inProgress && (
-                    <div
-                      className="absolute inset-0 z-0 transition-[background] duration-300"
+                    <motion.div
+                      className="absolute inset-y-0 left-0 z-0 bg-primary/30"
                       aria-hidden
-                      style={{
-                        background: `linear-gradient(to right, color-mix(in oklch, var(--primary) 30%, transparent) 0%, color-mix(in oklch, var(--primary) 30%, transparent) ${progressPct * 100}%, transparent ${progressPct * 100}%, transparent 100%)`,
-                      }}
+                      initial={false}
+                      animate={{ width: `${Math.max(0, Math.min(1, progressPct)) * 100}%` }}
+                      transition={{ duration: 0.35, ease: "easeOut" }}
                     />
                   )}
                   <div className="relative z-10 flex w-full flex-col gap-0.5 px-3 py-2">

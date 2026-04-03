@@ -292,9 +292,15 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       }
     }
 
-    if (msg.type === "suggestion_completed" && msg.payload && isActiveVideo) {
-      const p = msg.payload as { chunks?: ChunksOutput };
-      if (p.chunks) setSceneSuggestions(p.chunks);
+    if (msg.type === "suggestion_completed" && isActiveVideo) {
+      const p = msg.payload as { chunks?: ChunksOutput } | undefined;
+      if (p?.chunks) setSceneSuggestions(p.chunks);
+
+      const { ui, setScriptFeedback, setSceneFeedback } = useRunStore.getState();
+      setScriptFeedback("");
+      Object.keys(ui.activeSceneUiByIndex).forEach((sceneIndex) => {
+        setSceneFeedback(Number(sceneIndex), { sentiment: null, note: "" });
+      });
     }
 
     if (msg.type === "video_started" && msg.payload) {
