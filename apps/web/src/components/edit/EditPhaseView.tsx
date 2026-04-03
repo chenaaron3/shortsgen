@@ -37,8 +37,6 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   const setRunId = useRunStore((s) => s.setRunId);
   const setActiveVideo = useRunStore((s) => s.setActiveVideo);
   const setActiveRunPhase = useRunStore((s) => s.setActiveRunPhase);
-  const setActiveVideoStatus = useRunStore((s) => s.setActiveVideoStatus);
-  const setActiveSourceText = useRunStore((s) => s.setActiveSourceText);
 
   const activeSourceText = useRunStore((s) => s.ui.activeSourceText);
   const breakdownComplete = useRunStore((s) => s.ui.breakdownComplete);
@@ -63,12 +61,12 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
   }, [runId, setRunId]);
 
   useEffect(() => {
-    setActiveVideo(videoId);
-  }, [videoId, setActiveVideo]);
-
-  useEffect(() => {
-    setActiveSourceText(selectedVideo?.source_text ?? "");
-  }, [selectedVideo?.id, selectedVideo?.source_text, setActiveSourceText]);
+    setActiveVideo({
+      id: videoId,
+      status: selectedVideo?.status ?? null,
+      sourceText: selectedVideo?.source_text ?? "",
+    });
+  }, [videoId, selectedVideo?.status, selectedVideo?.source_text, setActiveVideo]);
 
   useEffect(() => {
     if (!sceneSuggestions) return;
@@ -125,16 +123,16 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     },
   });
 
-  useExportProgressPolling(runId, videos, () => void runQuery.refetch());
+  const refetchRun = useCallback(() => {
+    void runQuery.refetch();
+  }, [runQuery]);
+
+  useExportProgressPolling(runId, videos, refetchRun);
   const runPhase: RunPhase = (runData.status ?? "breakdown") as RunPhase;
 
   useEffect(() => {
     setActiveRunPhase(runPhase);
   }, [runPhase, setActiveRunPhase]);
-
-  useEffect(() => {
-    setActiveVideoStatus(selectedVideo?.status ?? null);
-  }, [selectedVideo?.id, selectedVideo?.status, setActiveVideoStatus]);
 
   const allVideosHaveScripts =
     videos.length > 0 && videos.every((v) => v.status === "scripts");

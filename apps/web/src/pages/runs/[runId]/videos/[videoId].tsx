@@ -8,7 +8,6 @@ import { RunNotFound } from '~/components/edit/RunNotFound';
 import { RunPageSkeleton } from '~/components/edit/RunPageSkeleton';
 import { AuthRequiredLayout } from '~/components/layouts/AuthRequiredLayout';
 import { useRunProgressWithHandler } from '~/hooks/useRunProgress';
-import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
 function VideoEditContent({
@@ -21,8 +20,6 @@ function VideoEditContent({
   const router = useRouter();
   const [runData, runQuery] = api.runs.getById.useSuspenseQuery({ runId });
   const runWithVideos = runData;
-
-  const { init: initStore, reset: resetStore } = useRunStore();
 
   const videos = runWithVideos?.videos ?? [];
   const video = videos.find((v) => v.id === videoId);
@@ -43,11 +40,6 @@ function VideoEditContent({
     runId,
     { refetch: () => void runQuery.refetch() }
   );
-
-  useEffect(() => {
-    initStore(runId);
-    return () => resetStore();
-  }, [runId, initStore, resetStore]);
 
   if (!runWithVideos) {
     return <RunNotFound />;

@@ -52,7 +52,6 @@ export interface RunStoreUi {
   activeSourceText: string;
   scriptFeedback: string;
   activeSceneSuggestions: ChunksOutput | null;
-  activeAssetBaseUrl: string | null;
   /** Bumped when update_imagery completes; used as cache-buster for image URLs */
   activeAssetsRefreshKey: number;
   /** True if a manual decision is pending on a script suggestion (blocks accept/discard actions). */
@@ -68,11 +67,17 @@ export interface RunStoreProgress {
   videoProgressByVideo: Record<string, VideoProgress>;
 }
 
+interface ActiveVideoSelection {
+  id: string;
+  status: string | null;
+  sourceText?: string | null;
+}
+
 interface RunStore {
   ui: RunStoreUi;
   progress: RunStoreProgress;
   setRunId: (runId: string) => void;
-  setActiveVideo: (videoId: string) => void;
+  setActiveVideo: (video: ActiveVideoSelection | null) => void;
   setActiveRunPhase: (
     phase: "breakdown" | "scripting" | "asset_gen" | "export" | "failed",
   ) => void;
@@ -103,7 +108,6 @@ interface RunStore {
   setVideoUpdating: (updating: boolean) => void;
   setSuggestionDecisionPending: (pending: boolean) => void;
   setVideoProgress: (videoId: string, progress: VideoProgress | null) => void;
-  setAssetsBaseUrl: (assetBaseUrl: string) => void;
   setAssetUploaded: (
     kind: "image" | "voice",
     sceneIndex: number,
@@ -122,7 +126,6 @@ const initialUi: RunStoreUi = {
   activeSourceText: "",
   scriptFeedback: "",
   activeSceneSuggestions: null,
-  activeAssetBaseUrl: null,
   activeAssetsRefreshKey: 0,
   suggestionDecisionPending: false,
   activeSceneUiByIndex: {},
@@ -162,16 +165,19 @@ export const useRunStore = create<RunStore>((set) => ({
         draft.ui.runId = runId;
       }),
     ),
-  setActiveVideo: (videoId) =>
+  setActiveVideo: (video) =>
     set((s) =>
       produce(s, (draft) => {
-        if (draft.ui.activeVideoId === videoId) return;
-        draft.ui.activeVideoId = videoId;
-        draft.ui.activeVideoStatus = null;
-        draft.ui.activeSourceText = "";
+        const nextVideoId = video?.id ?? null;
+        const videoChanged = draft.ui.activeVideoId !== nextVideoId;
+        draft.ui.activeVideoId = nextVideoId;
+        draft.ui.activeVideoStatus = video?.status ?? null;
+        draft.ui.activeSourceText = video?.sourceText ?? "";
+
+        if (!videoChanged) return;
+
         draft.ui.scriptFeedback = "";
         draft.ui.activeSceneSuggestions = null;
-        draft.ui.activeAssetBaseUrl = null;
         draft.ui.activeAssetsRefreshKey = 0;
         draft.ui.suggestionDecisionPending = false;
         draft.ui.activeSceneUiByIndex = {};
@@ -317,12 +323,6 @@ export const useRunStore = create<RunStore>((set) => ({
         } else {
           draft.progress.videoProgressByVideo[videoId] = progress;
         }
-      }),
-    ),
-  setAssetsBaseUrl: (assetBaseUrl) =>
-    set((s) =>
-      produce(s, (draft) => {
-        draft.ui.activeAssetBaseUrl = assetBaseUrl;
       }),
     ),
   setAssetUploaded: (kind, sceneIndex, path) =>

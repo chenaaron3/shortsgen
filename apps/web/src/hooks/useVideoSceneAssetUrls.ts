@@ -8,28 +8,20 @@ import { api } from '~/utils/api';
 export function useVideoSceneAssetUrls(opts: {
   runId: string;
   videoId: string;
-  videoStatus: string | null;
 }) {
-  const { runId, videoId, videoStatus } = opts;
-  const activeAssetBaseUrl = useRunStore((s) => s.ui.activeAssetBaseUrl);
+  const { runId, videoId } = opts;
   const activeSceneUiByIndex = useRunStore((s) => s.ui.activeSceneUiByIndex);
   const activeAssetsRefreshKey = useRunStore(
     (s) => s.ui.activeAssetsRefreshKey,
   );
 
-  const showPreview =
-    videoStatus === "scripts" ||
-    videoStatus === "assets" ||
-    videoStatus === "exporting" ||
-    videoStatus === "exported";
-
   const { data: videoAssets } = api.runs.getVideoAssets.useQuery(
     { runId, videoId },
-    { enabled: !!runId && !!videoId && showPreview },
+    { enabled: !!runId && !!videoId },
   );
 
   return useMemo(() => {
-    const base = videoAssets?.assetBaseUrl ?? activeAssetBaseUrl;
+    const base = videoAssets?.assetBaseUrl;
     if (!base)
       return { imageUrlByIndex: undefined, voiceUrlByIndex: undefined };
 
@@ -84,7 +76,6 @@ export function useVideoSceneAssetUrls(opts: {
     };
   }, [
     videoAssets,
-    activeAssetBaseUrl,
     activeSceneUiByIndex,
     activeAssetsRefreshKey,
   ]);

@@ -61,7 +61,7 @@ export const brandRouter = createTRPCRouter({
   /** Past avatars, newest first, one entry per `avatar_s3_key` (reuse creates duplicate rows with the same key). */
   avatarHistory: protectedProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db
-      .select({
+      .selectDistinctOn([brand.avatar_s3_key], {
         id: brand.id,
         created_at: brand.created_at,
         avatar_s3_key: brand.avatar_s3_key,
@@ -70,30 +70,22 @@ export const brandRouter = createTRPCRouter({
       .where(
         and(eq(brand.userId, ctx.session.user.id), isNotNull(brand.avatar_s3_key)),
       )
-      .orderBy(desc(brand.created_at))
+      .orderBy(brand.avatar_s3_key, desc(brand.created_at))
       .limit(AVATAR_HISTORY_LIMIT);
 
-    const seenKeys = new Set<string>();
-    const deduped: {
-      id: string;
-      created_at: Date | null;
-      avatar_s3_key: string;
-      avatarUrl: string | null;
-    }[] = [];
-
-    for (const r of rows) {
-      const key = r.avatar_s3_key as string;
-      if (seenKeys.has(key)) continue;
-      seenKeys.add(key);
-      deduped.push({
+    return rows
+      .map((r) => ({
         id: r.id,
         created_at: r.created_at,
-        avatar_s3_key: key,
+        avatar_s3_key: r.avatar_s3_key as string,
         avatarUrl: cdnUrlForKey(r.avatar_s3_key),
+      }))
+      .sort((a, b) => {
+        if (!a.created_at && !b.created_at) return 0;
+        if (!a.created_at) return 1;
+        if (!b.created_at) return -1;
+        return b.created_at.getTime() - a.created_at.getTime();
       });
-    }
-
-    return deduped;
   }),
 
   /**

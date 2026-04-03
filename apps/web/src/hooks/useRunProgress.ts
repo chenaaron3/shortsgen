@@ -272,7 +272,6 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       setVideoUpdating,
       setSceneSuggestions,
       setVideoProgress,
-      setAssetsBaseUrl,
       setAssetUploaded,
       bumpAssetsRefreshKey,
     } = useRunStore.getState();
@@ -320,13 +319,6 @@ function createProgressHandler(refetch: (() => void) | undefined) {
     }
 
     if (msg.type === "asset_gen_started" && msg.payload && isActiveVideo) {
-      const p = msg.payload as {
-        assetBaseUrl?: string;
-        s3Prefix?: string;
-      };
-      if (p.assetBaseUrl && p.assetBaseUrl.length > 0) {
-        setAssetsBaseUrl(p.assetBaseUrl);
-      }
       refetch?.();
     }
 

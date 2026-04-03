@@ -577,6 +577,15 @@ export const runsRouter = createTRPCRouter({
           >[0]["region"],
         });
 
+        if (progress.done) {
+          await ctx.db
+            .update(videos)
+            .set({ status: "exported" })
+            .where(
+              and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
+            );
+        }
+
         return {
           overallProgress: progress.overallProgress,
           done: progress.done,

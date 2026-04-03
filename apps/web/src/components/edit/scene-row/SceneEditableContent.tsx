@@ -37,7 +37,6 @@ export function SceneEditableContent({
   const { imageUrlByIndex, voiceUrlByIndex } = useVideoSceneAssetUrls({
     runId,
     videoId,
-    videoStatus,
   });
   const voiceUrl = voiceUrlByIndex?.[sceneIndex];
   const imageUrl = imageUrlByIndex?.[sceneIndex];

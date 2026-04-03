@@ -26,7 +26,6 @@ export function SceneImagePreview({
   const { imageUrlByIndex } = useVideoSceneAssetUrls({
     runId,
     videoId,
-    videoStatus,
   });
   const imageUrl = imageUrlByIndex?.[sceneIndex];
   const isRegenerating = sceneUpdating === sceneIndex;
