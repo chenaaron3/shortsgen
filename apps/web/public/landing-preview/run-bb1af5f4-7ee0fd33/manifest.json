@@ -1,0 +1,883 @@
+{
+  "cacheKey": "default_60db9c5804bfc091",
+  "fps": 60.0,
+  "width": 1080.0,
+  "height": 1920.0,
+  "durationInFrames": 3139.0,
+  "scenes": [
+    {
+      "text": "Most of what you know about exercise for optimal health is outdated—",
+      "imagePath": "images/image_1.png",
+      "voicePath": "voice/voice_1.mp3",
+      "durationInSeconds": 4.388571428571429,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "one minute of vigorous exercise is worth more than you think.",
+      "imagePath": "images/image_2.png",
+      "voicePath": "voice/voice_2.mp3",
+      "durationInSeconds": 3.526530612244898,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "Current exercise guidelines rely on calories—",
+      "imagePath": "images/image_3.png",
+      "voicePath": "voice/voice_3.mp3",
+      "durationInSeconds": 3.317551020408163,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "suggesting 150 to 300 minutes of moderate activity weekly or half for vigorous.",
+      "imagePath": "images/image_4.png",
+      "voicePath": "voice/voice_4.mp3",
+      "durationInSeconds": 6.295510204081633,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "But a new study flips the script:",
+      "imagePath": "images/image_5.png",
+      "voicePath": "voice/voice_5.mp3",
+      "durationInSeconds": 2.4816326530612245,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "one minute of vigorous exercise delivers outsized benefits.",
+      "imagePath": "images/image_6.png",
+      "voicePath": "voice/voice_6.mp3",
+      "durationInSeconds": 3.7877551020408164,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "Think about a sprint: it can yield more health benefits",
+      "imagePath": "images/image_7.png",
+      "voicePath": "voice/voice_7.mp3",
+      "durationInSeconds": 3.813877551020408,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "than four minutes of a brisk walk.",
+      "imagePath": "images/image_8.png",
+      "voicePath": "voice/voice_8.mp3",
+      "durationInSeconds": 2.246530612244898,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "To really boost your health, picture integrating short, intense bursts,",
+      "imagePath": "images/image_9.png",
+      "voicePath": "voice/voice_9.mp3",
+      "durationInSeconds": 5.433469387755102,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "like a quick jog or some jumping jacks into your routine.",
+      "imagePath": "images/image_10.png",
+      "voicePath": "voice/voice_10.mp3",
+      "durationInSeconds": 3.7355102040816326,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "These vigorous moments pack a punch in reducing disease risks.",
+      "imagePath": "images/image_11.png",
+      "voicePath": "voice/voice_11.mp3",
+      "durationInSeconds": 4.519183673469388,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "To maximize your health gains, try weaving short bursts of intense activity right into your day.",
+      "imagePath": "images/image_12.png",
+      "voicePath": "voice/voice_12.mp3",
+      "durationInSeconds": 6.452244897959184,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    },
+    {
+      "text": "They're more powerful than you might expect.",
+      "imagePath": "images/image_13.png",
+      "voicePath": "voice/voice_13.mp3",
+      "durationInSeconds": 2.3248979591836734,
+      "imageWidth": 1024.0,
+      "imageHeight": 1024.0
+    }
+  ],
+  "captions": [
+    {
+      "text": " Most",
+      "startMs": 0.0,
+      "endMs": 220.0,
+      "timestampMs": 110.0
+    },
+    {
+      "text": " of",
+      "startMs": 220.0,
+      "endMs": 400.0,
+      "timestampMs": 310.0
+    },
+    {
+      "text": " what",
+      "startMs": 400.0,
+      "endMs": 540.0,
+      "timestampMs": 470.0
+    },
+    {
+      "text": " you",
+      "startMs": 540.0,
+      "endMs": 720.0,
+      "timestampMs": 630.0
+    },
+    {
+      "text": " know",
+      "startMs": 720.0,
+      "endMs": 920.0,
+      "timestampMs": 820.0
+    },
+    {
+      "text": " about",
+      "startMs": 920.0,
+      "endMs": 1160.0,
+      "timestampMs": 1040.0
+    },
+    {
+      "text": " exercise",
+      "startMs": 1160.0,
+      "endMs": 1620.0,
+      "timestampMs": 1390.0
+    },
+    {
+      "text": " for",
+      "startMs": 1620.0,
+      "endMs": 1980.0,
+      "timestampMs": 1800.0
+    },
+    {
+      "text": " optimal",
+      "startMs": 1980.0,
+      "endMs": 2320.0,
+      "timestampMs": 2150.0
+    },
+    {
+      "text": " health",
+      "startMs": 2320.0,
+      "endMs": 2740.0,
+      "timestampMs": 2530.0
+    },
+    {
+      "text": " is",
+      "startMs": 2740.0,
+      "endMs": 3120.0,
+      "timestampMs": 2930.0
+    },
+    {
+      "text": " outdated.",
+      "startMs": 3120.0,
+      "endMs": 3660.0,
+      "timestampMs": 3390.0
+    },
+    {
+      "text": " One",
+      "startMs": 4389.0,
+      "endMs": 4609.0,
+      "timestampMs": 4499.0
+    },
+    {
+      "text": " minute",
+      "startMs": 4609.0,
+      "endMs": 4869.0,
+      "timestampMs": 4739.0
+    },
+    {
+      "text": " of",
+      "startMs": 4869.0,
+      "endMs": 5089.0,
+      "timestampMs": 4979.0
+    },
+    {
+      "text": " vigorous",
+      "startMs": 5089.0,
+      "endMs": 5429.0,
+      "timestampMs": 5259.0
+    },
+    {
+      "text": " exercise",
+      "startMs": 5429.0,
+      "endMs": 5969.0,
+      "timestampMs": 5699.0
+    },
+    {
+      "text": " is",
+      "startMs": 5969.0,
+      "endMs": 6449.0,
+      "timestampMs": 6209.0
+    },
+    {
+      "text": " worth",
+      "startMs": 6449.0,
+      "endMs": 6709.0,
+      "timestampMs": 6579.0
+    },
+    {
+      "text": " more",
+      "startMs": 6709.0,
+      "endMs": 6969.0,
+      "timestampMs": 6839.0
+    },
+    {
+      "text": " than",
+      "startMs": 6969.0,
+      "endMs": 7149.0,
+      "timestampMs": 7059.0
+    },
+    {
+      "text": " you",
+      "startMs": 7149.0,
+      "endMs": 7289.0,
+      "timestampMs": 7219.0
+    },
+    {
+      "text": " think.",
+      "startMs": 7289.0,
+      "endMs": 7509.0,
+      "timestampMs": 7399.0
+    },
+    {
+      "text": " Current",
+      "startMs": 7915.0,
+      "endMs": 8635.0,
+      "timestampMs": 8275.0
+    },
+    {
+      "text": " exercise",
+      "startMs": 8635.0,
+      "endMs": 9055.0,
+      "timestampMs": 8845.0
+    },
+    {
+      "text": " guidelines",
+      "startMs": 9055.0,
+      "endMs": 9595.0,
+      "timestampMs": 9325.0
+    },
+    {
+      "text": " rely",
+      "startMs": 9595.0,
+      "endMs": 9955.0,
+      "timestampMs": 9775.0
+    },
+    {
+      "text": " on",
+      "startMs": 9955.0,
+      "endMs": 10255.0,
+      "timestampMs": 10105.0
+    },
+    {
+      "text": " calories.",
+      "startMs": 10255.0,
+      "endMs": 10695.0,
+      "timestampMs": 10475.0
+    },
+    {
+      "text": " suggesting",
+      "startMs": 11233.0,
+      "endMs": 11673.0,
+      "timestampMs": 11453.0
+    },
+    {
+      "text": " 150",
+      "startMs": 11673.0,
+      "endMs": 12393.0,
+      "timestampMs": 12033.0
+    },
+    {
+      "text": " to",
+      "startMs": 12393.0,
+      "endMs": 13033.0,
+      "timestampMs": 12713.0
+    },
+    {
+      "text": " 300",
+      "startMs": 13033.0,
+      "endMs": 13493.0,
+      "timestampMs": 13263.0
+    },
+    {
+      "text": " minutes",
+      "startMs": 13493.0,
+      "endMs": 13773.0,
+      "timestampMs": 13633.0
+    },
+    {
+      "text": " of",
+      "startMs": 13773.0,
+      "endMs": 14013.0,
+      "timestampMs": 13893.0
+    },
+    {
+      "text": " moderate",
+      "startMs": 14013.0,
+      "endMs": 14233.0,
+      "timestampMs": 14123.0
+    },
+    {
+      "text": " activity",
+      "startMs": 14233.0,
+      "endMs": 14753.0,
+      "timestampMs": 14493.0
+    },
+    {
+      "text": " weekly",
+      "startMs": 14753.0,
+      "endMs": 15233.0,
+      "timestampMs": 14993.0
+    },
+    {
+      "text": " or",
+      "startMs": 15233.0,
+      "endMs": 15853.0,
+      "timestampMs": 15543.0
+    },
+    {
+      "text": " half",
+      "startMs": 15853.0,
+      "endMs": 16133.0,
+      "timestampMs": 15993.0
+    },
+    {
+      "text": " for",
+      "startMs": 16133.0,
+      "endMs": 16533.0,
+      "timestampMs": 16333.0
+    },
+    {
+      "text": " vigorous.",
+      "startMs": 16533.0,
+      "endMs": 16913.0,
+      "timestampMs": 16723.0
+    },
+    {
+      "text": " but",
+      "startMs": 17528.0,
+      "endMs": 17988.0,
+      "timestampMs": 17758.0
+    },
+    {
+      "text": " a",
+      "startMs": 17988.0,
+      "endMs": 18088.0,
+      "timestampMs": 18038.0
+    },
+    {
+      "text": " new",
+      "startMs": 18088.0,
+      "endMs": 18228.0,
+      "timestampMs": 18158.0
+    },
+    {
+      "text": " study",
+      "startMs": 18228.0,
+      "endMs": 18528.0,
+      "timestampMs": 18378.0
+    },
+    {
+      "text": " flips",
+      "startMs": 18528.0,
+      "endMs": 18828.0,
+      "timestampMs": 18678.0
+    },
+    {
+      "text": " the",
+      "startMs": 18828.0,
+      "endMs": 19068.0,
+      "timestampMs": 18948.0
+    },
+    {
+      "text": " script.",
+      "startMs": 19068.0,
+      "endMs": 19328.0,
+      "timestampMs": 19198.0
+    },
+    {
+      "text": " One",
+      "startMs": 20010.0,
+      "endMs": 20310.0,
+      "timestampMs": 20160.0
+    },
+    {
+      "text": " minute",
+      "startMs": 20310.0,
+      "endMs": 20530.0,
+      "timestampMs": 20420.0
+    },
+    {
+      "text": " of",
+      "startMs": 20530.0,
+      "endMs": 20750.0,
+      "timestampMs": 20640.0
+    },
+    {
+      "text": " vigorous",
+      "startMs": 20750.0,
+      "endMs": 21030.0,
+      "timestampMs": 20890.0
+    },
+    {
+      "text": " exercise",
+      "startMs": 21030.0,
+      "endMs": 21570.0,
+      "timestampMs": 21300.0
+    },
+    {
+      "text": " delivers",
+      "startMs": 21570.0,
+      "endMs": 22290.0,
+      "timestampMs": 21930.0
+    },
+    {
+      "text": " outsized",
+      "startMs": 22290.0,
+      "endMs": 23070.0,
+      "timestampMs": 22680.0
+    },
+    {
+      "text": " benefits.",
+      "startMs": 23070.0,
+      "endMs": 23550.0,
+      "timestampMs": 23310.0
+    },
+    {
+      "text": " Think",
+      "startMs": 23798.0,
+      "endMs": 24618.0,
+      "timestampMs": 24208.0
+    },
+    {
+      "text": " about",
+      "startMs": 24618.0,
+      "endMs": 24798.0,
+      "timestampMs": 24708.0
+    },
+    {
+      "text": " a",
+      "startMs": 24798.0,
+      "endMs": 24918.0,
+      "timestampMs": 24858.0
+    },
+    {
+      "text": " sprint.",
+      "startMs": 24918.0,
+      "endMs": 25238.0,
+      "timestampMs": 25078.0
+    },
+    {
+      "text": " It",
+      "startMs": 25918.0,
+      "endMs": 26018.0,
+      "timestampMs": 25968.0
+    },
+    {
+      "text": " can",
+      "startMs": 26018.0,
+      "endMs": 26178.0,
+      "timestampMs": 26098.0
+    },
+    {
+      "text": " yield",
+      "startMs": 26178.0,
+      "endMs": 26418.0,
+      "timestampMs": 26298.0
+    },
+    {
+      "text": " more",
+      "startMs": 26418.0,
+      "endMs": 26758.0,
+      "timestampMs": 26588.0
+    },
+    {
+      "text": " health",
+      "startMs": 26758.0,
+      "endMs": 27098.0,
+      "timestampMs": 26928.0
+    },
+    {
+      "text": " benefit.",
+      "startMs": 27098.0,
+      "endMs": 27498.0,
+      "timestampMs": 27298.0
+    },
+    {
+      "text": " than",
+      "startMs": 27611.0,
+      "endMs": 28091.0,
+      "timestampMs": 27851.0
+    },
+    {
+      "text": " 4",
+      "startMs": 28091.0,
+      "endMs": 28451.0,
+      "timestampMs": 28271.0
+    },
+    {
+      "text": " minutes",
+      "startMs": 28451.0,
+      "endMs": 28671.0,
+      "timestampMs": 28561.0
+    },
+    {
+      "text": " of",
+      "startMs": 28671.0,
+      "endMs": 28911.0,
+      "timestampMs": 28791.0
+    },
+    {
+      "text": " a",
+      "startMs": 28911.0,
+      "endMs": 28991.0,
+      "timestampMs": 28951.0
+    },
+    {
+      "text": " brisk",
+      "startMs": 28991.0,
+      "endMs": 29251.0,
+      "timestampMs": 29121.0
+    },
+    {
+      "text": " walk.",
+      "startMs": 29251.0,
+      "endMs": 29571.0,
+      "timestampMs": 29411.0
+    },
+    {
+      "text": " To",
+      "startMs": 29858.0,
+      "endMs": 30578.0,
+      "timestampMs": 30218.0
+    },
+    {
+      "text": " really",
+      "startMs": 30578.0,
+      "endMs": 30818.0,
+      "timestampMs": 30698.0
+    },
+    {
+      "text": " boost",
+      "startMs": 30818.0,
+      "endMs": 31118.0,
+      "timestampMs": 30968.0
+    },
+    {
+      "text": " your",
+      "startMs": 31118.0,
+      "endMs": 31338.0,
+      "timestampMs": 31228.0
+    },
+    {
+      "text": " health,",
+      "startMs": 31338.0,
+      "endMs": 31698.0,
+      "timestampMs": 31518.0
+    },
+    {
+      "text": " picture",
+      "startMs": 32158.0,
+      "endMs": 32378.0,
+      "timestampMs": 32268.0
+    },
+    {
+      "text": " integrating",
+      "startMs": 32378.0,
+      "endMs": 32958.0,
+      "timestampMs": 32668.0
+    },
+    {
+      "text": " short,",
+      "startMs": 32958.0,
+      "endMs": 33438.0,
+      "timestampMs": 33198.0
+    },
+    {
+      "text": " intense",
+      "startMs": 33718.0,
+      "endMs": 34318.0,
+      "timestampMs": 34018.0
+    },
+    {
+      "text": " bursts.",
+      "startMs": 34318.0,
+      "endMs": 34838.0,
+      "timestampMs": 34578.0
+    },
+    {
+      "text": " like",
+      "startMs": 35291.0,
+      "endMs": 35611.0,
+      "timestampMs": 35451.0
+    },
+    {
+      "text": " a",
+      "startMs": 35611.0,
+      "endMs": 35711.0,
+      "timestampMs": 35661.0
+    },
+    {
+      "text": " quick",
+      "startMs": 35711.0,
+      "endMs": 35911.0,
+      "timestampMs": 35811.0
+    },
+    {
+      "text": " jog",
+      "startMs": 35911.0,
+      "endMs": 36271.0,
+      "timestampMs": 36091.0
+    },
+    {
+      "text": " or",
+      "startMs": 36271.0,
+      "endMs": 36851.0,
+      "timestampMs": 36561.0
+    },
+    {
+      "text": " some",
+      "startMs": 36851.0,
+      "endMs": 37091.0,
+      "timestampMs": 36971.0
+    },
+    {
+      "text": " jumping",
+      "startMs": 37091.0,
+      "endMs": 37391.0,
+      "timestampMs": 37241.0
+    },
+    {
+      "text": " jacks",
+      "startMs": 37391.0,
+      "endMs": 37891.0,
+      "timestampMs": 37641.0
+    },
+    {
+      "text": " into",
+      "startMs": 37891.0,
+      "endMs": 38051.0,
+      "timestampMs": 37971.0
+    },
+    {
+      "text": " your",
+      "startMs": 38051.0,
+      "endMs": 38251.0,
+      "timestampMs": 38151.0
+    },
+    {
+      "text": " routine.",
+      "startMs": 38251.0,
+      "endMs": 38611.0,
+      "timestampMs": 38431.0
+    },
+    {
+      "text": " These",
+      "startMs": 39027.0,
+      "endMs": 39847.0,
+      "timestampMs": 39437.0
+    },
+    {
+      "text": " vigorous",
+      "startMs": 39847.0,
+      "endMs": 40267.0,
+      "timestampMs": 40057.0
+    },
+    {
+      "text": " moments",
+      "startMs": 40267.0,
+      "endMs": 40647.0,
+      "timestampMs": 40457.0
+    },
+    {
+      "text": " pack",
+      "startMs": 40647.0,
+      "endMs": 41027.0,
+      "timestampMs": 40837.0
+    },
+    {
+      "text": " a",
+      "startMs": 41027.0,
+      "endMs": 41167.0,
+      "timestampMs": 41097.0
+    },
+    {
+      "text": " punch",
+      "startMs": 41167.0,
+      "endMs": 41487.0,
+      "timestampMs": 41327.0
+    },
+    {
+      "text": " in",
+      "startMs": 41487.0,
+      "endMs": 41947.0,
+      "timestampMs": 41717.0
+    },
+    {
+      "text": " reducing",
+      "startMs": 41947.0,
+      "endMs": 42367.0,
+      "timestampMs": 42157.0
+    },
+    {
+      "text": " disease",
+      "startMs": 42367.0,
+      "endMs": 42727.0,
+      "timestampMs": 42547.0
+    },
+    {
+      "text": " risks.",
+      "startMs": 42727.0,
+      "endMs": 43167.0,
+      "timestampMs": 42947.0
+    },
+    {
+      "text": " To",
+      "startMs": 43546.0,
+      "endMs": 44066.0,
+      "timestampMs": 43806.0
+    },
+    {
+      "text": " maximize",
+      "startMs": 44066.0,
+      "endMs": 44486.0,
+      "timestampMs": 44276.0
+    },
+    {
+      "text": " your",
+      "startMs": 44486.0,
+      "endMs": 44746.0,
+      "timestampMs": 44616.0
+    },
+    {
+      "text": " health",
+      "startMs": 44746.0,
+      "endMs": 45026.0,
+      "timestampMs": 44886.0
+    },
+    {
+      "text": " gains,",
+      "startMs": 45026.0,
+      "endMs": 45366.0,
+      "timestampMs": 45196.0
+    },
+    {
+      "text": " try",
+      "startMs": 45846.0,
+      "endMs": 45966.0,
+      "timestampMs": 45906.0
+    },
+    {
+      "text": " weaving",
+      "startMs": 45966.0,
+      "endMs": 46306.0,
+      "timestampMs": 46136.0
+    },
+    {
+      "text": " short",
+      "startMs": 46306.0,
+      "endMs": 46726.0,
+      "timestampMs": 46516.0
+    },
+    {
+      "text": " bursts",
+      "startMs": 46726.0,
+      "endMs": 47106.0,
+      "timestampMs": 46916.0
+    },
+    {
+      "text": " of",
+      "startMs": 47106.0,
+      "endMs": 47366.0,
+      "timestampMs": 47236.0
+    },
+    {
+      "text": " intense",
+      "startMs": 47366.0,
+      "endMs": 47626.0,
+      "timestampMs": 47496.0
+    },
+    {
+      "text": " activity",
+      "startMs": 47626.0,
+      "endMs": 48326.0,
+      "timestampMs": 47976.0
+    },
+    {
+      "text": " right",
+      "startMs": 48326.0,
+      "endMs": 48906.0,
+      "timestampMs": 48616.0
+    },
+    {
+      "text": " into",
+      "startMs": 48906.0,
+      "endMs": 49206.0,
+      "timestampMs": 49056.0
+    },
+    {
+      "text": " your",
+      "startMs": 49206.0,
+      "endMs": 49386.0,
+      "timestampMs": 49296.0
+    },
+    {
+      "text": " day.",
+      "startMs": 49386.0,
+      "endMs": 49626.0,
+      "timestampMs": 49506.0
+    },
+    {
+      "text": " They're",
+      "startMs": 49998.0,
+      "endMs": 50618.0,
+      "timestampMs": 50308.0
+    },
+    {
+      "text": " more",
+      "startMs": 50618.0,
+      "endMs": 50718.0,
+      "timestampMs": 50668.0
+    },
+    {
+      "text": " powerful",
+      "startMs": 50718.0,
+      "endMs": 51178.0,
+      "timestampMs": 50948.0
+    },
+    {
+      "text": " than",
+      "startMs": 51178.0,
+      "endMs": 51398.0,
+      "timestampMs": 51288.0
+    },
+    {
+      "text": " you",
+      "startMs": 51398.0,
+      "endMs": 51478.0,
+      "timestampMs": 51438.0
+    },
+    {
+      "text": " might",
+      "startMs": 51478.0,
+      "endMs": 51638.0,
+      "timestampMs": 51558.0
+    },
+    {
+      "text": " expect.",
+      "startMs": 51638.0,
+      "endMs": 52018.0,
+      "timestampMs": 51828.0
+    }
+  ]
+}

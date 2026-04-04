@@ -29,6 +29,9 @@ function resolveAssetUrl(
   assetBaseUrl?: string,
   assetsRefreshKey?: number
 ): string {
+  if (!relativePath) {
+    return "";
+  }
   if (assetBaseUrl) {
     const base = `${assetBaseUrl.replace(/\/$/, "")}/${relativePath}`;
     return assetsRefreshKey != null ? `${base}?v=${assetsRefreshKey}` : base;
@@ -77,17 +80,19 @@ export function ShortVideo({
 
   return (
     <>
-      <Audio
-        src={bgMusicSrc}
-        volume={(f) =>
-          interpolate(
-            f,
-            [0, fadeFrames, fadeOutStart, durationInFrames],
-            [0, 0.05, 0.05, 0],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-          )
-        }
-      />
+      {bgMusicSrc ? (
+        <Audio
+          src={bgMusicSrc}
+          volume={(f) =>
+            interpolate(
+              f,
+              [0, fadeFrames, fadeOutStart, durationInFrames],
+              [0, 0.05, 0.05, 0],
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+            )
+          }
+        />
+      ) : null}
       <Series>
         {manifest.scenes.map((scene, i) => {
           const imageSrc = resolveAssetUrl(

@@ -18,7 +18,7 @@ const PAN_DIRECTIONS = [
 
 type SceneSlideProps = {
   imageSrc: string;
-  audioSrc: string;
+  audioSrc?: string;
   durationInFrames: number;
   sceneIndex: number;
   effectsConfig: EffectsConfig;
@@ -184,7 +184,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
           />
         </div>
       </div>
-      <Audio src={audioSrc} volume={1} />
+      {audioSrc ? <Audio src={audioSrc} volume={1} /> : null}
     </AbsoluteFill>
   );
 };
