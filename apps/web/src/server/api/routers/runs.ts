@@ -1,6 +1,4 @@
 import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
-import OpenAI from 'openai';
-import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { env } from '~/env';
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
@@ -18,50 +16,8 @@ import type { VideoManifest } from "@shortgen/types";
 import type { InferSelectModel } from "drizzle-orm";
 
 import { triggerRemotionExports } from "./runs.utils";
-import { resolveUserInput } from "~/server/ingest/resolveSource";
-
-const BREAKDOWN_SYSTEM = `You generate a short title and playful loading messages for a video creation app. The user pasted content and the app is analyzing it to create short-form videos.
-
-Title:
-- 3-8 words, descriptive of the content (topic, theme, or vibe)
-- Suitable for a list/card view (e.g. "How to Make Sourdough", "The History of Coffee", "5 Productivity Hacks")
-
-Messages (each 2-8 words):
-- Feel like a Discord update: witty, light, occasionally silly
-- Reference the content when possible (topics, tone, themes)
-- Sound like something is actively happening
-
-Infer content type from the text (how-to, essay, transcript, story, recipe, etc.) and tailor both title and messages. Avoid generic phrases like "Analyzing..." unless you add a twist.
-
-Examples: "Consulting the content council…", "Finding the climax…", "Checking if the intro hooks…"`;
-
-const breakdownOutputSchema = z.object({
-  title: z.string().min(1).max(80),
-  messages: z.array(z.string().min(1).max(60)).min(1),
-});
-
-async function generateBreakdownContent(
-  content: string,
-): Promise<{ title: string; messages: string[] } | null> {
-  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-  const truncated = content.slice(0, 4000);
-  const res = await openai.beta.chat.completions.parse({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: BREAKDOWN_SYSTEM },
-      { role: "user", content: truncated },
-    ],
-    max_tokens: 250,
-    response_format: zodResponseFormat(
-      breakdownOutputSchema,
-      "breakdown_output",
-    ),
-  });
-  const parsed = res.choices[0]?.message?.parsed;
-  if (!parsed) return null;
-  const result = breakdownOutputSchema.safeParse(parsed);
-  return result.success ? result.data : null;
-}
+import { generateBreakdownContent } from "~/server/ingest/generateBreakdownContent";
+import { assertUrlSafeForServerFetch, fetchUrlPreviewMetadata } from "~/server/ingest/urlMetadata";
 
 /** Run with videos relation. Used as explicit return type for getById so tRPC infers it. */
 export type RunWithVideos = InferSelectModel<typeof runs> & {
@@ -95,6 +51,13 @@ export const runsRouter = createTRPCRouter({
       return runWithVideos as RunWithVideos;
     }),
 
+  /** SSRF-safe fetch of og:title / og:site_name for URL preview on create. */
+  previewUrlMetadata: protectedProcedure
+    .input(z.object({ url: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      return fetchUrlPreviewMetadata(input.url);
+    }),
+
   /**
    * Create a run and immediately trigger initial processing (breakdown + clip processing).
    * Returns the same run + videos shape as getById plus wsUrl for clients that need it.
@@ -102,8 +65,21 @@ export const runsRouter = createTRPCRouter({
   createRun: protectedProcedure
     .input(
       z.object({
+        /** Always present: text body for text flow, page title/label for URL flow. */
         userInput: z.string().min(1),
-        /** Pipeline config: prototype (cheap/fast) or default (full quality). From user tier. */
+        /** Optional URL for URL workflow; absent means pure text workflow. */
+        sourceUrl: z
+          .string()
+          .min(1)
+          .optional()
+          .refine((s) => {
+            if (!s) return true;
+            try {
+              return new URL(s.trim()).protocol === "https:";
+            } catch {
+              return false;
+            }
+          }, "Must be a valid https URL"),
         config: z
           .enum(["prototype", "default"])
           .optional()
@@ -111,23 +87,39 @@ export const runsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      let resolvedInput: string;
-      try {
-        resolvedInput = await resolveUserInput(input.userInput);
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Could not load that source.";
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message,
-        });
+      const config = input.config;
+      const userInput = input.userInput.trim();
+      const isUrlFlow = !!input.sourceUrl?.trim();
+      let normalizedSourceUrl: string | null = null;
+      if (isUrlFlow) {
+        try {
+          normalizedSourceUrl = assertUrlSafeForServerFetch(input.sourceUrl!.trim()).href;
+          const preview = await fetchUrlPreviewMetadata(normalizedSourceUrl);
+          if (!preview) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Could not validate this URL. Please use a valid page link.",
+            });
+          }
+        } catch (e) {
+          if (e instanceof TRPCError) throw e;
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: e instanceof Error ? e.message : "Invalid URL",
+          });
+        }
       }
+      const copy = await generateBreakdownContent(userInput);
 
       const [run] = await ctx.db
         .insert(runs)
         .values({
           userId: ctx.session.user.id,
-          user_input: resolvedInput,
+          user_input: userInput,
+          source_url: normalizedSourceUrl,
+          title: copy.title,
+          breakdown_messages: copy.breakdownMessagesJson,
+          config,
           status: "breakdown",
         })
         .returning();
@@ -154,52 +146,39 @@ export const runsRouter = createTRPCRouter({
         5,
         Math.max(1, Math.floor(balance / CREDITS_ASSETS_PER_VIDEO)),
       );
+      await ctx.db
+        .update(runs)
+        .set({ max_nuggets: maxNuggets })
+        .where(eq(runs.id, run.id));
 
-      const [, breakdown] = await Promise.all([
-        (async () => {
-          const res = await fetch(
-            `${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/initial-processing`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-API-Secret": env.SHORTGEN_API_SECRET,
-              },
-              body: JSON.stringify({
-                runId: run.id,
-                sourceContent: resolvedInput,
-                config: input.config,
-                maxNuggets,
-              }),
-            },
-          );
+      const initialPayload = { runId: run.id };
 
-          if (!res.ok) {
-            const err = await res.text();
-            let parsed: { message?: string; error?: string };
-            try {
-              parsed = JSON.parse(err) as { message?: string; error?: string };
-            } catch {
-              parsed = {};
-            }
-            const msg = parsed.message ?? parsed.error ?? err;
-            throw new Error(`Initial processing failed: ${msg}`);
-          }
+      const res = await fetch(
+        `${env.SHORTGEN_API_URL.replace(/\/$/, "")}/runs/initial-processing`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Secret": env.SHORTGEN_API_SECRET,
+          },
+          body: JSON.stringify(initialPayload),
+        },
+      );
 
-          await res.json();
-          console.log(`[initial-processing] runId=${run.id} triggered`);
-        })(),
-        generateBreakdownContent(resolvedInput),
-      ]);
-      if (breakdown && breakdown.messages.length > 0) {
-        await ctx.db
-          .update(runs)
-          .set({
-            title: breakdown.title,
-            breakdown_messages: JSON.stringify(breakdown.messages),
-          })
-          .where(eq(runs.id, run.id));
+      if (!res.ok) {
+        const err = await res.text();
+        let parsed: { message?: string; error?: string };
+        try {
+          parsed = JSON.parse(err) as { message?: string; error?: string };
+        } catch {
+          parsed = {};
+        }
+        const msg = parsed.message ?? parsed.error ?? err;
+        throw new Error(`Initial processing failed: ${msg}`);
       }
+
+      await res.json();
+      console.log(`[initial-processing] runId=${run.id} triggered`);
 
       const runWithVideos = await ctx.db.query.runs.findFirst({
         where: eq(runs.id, run.id),

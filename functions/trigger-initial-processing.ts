@@ -1,6 +1,6 @@
 /**
  * Trigger Initial Processing: breakdown + parallel clip processing (script -> scenes per clip).
- * Receives { runId, sourceContent, config? }. Invokes ShortgenInitialProcessing Lambda async.
+ * Receives { runId }. Lambda loads source/config/max_nuggets from DB.
  */
 
 import { Resource } from "sst";

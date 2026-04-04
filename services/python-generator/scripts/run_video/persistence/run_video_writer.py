@@ -112,7 +112,27 @@ def update_run_status(run_id: str, status: RunStatus) -> None:
         conn.commit()
 
 
-def _row_to_model(row: dict, model_cls: type[T], datetime_fields: tuple[str, ...] = ("created_at",)) -> T:
+def update_run_after_url_ingest(run_id: str, *, source_adapter: str) -> None:
+    """After URL fetch: record adapter; source_url and user_input (label) were set at create."""
+    with _conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                UPDATE {RUNS_TABLE}
+                SET source_adapter = %s,
+                    source_resolved_at = NOW()
+                WHERE id = %s
+                """,
+                (source_adapter, run_id),
+            )
+        conn.commit()
+
+
+def _row_to_model(
+    row: dict,
+    model_cls: type[T],
+    datetime_fields: tuple[str, ...] = ("created_at", "source_resolved_at"),
+) -> T:
     """Convert DB row to Pydantic model, serializing datetime fields to ISO strings."""
     d = dict(row)
     for key in datetime_fields:
@@ -128,7 +148,11 @@ def get_run(run_id: str) -> Run | None:
     with _conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                f'SELECT id, "userId", user_input, title, status, breakdown_messages, script_regen_count, created_at FROM {RUNS_TABLE} WHERE id = %s',
+                f"""
+                SELECT id, "userId", user_input, source_url, source_adapter, source_resolved_at,
+                       title, config, max_nuggets, status, breakdown_messages, script_regen_count, created_at
+                FROM {RUNS_TABLE} WHERE id = %s
+                """,
                 (run_id,),
             )
             row = cur.fetchone()

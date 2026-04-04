@@ -17,9 +17,50 @@
             "user_input": {
               "type": "string"
             },
+            "source_url": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "source_adapter": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "source_resolved_at": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "not": {}
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "title": {
               "type": [
                 "string",
+                "null"
+              ]
+            },
+            "config": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "max_nuggets": {
+              "type": [
+                "number",
                 "null"
               ]
             },
@@ -63,7 +104,11 @@
             "id",
             "userId",
             "user_input",
+            "source_url",
+            "source_adapter",
             "title",
+            "config",
+            "max_nuggets",
             "status",
             "breakdown_messages",
             "script_regen_count"

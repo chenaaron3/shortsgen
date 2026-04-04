@@ -45,11 +45,9 @@ export const breakdownMessagesSchema = z.array(z.string().min(1).max(60));
 export type BreakdownMessages = z.infer<typeof breakdownMessagesSchema>;
 
 // --- Request schemas ---
+/** Initial processing now loads config/source/max_nuggets from runs row. */
 export const initialProcessingRequestSchema = z.object({
   runId: z.string().uuid(),
-  sourceContent: z.string().min(1),
-  config: z.string().optional().default("default"),
-  maxNuggets: z.number().int().min(0).optional(),
 });
 export type InitialProcessingRequest = z.infer<
   typeof initialProcessingRequestSchema

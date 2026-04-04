@@ -1,51 +1,46 @@
 "use client";
 
-import { signIn, useSession } from "next-auth/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Button } from "~/components/ui/button";
+import { signIn, useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Button } from '~/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { Textarea } from "~/components/ui/textarea";
-import {
-  ARTICLE_SAMPLE,
-  BOOK_SAMPLE,
-  YOUTUBE_SAMPLE,
-} from "~/constants/inspirationSamples";
-import { SHORTGEN_PENDING_SOURCE_KEY } from "~/constants/pendingSource";
-import { useUserConfig } from "~/hooks/useUserConfig";
-import { api } from "~/utils/api";
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '~/components/ui/select';
+import { Textarea } from '~/components/ui/textarea';
+import { ARTICLE_SAMPLE, BOOK_SAMPLE, YOUTUBE_SAMPLE } from '~/constants/inspirationSamples';
+import { SHORTGEN_PENDING_SOURCE_KEY } from '~/constants/pendingSource';
+import { useUserConfig } from '~/hooks/useUserConfig';
+import { buildSourceLabel } from '~/lib/urlPreviewLabel';
+import { isSingleLineHttpsUrl } from '~/lib/urlValidation';
+import { api } from '~/utils/api';
 
-import { InspirationCard } from "./InspirationCard";
+import { InspirationCard } from './InspirationCard';
 
 const PIPELINE_CONFIG_OPTIONS: {
   value: "prototype" | "default";
   label: string;
   description: string;
 }[] = [
-  {
-    value: "prototype",
-    label: "Prototype",
-    description: "Faster, lower cost models",
-  },
-  {
-    value: "default",
-    label: "Default",
-    description: "Full quality pipeline",
-  },
-];
+    {
+      value: "prototype",
+      label: "Prototype",
+      description: "Faster, lower cost models",
+    },
+    {
+      value: "default",
+      label: "Default",
+      description: "Full quality pipeline",
+    },
+  ];
 
 export function CreateForm() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { config: suggestedConfig } = useUserConfig();
   const [input, setInput] = useState("");
+  const [previewedUrl, setPreviewedUrl] = useState<string | null>(null);
   const [pipelineConfig, setPipelineConfig] = useState<
     "prototype" | "default"
   >(suggestedConfig);
@@ -58,7 +53,23 @@ export function CreateForm() {
     }
   }, []);
 
+  useEffect(() => {
+    const t = input.trim();
+    if (!isSingleLineHttpsUrl(t)) {
+      setPreviewedUrl(null);
+      previewUrlMetadata.reset();
+      return;
+    }
+    const timer = setTimeout(() => {
+      setPreviewedUrl(t);
+      previewUrlMetadata.mutate({ url: t });
+    }, 450);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce on input only
+  }, [input]);
+
   const utils = api.useUtils();
+  const previewUrlMetadata = api.runs.previewUrlMetadata.useMutation();
   const createRunMutation = api.runs.createRun.useMutation({
     onSuccess: (data) => {
       utils.runs.getById.setData({ runId: data.run.id }, data.run);
@@ -68,12 +79,51 @@ export function CreateForm() {
   });
 
   const handleStart = () => {
-    if (!input.trim()) return;
+    const t = input.trim();
+    if (!t) return;
+
+    if (isSingleLineHttpsUrl(t)) {
+      if (
+        previewedUrl !== t ||
+        previewUrlMetadata.isPending ||
+        !previewUrlMetadata.data
+      ) {
+        return;
+      }
+      let u: URL;
+      try {
+        u = new URL(t);
+      } catch {
+        return;
+      }
+      if (u.protocol !== "https:") return;
+      createRunMutation.mutate({
+        userInput: buildSourceLabel(previewUrlMetadata.data, t),
+        sourceUrl: t,
+        config: pipelineConfig,
+      });
+      return;
+    }
+
     createRunMutation.mutate({
-      userInput: input.trim(),
+      userInput: t,
       config: pipelineConfig,
     });
   };
+
+  const trimmedInput = input.trim();
+  const isUrlInput = isSingleLineHttpsUrl(trimmedInput);
+  const dynamicRows = Math.min(10, Math.max(1, input.split("\n").length));
+  const hasValidUrlMetadata =
+    isUrlInput &&
+    previewedUrl === trimmedInput &&
+    !previewUrlMetadata.isPending &&
+    !!previewUrlMetadata.data;
+  const showInvalidUrlHint =
+    isUrlInput &&
+    previewedUrl === trimmedInput &&
+    !previewUrlMetadata.isPending &&
+    !previewUrlMetadata.data;
 
   if (status === "loading") {
     return (
@@ -100,21 +150,35 @@ export function CreateForm() {
   return (
     <div className="space-y-6">
       <p className="text-muted-foreground">
-        Paste a <strong className="font-medium text-foreground">YouTube</strong>{" "}
-        or <strong className="font-medium text-foreground">article</strong> link,
-        or your own text. When you click{" "}
-        <strong className="font-medium text-foreground">Create</strong>, we load
-        captions or the article when needed, then break content into clips. You
-        refine scripts and scenes before images and voice.
+        Paste a YouTube/article URL or plain text. We auto-detect links and
+        fetch source content when needed.
       </p>
       <Textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="https://… or paste article, transcript, or notes"
-        rows={8}
+        placeholder="Paste a URL (or paste plain text)"
+        rows={dynamicRows}
         disabled={createRunMutation.isPending}
-        className="min-h-[200px] resize-y"
+        className="resize-y"
       />
+      {isUrlInput &&
+        previewUrlMetadata.data &&
+        previewedUrl === trimmedInput && (
+          <p className="text-sm text-muted-foreground">
+            {previewUrlMetadata.data.siteName ?? previewUrlMetadata.data.hostname}
+            {previewUrlMetadata.data.pageTitle
+              ? ` — ${previewUrlMetadata.data.pageTitle}`
+              : null}
+            {previewUrlMetadata.data.contentLengthWords
+              ? ` • ${previewUrlMetadata.data.contentLengthWords.toLocaleString()} words`
+              : null}
+          </p>
+        )}
+      {showInvalidUrlHint && (
+        <p className="text-sm text-destructive">
+          Could not validate this URL. Please use a valid page link.
+        </p>
+      )}
       <div className="space-y-2">
         <label
           htmlFor="create-pipeline-config"
@@ -149,7 +213,11 @@ export function CreateForm() {
       </div>
       <Button
         onClick={handleStart}
-        disabled={!input.trim() || createRunMutation.isPending}
+        disabled={
+          !trimmedInput ||
+          createRunMutation.isPending ||
+          (isUrlInput && !hasValidUrlMetadata)
+        }
         size="lg"
       >
         {createRunMutation.isPending ? "Creating…" : "Create"}
@@ -160,12 +228,12 @@ export function CreateForm() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <InspirationCard
             title="YouTube"
-            description="YouTube transcript style"
+            description="YouTube link"
             onClick={() => setInput(YOUTUBE_SAMPLE)}
           />
           <InspirationCard
             title="Book"
-            description="Interview / long-form transcript"
+            description="Long-form transcript"
             onClick={() => setInput(BOOK_SAMPLE)}
           />
           <InspirationCard
