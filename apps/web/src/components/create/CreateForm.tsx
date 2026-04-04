@@ -69,6 +69,7 @@ export function CreateForm() {
   }, [input]);
 
   const utils = api.useUtils();
+  const isAdminQuery = api.admin.isAdmin.useQuery();
   const previewUrlMetadata = api.runs.previewUrlMetadata.useMutation();
   const createRunMutation = api.runs.createRun.useMutation({
     onSuccess: (data) => {
@@ -149,6 +150,37 @@ export function CreateForm() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="text-2xl font-bold">Create Short</h1>
+        {isAdminQuery.data?.isAdmin && (
+          <div className="w-full max-w-xs space-y-2">
+            <Select
+              value={pipelineConfig}
+              onValueChange={(v) =>
+                setPipelineConfig(v as "prototype" | "default")
+              }
+              disabled={createRunMutation.isPending}
+            >
+              <SelectTrigger
+                id="create-pipeline-config"
+                className="h-8 w-full"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PIPELINE_CONFIG_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    <span className="font-medium">{opt.label}</span>
+                    <span className="text-muted-foreground">
+                      — {opt.description}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
       <p className="text-muted-foreground">
         Paste a YouTube/article URL or plain text. We auto-detect links and
         fetch source content when needed.
@@ -179,38 +211,6 @@ export function CreateForm() {
           Could not validate this URL. Please use a valid page link.
         </p>
       )}
-      <div className="space-y-2">
-        <label
-          htmlFor="create-pipeline-config"
-          className="text-sm font-medium text-foreground"
-        >
-          Pipeline config
-        </label>
-        <Select
-          value={pipelineConfig}
-          onValueChange={(v) =>
-            setPipelineConfig(v as "prototype" | "default")
-          }
-          disabled={createRunMutation.isPending}
-        >
-          <SelectTrigger
-            id="create-pipeline-config"
-            className="w-full max-w-md"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PIPELINE_CONFIG_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                <span className="font-medium">{opt.label}</span>
-                <span className="text-muted-foreground">
-                  — {opt.description}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
       <Button
         onClick={handleStart}
         disabled={

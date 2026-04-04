@@ -13,7 +13,6 @@ export default function CreatePage() {
           <Link href="/" className="mb-6 inline-block text-muted-foreground hover:text-foreground">
             ← Back
           </Link>
-          <h1 className="mb-6 text-2xl font-bold">Create Short</h1>
           <CreateForm />
         </div>
       </main>
