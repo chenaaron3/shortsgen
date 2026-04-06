@@ -1,11 +1,11 @@
 "use client";
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { MousePointerClick, UserRoundCheck } from 'lucide-react';
+import { Coins, MousePointerClick, UserRoundCheck } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge } from '~/components/ui/badge';
 import { Button, buttonVariants } from '~/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
@@ -47,9 +47,27 @@ const sectionView = {
   },
 };
 
+const rotatingPlaceholders = [
+  "Paste a YouTube link",
+  "Paste a blog link",
+  "Paste a Reddit link",
+];
+
 export function LandingPage() {
   const [heroInput, setHeroInput] = useState("");
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const reduceMotion = useReducedMotion();
+  const isHeroInputEmpty = heroInput.trim().length === 0;
+
+  useEffect(() => {
+    if (!isHeroInputEmpty) return;
+
+    const id = window.setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % rotatingPlaceholders.length);
+    }, 2200);
+
+    return () => window.clearInterval(id);
+  }, [isHeroInputEmpty]);
 
   const handleGetStarted = () => {
     const v = heroInput.trim();
@@ -102,25 +120,24 @@ export function LandingPage() {
           />
         </div>
 
-        {/* Hero */}
-        <section className="border-b border-border px-4 pb-20 pt-20 md:pb-28 md:pt-28">
-          <motion.div className="mx-auto max-w-6xl" {...heroMotion}>
-            <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
+        {/* Hero — fills viewport below sticky navbar (h-14 + 1px border) */}
+        <section className="flex min-h-[calc(100vh-3.5rem-1px)] flex-col justify-center border-b border-border px-4 py-8 md:py-10">
+          <motion.div className="mx-auto w-full max-w-6xl" {...heroMotion}>
+            <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
               <div className="text-center lg:text-left">
                 <motion.h1
                   className="text-4xl font-bold tracking-tight md:text-5xl lg:text-[3.25rem] lg:leading-tight"
                   variants={reduceMotion ? undefined : heroItem}
                 >
-                  Shorts from a link, article, or your text—
-                  <span className="text-primary"> you stay in control</span>
+                  Build a faceless channel
+                  <span className="text-primary"> that ships consistently</span>
                 </motion.h1>
                 <motion.p
                   className="mt-5 text-lg text-muted-foreground md:text-xl lg:max-w-2xl"
                   variants={reduceMotion ? undefined : heroItem}
                 >
-                  Paste a YouTube or blog URL, or write your own. One click
-                  begins the pipeline; you review scripts and scenes before
-                  images and voice ship.
+                  Turn YouTube and articles into polished shorts, ready to
+                  review and publish with confidence.
                 </motion.p>
                 <motion.div
                   className="mx-auto mt-8 w-full max-w-xl lg:mx-0"
@@ -131,7 +148,7 @@ export function LandingPage() {
                       type="text"
                       inputMode="text"
                       autoComplete="off"
-                      placeholder="YouTube or article URL, or paste your text..."
+                      placeholder={rotatingPlaceholders[placeholderIndex]}
                       value={heroInput}
                       onChange={(e) => setHeroInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -169,7 +186,7 @@ export function LandingPage() {
 
               <motion.div
                 variants={reduceMotion ? undefined : heroItem}
-                className="mx-auto w-full max-w-[380px]"
+                className="mx-auto w-full max-w-[380px] lg:max-w-[320px]"
               >
                 <HeroRemotionPreview />
               </motion.div>
@@ -180,31 +197,41 @@ export function LandingPage() {
         {/* Value split */}
         <section className="border-b border-border px-4 py-16 md:py-24">
           <motion.div
-            className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:gap-10"
+            className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:gap-10 lg:grid-cols-3"
             {...scrollMotion}
           >
             <Card className="border-border/80 bg-card/80 backdrop-blur-sm">
               <CardHeader>
                 <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <MousePointerClick className="h-6 w-6" />
+                  <UserRoundCheck className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-xl">Fast to start</CardTitle>
+                <CardTitle className="text-xl">Post consistently</CardTitle>
                 <CardDescription className="text-base leading-relaxed">
-                  Go from a single field to a working draft. Links and pasted
-                  text both flow into the same pipeline—no extra tooling.
+                  Publish on schedule and build your niche from content you
+                  already have.
                 </CardDescription>
               </CardHeader>
             </Card>
             <Card className="border-primary/20 bg-linear-to-br from-card to-primary/5">
               <CardHeader>
                 <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <UserRoundCheck className="h-6 w-6" />
+                  <MousePointerClick className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-xl">You approve what ships</CardTitle>
+                <CardTitle className="text-xl">Save hours every week</CardTitle>
                 <CardDescription className="text-base leading-relaxed">
-                  Human-in-the-loop review means you adjust scripts and scenes
-                  before we burn credits on imagery and voice—quality without
-                  surprises.
+                  Generate polished videos in one click, not hours of manual
+                  editing.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            <Card className="border-border/80 bg-card/80 backdrop-blur-sm">
+              <CardHeader>
+                <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <Coins className="h-6 w-6" />
+                </div>
+                <CardTitle className="text-xl">Cut production costs</CardTitle>
+                <CardDescription className="text-base leading-relaxed">
+                  Skip editor costs while maintaining high-quality output.
                 </CardDescription>
               </CardHeader>
             </Card>

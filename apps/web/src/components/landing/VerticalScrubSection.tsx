@@ -1,10 +1,9 @@
 "use client";
 
-import { index } from 'drizzle-orm/gel-core';
 import {
     AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useSpring
 } from 'framer-motion';
-import { Download, Sparkles, UserRoundCheck } from 'lucide-react';
+import { Coins, Image, Mic, Sparkles, Upload, UserRoundCheck } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Badge } from '~/components/ui/badge';
 import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
@@ -38,22 +37,28 @@ function MobilePreviewCard() {
         <div className="relative flex h-full flex-col justify-between">
           <div className="space-y-2">
             <Badge variant="secondary" className="bg-black/40 text-[11px] text-white">
-              Shorts Preview
+              Pipeline Preview
             </Badge>
             <p className="max-w-[85%] text-sm font-semibold text-white">
-              Stop wasting 6 hours on one short.
+              Source to upload in four clear stages.
             </p>
           </div>
-          <div className="space-y-3 rounded-2xl border border-white/20 bg-black/35 p-3">
-            <div className="flex items-center justify-between text-xs text-white/80">
-              <span>Generate</span>
-              <span>100%</span>
+          <div className="space-y-2 rounded-2xl border border-white/20 bg-black/35 p-3 text-[11px] text-white/90">
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5">
+              <span>1. Identify clips</span>
+              <span>Done</span>
             </div>
-            <div className="h-2 rounded-full bg-white/20">
-              <div className="h-full w-full rounded-full bg-emerald-300" />
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5">
+              <span>2. Script + verify</span>
+              <UserRoundCheck className="h-3.5 w-3.5" />
             </div>
-            <div className="flex items-center justify-end text-white">
-              <Download className="h-4 w-4" />
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5">
+              <span>3. Generate assets</span>
+              <span>92%</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-emerald-300/30 bg-emerald-300/10 px-2 py-1.5">
+              <span>4. Upload + monetize</span>
+              <Coins className="h-3.5 w-3.5" />
             </div>
           </div>
         </div>
@@ -76,22 +81,23 @@ export function VerticalScrubSection() {
   });
   const [scrubState, setScrubState] = useState({
     global: 0,
-    step1: 0,
-    step2: 0,
-    step3: 0,
-    step4: 0,
+    stage1: 0,
+    stage2: 0,
+    stage3: 0,
+    stage4: 0,
     activeStep: 0,
     typedChars: 0,
     exportPercent: 0,
+    assetsPercent: 0,
   });
 
   const scriptTarget = `${SCRUB_SCRIPT_HOOK}\n${SCRUB_SCRIPT_BODY}`;
   useMotionValueEvent(smoothProgress, "change", (latest) => {
     const global = clamp01(latest);
-    const step1 = normalizedStepProgress(global, 0);
-    const step2 = normalizedStepProgress(global, 1);
-    const step3 = normalizedStepProgress(global, 2);
-    const step4 = normalizedStepProgress(global, 3);
+    const stage1 = normalizedStepProgress(global, 0);
+    const stage2 = normalizedStepProgress(global, 1);
+    const stage3 = normalizedStepProgress(global, 2);
+    const stage4 = normalizedStepProgress(global, 3);
     const nextActive = Math.min(
       STEP_COUNT - 1,
       Math.max(0, Math.floor(global * STEP_COUNT)),
@@ -99,21 +105,22 @@ export function VerticalScrubSection() {
 
     setScrubState({
       global,
-      step1,
-      step2,
-      step3,
-      step4,
+      stage1,
+      stage2,
+      stage3,
+      stage4,
       activeStep: nextActive,
-      typedChars: Math.floor(scriptTarget.length * step2),
-      exportPercent: Math.round(step4 * 100),
+      typedChars: Math.floor(scriptTarget.length * stage2),
+      exportPercent: Math.round(stage4 * 100),
+      assetsPercent: Math.round(stage3 * 100),
     });
   });
 
   const typedDisplay = scriptTarget.slice(0, scrubState.typedChars);
   const typedParts = typedDisplay.split("\n");
-  const verifyHighlightAlpha = 0.38 * scrubState.step3;
-  const verifyOpacity = 0.45 + scrubState.step3 * 0.55;
-  const exportLayerOpacity = scrubState.step4;
+  const verifyOpacity = 0.55 + scrubState.stage2 * 0.45;
+  const assetsLayerOpacity = scrubState.stage3;
+  const exportLayerOpacity = scrubState.stage4;
   const clipTargets = [
     { x: -68, y: -82, rotate: -8 },
     { x: 70, y: -76, rotate: 6 },
@@ -134,7 +141,7 @@ export function VerticalScrubSection() {
               </span>
             </div>
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-              One source, four visible transformations
+              One source, four outcomes
             </h2>
             <p className="mt-3 text-muted-foreground md:text-lg">
               The preview is simplified when reduced motion is enabled.
@@ -168,15 +175,15 @@ export function VerticalScrubSection() {
           <div className="mb-2 inline-flex items-center gap-2 text-primary">
             <Sparkles className="h-5 w-5" aria-hidden />
             <span className="text-sm font-medium uppercase tracking-wider">
-              Scroll Narrative
+              See how it works
             </span>
           </div>
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-            One source, four visible transformations
+            One source, four outcomes
           </h2>
           <p className="mt-3 text-muted-foreground md:text-lg">
-            Scroll to scrub each stage forward or backward in the same vertical
-            Shorts preview.
+            Scroll to follow one continuous flow: identify clips, verify script,
+            generate assets, then upload.
           </p>
         </div>
 
@@ -276,7 +283,7 @@ export function VerticalScrubSection() {
                         variant="secondary"
                         className="w-fit bg-black/35 text-[11px] text-white"
                       >
-                        Shorts Preview
+                        Pipeline Preview
                       </Badge>
 
                       <div className="relative mx-auto h-[56%] w-[88%]">
@@ -285,8 +292,8 @@ export function VerticalScrubSection() {
                             <motion.div
                               className="absolute left-1/2 top-1/2 w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/20 bg-black/45 p-4 text-sm text-white/95"
                               style={{
-                                opacity: 1 - scrubState.step1,
-                                scale: 1 - scrubState.step1 * 0.07,
+                                opacity: 1 - scrubState.stage1,
+                                scale: 1 - scrubState.stage1 * 0.07,
                               }}
                             >
                               {SCRUB_BREAKDOWN_SOURCE}
@@ -297,13 +304,13 @@ export function VerticalScrubSection() {
                                 key={label}
                                 className="absolute left-1/2 top-1/2 w-[52%] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-cyan-200/35 bg-cyan-400/18 p-2 text-[11px] font-medium text-cyan-50"
                                 style={{
-                                  x: scrubState.step1 * (clipTargets[index]?.x ?? 0),
-                                  y: scrubState.step1 * (clipTargets[index]?.y ?? 0),
-                                  rotate: scrubState.step1 * (clipTargets[index]?.rotate ?? 0),
-                                  opacity: scrubState.step1 <= 0.15
-                                    ? (scrubState.step1 / 0.15) * 0.7
-                                    : 0.7 + ((scrubState.step1 - 0.15) / 0.85) * 0.3,
-                                  scale: 0.9 + scrubState.step1 * 0.1,
+                                  x: scrubState.stage1 * (clipTargets[index]?.x ?? 0),
+                                  y: scrubState.stage1 * (clipTargets[index]?.y ?? 0),
+                                  rotate: scrubState.stage1 * (clipTargets[index]?.rotate ?? 0),
+                                  opacity: scrubState.stage1 <= 0.15
+                                    ? (scrubState.stage1 / 0.15) * 0.7
+                                    : 0.7 + ((scrubState.stage1 - 0.15) / 0.85) * 0.3,
+                                  scale: 0.9 + scrubState.stage1 * 0.1,
                                 }}
                               >
                                 {label}
@@ -313,65 +320,78 @@ export function VerticalScrubSection() {
                         ) : null}
 
                         {scrubState.activeStep === 1 ? (
-                          <motion.div
-                            className="absolute inset-x-0 bottom-6 rounded-2xl border border-violet-200/30 bg-violet-400/12 p-4 text-left text-[13px] text-violet-50"
-                            style={{
-                              opacity: scrubState.step2,
-                              y: 12 - scrubState.step2 * 12,
-                            }}
-                          >
-                            <p className="font-semibold">
-                              {typedParts[0] ?? ""}
-                              <span
-                                className={scrubState.typedChars < scriptTarget.length ? "inline" : "hidden"}
-                              >
-                                |
-                              </span>
-                            </p>
-                            <p className="mt-2 text-violet-100/90">{typedParts[1] ?? ""}</p>
-                          </motion.div>
+                          <>
+                            <motion.div
+                              className="absolute left-1/2 top-4 w-[58%] -translate-x-1/2 rounded-xl border border-cyan-200/35 bg-cyan-400/16 px-3 py-1.5 text-center text-[11px] font-medium text-cyan-50"
+                              style={{
+                                opacity: 0.55 + scrubState.stage2 * 0.45,
+                                y: 10 - scrubState.stage2 * 10,
+                                scale: 0.95 + scrubState.stage2 * 0.05,
+                              }}
+                            >
+                              {SCRUB_BREAKDOWN_CLIPS[0]}
+                            </motion.div>
+                            <motion.div
+                              className="absolute inset-x-0 bottom-6 rounded-2xl border border-violet-200/30 bg-violet-400/12 p-4 text-left text-[13px] text-violet-50"
+                              style={{
+                                opacity: scrubState.stage2,
+                                y: 12 - scrubState.stage2 * 12,
+                              }}
+                            >
+                              <p className="font-semibold">
+                                {typedParts[0] ?? ""}
+                                <span
+                                  className={scrubState.typedChars < scriptTarget.length ? "inline" : "hidden"}
+                                >
+                                  |
+                                </span>
+                              </p>
+                              <p className="mt-2 text-violet-100/90">{typedParts[1] ?? ""}</p>
+                            </motion.div>
+                            <motion.div
+                              className="absolute right-0 top-14 rounded-lg border border-emerald-200/35 bg-emerald-400/15 px-2 py-1 text-[10px] text-emerald-100"
+                              style={{ opacity: verifyOpacity }}
+                            >
+                              Verified <UserRoundCheck className="ml-1 inline h-3 w-3" />
+                            </motion.div>
+                          </>
                         ) : null}
 
                         {scrubState.activeStep === 2 ? (
                           <motion.div
-                            className="absolute inset-x-2 top-5 rounded-xl border border-emerald-200/30 bg-black/35 p-3 text-[12px] text-white"
-                            style={{ opacity: verifyOpacity }}
+                            className="absolute inset-0 rounded-2xl border border-white/20 bg-black/35 p-3 text-[11px] text-white"
+                            style={{ opacity: assetsLayerOpacity }}
                           >
-                            <div className="mb-2 flex items-center gap-2 text-emerald-300">
-                              <motion.span
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-emerald-300/70 bg-emerald-300/20"
-                                style={{
-                                  scale: 0.9 + scrubState.step3 * 0.17,
-                                }}
-                              >
-                                <UserRoundCheck className="h-3.5 w-3.5" />
-                              </motion.span>
-                              <span className="font-medium">Verified edits</span>
+                            <div className="mb-2 flex items-center justify-between text-white/85">
+                              <span>Generating assets</span>
+                              <span>{scrubState.assetsPercent}%</span>
                             </div>
-                            <p>
-                              Stop wasting{" "}
-                              <motion.span
-                                style={{
-                                  backgroundColor: `rgba(16,185,129,${verifyHighlightAlpha})`,
-                                }}
-                                className="rounded px-1"
-                              >
-                                hours
-                              </motion.span>{" "}
-                              on one short.
-                            </p>
-                            <p className="mt-1">
-                              Turn one source into{" "}
-                              <motion.span
-                                style={{
-                                  backgroundColor: `rgba(59,130,246,${0.36 * scrubState.step3})`,
-                                }}
-                                className="rounded px-1"
-                              >
-                                scenes and captions
-                              </motion.span>{" "}
-                              quickly.
-                            </p>
+                            <div className="space-y-2">
+                              <div className="rounded-xl border border-white/10 bg-white/5 p-2">
+                                <div className="mb-1 flex items-center gap-1.5 text-cyan-100">
+                                  <Image className="h-3.5 w-3.5" />
+                                  <span>Images</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-white/15">
+                                  <motion.div
+                                    className="h-full rounded-full bg-cyan-300"
+                                    style={{ width: `${Math.max(8, scrubState.assetsPercent)}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="rounded-xl border border-white/10 bg-white/5 p-2">
+                                <div className="mb-1 flex items-center gap-1.5 text-violet-100">
+                                  <Mic className="h-3.5 w-3.5" />
+                                  <span>Voiceover</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-white/15">
+                                  <motion.div
+                                    className="h-full rounded-full bg-violet-300"
+                                    style={{ width: `${Math.max(12, scrubState.assetsPercent - 6)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </motion.div>
                         ) : null}
 
@@ -382,48 +402,57 @@ export function VerticalScrubSection() {
                           >
                             <motion.div
                               className="absolute -left-10 top-4 h-32 w-32 rounded-3xl bg-amber-300/30 blur-2xl"
-                              style={{ y: 10 - scrubState.step4 * 18 }}
+                              style={{ y: 10 - scrubState.stage4 * 18 }}
                             />
                             <motion.div
                               className="absolute -right-8 bottom-12 h-36 w-36 rounded-3xl bg-fuchsia-300/30 blur-2xl"
-                              style={{ y: 8 - scrubState.step4 * 20 }}
+                              style={{ y: 8 - scrubState.stage4 * 20 }}
                             />
+                            <motion.div
+                              className="absolute inset-x-2 top-5 rounded-xl border border-white/20 bg-black/40 p-3 text-[12px] text-white"
+                              style={{ y: 8 - scrubState.stage4 * 8 }}
+                            >
+                              <div className="flex items-center justify-between text-white/90">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Upload className="h-3.5 w-3.5" />
+                                  Uploading
+                                </span>
+                                <span>{scrubState.exportPercent}%</span>
+                              </div>
+                              <div className="mt-2 h-1.5 rounded-full bg-white/20">
+                                <motion.div
+                                  className="h-full rounded-full bg-emerald-300"
+                                  style={{ width: `${scrubState.exportPercent}%` }}
+                                />
+                              </div>
+                              <div className="mt-2 inline-flex items-center gap-1 rounded-md border border-emerald-200/35 bg-emerald-300/10 px-2 py-1 text-[10px] text-emerald-100">
+                                <Coins className="h-3 w-3" />
+                                Monetization ready
+                              </div>
+                            </motion.div>
                           </motion.div>
                         ) : null}
                       </div>
 
-                      {scrubState.activeStep === 3 ? (
-                        <motion.div
-                          className="rounded-2xl border border-white/20 bg-black/35 p-3"
-                          style={{
-                            opacity: 0.4 + scrubState.step4 * 0.6,
-                            y: 8 - scrubState.step4 * 8,
-                          }}
-                        >
-                          <div className="mb-2 flex items-center justify-between text-xs text-white/85">
-                            <span>Export progress</span>
-                            <span>{scrubState.exportPercent}%</span>
-                          </div>
-                          <div className="h-2 rounded-full bg-white/20">
-                            <motion.div
-                              className="h-full rounded-full bg-emerald-300"
-                              style={{ width: `${scrubState.exportPercent}%` }}
-                            />
-                          </div>
-                          <motion.div
-                            className="mt-2 flex justify-end text-white"
-                            style={{
-                              opacity: scrubState.step4 <= 0.8
-                                ? 0
-                                : (scrubState.step4 - 0.8) / 0.2,
-                            }}
+                      <motion.div
+                        className="grid grid-cols-4 gap-2 rounded-2xl border border-white/20 bg-black/35 p-2"
+                        style={{
+                          opacity: 0.55 + scrubState.global * 0.45,
+                          y: 8 - scrubState.global * 8,
+                        }}
+                      >
+                        {LANDING_SCRUB_STEPS.map((step, index) => (
+                          <div
+                            key={step.id}
+                            className={cn(
+                              "rounded-md px-1.5 py-1 text-center text-[10px] text-white/70",
+                              scrubState.activeStep === index && "bg-white/10 text-white",
+                            )}
                           >
-                            <Download className="h-4 w-4" />
-                          </motion.div>
-                        </motion.div>
-                      ) : (
-                        <div className="h-16" aria-hidden />
-                      )}
+                            {index + 1}
+                          </div>
+                        ))}
+                      </motion.div>
                     </div>
                   </motion.div>
                 </div>

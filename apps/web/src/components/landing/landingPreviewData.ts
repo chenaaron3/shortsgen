@@ -1,38 +1,38 @@
 export type LandingScrubStep = {
-  id: "breakdown" | "script" | "verify" | "export";
+  id: "clips" | "scriptVerify" | "assets" | "upload";
   title: string;
   description: string;
 };
 
 export const LANDING_SCRUB_STEPS: LandingScrubStep[] = [
   {
-    id: "breakdown",
-    title: "Breakdown",
+    id: "clips",
+    title: "Identify Clips",
     description:
-      "Start from one source block, then split it into focused clips you can shape.",
+      "Split one source into focused clips you can turn into consistent posts.",
   },
   {
-    id: "script",
-    title: "Create Script",
+    id: "scriptVerify",
+    title: "Generate Script + Verify",
     description:
-      "Refine into a hook and tight body copy that reads like a publish-ready short.",
+      "Generate draft copy fast, then scan and approve it before moving forward.",
   },
   {
-    id: "verify",
-    title: "Human Verify",
+    id: "assets",
+    title: "Generate Assets",
     description:
-      "Stay in control: highlight edits, confirm changes, and lock your final phrasing.",
+      "Create visuals and voiceover from the approved script in one step.",
   },
   {
-    id: "export",
-    title: "Generate & Export",
+    id: "upload",
+    title: "Upload + Make Money",
     description:
-      "Generate visuals, finalize assets, and export a vertical short in one flow.",
+      "Export and publish quickly so your channel can grow and monetize consistently.",
   },
 ];
 
 export const SCRUB_BREAKDOWN_SOURCE =
-  "Most creators lose hours turning one long source into short-form clips worth posting.";
+  "Long-form source in. Find the strongest moments and map them into repeatable short-form clips.";
 
 export const SCRUB_BREAKDOWN_CLIPS = [
   "Clip 01: Hook",
@@ -44,11 +44,11 @@ export const SCRUB_BREAKDOWN_CLIPS = [
 
 export const SCRUB_SCRIPT_HOOK = "Stop wasting 6 hours on one short.";
 export const SCRUB_SCRIPT_BODY =
-  "Turn one source into scripted scenes, visuals, and captions in minutes.";
+  "Generate a concise script, then quickly verify it before you spend credits.";
 
 export const SCRUB_VERIFY_TEXT = [
-  "Stop wasting hours on one short.",
-  "Turn one source into scenes, visuals, and captions quickly.",
+  "Hook is clear and on-brand.",
+  "Script approved for asset generation.",
 ];
 
 export const LANDING_PREVIEW_ASSET_BASE_URL =
