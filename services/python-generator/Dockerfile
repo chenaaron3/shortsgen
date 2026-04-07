@@ -13,15 +13,13 @@ RUN apk add --no-cache curl xz && \
 FROM public.ecr.aws/lambda/python:3.12
 COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffprobe /usr/local/bin/
 
-# Copy requirements and install
-COPY requirements.txt ${LAMBDA_TASK_ROOT}/
-RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.txt
+# Install deps from pyproject.toml (single source of truth). Hatch needs scripts/ to build the wheel.
+COPY pyproject.toml ${LAMBDA_TASK_ROOT}/generation/
+COPY scripts ${LAMBDA_TASK_ROOT}/generation/scripts/
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/generation/"
 
 # Crawl4AI / Playwright browser for generic URL fallback in initial_processing.
-# Install playwright explicitly here to avoid failures when transitive deps change
-# or build contexts do not carry the same requirements resolution.
-RUN python -m pip install --no-cache-dir "playwright>=1.40.0" && \
-    python -m playwright install chromium
+RUN python -m playwright install chromium
 
 # Pre-download faster-whisper models into image (avoids cold-start download in Lambda).
 # Build cache mount speeds rebuilds; first build ~5–10 min. HF_TOKEN optional for rate limits.

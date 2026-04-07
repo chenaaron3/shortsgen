@@ -1,3 +1,7 @@
 {
-  "extraPaths": ["services/python-generator/scripts"]
+  "extraPaths": [
+    "services/python-generator/scripts"
+  ],
+  "venvPath": "services/python-generator",
+  "venv": ".venv"
 }

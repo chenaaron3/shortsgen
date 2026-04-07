@@ -3,7 +3,7 @@
 Run a script from services/python-generator/scripts with PYTHONPATH set.
 
 If services/python-generator/.venv exists, any ``python3 .../run.py`` invocation is
-re-executed with that venv's interpreter so deps (e.g. crawl4ai) match ``pip install -r requirements.txt``.
+re-executed with that venv's interpreter so deps match ``pyproject.toml`` (e.g. ``uv sync`` or ``pip install -e services/python-generator``).
 
 Usage (from repo root):
   python3 services/python-generator/scripts/run.py pipeline/run_source_pipeline.py -f content.txt -c default --no-breakdown

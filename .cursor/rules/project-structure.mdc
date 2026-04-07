@@ -27,7 +27,7 @@ shortgen/
 │       ├── prompts/           # LLM system prompts
 │       ├── assets/            # Mascot reference
 │       ├── cache/             # _breakdown/, {configHash}/breakdowns/, {configHash}/videos/
-│       └── requirements.txt
+│       └── pyproject.toml     # Pipeline deps (uv / pip -e; Docker install)
 ├── packages/
 │   ├── types/                # Zod schemas: manifest/, api/, table/ → Pydantic via types:sync
 │   ├── api/                  # Re-exports @shortgen/types (Lambda handlers)

@@ -86,10 +86,10 @@ Schemas are consolidated in `packages/types` (manifest, api, table, progress-eve
 # Install deps (pnpm monorepo)
 pnpm install
 
-# Pipeline (Python); run from project root
+# Pipeline (Python); run from project root (deps: services/python-generator/pyproject.toml)
 # Option A: pip
-pip install -r services/python-generator/requirements.txt
-# Option B: uv (pyproject.toml)
+pip install -e services/python-generator
+# Option B: uv
 cd services/python-generator && uv sync
 ```
 
