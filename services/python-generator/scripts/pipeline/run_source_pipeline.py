@@ -15,6 +15,7 @@ Usage:
   python generation/scripts/pipeline/run_source_pipeline.py -f book.txt -c default --step image
   python generation/scripts/pipeline/run_source_pipeline.py -f content.txt -c default --no-breakdown  # single content (run_pipeline equivalent)
   python generation/scripts/pipeline/run_source_pipeline.py -f content.txt -c prototype --no-breakdown  # cheap/fast config (flux + readaloud)
+  python generation/scripts/pipeline/run_source_pipeline.py --url https://example.com/article -c default
 """
 
 import argparse
@@ -26,6 +27,8 @@ from typing import cast
 from dotenv import load_dotenv
 
 from config_loader import load_config
+from ingest.resolve import resolve_url_to_text
+from ingest.url_security import assert_url_safe_for_ingest
 from path_utils import breakdown_cache_path, env_path, breakdown_output_dir, video_cache_path
 from logger import error, info
 from usage_trace import flush_traces_to_disk, print_batch_summary, set_context as usage_set_context
@@ -82,7 +85,17 @@ def main():
     parser = argparse.ArgumentParser(
         description="Break down source into nuggets, run pipeline once per nugget."
     )
-    parser.add_argument("-f", "--file", help="Path to source file (book or transcript, markdown). Required for --no-breakdown.")
+    source_group = parser.add_mutually_exclusive_group(required=True)
+    source_group.add_argument(
+        "-f",
+        "--file",
+        help="Path to source file (book or transcript, markdown). Mutually exclusive with --url.",
+    )
+    source_group.add_argument(
+        "--url",
+        metavar="URL",
+        help="HTTPS URL to fetch as markdown (ingest adapters). Mutually exclusive with -f.",
+    )
     parser.add_argument(
         "--no-breakdown",
         action="store_true",
@@ -141,37 +154,49 @@ def main():
 
     no_breakdown = args.no_breakdown
 
-    if no_breakdown and not args.file:
-        error("Error: --no-breakdown requires -f.")
-        sys.exit(1)
-    if not no_breakdown and not args.file:
-        error("Error: -f/--file is required for source breakdown.")
-        sys.exit(1)
-
-    source_path = Path(args.file)
-    if not source_path.exists():
-        error(f"Error: File not found: {source_path}")
-        sys.exit(1)
-
-    source_content = source_path.read_text(encoding="utf-8")
-    if not source_content.strip():
-        error("Error: Source file is empty.")
-        sys.exit(1)
+    if args.url:
+        try:
+            safe_url = assert_url_safe_for_ingest(args.url)
+        except ValueError as e:
+            error(f"Error: {e}")
+            sys.exit(1)
+        info(f"🔗 Fetching: {safe_url}")
+        try:
+            source_content, adapter_name = resolve_url_to_text(safe_url)
+        except Exception as e:
+            error(f"Error: URL ingest failed: {e}")
+            sys.exit(1)
+        if not source_content.strip():
+            error("Error: Fetched URL body is empty.")
+            sys.exit(1)
+        info(f"📥 Ingest adapter: {adapter_name}")
+        source_label = safe_url
+    else:
+        source_path = Path(args.file)
+        if not source_path.exists():
+            error(f"Error: File not found: {source_path}")
+            sys.exit(1)
+        source_content = source_path.read_text(encoding="utf-8")
+        if not source_content.strip():
+            error("Error: Source file is empty.")
+            sys.exit(1)
+        source_label = source_path.name
 
     configs = [load_config(c) for c in args.config]
     source_key = source_hash(source_content)
     usage_set_context(source_key, "_breakdown")
-    info(f"📚 Source: {source_path.name}")
+    info(f"📚 Source: {source_label}")
     info(f"🔑 source_key: {source_key}")
     info(f"📋 Configs: {[c.name for c in configs]}")
 
     if no_breakdown:
         cache_key = content_hash(source_content)
         lines = source_content.count("\n") + 1
+        nugget_title = source_label if args.url else Path(args.file).stem
         nuggets = [
             Nugget(
                 id=cache_key,
-                title=source_path.stem,
+                title=nugget_title,
                 start_line=1,
                 end_line=lines,
                 source_ref=None,
@@ -208,11 +233,11 @@ def main():
         sys.exit(0)
 
     def on_config_enter(config, items):
-        md_path = write_videos_markdown(source_key, config.hash, items, source_path.name if source_path else "")
+        md_path = write_videos_markdown(source_key, config.hash, items, source_label)
         info(f"  📄 {md_path}")
 
     def on_item_done(config, items):
-        write_videos_markdown(source_key, config.hash, items, source_path.name if source_path else "")
+        write_videos_markdown(source_key, config.hash, items, source_label)
 
     # Pass step to run_batch only for per-nugget steps (run_pipeline doesn't know breakdown)
     per_nugget_step = None if args.step == "breakdown" else args.step
