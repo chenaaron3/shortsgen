@@ -13,7 +13,8 @@ RUN apk add --no-cache curl xz && \
 FROM public.ecr.aws/lambda/python:3.12
 COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffprobe /usr/local/bin/
 
-# Install deps from pyproject.toml (single source of truth). Hatch needs scripts/ to build the wheel.
+# Build context is services/python-generator (sst.config.ts bundle) so pyproject.toml + scripts/ are at context root.
+# Hatch needs scripts/ beside pyproject.toml to build the wheel.
 COPY pyproject.toml ${LAMBDA_TASK_ROOT}/generation/
 COPY scripts ${LAMBDA_TASK_ROOT}/generation/scripts/
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/generation/"

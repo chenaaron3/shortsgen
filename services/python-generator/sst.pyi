@@ -7,4 +7,53 @@ class Resource:
     class App:
         name: str
         stage: str
+    class ShortgenAnthropicApiKey:
+        type: str
+        value: str
+    class ShortgenApi:
+        type: str
+        url: str
+    class ShortgenApiSecret:
+        type: str
+        value: str
+    class ShortgenAssets:
+        name: str
+        type: str
+    class ShortgenAssetsRouter:
+        type: str
+        url: str
+    class ShortgenConnections:
+        name: str
+        type: str
+    class ShortgenDatabaseUrl:
+        type: str
+        value: str
+    class ShortgenElevenlabsApiKey:
+        type: str
+        value: str
+    class ShortgenFinalizeAllStateMachine:
+        arn: str
+        type: str
+    class ShortgenFinalizeClip:
+        name: str
+        type: str
+    class ShortgenInitialProcessing:
+        name: str
+        type: str
+    class ShortgenOpenaiApiKey:
+        type: str
+        value: str
+    class ShortgenProgressApi:
+        managementEndpoint: str
+        type: str
+        url: str
+    class ShortgenReplicateApiToken:
+        type: str
+        value: str
+    class ShortgenUpdateFeedback:
+        name: str
+        type: str
+    class ShortgenUpdateImagery:
+        name: str
+        type: str
 

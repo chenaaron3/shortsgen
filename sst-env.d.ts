@@ -6,6 +6,71 @@
 
 declare module "sst" {
   export interface Resource {
+    "ShortgenAnthropicApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "ShortgenApi": {
+      "type": "sst.aws.ApiGatewayV2"
+      "url": string
+    }
+    "ShortgenApiSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "ShortgenAssets": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "ShortgenAssetsRouter": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
+    "ShortgenConnections": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
+    "ShortgenDatabaseUrl": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "ShortgenElevenlabsApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "ShortgenFinalizeAllStateMachine": {
+      "arn": string
+      "type": "sst.aws.StepFunctions"
+    }
+    "ShortgenFinalizeClip": {
+      "name": string
+      "type": "sst.aws.Function"
+    }
+    "ShortgenInitialProcessing": {
+      "name": string
+      "type": "sst.aws.Function"
+    }
+    "ShortgenOpenaiApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "ShortgenProgressApi": {
+      "managementEndpoint": string
+      "type": "sst.aws.ApiGatewayWebSocket"
+      "url": string
+    }
+    "ShortgenReplicateApiToken": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "ShortgenUpdateFeedback": {
+      "name": string
+      "type": "sst.aws.Function"
+    }
+    "ShortgenUpdateImagery": {
+      "name": string
+      "type": "sst.aws.Function"
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />

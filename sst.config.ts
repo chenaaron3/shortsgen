@@ -84,25 +84,26 @@ export default $config({
     // Python pipeline Lambdas (container image, 15min timeout)
     // Note: container must be bool; object form { cache: false } causes ion parse error
     // dev: false = run in deployed container (not Live); avoids SST Python handler path bugs
+    //
+    // bundle = uv project root so Docker build context includes pyproject.toml + scripts/
+    // at the context root (required by Dockerfile COPY). Handlers are relative to bundle.
     const pythonBase = {
       runtime: "python3.12" as const,
       timeout: "15 minutes",
       memory: "3008 MB",
+      bundle: "./services/python-generator",
       python: { container: true } as const,
       dev: false,
       environment: pythonEnv,
     };
 
-    // Handler path is used by SST to find the file. For container images, SST sets
-    // imageConfig.commands from the handler path (services.python-generator...), but
-    // the Dockerfile uses PYTHONPATH=generation/scripts so the correct module is
-    // handlers.initial_processing. Override imageConfig to fix the import path.
+    // For container images, SST derives imageConfig.commands from the handler path; we
+    // override to handlers.<module>.handler. PYTHONPATH=generation/scripts matches COPY layout.
     const initialProcessing = new sst.aws.Function(
       "ShortgenInitialProcessing",
       {
         ...pythonBase,
-        handler:
-          "./services/python-generator/scripts/handlers/initial_processing.handler",
+        handler: "scripts/handlers/initial_processing.handler",
         link: [
           connectionsTable,
           bucket,
@@ -128,8 +129,7 @@ export default $config({
 
     const updateImagery = new sst.aws.Function("ShortgenUpdateImagery", {
       ...pythonBase,
-      handler:
-        "./services/python-generator/scripts/handlers/update_imagery.handler",
+      handler: "scripts/handlers/update_imagery.handler",
       link: [
         connectionsTable,
         bucket,
@@ -154,8 +154,7 @@ export default $config({
 
     const updateFeedback = new sst.aws.Function("ShortgenUpdateFeedback", {
       ...pythonBase,
-      handler:
-        "./services/python-generator/scripts/handlers/update_feedback.handler",
+      handler: "scripts/handlers/update_feedback.handler",
       link: [
         connectionsTable,
         wsApi,
@@ -179,8 +178,7 @@ export default $config({
 
     const finalizeClip = new sst.aws.Function("ShortgenFinalizeClip", {
       ...pythonBase,
-      handler:
-        "./services/python-generator/scripts/handlers/finalize_clip.handler",
+      handler: "scripts/handlers/finalize_clip.handler",
       link: [
         connectionsTable,
         bucket,
