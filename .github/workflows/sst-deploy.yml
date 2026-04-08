@@ -51,6 +51,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # SST reads .sst/artifacts/<Function>-src/Dockerfile before that folder exists on clean CI checkouts.
+      - name: Prepare Python Lambda Docker context
+        run: |
+          set -euo pipefail
+          for fn in ShortgenInitialProcessing ShortgenUpdateImagery ShortgenUpdateFeedback ShortgenFinalizeClip; do
+            dest=".sst/artifacts/${fn}-src"
+            rm -rf "$dest"
+            mkdir -p "$dest"
+            cp -a services/python-generator/. "$dest/"
+            rm -rf "$dest/cache" "$dest/.venv" 2>/dev/null || true
+          done
+
       - name: Deploy
         run: |
           STAGE="${{ vars.SST_STAGE || secrets.SST_STAGE }}"
