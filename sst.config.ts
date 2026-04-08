@@ -61,7 +61,7 @@ export default $config({
     const replicateApiToken = new sst.Secret("ShortgenReplicateApiToken");
     const elevenlabsApiKey = new sst.Secret("ShortgenElevenlabsApiKey");
     const anthropicApiKey = new sst.Secret("ShortgenAnthropicApiKey");
-    const ytdlpCookiesB64 = new sst.Secret("ShortgenYtdlpCookiesB64");
+    const ytdlpCookiesGzB64 = new sst.Secret("ShortgenYtdlpCookiesGzB64");
 
     // Shared env for all Python Lambdas (from linked resources + API keys)
     const pythonEnv = {
@@ -74,7 +74,7 @@ export default $config({
       REPLICATE_API_TOKEN: replicateApiToken.value,
       ELEVENLABS_API_KEY: elevenlabsApiKey.value,
       ANTHROPIC_API_KEY: anthropicApiKey.value,
-      YTDLP_COOKIES_B64: ytdlpCookiesB64.value,
+      YTDLP_COOKIES_GZ_B64: ytdlpCookiesGzB64.value,
       // Baked-in Whisper models from Docker build (no cold-start download)
       HF_HOME: "/var/task/whisper-models",
       HF_HUB_CACHE: "/var/task/whisper-models/hub",
@@ -117,7 +117,7 @@ export default $config({
           replicateApiToken,
           elevenlabsApiKey,
           anthropicApiKey,
-          ytdlpCookiesB64,
+          ytdlpCookiesGzB64,
         ],
         transform: {
           function: (args) => {
@@ -144,7 +144,7 @@ export default $config({
         replicateApiToken,
         elevenlabsApiKey,
         anthropicApiKey,
-        ytdlpCookiesB64,
+        ytdlpCookiesGzB64,
       ],
       transform: {
         function: (args) => {
@@ -169,7 +169,7 @@ export default $config({
         replicateApiToken,
         elevenlabsApiKey,
         anthropicApiKey,
-        ytdlpCookiesB64,
+        ytdlpCookiesGzB64,
       ],
       transform: {
         function: (args) => {
@@ -195,7 +195,7 @@ export default $config({
         replicateApiToken,
         elevenlabsApiKey,
         anthropicApiKey,
-        ytdlpCookiesB64,
+        ytdlpCookiesGzB64,
       ],
       transform: {
         function: (args) => {

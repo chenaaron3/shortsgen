@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import gzip
 import hashlib
 import os
 from pathlib import Path
@@ -56,13 +57,14 @@ def _find_downloaded_caption(tmpdir: str, video_id: str) -> Path | None:
 
 
 def _resolve_cookiefile_path() -> str | None:
-    encoded = os.environ.get("YTDLP_COOKIES_B64", "").strip()
-    if not encoded:
+    encoded_gz = os.environ.get("YTDLP_COOKIES_GZ_B64", "").strip()
+    if not encoded_gz:
         return None
     try:
-        cookie_text = base64.b64decode(encoded).decode("utf-8")
+        cookie_bytes = gzip.decompress(base64.b64decode(encoded_gz))
+        cookie_text = cookie_bytes.decode("utf-8")
     except Exception as exc:
-        warn(f"[youtube_ingest] invalid YTDLP_COOKIES_B64 value: {exc}")
+        warn(f"[youtube_ingest] invalid cookie secret value: {exc}")
         return None
 
     global _COOKIEFILE_DIGEST
