@@ -4,8 +4,6 @@
  */
 
 import { isIPv4, isIPv6 } from "node:net";
-import { Readability } from "@mozilla/readability";
-import { JSDOM } from "jsdom";
 import { YoutubeTranscript } from "youtube-transcript/dist/youtube-transcript.esm.js";
 
 const MAX_ARTICLE_BYTES = 3 * 1024 * 1024;
@@ -202,6 +200,19 @@ function stripHtmlToText(html: string): string {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function extractTagInnerHtml(html: string, tag: "article" | "main"): string | null {
+  const match = html.match(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
+  return match?.[1]?.trim() || null;
+}
+
+function toReadablePlainText(html: string): string {
+  return stripHtmlToText(html)
+    .split(/\s{2,}/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function extractMetaTagContent(
@@ -456,17 +467,12 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
 
 function extractReadableArticleContent(html: string, pageUrl: string): string | null {
   try {
-    const dom = new JSDOM(html, { url: pageUrl });
-    const parsed = new Readability(dom.window.document).parse();
-    const text = parsed?.textContent?.replace(/\r/g, "").trim() ?? "";
-    if (!text) return null;
-    const paragraphs = text
-      .split(/\n+/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-    if (paragraphs.length === 0) return null;
-    const body = paragraphs.join("\n\n");
-    const title = parsed?.title?.replace(/\s+/g, " ").trim() ?? "";
+    const articleHtml = extractTagInnerHtml(html, "article");
+    const mainHtml = articleHtml ? null : extractTagInnerHtml(html, "main");
+    const preferredHtml = articleHtml ?? mainHtml ?? html;
+    const body = toReadablePlainText(preferredHtml);
+    if (!body) return null;
+    const title = extractTitleTag(html)?.replace(/\s+/g, " ").trim() ?? "";
     if (title.length > 0) {
       return `# ${title}\n\n${body}`;
     }
