@@ -51,7 +51,6 @@ async def _crawl(url: str) -> str:
         raise RuntimeError("Crawl succeeded but markdown output was empty.")
     return markdown
 
-
 class Crawl4AiFallbackAdapter(UrlAdapter):
     name = "crawl4ai-fallback"
 

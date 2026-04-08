@@ -20,7 +20,7 @@ COPY scripts ${LAMBDA_TASK_ROOT}/generation/scripts/
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}/generation/"
 
 # Crawl4AI / Playwright browser for generic URL fallback in initial_processing.
-RUN python -m playwright install chromium
+RUN PLAYWRIGHT_BROWSERS_PATH=${LAMBDA_TASK_ROOT}/ms-playwright python -m playwright install chromium
 
 # Pre-download faster-whisper models into image (avoids cold-start download in Lambda).
 # Build cache mount speeds rebuilds; first build ~5–10 min. HF_TOKEN optional for rate limits.
