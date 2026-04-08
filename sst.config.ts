@@ -64,9 +64,38 @@ export default $config({
     const ytdlpCookiesGzB64 = new sst.Secret("ShortgenYtdlpCookiesGzB64");
 
     // Public, lightweight EC2 host for bgutil PO-token provider (kept in SST-managed infra).
-    const defaultVpc = aws.ec2.getVpcOutput({ default: true });
-    const defaultSubnets = aws.ec2.getSubnetsOutput({
-      filters: [{ name: "vpc-id", values: [defaultVpc.id] }],
+    // We create a tiny dedicated VPC/public subnet so this works even when account has no default VPC.
+    const potProviderVpc = new aws.ec2.Vpc("ShortgenYtdlpPotProviderVpc", {
+      cidrBlock: "10.90.0.0/16",
+      enableDnsHostnames: true,
+      enableDnsSupport: true,
+      tags: { Name: "shortgen-ytdlp-pot-provider-vpc" },
+    });
+    const potProviderIgw = new aws.ec2.InternetGateway("ShortgenYtdlpPotProviderIgw", {
+      vpcId: potProviderVpc.id,
+      tags: { Name: "shortgen-ytdlp-pot-provider-igw" },
+    });
+    const azs = aws.getAvailabilityZonesOutput({ state: "available" });
+    const potProviderSubnet = new aws.ec2.Subnet("ShortgenYtdlpPotProviderSubnet", {
+      vpcId: potProviderVpc.id,
+      cidrBlock: "10.90.1.0/24",
+      availabilityZone: azs.names.apply((names) => names[0]),
+      mapPublicIpOnLaunch: true,
+      tags: { Name: "shortgen-ytdlp-pot-provider-subnet" },
+    });
+    const potProviderRouteTable = new aws.ec2.RouteTable("ShortgenYtdlpPotProviderRt", {
+      vpcId: potProviderVpc.id,
+      routes: [
+        {
+          cidrBlock: "0.0.0.0/0",
+          gatewayId: potProviderIgw.id,
+        },
+      ],
+      tags: { Name: "shortgen-ytdlp-pot-provider-rt" },
+    });
+    new aws.ec2.RouteTableAssociation("ShortgenYtdlpPotProviderRta", {
+      subnetId: potProviderSubnet.id,
+      routeTableId: potProviderRouteTable.id,
     });
     const al2023Arm64 = aws.ssm.getParameterOutput({
       name: "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64",
@@ -74,7 +103,7 @@ export default $config({
     const potProviderSecurityGroup = new aws.ec2.SecurityGroup(
       "ShortgenYtdlpPotProviderSg",
       {
-        vpcId: defaultVpc.id,
+        vpcId: potProviderVpc.id,
         description: "Public access for bgutil PO provider",
         ingress: [
           {
@@ -106,7 +135,7 @@ export default $config({
     const potProviderInstance = new aws.ec2.Instance("ShortgenYtdlpPotProvider", {
       ami: al2023Arm64.value,
       instanceType: "t4g.nano",
-      subnetId: defaultSubnets.ids.apply((ids) => ids[0]),
+      subnetId: potProviderSubnet.id,
       vpcSecurityGroupIds: [potProviderSecurityGroup.id],
       userData: potProviderUserData,
       tags: { Name: "shortgen-ytdlp-pot-provider" },
