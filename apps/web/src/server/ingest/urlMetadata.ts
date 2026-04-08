@@ -15,6 +15,24 @@ const BLOCKED_HOSTNAMES = new Set([
   "metadata",
 ]);
 
+function safeUrlForLog(input: string): string {
+  try {
+    const u = new URL(input);
+    return `${u.origin}${u.pathname}`;
+  } catch {
+    return input;
+  }
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
 function isBlockedHostname(hostname: string): boolean {
   const h = hostname.toLowerCase();
   if (BLOCKED_HOSTNAMES.has(h)) return true;
@@ -233,7 +251,13 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
       },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error("[urlMetadata] Reddit JSON metadata request failed", {
+        url: safeUrlForLog(jsonUrl.href),
+        status: res.status,
+      });
+      return null;
+    }
     const payload = (await res.json()) as unknown;
     if (!Array.isArray(payload) || payload.length === 0) return null;
     const postListing = payload[0] as { data?: { children?: Array<{ data?: Record<string, unknown> }> } };
@@ -255,7 +279,11 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
       : undefined;
     if (!isMeaningfulTitle(pageTitle)) return null;
     return { siteName: subreddit ?? "Reddit", pageTitle, contentLengthWords };
-  } catch {
+  } catch (error) {
+    console.error("[urlMetadata] Reddit JSON metadata parse failed", {
+      url: safeUrlForLog(url),
+      error: errorMessage(error),
+    });
     return null;
   }
 }
@@ -277,18 +305,33 @@ export async function fetchUrlPreviewMetadata(
     }
 
     const { html, url: finalUrl } = await fetchArticleHtml(trimmed);
-    if (!html.trim()) return null;
+    if (!html.trim()) {
+      console.error("[urlMetadata] Fetched HTML was empty", {
+        url: safeUrlForLog(finalUrl),
+      });
+      return null;
+    }
     const meta = await parseHtmlMeta(html, finalUrl);
     const siteName = normalizeMetaText(meta.siteName);
     const pageTitle = normalizeMetaText(meta.pageTitle);
-    if (!isMeaningfulTitle(pageTitle)) return null;
+    if (!isMeaningfulTitle(pageTitle)) {
+      console.error("[urlMetadata] Metadata title rejected as non-meaningful", {
+        url: safeUrlForLog(finalUrl),
+        pageTitle: pageTitle ?? null,
+      });
+      return null;
+    }
     return {
       hostname,
       siteName,
       pageTitle,
       contentLengthWords: meta.contentLengthWords,
     };
-  } catch {
+  } catch (error) {
+    console.error("[urlMetadata] URL preview metadata fetch failed", {
+      url: safeUrlForLog(rawUrl),
+      error: errorMessage(error),
+    });
     return null;
   }
 }
