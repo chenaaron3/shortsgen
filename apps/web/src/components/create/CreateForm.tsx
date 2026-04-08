@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
 import { ARTICLE_SAMPLE, BOOK_SAMPLE, YOUTUBE_SAMPLE } from '~/constants/inspirationSamples';
@@ -34,6 +34,14 @@ const PIPELINE_CONFIG_OPTIONS: {
       description: "Full quality pipeline",
     },
   ];
+
+const MIN_TEXT_WORDS = 10;
+
+function countWords(input: string): number {
+  const trimmed = input.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).filter(Boolean).length;
+}
 
 export function CreateForm() {
   const router = useRouter();
@@ -106,6 +114,11 @@ export function CreateForm() {
       return;
     }
 
+    const wordCount = countWords(t);
+    if (wordCount < MIN_TEXT_WORDS) {
+      return;
+    }
+
     createRunMutation.mutate({
       userInput: t,
       config: pipelineConfig,
@@ -114,6 +127,8 @@ export function CreateForm() {
 
   const trimmedInput = input.trim();
   const isUrlInput = isSingleLineHttpsUrl(trimmedInput);
+  const textWordCount = isUrlInput ? 0 : countWords(trimmedInput);
+  const hasEnoughTextWords = isUrlInput || textWordCount >= MIN_TEXT_WORDS;
   const dynamicRows = Math.min(10, Math.max(1, input.split("\n").length));
   const hasValidUrlMetadata =
     isUrlInput &&
@@ -125,6 +140,8 @@ export function CreateForm() {
     previewedUrl === trimmedInput &&
     !previewUrlMetadata.isPending &&
     !previewUrlMetadata.data;
+  const showMinWordHint =
+    !isUrlInput && trimmedInput.length > 0 && !hasEnoughTextWords;
 
   if (status === "loading") {
     return (
@@ -211,12 +228,19 @@ export function CreateForm() {
           Could not validate this URL. Please use a valid page link.
         </p>
       )}
+      {showMinWordHint && (
+        <p className="text-sm text-destructive">
+          Please enter at least {MIN_TEXT_WORDS} words for plain text (
+          {textWordCount}/{MIN_TEXT_WORDS}).
+        </p>
+      )}
       <Button
         onClick={handleStart}
         disabled={
           !trimmedInput ||
           createRunMutation.isPending ||
-          (isUrlInput && !hasValidUrlMetadata)
+          (isUrlInput && !hasValidUrlMetadata) ||
+          !hasEnoughTextWords
         }
         size="lg"
       >
