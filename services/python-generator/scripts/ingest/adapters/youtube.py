@@ -43,21 +43,19 @@ class YouTubeAdapter(UrlAdapter):
         video_id = _extract_video_id(url)
         if not video_id:
             raise ValueError("Could not determine YouTube video id from URL.")
-        youtube_api = _youtube_api_class()
-
-        transcript_lines = None
-
-        try:
-            fetched = youtube_api().fetch(video_id, languages=["en"])
-            transcript_lines = [getattr(item, "text", "").strip() for item in fetched]
-        except Exception:
-            transcript_lines = None
-
-        if not transcript_lines:
-            fetched = youtube_api.get_transcript(video_id, languages=["en"])
-            transcript_lines = [item.get("text", "").strip() for item in fetched]
-
-        transcript_lines = [line for line in transcript_lines if line]
+        api = _youtube_api_class()()
+        # youtube-transcript-api 1.x had get_transcript(); 2.x is instance-only: .fetch()
+        transcript_lines: list[str] = []
+        for langs in (["en"], ["en-US", "en", "en-GB"]):
+            try:
+                fetched = api.fetch(video_id, languages=langs)
+                lines = [s.text.strip() for s in fetched]
+            except Exception:
+                continue
+            lines = [line for line in lines if line]
+            if lines:
+                transcript_lines = lines
+                break
         if not transcript_lines:
             raise RuntimeError("Transcript was empty.")
 
