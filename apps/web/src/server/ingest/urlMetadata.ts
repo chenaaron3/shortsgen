@@ -276,6 +276,32 @@ function isYouTubeHost(hostname: string): boolean {
   );
 }
 
+function isValidYouTubeVideoUrl(url: URL): boolean {
+  const h = url.hostname.toLowerCase();
+  if (h === "youtu.be") {
+    return url.pathname.split("/").filter(Boolean).length >= 1;
+  }
+  if (h === "youtube.com" || h === "www.youtube.com" || h === "m.youtube.com") {
+    if (url.pathname === "/watch") {
+      return (url.searchParams.get("v") ?? "").trim().length > 0;
+    }
+    if (url.pathname.startsWith("/shorts/")) {
+      return url.pathname.split("/").filter(Boolean).length >= 2;
+    }
+    if (url.pathname.startsWith("/live/")) {
+      return url.pathname.split("/").filter(Boolean).length >= 2;
+    }
+    return false;
+  }
+  if (h === "music.youtube.com") {
+    if (url.pathname === "/watch") {
+      return (url.searchParams.get("v") ?? "").trim().length > 0;
+    }
+    return false;
+  }
+  return false;
+}
+
 function titleFromSlug(slug: string): string | undefined {
   const decoded = decodeURIComponent(slug).replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
   if (!decoded) return undefined;
@@ -433,6 +459,12 @@ export async function fetchUrlPreviewMetadata(
     }
 
     if (isYouTubeHost(hostname)) {
+      if (!isValidYouTubeVideoUrl(u)) {
+        console.error("[urlMetadata] Invalid YouTube URL: expected a video link", {
+          url: safeUrlForLog(trimmed),
+        });
+        return null;
+      }
       const youtubeMeta = await fetchYoutubeOembedMetadata(trimmed);
       if (youtubeMeta) {
         return { hostname, ...youtubeMeta };
