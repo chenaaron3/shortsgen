@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-import base64
-import gzip
-import hashlib
-import os
 from importlib import import_module
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -15,10 +11,6 @@ from faster_whisper import WhisperModel
 from ingest.adapters.base import UrlAdapter
 from ingest.models import ScrapeResult
 from logger import error, info, warn
-
-_COOKIEFILE_PATH = Path("/tmp/yt_dlp_youtube_cookies.txt")
-_COOKIEFILE_DIGEST: str | None = None
-
 
 def _extract_video_id(url: str) -> str | None:
     parsed = urlparse(url)
@@ -57,26 +49,6 @@ def _find_downloaded_caption(tmpdir: str, video_id: str) -> Path | None:
     return max(candidates, key=lambda p: p.stat().st_size)
 
 
-def _resolve_cookiefile_path() -> str | None:
-    encoded_gz = os.environ.get("YTDLP_COOKIES_GZ_B64", "").strip()
-    if not encoded_gz:
-        return None
-    try:
-        cookie_bytes = gzip.decompress(base64.b64decode(encoded_gz))
-        cookie_text = cookie_bytes.decode("utf-8")
-    except Exception as exc:
-        warn(f"[youtube_ingest] invalid cookie secret value: {exc}")
-        return None
-
-    global _COOKIEFILE_DIGEST
-    digest = hashlib.sha256(cookie_text.encode("utf-8")).hexdigest()
-    if _COOKIEFILE_DIGEST != digest or not _COOKIEFILE_PATH.exists():
-        _COOKIEFILE_PATH.write_text(cookie_text, encoding="utf-8")
-        _COOKIEFILE_DIGEST = digest
-        info("[youtube_ingest] refreshed yt-dlp cookiefile in /tmp")
-    return str(_COOKIEFILE_PATH)
-
-
 def _youtube_api_class():
     try:
         module = import_module("youtube_transcript_api")
@@ -101,11 +73,7 @@ def _fetch_transcript_lines_from_transcript_api(video_id: str) -> list[str]:
     return []
 
 
-def _cookies_configured() -> bool:
-    return bool(os.environ.get("YTDLP_COOKIES_GZ_B64", "").strip())
-
-
-def _yt_dlp_base_options(*, use_cookies: bool) -> dict[str, object]:
+def _yt_dlp_base_options() -> dict[str, object]:
     options: dict[str, object] = {
         "noplaylist": True,
         "quiet": True,
@@ -115,34 +83,13 @@ def _yt_dlp_base_options(*, use_cookies: bool) -> dict[str, object]:
         # Pull latest challenge solver script for YouTube n-challenge compatibility.
         "remote_components": ["ejs:github"],
     }
-    if use_cookies:
-        cookiefile = _resolve_cookiefile_path()
-        if cookiefile:
-            options["cookiefile"] = cookiefile
-
-    pot_base_url = os.environ.get("YTDLP_POT_BASE_URL", "").strip()
-    pot_trace = os.environ.get("YTDLP_POT_TRACE", "").strip().lower() in {"1", "true", "yes", "on"}
-    fetch_pot_policy = os.environ.get("YTDLP_FETCH_POT", "auto").strip() or "auto"
-    extractor_args: dict[str, object] = {
-        "youtube": {
-            "fetch_pot": [fetch_pot_policy],
-        }
-    }
-    if pot_trace:
-        extractor_args["youtube"]["pot_trace"] = ["true"]  # type: ignore[index]
-    if pot_base_url:
-        extractor_args["youtubepot-bgutilhttp"] = {
-            "base_url": [pot_base_url],
-        }
-        info(f"[youtube_ingest] using bgutil POT provider base_url={pot_base_url}")
-    options["extractor_args"] = extractor_args
     return options
 
 
-def _fetch_transcript_lines_from_captions(url: str, video_id: str, *, use_cookies: bool) -> list[str]:
+def _fetch_transcript_lines_from_captions(url: str, video_id: str) -> list[str]:
     with TemporaryDirectory(prefix="yt_captions_") as tmpdir:
         output_template = str(Path(tmpdir) / "%(id)s.%(ext)s")
-        options = _yt_dlp_base_options(use_cookies=use_cookies)
+        options = _yt_dlp_base_options()
         options.update(
             {
                 "skip_download": True,
@@ -183,10 +130,10 @@ def _find_downloaded_audio(tmpdir: str, video_id: str) -> Path:
     return max(candidates, key=lambda p: p.stat().st_size)
 
 
-def _transcribe_via_audio_fallback(url: str, video_id: str, *, use_cookies: bool) -> list[str]:
+def _transcribe_via_audio_fallback(url: str, video_id: str) -> list[str]:
     with TemporaryDirectory(prefix="yt_ingest_") as tmpdir:
         output_template = str(Path(tmpdir) / "%(id)s.%(ext)s")
-        options = _yt_dlp_base_options(use_cookies=use_cookies)
+        options = _yt_dlp_base_options()
         options.update(
             {
                 # Prefer smallest audio-only stream to minimize fallback latency.
@@ -232,53 +179,29 @@ class YouTubeAdapter(UrlAdapter):
             info(f"[youtube_ingest] transcript-api succeeded video_id={video_id} lines={len(transcript_lines)}")
 
         if not transcript_lines:
-            modes: list[tuple[str, bool]] = [("guest", False)]
-            if _cookies_configured():
-                modes.append(("auth", True))
-            else:
-                warn("[youtube_ingest] no cookie secret configured; skipping auth mode")
-
-            for mode_name, use_cookies in modes:
-                info(f"[youtube_ingest] attempting captions mode={mode_name} video_id={video_id}")
-                try:
-                    transcript_lines = _fetch_transcript_lines_from_captions(
-                        url,
-                        video_id,
-                        use_cookies=use_cookies,
-                    )
-                except Exception as exc:
-                    warn(f"[youtube_ingest] captions failed mode={mode_name} video_id={video_id}: {exc}")
-                    transcript_lines = []
-                    continue
-                if transcript_lines:
-                    info(
-                        f"[youtube_ingest] yt-dlp captions succeeded mode={mode_name} video_id={video_id} lines={len(transcript_lines)}"
-                    )
-                    break
+            info(f"[youtube_ingest] attempting yt-dlp captions video_id={video_id}")
+            try:
+                transcript_lines = _fetch_transcript_lines_from_captions(url, video_id)
+            except Exception as exc:
+                warn(f"[youtube_ingest] yt-dlp captions failed video_id={video_id}: {exc}")
+                transcript_lines = []
+            if transcript_lines:
+                info(f"[youtube_ingest] yt-dlp captions succeeded video_id={video_id} lines={len(transcript_lines)}")
 
             if not transcript_lines:
                 warn(f"[youtube_ingest] captions unavailable/empty, using audio fallback video_id={video_id}")
                 last_error: Exception | None = None
-                for mode_name, use_cookies in modes:
-                    info(f"[youtube_ingest] attempting audio fallback mode={mode_name} video_id={video_id}")
-                    try:
-                        transcript_lines = _transcribe_via_audio_fallback(
-                            url,
-                            video_id,
-                            use_cookies=use_cookies,
-                        )
-                        info(
-                            f"[youtube_ingest] audio fallback succeeded mode={mode_name} video_id={video_id} lines={len(transcript_lines)}"
-                        )
-                        break
-                    except Exception as exc:
-                        last_error = exc
-                        warn(f"[youtube_ingest] audio fallback failed mode={mode_name} video_id={video_id}: {exc}")
-                        transcript_lines = []
+                try:
+                    transcript_lines = _transcribe_via_audio_fallback(url, video_id)
+                    info(f"[youtube_ingest] audio fallback succeeded video_id={video_id} lines={len(transcript_lines)}")
+                except Exception as exc:
+                    last_error = exc
+                    warn(f"[youtube_ingest] audio fallback failed video_id={video_id}: {exc}")
+                    transcript_lines = []
                 if not transcript_lines:
                     error(f"[youtube_ingest] fallback transcription failed video_id={video_id}: {last_error}")
                     raise RuntimeError(
-                        "YouTube transcript unavailable for transcript-api and guest/auth caption+audio paths."
+                        "YouTube transcript unavailable for transcript-api and yt-dlp caption+audio paths."
                     ) from last_error
 
         body = "\n".join(transcript_lines)
