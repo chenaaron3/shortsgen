@@ -175,23 +175,60 @@ async function fetchArticleHtml(url: string): Promise<{ html: string; url: strin
   throw new Error("Too many redirects.");
 }
 
-async function parseHtmlMeta(
+function decodeHtmlEntities(value: string): string {
+  const decodedNamed = value
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+  return decodedNamed.replace(/&#(\d+);/g, (_m, n: string) => {
+    const code = Number(n);
+    return Number.isFinite(code) ? String.fromCharCode(code) : _m;
+  });
+}
+
+function stripHtmlToText(html: string): string {
+  return html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractMetaTagContent(
   html: string,
-  pageUrl: string,
-): Promise<{ siteName?: string; pageTitle?: string; contentLengthWords?: number }> {
-  const { JSDOM } = await import("jsdom");
-  const dom = new JSDOM(html, { url: pageUrl });
-  const doc = dom.window.document;
-  const ogSite = doc
-    .querySelector('meta[property="og:site_name"]')
-    ?.getAttribute("content")
-    ?.trim();
-  const ogTitle = doc
-    .querySelector('meta[property="og:title"]')
-    ?.getAttribute("content")
-    ?.trim();
-  const titleEl = doc.querySelector("title")?.textContent?.trim();
-  const bodyText = doc.body?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+  key: string,
+  attr: "property" | "name" = "property",
+): string | undefined {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(
+    `<meta[^>]*\\b${attr}\\s*=\\s*["']${escaped}["'][^>]*\\bcontent\\s*=\\s*["']([^"']+)["'][^>]*>`,
+    "i",
+  );
+  const m = html.match(re);
+  return m?.[1] ? decodeHtmlEntities(m[1]).trim() : undefined;
+}
+
+function extractTitleTag(html: string): string | undefined {
+  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (!m?.[1]) return undefined;
+  return decodeHtmlEntities(m[1]).replace(/\s+/g, " ").trim();
+}
+
+function parseHtmlMeta(html: string): {
+  siteName?: string;
+  pageTitle?: string;
+  contentLengthWords?: number;
+} {
+  const ogSite = extractMetaTagContent(html, "og:site_name", "property");
+  const ogTitle = extractMetaTagContent(html, "og:title", "property");
+  const titleEl = extractTitleTag(html);
+  const bodyText = stripHtmlToText(html);
   const words = bodyText.length ? bodyText.split(" ").filter(Boolean).length : 0;
   return {
     siteName: ogSite || undefined,
@@ -226,6 +263,44 @@ function isMeaningfulTitle(value: string | undefined): boolean {
 function isRedditHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
   return h === "reddit.com" || h === "www.reddit.com" || h.endsWith(".reddit.com");
+}
+
+function isYouTubeHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return (
+    h === "youtube.com" ||
+    h === "www.youtube.com" ||
+    h === "m.youtube.com" ||
+    h === "music.youtube.com" ||
+    h === "youtu.be"
+  );
+}
+
+function titleFromSlug(slug: string): string | undefined {
+  const decoded = decodeURIComponent(slug).replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!decoded) return undefined;
+  return decoded.charAt(0).toUpperCase() + decoded.slice(1);
+}
+
+function deriveRedditFallbackMetadata(url: string): {
+  siteName?: string;
+  pageTitle?: string;
+  contentLengthWords?: number;
+} | null {
+  try {
+    const u = new URL(url);
+    const segments = u.pathname.split("/").filter(Boolean);
+    // Typical post path: /r/{subreddit}/comments/{postId}/{slug}/
+    if (segments.length < 5) return null;
+    if (segments[0] !== "r" || segments[2] !== "comments") return null;
+    const subreddit = segments[1];
+    const slug = segments[4];
+    if (!subreddit || !slug) return null;
+    const pageTitle = titleFromSlug(slug) ?? "Reddit post";
+    return { siteName: `r/${subreddit}`, pageTitle };
+  } catch {
+    return null;
+  }
 }
 
 async function fetchRedditJsonMetadata(url: string): Promise<{
@@ -288,6 +363,52 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
   }
 }
 
+async function fetchYoutubeOembedMetadata(url: string): Promise<{
+  siteName?: string;
+  pageTitle?: string;
+  contentLengthWords?: number;
+} | null> {
+  try {
+    const oembedUrl = new URL("https://www.youtube.com/oembed");
+    oembedUrl.searchParams.set("url", url);
+    oembedUrl.searchParams.set("format", "json");
+    assertUrlSafeForServerFetch(oembedUrl.href);
+
+    const res = await fetch(oembedUrl.href, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; Shortgen/1.0; +https://shortgen.app)",
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      console.error("[urlMetadata] YouTube oEmbed request failed", {
+        url: safeUrlForLog(oembedUrl.href),
+        status: res.status,
+      });
+      return null;
+    }
+    const payload = (await res.json()) as { title?: unknown; author_name?: unknown };
+    const pageTitle =
+      typeof payload.title === "string" && payload.title.trim().length > 0
+        ? payload.title.trim()
+        : undefined;
+    const siteName =
+      typeof payload.author_name === "string" && payload.author_name.trim().length > 0
+        ? payload.author_name.trim()
+        : "YouTube";
+    if (!isMeaningfulTitle(pageTitle)) return null;
+    return { siteName, pageTitle };
+  } catch (error) {
+    console.error("[urlMetadata] YouTube oEmbed parse failed", {
+      url: safeUrlForLog(url),
+      error: errorMessage(error),
+    });
+    return null;
+  }
+}
+
 /** Preview only: site / page name for UI. Same SSRF rules as full ingest. */
 export async function fetchUrlPreviewMetadata(
   rawUrl: string,
@@ -302,6 +423,20 @@ export async function fetchUrlPreviewMetadata(
       if (redditMeta) {
         return { hostname, ...redditMeta };
       }
+      const redditFallback = deriveRedditFallbackMetadata(trimmed);
+      if (redditFallback && isMeaningfulTitle(redditFallback.pageTitle)) {
+        console.warn("[urlMetadata] Using Reddit URL fallback metadata", {
+          url: safeUrlForLog(trimmed),
+        });
+        return { hostname, ...redditFallback };
+      }
+    }
+
+    if (isYouTubeHost(hostname)) {
+      const youtubeMeta = await fetchYoutubeOembedMetadata(trimmed);
+      if (youtubeMeta) {
+        return { hostname, ...youtubeMeta };
+      }
     }
 
     const { html, url: finalUrl } = await fetchArticleHtml(trimmed);
@@ -311,7 +446,7 @@ export async function fetchUrlPreviewMetadata(
       });
       return null;
     }
-    const meta = await parseHtmlMeta(html, finalUrl);
+    const meta = parseHtmlMeta(html);
     const siteName = normalizeMetaText(meta.siteName);
     const pageTitle = normalizeMetaText(meta.pageTitle);
     if (!isMeaningfulTitle(pageTitle)) {
