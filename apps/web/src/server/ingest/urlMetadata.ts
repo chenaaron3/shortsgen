@@ -5,6 +5,7 @@
 
 import { isIPv4, isIPv6 } from "node:net";
 import { YoutubeTranscript } from "youtube-transcript/dist/youtube-transcript.esm.js";
+import { Innertube } from "youtubei.js";
 
 const MAX_ARTICLE_BYTES = 3 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
@@ -12,6 +13,7 @@ const FETCH_TIMEOUT_MS = 20_000;
 const REDDIT_TOP_COMMENTS_LIMIT = 25;
 const DEFAULT_REDDIT_USER_AGENT =
   "web:shortgen.url-ingest:v1.0.0 (by /u/shortgenapp)";
+let innertubeClientPromise: Promise<unknown> | null = null;
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
@@ -410,7 +412,9 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
   try {
     const normalized = new URL(url);
     // Reddit policy requires unique, descriptive user agents.
-    const jsonUrl = new URL(`https://www.reddit.com${normalized.pathname.replace(/\/$/, "")}.json`);
+    const jsonUrl = new URL(
+      `https://www.reddit.com${normalized.pathname.replace(/\/$/, "")}.json`,
+    );
     jsonUrl.searchParams.set("raw_json", "1");
     jsonUrl.searchParams.set("limit", String(REDDIT_TOP_COMMENTS_LIMIT));
     // Keep only top-level comments; avoids huge nested payloads.
@@ -582,75 +586,248 @@ async function fetchYoutubeOembedMetadata(url: string): Promise<{
   }
 }
 
-function parseTimedtextXmlToLines(xml: string): string[] {
+function parseCaptionXmlToLines(xml: string): string[] {
   const matches = [...xml.matchAll(/<text\b[^>]*>([\s\S]*?)<\/text>/gi)];
   const lines = matches
-    .map((m) => decodeHtmlEntities(stripXmlTags(m[1] ?? "")).replace(/\s+/g, " ").trim())
+    .map((m) =>
+      decodeHtmlEntities(stripXmlTags(m[1] ?? ""))
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
     .filter((line) => line.length > 0);
   return lines;
 }
 
-async function fetchYouTubeTimedtextContent(videoId: string): Promise<string | null> {
-  const candidates = [
-    `https://www.youtube.com/api/timedtext?lang=en&v=${encodeURIComponent(videoId)}`,
-    `https://www.youtube.com/api/timedtext?lang=en&kind=asr&v=${encodeURIComponent(videoId)}`,
-    `https://www.youtube.com/api/timedtext?lang=en-US&kind=asr&v=${encodeURIComponent(videoId)}`,
+function parseCaptionJson3ToLines(jsonText: string): string[] {
+  try {
+    const parsed = JSON.parse(jsonText) as {
+      events?: Array<{ segs?: Array<{ utf8?: string }> }>;
+    };
+    return (
+      parsed.events
+        ?.map((event) =>
+          (event.segs ?? [])
+            .map((seg) => (typeof seg.utf8 === "string" ? seg.utf8 : ""))
+            .join("")
+            .replace(/\s+/g, " ")
+            .trim(),
+        )
+        .filter((line): line is string => line.length > 0) ?? []
+    );
+  } catch {
+    return [];
+  }
+}
+
+async function getInnertubeClient(): Promise<unknown> {
+  if (!innertubeClientPromise) {
+    innertubeClientPromise = Innertube.create();
+  }
+  return innertubeClientPromise;
+}
+
+type CaptionTrack = {
+  baseUrl: string;
+  languageCode: string;
+  kind?: string;
+};
+
+function extractCaptionTracksFromInnertubeInfo(info: unknown): CaptionTrack[] {
+  const anyInfo = info as Record<string, unknown>;
+  const tracksCandidates = [
+    (anyInfo?.captions as Record<string, unknown> | undefined)?.caption_tracks,
+    (anyInfo?.captions as Record<string, unknown> | undefined)?.captionTracks,
+    (
+      (anyInfo?.player_response as Record<string, unknown> | undefined)
+        ?.captions as Record<string, unknown> | undefined
+    )?.playerCaptionsTracklistRenderer,
+    (
+      (anyInfo?.raw_data as Record<string, unknown> | undefined)?.captions as
+        | Record<string, unknown>
+        | undefined
+    )?.playerCaptionsTracklistRenderer,
   ];
 
-  for (const url of candidates) {
-    try {
-      console.info("[urlMetadata] YouTube timedtext attempt", {
-        videoId,
-        endpoint: url,
-      });
-      const res = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (compatible; Shortgen/1.0; +https://shortgen.app)",
-          Accept: "application/xml,text/xml;q=0.9,*/*;q=0.8",
-        },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
-      if (!res.ok) {
-        console.warn("[urlMetadata] YouTube timedtext non-200", {
-          videoId,
-          endpoint: url,
-          status: res.status,
-        });
-        continue;
+  const directTracks =
+    tracksCandidates.find((candidate) => Array.isArray(candidate)) ?? null;
+  const rendererTracks = tracksCandidates
+    .map((candidate) => {
+      if (
+        candidate &&
+        typeof candidate === "object" &&
+        "captionTracks" in candidate
+      ) {
+        return (candidate as { captionTracks?: unknown }).captionTracks;
       }
-      const xml = await res.text();
-      if (!xml || !xml.includes("<text")) {
-        console.warn("[urlMetadata] YouTube timedtext empty/no-text", {
-          videoId,
-          endpoint: url,
-          responseSize: xml?.length ?? 0,
-        });
-        continue;
-      }
-      const lines = parseTimedtextXmlToLines(xml);
-      if (lines.length > 0) {
-        console.info("[urlMetadata] YouTube timedtext succeeded", {
-          videoId,
-          endpoint: url,
-          lines: lines.length,
-        });
-        return lines.join("\n");
-      }
-      console.warn("[urlMetadata] YouTube timedtext parsed zero lines", {
+      return null;
+    })
+    .find((candidate) => Array.isArray(candidate));
+
+  const tracksRaw = (directTracks ?? rendererTracks) as unknown[] | undefined;
+  if (!tracksRaw || tracksRaw.length === 0) return [];
+
+  return tracksRaw
+    .map((track): CaptionTrack | undefined => {
+      const t = track as Record<string, unknown>;
+      const baseUrl =
+        (typeof t.base_url === "string" ? t.base_url : null) ??
+        (typeof t.baseUrl === "string" ? t.baseUrl : null);
+      const languageCode =
+        (typeof t.language_code === "string" ? t.language_code : null) ??
+        (typeof t.languageCode === "string" ? t.languageCode : null);
+      const kind = typeof t.kind === "string" ? t.kind : undefined;
+      if (!baseUrl || !languageCode) return undefined;
+      return { baseUrl, languageCode, kind };
+    })
+    .filter((track): track is CaptionTrack => track !== undefined);
+}
+
+async function fetchCaptionTrackContent(
+  trackUrl: string,
+  videoId: string,
+  label: string,
+): Promise<string | null> {
+  const url = `${trackUrl}${trackUrl.includes("?") ? "&" : "?"}fmt=json3`;
+  console.info("[urlMetadata] YouTube innertube caption track attempt", {
+    videoId,
+    label,
+  });
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; Shortgen/1.0; +https://shortgen.app)",
+        Accept:
+          "application/json,text/xml;q=0.9,application/xml;q=0.8,*/*;q=0.7",
+      },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      console.warn("[urlMetadata] YouTube innertube caption track non-200", {
         videoId,
-        endpoint: url,
+        label,
+        status: res.status,
       });
-    } catch (error) {
-      console.warn("[urlMetadata] YouTube timedtext request error", {
-        videoId,
-        endpoint: url,
-        error: errorMessage(error),
-      });
-      continue;
+      return null;
     }
+    const raw = await res.text();
+    const jsonLines = parseCaptionJson3ToLines(raw);
+    if (jsonLines.length > 0) {
+      console.info(
+        "[urlMetadata] YouTube innertube caption track succeeded (json3)",
+        {
+          videoId,
+          label,
+          lines: jsonLines.length,
+        },
+      );
+      return jsonLines.join("\n");
+    }
+    const xmlLines = parseCaptionXmlToLines(raw);
+    if (xmlLines.length > 0) {
+      console.info(
+        "[urlMetadata] YouTube innertube caption track succeeded (xml)",
+        {
+          videoId,
+          label,
+          lines: xmlLines.length,
+        },
+      );
+      return xmlLines.join("\n");
+    }
+    console.warn("[urlMetadata] YouTube innertube caption track empty", {
+      videoId,
+      label,
+      responseSize: raw.length,
+    });
+    return null;
+  } catch (error) {
+    console.warn(
+      "[urlMetadata] YouTube innertube caption track request error",
+      {
+        videoId,
+        label,
+        error: errorMessage(error),
+      },
+    );
+    return null;
   }
-  console.warn("[urlMetadata] YouTube timedtext all attempts exhausted", { videoId });
+}
+
+async function fetchYouTubeTranscriptViaInnertubeCaptionTracks(
+  videoId: string,
+): Promise<string | null> {
+  try {
+    const client = await getInnertubeClient();
+    const info = await (
+      client as { getInfo: (id: string) => Promise<unknown> }
+    ).getInfo(videoId);
+    const tracks = extractCaptionTracksFromInnertubeInfo(info);
+    if (!Array.isArray(tracks) || tracks.length === 0) {
+      console.warn("[urlMetadata] YouTube innertube no caption tracks", {
+        videoId,
+      });
+      return null;
+    }
+    const englishTracks = tracks.filter(
+      (track) =>
+        typeof track.baseUrl === "string" &&
+        typeof track.languageCode === "string" &&
+        track.languageCode.toLowerCase().startsWith("en"),
+    );
+    if (englishTracks.length === 0) {
+      console.warn(
+        "[urlMetadata] YouTube innertube no english caption tracks",
+        {
+          videoId,
+        },
+      );
+      return null;
+    }
+    const ordered = englishTracks.sort((a, b) => {
+      const aIsAsr = (a.kind ?? "") === "asr";
+      const bIsAsr = (b.kind ?? "") === "asr";
+      if (aIsAsr !== bIsAsr) return aIsAsr ? 1 : -1; // manual first, then ASR
+      return 0;
+    });
+    for (const track of ordered) {
+      if (!track.baseUrl) continue;
+      const label = `${track.languageCode}:${track.kind ?? "manual"}`;
+      const content = await fetchCaptionTrackContent(
+        track.baseUrl,
+        videoId,
+        label,
+      );
+      if (content) return content;
+    }
+    console.warn("[urlMetadata] YouTube innertube caption tracks exhausted", {
+      videoId,
+    });
+    return null;
+  } catch (error) {
+    console.warn("[urlMetadata] YouTube innertube getInfo failed", {
+      videoId,
+      error: errorMessage(error),
+    });
+    return null;
+  }
+}
+
+async function fetchYouTubeCaptionFallback(
+  videoId: string,
+): Promise<string | null> {
+  const content =
+    await fetchYouTubeTranscriptViaInnertubeCaptionTracks(videoId);
+  if (content) {
+    console.info("[urlMetadata] YouTube innertube caption fallback succeeded", {
+      videoId,
+      chars: content.length,
+    });
+    return content;
+  }
+  console.warn("[urlMetadata] YouTube innertube caption fallback failed", {
+    videoId,
+  });
   return null;
 }
 
@@ -669,7 +846,9 @@ async function fetchYouTubeTranscriptContent(url: URL): Promise<string | null> {
   let lines: string[] = [];
   let libraryError: string | null = null;
   try {
-    console.info("[urlMetadata] YouTube transcript library attempt", { videoId });
+    console.info("[urlMetadata] YouTube transcript library attempt", {
+      videoId,
+    });
     const transcript = await YoutubeTranscript.fetchTranscript(videoId);
     lines = transcript
       .map((entry: { text?: unknown }) =>
@@ -680,11 +859,14 @@ async function fetchYouTubeTranscriptContent(url: URL): Promise<string | null> {
       .filter((line): line is string => line.length > 0);
   } catch (error) {
     libraryError = errorMessage(error);
-    console.warn("[urlMetadata] YouTube transcript library failed, trying timedtext fallback", {
-      url: safeUrlForLog(url.href),
-      videoId,
-      error: libraryError,
-    });
+    console.warn(
+      "[urlMetadata] YouTube transcript library failed, trying innertube caption fallback",
+      {
+        url: safeUrlForLog(url.href),
+        videoId,
+        error: libraryError,
+      },
+    );
     lines = [];
   }
   if (lines.length > 0) {
@@ -697,20 +879,14 @@ async function fetchYouTubeTranscriptContent(url: URL): Promise<string | null> {
   console.warn("[urlMetadata] YouTube transcript library returned zero lines", {
     videoId,
   });
-  const timedtextContent = await fetchYouTubeTimedtextContent(videoId);
-  if (timedtextContent) {
-    console.info("[urlMetadata] YouTube transcript timedtext fallback succeeded", {
-      videoId,
-      chars: timedtextContent.length,
-    });
-    return timedtextContent;
-  }
+  const fallbackContent = await fetchYouTubeCaptionFallback(videoId);
+  if (fallbackContent) return fallbackContent;
   console.error("[urlMetadata] YouTube transcript fetch failed", {
     url: safeUrlForLog(url.href),
     videoId,
     error:
       libraryError ??
-      "YouTube transcript library returned zero lines and timedtext fallback failed",
+      "YouTube transcript library returned zero lines and innertube caption fallback failed",
   });
   return null;
 }
