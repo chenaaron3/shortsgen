@@ -10,6 +10,7 @@ import {
 import {
   CloudWatchLogsClient,
   DescribeLogGroupsCommand,
+  DescribeLogStreamsCommand,
   GetQueryResultsCommand,
   StartQueryCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
@@ -20,6 +21,79 @@ const LOG_GROUP_PREFIX = "/aws/lambda";
 const SHORTGEN_PATTERN = "Shortgen";
 const POLL_INTERVAL_MS = 500;
 const MAX_POLL_MS = 30_000;
+const PIPELINE_LAMBDA_PATTERNS = {
+  initialProcessing: "ShortgenInitialProcessingFunction",
+  updateImagery: "ShortgenUpdateImageryFunction",
+  updateFeedback: "ShortgenUpdateFeedbackFunction",
+  finalizeClip: "ShortgenFinalizeClipFunction",
+} as const;
+const EMPTY_PIPELINE_LOG_GROUPS: Record<
+  keyof typeof PIPELINE_LAMBDA_PATTERNS,
+  string | null
+> = {
+  initialProcessing: null,
+  updateImagery: null,
+  updateFeedback: null,
+  finalizeClip: null,
+};
+const EMPTY_PIPELINE_LOG_STREAMS: Record<
+  keyof typeof PIPELINE_LAMBDA_PATTERNS,
+  string | null
+> = {
+  initialProcessing: null,
+  updateImagery: null,
+  updateFeedback: null,
+  finalizeClip: null,
+};
+
+function getFieldValue(
+  row: Array<{ field?: string; value?: string }>,
+  fieldName: string,
+): string | null {
+  const match = row.find((f) => f.field === fieldName);
+  return match?.value ?? null;
+}
+
+async function findMostRecentStreamContainingRunId(
+  client: CloudWatchLogsClient,
+  logGroupName: string,
+  runId: string,
+): Promise<string | null> {
+  const endTimeSec = Math.floor(Date.now() / 1000);
+  const startTimeSec = endTimeSec - 30 * 24 * 60 * 60; // 30 days
+
+  const { queryId } = await client.send(
+    new StartQueryCommand({
+      logGroupNames: [logGroupName],
+      queryString: `fields @timestamp, @logStream, @message | filter @message like /${runId}/ | sort @timestamp desc | limit 1`,
+      startTime: startTimeSec,
+      endTime: endTimeSec,
+      limit: 1,
+    }),
+  );
+  if (!queryId) {
+    return null;
+  }
+
+  const startPoll = Date.now();
+  let status: string;
+  let results: Array<Array<{ field?: string; value?: string }>> = [];
+  do {
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+    if (Date.now() - startPoll > MAX_POLL_MS) {
+      return null;
+    }
+    const resp = await client.send(new GetQueryResultsCommand({ queryId }));
+    status = resp.status ?? "Unknown";
+    results = (resp.results ?? []) as Array<Array<{ field?: string; value?: string }>>;
+  } while (status === "Running" || status === "Scheduled");
+
+  const firstRow = results[0];
+  if (!firstRow) {
+    return null;
+  }
+  return getFieldValue(firstRow, "@logStream");
+}
 
 function getCloudWatchClient(): CloudWatchLogsClient | null {
   const region = process.env.AWS_REGION ?? "us-east-1";
@@ -144,6 +218,85 @@ export const adminRouter = createTRPCRouter({
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         return { logs: [], error: `CloudWatch error: ${msg}` };
+      }
+    }),
+
+  /** Return CloudWatch log groups for pipeline lambdas. */
+  getPipelineLambdaLogGroups: adminProcedure
+    .input(z.object({ runId: z.string().uuid() }))
+    .query(async ({ input }) => {
+    const client = getCloudWatchClient();
+    if (!client) {
+      return {
+        logGroups: EMPTY_PIPELINE_LOG_GROUPS,
+        logStreams: EMPTY_PIPELINE_LOG_STREAMS,
+        error:
+          "AWS credentials not configured (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)",
+      };
+    }
+
+      try {
+        const { logGroups } = await client.send(
+          new DescribeLogGroupsCommand({
+            logGroupNamePrefix: LOG_GROUP_PREFIX,
+          }),
+        );
+
+        const shortgenGroups =
+          logGroups
+            ?.map((lg: { logGroupName?: string }) => lg.logGroupName ?? "")
+            .filter((name) => name.includes(SHORTGEN_PATTERN)) ?? [];
+
+        const logGroupsByLambda = Object.fromEntries(
+          Object.entries(PIPELINE_LAMBDA_PATTERNS).map(([key, pattern]) => {
+            const match = shortgenGroups.find((name) => name.includes(pattern));
+            return [key, match ?? null];
+          }),
+        ) as Record<keyof typeof PIPELINE_LAMBDA_PATTERNS, string | null>;
+
+        const logStreamsByLambdaEntries = await Promise.all(
+          Object.entries(logGroupsByLambda).map(async ([key, logGroupName]) => {
+            if (!logGroupName) {
+              return [key, null] as const;
+            }
+            try {
+              const runScopedStream = await findMostRecentStreamContainingRunId(
+                client,
+                logGroupName,
+                input.runId,
+              );
+              if (runScopedStream) {
+                return [key, runScopedStream] as const;
+              }
+
+              // Fallback when no stream contains this runId.
+              const resp = await client.send(
+                new DescribeLogStreamsCommand({
+                  logGroupName,
+                  orderBy: "LastEventTime",
+                  descending: true,
+                  limit: 1,
+                }),
+              );
+              return [key, resp.logStreams?.[0]?.logStreamName ?? null] as const;
+            } catch {
+              return [key, null] as const;
+            }
+          }),
+        );
+        const logStreamsByLambda = Object.fromEntries(logStreamsByLambdaEntries) as Record<
+          keyof typeof PIPELINE_LAMBDA_PATTERNS,
+          string | null
+        >;
+
+        return { logGroups: logGroupsByLambda, logStreams: logStreamsByLambda };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return {
+          logGroups: EMPTY_PIPELINE_LOG_GROUPS,
+          logStreams: EMPTY_PIPELINE_LOG_STREAMS,
+          error: `CloudWatch error: ${msg}`,
+        };
       }
     }),
 

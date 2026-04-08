@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { api } from "~/utils/api";
-import { Button } from "~/components/ui/button";
+import { Button, buttonVariants } from "~/components/ui/button";
 import { TreeView, type TreeDataItem } from "~/components/tree-view";
 
 interface RunLogsModalProps {
@@ -15,6 +15,30 @@ interface RunLogsModalProps {
 
 type Tab = "logs" | "artifacts";
 
+const CLOUDWATCH_REGION = "us-east-1";
+const PIPELINE_LAMBDA_PILLS = [
+  { key: "initialProcessing", label: "Initial Processing" },
+  { key: "updateImagery", label: "Update Imagery" },
+  { key: "updateFeedback", label: "Update Feedback" },
+  { key: "finalizeClip", label: "Finalize Clip" },
+] as const;
+
+function getCloudWatchLogGroupUrl(logGroupName: string): string {
+  return encodeURIComponent(encodeURIComponent(logGroupName)).replaceAll("%", "$");
+}
+
+function getCloudWatchLogStreamUrl(logGroupName: string, logStreamName: string | null): string {
+  const encodedGroup = getCloudWatchLogGroupUrl(logGroupName);
+  if (!logStreamName) {
+    return `https://${CLOUDWATCH_REGION}.console.aws.amazon.com/cloudwatch/home?region=${CLOUDWATCH_REGION}#logsV2:log-groups/log-group/${encodedGroup}`;
+  }
+  const encodedStream = encodeURIComponent(encodeURIComponent(logStreamName)).replaceAll(
+    "%",
+    "$"
+  );
+  return `https://${CLOUDWATCH_REGION}.console.aws.amazon.com/cloudwatch/home?region=${CLOUDWATCH_REGION}#logsV2:log-groups/log-group/${encodedGroup}/log-events/${encodedStream}`;
+}
+
 export function RunLogsModal({ open, onClose, runId, videoId }: RunLogsModalProps) {
   const [tab, setTab] = useState<Tab>("logs");
 
@@ -26,6 +50,10 @@ export function RunLogsModal({ open, onClose, runId, videoId }: RunLogsModalProp
   const listArtifactsQuery = api.admin.listArtifacts.useQuery(
     { runId },
     { enabled: !!runId && open && tab === "artifacts" }
+  );
+  const pipelineLogGroupsQuery = api.admin.getPipelineLambdaLogGroups.useQuery(
+    { runId },
+    { enabled: !!runId && open && tab === "logs" }
   );
 
   if (!open) return null;
@@ -70,6 +98,52 @@ export function RunLogsModal({ open, onClose, runId, videoId }: RunLogsModalProp
         <div className="flex-1 overflow-auto p-4">
           {tab === "logs" && (
             <>
+              <div className="mb-4 space-y-2">
+                <p className="text-muted-foreground text-sm">
+                  Open most recent Lambda log stream in AWS:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {PIPELINE_LAMBDA_PILLS.map((pill) => {
+                    const logGroupName = pipelineLogGroupsQuery.data?.logGroups?.[pill.key] ?? null;
+                    const logStreamName =
+                      pipelineLogGroupsQuery.data?.logStreams?.[pill.key] ?? null;
+                    const href = logGroupName
+                      ? getCloudWatchLogStreamUrl(logGroupName, logStreamName)
+                      : null;
+                    if (!href) {
+                      return (
+                        <Button
+                          key={pill.key}
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          disabled
+                        >
+                          {pill.label}
+                        </Button>
+                      );
+                    }
+                    return (
+                      <a
+                        key={pill.key}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={buttonVariants({
+                          variant: "outline",
+                          size: "sm",
+                          className: "h-7 px-2 text-xs",
+                        })}
+                      >
+                        {pill.label}
+                      </a>
+                    );
+                  })}
+                </div>
+                {pipelineLogGroupsQuery.data?.error && (
+                  <p className="text-destructive text-xs">{pipelineLogGroupsQuery.data.error}</p>
+                )}
+              </div>
               {runLogsQuery.isLoading && (
                 <p className="text-muted-foreground">Loading logs…</p>
               )}
@@ -95,7 +169,7 @@ export function RunLogsModal({ open, onClose, runId, videoId }: RunLogsModalProp
                         <span>{log.timestamp}</span>
                         <span>{log.logStream}</span>
                       </div>
-                      <pre className="whitespace-pre-wrap break-words">{log.message}</pre>
+                      <pre className="whitespace-pre-wrap wrap-break-word">{log.message}</pre>
                     </div>
                   ))}
                 </div>

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import base64
+import hashlib
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import parse_qs, urlparse
@@ -10,6 +13,9 @@ from faster_whisper import WhisperModel
 from ingest.adapters.base import UrlAdapter
 from ingest.models import ScrapeResult
 from logger import error, info, warn
+
+_COOKIEFILE_PATH = Path("/tmp/yt_dlp_youtube_cookies.txt")
+_COOKIEFILE_DIGEST: str | None = None
 
 
 def _extract_video_id(url: str) -> str | None:
@@ -49,10 +55,42 @@ def _find_downloaded_caption(tmpdir: str, video_id: str) -> Path | None:
     return max(candidates, key=lambda p: p.stat().st_size)
 
 
+def _resolve_cookiefile_path() -> str | None:
+    encoded = os.environ.get("YTDLP_COOKIES_B64", "").strip()
+    if not encoded:
+        return None
+    try:
+        cookie_text = base64.b64decode(encoded).decode("utf-8")
+    except Exception as exc:
+        warn(f"[youtube_ingest] invalid YTDLP_COOKIES_B64 value: {exc}")
+        return None
+
+    global _COOKIEFILE_DIGEST
+    digest = hashlib.sha256(cookie_text.encode("utf-8")).hexdigest()
+    if _COOKIEFILE_DIGEST != digest or not _COOKIEFILE_PATH.exists():
+        _COOKIEFILE_PATH.write_text(cookie_text, encoding="utf-8")
+        _COOKIEFILE_DIGEST = digest
+        info("[youtube_ingest] refreshed yt-dlp cookiefile in /tmp")
+    return str(_COOKIEFILE_PATH)
+
+
+def _yt_dlp_base_options() -> dict[str, object]:
+    options: dict[str, object] = {
+        "noplaylist": True,
+        "quiet": True,
+        "no_warnings": True,
+    }
+    cookiefile = _resolve_cookiefile_path()
+    if cookiefile:
+        options["cookiefile"] = cookiefile
+    return options
+
+
 def _fetch_transcript_lines_from_captions(url: str, video_id: str) -> list[str]:
     with TemporaryDirectory(prefix="yt_captions_") as tmpdir:
         output_template = str(Path(tmpdir) / "%(id)s.%(ext)s")
-        with yt_dlp.YoutubeDL(
+        options = _yt_dlp_base_options()
+        options.update(
             {
                 "skip_download": True,
                 "writesubtitles": True,
@@ -60,10 +98,10 @@ def _fetch_transcript_lines_from_captions(url: str, video_id: str) -> list[str]:
                 "subtitleslangs": ["en", "en-US", "en-GB", "en.*"],
                 "subtitlesformat": "srt",
                 "outtmpl": output_template,
-                "noplaylist": True,
-                "quiet": True,
-                "no_warnings": True,
             }
+        )
+        with yt_dlp.YoutubeDL(
+            options
         ) as ydl:
             ydl.download([url])
 
@@ -94,15 +132,16 @@ def _find_downloaded_audio(tmpdir: str, video_id: str) -> Path:
 def _transcribe_via_audio_fallback(url: str, video_id: str) -> list[str]:
     with TemporaryDirectory(prefix="yt_ingest_") as tmpdir:
         output_template = str(Path(tmpdir) / "%(id)s.%(ext)s")
-        with yt_dlp.YoutubeDL(
+        options = _yt_dlp_base_options()
+        options.update(
             {
                 # Prefer smallest audio-only stream to minimize fallback latency.
                 "format": "worstaudio[acodec!=none]/worstaudio/bestaudio/best",
                 "outtmpl": output_template,
-                "noplaylist": True,
-                "quiet": True,
-                "no_warnings": True,
             }
+        )
+        with yt_dlp.YoutubeDL(
+            options
         ) as ydl:
             ydl.download([url])
 
