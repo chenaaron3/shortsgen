@@ -10,6 +10,8 @@ const MAX_ARTICLE_BYTES = 3 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
 const FETCH_TIMEOUT_MS = 20_000;
 const REDDIT_TOP_COMMENTS_LIMIT = 25;
+const DEFAULT_REDDIT_USER_AGENT =
+  "web:shortgen.url-ingest:v1.0.0 (by /u/shortgenapp)";
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
@@ -33,6 +35,13 @@ function errorMessage(error: unknown): string {
   } catch {
     return String(error);
   }
+}
+
+function redditUserAgent(): string {
+  const configured = process.env.SHORTGEN_REDDIT_USER_AGENT?.trim();
+  return configured && configured.length > 0
+    ? configured
+    : DEFAULT_REDDIT_USER_AGENT;
 }
 
 function isBlockedHostname(hostname: string): boolean {
@@ -133,7 +142,9 @@ async function readBodyWithLimit(
   return out.buffer;
 }
 
-async function fetchArticleHtml(url: string): Promise<{ html: string; url: string }> {
+async function fetchArticleHtml(
+  url: string,
+): Promise<{ html: string; url: string }> {
   let currentUrl = url;
 
   for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
@@ -164,9 +175,7 @@ async function fetchArticleHtml(url: string): Promise<{ html: string; url: strin
 
     const ct = res.headers.get("content-type") ?? "";
     if (!ct.includes("text/html") && !ct.includes("application/xhtml")) {
-      throw new Error(
-        "This URL did not return HTML.",
-      );
+      throw new Error("This URL did not return HTML.");
     }
 
     const buf = await readBodyWithLimit(res, MAX_ARTICLE_BYTES);
@@ -202,8 +211,13 @@ function stripHtmlToText(html: string): string {
     .trim();
 }
 
-function extractTagInnerHtml(html: string, tag: "article" | "main"): string | null {
-  const match = html.match(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
+function extractTagInnerHtml(
+  html: string,
+  tag: "article" | "main",
+): string | null {
+  const match = html.match(
+    new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"),
+  );
   return match?.[1]?.trim() || null;
 }
 
@@ -244,7 +258,9 @@ function parseHtmlMeta(html: string): {
   const ogTitle = extractMetaTagContent(html, "og:title", "property");
   const titleEl = extractTitleTag(html);
   const bodyText = stripHtmlToText(html);
-  const words = bodyText.length ? bodyText.split(" ").filter(Boolean).length : 0;
+  const words = bodyText.length
+    ? bodyText.split(" ").filter(Boolean).length
+    : 0;
   return {
     siteName: ogSite || undefined,
     pageTitle: ogTitle || titleEl || undefined,
@@ -278,7 +294,9 @@ function isMeaningfulTitle(value: string | undefined): boolean {
 
 function isRedditHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
-  return h === "reddit.com" || h === "www.reddit.com" || h.endsWith(".reddit.com");
+  return (
+    h === "reddit.com" || h === "www.reddit.com" || h.endsWith(".reddit.com")
+  );
 }
 
 function isYouTubeHost(hostname: string): boolean {
@@ -303,7 +321,10 @@ function extractYouTubeVideoId(url: URL): string | null {
       const id = (url.searchParams.get("v") ?? "").trim();
       return id || null;
     }
-    if (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/live/")) {
+    if (
+      url.pathname.startsWith("/shorts/") ||
+      url.pathname.startsWith("/live/")
+    ) {
       const segments = url.pathname.split("/").filter(Boolean);
       const id = segments[1];
       return id?.trim() || null;
@@ -347,7 +368,10 @@ function isValidYouTubeVideoUrl(url: URL): boolean {
 }
 
 function titleFromSlug(slug: string): string | undefined {
-  const decoded = decodeURIComponent(slug).replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  const decoded = decodeURIComponent(slug)
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!decoded) return undefined;
   return decoded.charAt(0).toUpperCase() + decoded.slice(1);
 }
@@ -381,18 +405,17 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
 } | null> {
   try {
     const normalized = new URL(url);
-    // Use Reddit's JSON endpoint to bypass anti-bot HTML interstitials.
-    const jsonUrl = new URL(`${normalized.pathname.replace(/\/$/, "")}.json`, normalized);
-    if (normalized.searchParams.size > 0) {
-      jsonUrl.search = normalized.search;
-    }
+    // Reddit policy requires unique, descriptive user agents.
+    const jsonUrl = new URL(`https://www.reddit.com${normalized.pathname.replace(/\/$/, "")}.json`);
     jsonUrl.searchParams.set("raw_json", "1");
+    jsonUrl.searchParams.set("limit", String(REDDIT_TOP_COMMENTS_LIMIT));
+    // Keep only top-level comments; avoids huge nested payloads.
+    jsonUrl.searchParams.set("depth", "1");
     assertUrlSafeForServerFetch(jsonUrl.href);
 
     const res = await fetch(jsonUrl.href, {
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; Shortgen/1.0; +https://shortgen.app)",
+        "User-Agent": redditUserAgent(),
         Accept: "application/json",
       },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
@@ -406,7 +429,9 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
     }
     const payload = (await res.json()) as unknown;
     if (!Array.isArray(payload) || payload.length === 0) return null;
-    const postListing = payload[0] as { data?: { children?: Array<{ data?: Record<string, unknown> }> } };
+    const postListing = payload[0] as {
+      data?: { children?: Array<{ data?: Record<string, unknown> }> };
+    };
     const postData = postListing?.data?.children?.[0]?.data;
     if (!postData) return null;
     const pageTitle =
@@ -419,25 +444,34 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
         ? postData.subreddit_name_prefixed.trim()
         : undefined;
     const selftext =
-      typeof postData.selftext === "string" ? postData.selftext.replace(/\s+/g, " ").trim() : "";
+      typeof postData.selftext === "string"
+        ? postData.selftext.replace(/\s+/g, " ").trim()
+        : "";
     const contentLengthWords = selftext.length
       ? selftext.split(" ").filter(Boolean).length
       : undefined;
     const commentsListing = payload[1] as
-      | { data?: { children?: Array<{ kind?: unknown; data?: Record<string, unknown> }> } }
+      | {
+          data?: {
+            children?: Array<{
+              kind?: unknown;
+              data?: Record<string, unknown>;
+            }>;
+          };
+        }
       | undefined;
     const topCommentBodies =
       commentsListing?.data?.children
         ?.filter((child) => child?.kind === "t1")
         .map((child) => {
           const body = child?.data?.body;
-          return typeof body === "string" ? body.replace(/\s+/g, " ").trim() : "";
+          return typeof body === "string"
+            ? body.replace(/\s+/g, " ").trim()
+            : "";
         })
         .filter(
           (body) =>
-            body.length > 0 &&
-            body !== "[deleted]" &&
-            body !== "[removed]",
+            body.length > 0 && body !== "[deleted]" && body !== "[removed]",
         )
         .slice(0, REDDIT_TOP_COMMENTS_LIMIT) ?? [];
 
@@ -455,7 +489,12 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
     }
     const content = contentParts.join("\n").trim() || undefined;
 
-    return { siteName: subreddit ?? "Reddit", pageTitle, contentLengthWords, content };
+    return {
+      siteName: subreddit ?? "Reddit",
+      pageTitle,
+      contentLengthWords,
+      content,
+    };
   } catch (error) {
     console.error("[urlMetadata] Reddit JSON metadata parse failed", {
       url: safeUrlForLog(url),
@@ -465,7 +504,10 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
   }
 }
 
-function extractReadableArticleContent(html: string, pageUrl: string): string | null {
+function extractReadableArticleContent(
+  html: string,
+  pageUrl: string,
+): string | null {
   try {
     const articleHtml = extractTagInnerHtml(html, "article");
     const mainHtml = articleHtml ? null : extractTagInnerHtml(html, "main");
@@ -512,13 +554,17 @@ async function fetchYoutubeOembedMetadata(url: string): Promise<{
       });
       return null;
     }
-    const payload = (await res.json()) as { title?: unknown; author_name?: unknown };
+    const payload = (await res.json()) as {
+      title?: unknown;
+      author_name?: unknown;
+    };
     const pageTitle =
       typeof payload.title === "string" && payload.title.trim().length > 0
         ? payload.title.trim()
         : undefined;
     const siteName =
-      typeof payload.author_name === "string" && payload.author_name.trim().length > 0
+      typeof payload.author_name === "string" &&
+      payload.author_name.trim().length > 0
         ? payload.author_name.trim()
         : "YouTube";
     if (!isMeaningfulTitle(pageTitle)) return null;
@@ -539,7 +585,9 @@ async function fetchYouTubeTranscriptContent(url: URL): Promise<string | null> {
     const transcript = await YoutubeTranscript.fetchTranscript(videoId);
     const lines = transcript
       .map((entry: { text?: unknown }) =>
-        typeof entry.text === "string" ? entry.text.replace(/\s+/g, " ").trim() : "",
+        typeof entry.text === "string"
+          ? entry.text.replace(/\s+/g, " ").trim()
+          : "",
       )
       .filter((line): line is string => line.length > 0);
     if (lines.length === 0) return null;
@@ -578,9 +626,12 @@ export async function fetchUrlPreviewMetadata(
 
     if (isYouTubeHost(hostname)) {
       if (!isValidYouTubeVideoUrl(u)) {
-        console.error("[urlMetadata] Invalid YouTube URL: expected a video link", {
-          url: safeUrlForLog(trimmed),
-        });
+        console.error(
+          "[urlMetadata] Invalid YouTube URL: expected a video link",
+          {
+            url: safeUrlForLog(trimmed),
+          },
+        );
         return null;
       }
       const transcriptContent = await fetchYouTubeTranscriptContent(u);
