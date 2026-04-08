@@ -6,10 +6,17 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
-import { ARTICLE_SAMPLE, BOOK_SAMPLE, YOUTUBE_SAMPLE } from '~/constants/inspirationSamples';
+import { ARTICLE_SAMPLE, REDDIT_SAMPLE, YOUTUBE_SAMPLE } from '~/constants/inspirationSamples';
 import { SHORTGEN_PENDING_SOURCE_KEY } from '~/constants/pendingSource';
 import { useUserConfig } from '~/hooks/useUserConfig';
 import { buildSourceLabel } from '~/lib/urlPreviewLabel';
@@ -49,6 +56,7 @@ export function CreateForm() {
   const { config: suggestedConfig } = useUserConfig();
   const [input, setInput] = useState("");
   const [previewedUrl, setPreviewedUrl] = useState<string | null>(null);
+  const [isPreviewContentOpen, setIsPreviewContentOpen] = useState(false);
   const [pipelineConfig, setPipelineConfig] = useState<
     "prototype" | "default"
   >(suggestedConfig);
@@ -129,6 +137,10 @@ export function CreateForm() {
   const isUrlInput = isSingleLineHttpsUrl(trimmedInput);
   const textWordCount = isUrlInput ? 0 : countWords(trimmedInput);
   const hasEnoughTextWords = isUrlInput || textWordCount >= MIN_TEXT_WORDS;
+  const previewContent =
+    isUrlInput && previewedUrl === trimmedInput
+      ? previewUrlMetadata.data?.content ?? null
+      : null;
   const dynamicRows = Math.min(10, Math.max(1, input.split("\n").length));
   const hasValidUrlMetadata =
     isUrlInput &&
@@ -213,15 +225,27 @@ export function CreateForm() {
       {isUrlInput &&
         previewUrlMetadata.data &&
         previewedUrl === trimmedInput && (
-          <p className="text-sm text-muted-foreground">
-            {previewUrlMetadata.data.siteName ?? previewUrlMetadata.data.hostname}
-            {previewUrlMetadata.data.pageTitle
-              ? ` — ${previewUrlMetadata.data.pageTitle}`
-              : null}
-            {previewUrlMetadata.data.contentLengthWords
-              ? ` • ${previewUrlMetadata.data.contentLengthWords.toLocaleString()} words`
-              : null}
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              {previewUrlMetadata.data.siteName ?? previewUrlMetadata.data.hostname}
+              {previewUrlMetadata.data.pageTitle
+                ? ` — ${previewUrlMetadata.data.pageTitle}`
+                : null}
+              {previewUrlMetadata.data.contentLengthWords
+                ? ` • ${previewUrlMetadata.data.contentLengthWords.toLocaleString()} words`
+                : null}
+            </p>
+            {previewContent && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setIsPreviewContentOpen(true)}
+              >
+                Preview content
+              </Button>
+            )}
+          </div>
         )}
       {showInvalidUrlHint && (
         <p className="text-sm text-destructive">
@@ -256,9 +280,9 @@ export function CreateForm() {
             onClick={() => setInput(YOUTUBE_SAMPLE)}
           />
           <InspirationCard
-            title="Book"
-            description="Long-form transcript"
-            onClick={() => setInput(BOOK_SAMPLE)}
+            title="Reddit"
+            description="Reddit discussion thread"
+            onClick={() => setInput(REDDIT_SAMPLE)}
           />
           <InspirationCard
             title="Article"
@@ -271,6 +295,22 @@ export function CreateForm() {
       {createRunMutation.isError && (
         <p className="text-destructive">{createRunMutation.error?.message}</p>
       )}
+
+      <Dialog open={isPreviewContentOpen} onOpenChange={setIsPreviewContentOpen}>
+        <DialogContent className="max-h-[80vh] max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Source content preview</DialogTitle>
+            <DialogDescription>
+              Full content extracted from this source URL.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto rounded-md border border-border bg-muted/30 p-4">
+            <pre className="whitespace-pre-wrap text-sm leading-6">
+              {previewContent ?? "No content available."}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

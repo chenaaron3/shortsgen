@@ -4,10 +4,14 @@
  */
 
 import { isIPv4, isIPv6 } from "node:net";
+import { Readability } from "@mozilla/readability";
+import { JSDOM } from "jsdom";
+import { YoutubeTranscript } from "youtube-transcript/dist/youtube-transcript.esm.js";
 
 const MAX_ARTICLE_BYTES = 3 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
 const FETCH_TIMEOUT_MS = 20_000;
+const REDDIT_TOP_COMMENTS_LIMIT = 10;
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
@@ -242,6 +246,7 @@ export type UrlPreviewMetadata = {
   siteName?: string;
   pageTitle?: string;
   contentLengthWords?: number;
+  content?: string;
 };
 
 function normalizeMetaText(value: string | undefined): string | undefined {
@@ -274,6 +279,34 @@ function isYouTubeHost(hostname: string): boolean {
     h === "music.youtube.com" ||
     h === "youtu.be"
   );
+}
+
+function extractYouTubeVideoId(url: URL): string | null {
+  const h = url.hostname.toLowerCase();
+  if (h === "youtu.be") {
+    const id = url.pathname.split("/").filter(Boolean)[0];
+    return id?.trim() || null;
+  }
+  if (h === "youtube.com" || h === "www.youtube.com" || h === "m.youtube.com") {
+    if (url.pathname === "/watch") {
+      const id = (url.searchParams.get("v") ?? "").trim();
+      return id || null;
+    }
+    if (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/live/")) {
+      const segments = url.pathname.split("/").filter(Boolean);
+      const id = segments[1];
+      return id?.trim() || null;
+    }
+    return null;
+  }
+  if (h === "music.youtube.com") {
+    if (url.pathname === "/watch") {
+      const id = (url.searchParams.get("v") ?? "").trim();
+      return id || null;
+    }
+    return null;
+  }
+  return null;
 }
 
 function isValidYouTubeVideoUrl(url: URL): boolean {
@@ -333,6 +366,7 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
   siteName?: string;
   pageTitle?: string;
   contentLengthWords?: number;
+  content?: string;
 } | null> {
   try {
     const normalized = new URL(url);
@@ -378,11 +412,68 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
     const contentLengthWords = selftext.length
       ? selftext.split(" ").filter(Boolean).length
       : undefined;
+    const commentsListing = payload[1] as
+      | { data?: { children?: Array<{ kind?: unknown; data?: Record<string, unknown> }> } }
+      | undefined;
+    const topCommentBodies =
+      commentsListing?.data?.children
+        ?.filter((child) => child?.kind === "t1")
+        .map((child) => {
+          const body = child?.data?.body;
+          return typeof body === "string" ? body.replace(/\s+/g, " ").trim() : "";
+        })
+        .filter(
+          (body) =>
+            body.length > 0 &&
+            body !== "[deleted]" &&
+            body !== "[removed]",
+        )
+        .slice(0, REDDIT_TOP_COMMENTS_LIMIT) ?? [];
+
     if (!isMeaningfulTitle(pageTitle)) return null;
-    return { siteName: subreddit ?? "Reddit", pageTitle, contentLengthWords };
+    const contentParts: string[] = [];
+    contentParts.push(`# ${pageTitle}`);
+    if (selftext.length > 0) {
+      contentParts.push("", selftext);
+    }
+    if (topCommentBodies.length > 0) {
+      contentParts.push("", "## Top comments");
+      contentParts.push(
+        ...topCommentBodies.map((comment, idx) => `${idx + 1}. ${comment}`),
+      );
+    }
+    const content = contentParts.join("\n").trim() || undefined;
+
+    return { siteName: subreddit ?? "Reddit", pageTitle, contentLengthWords, content };
   } catch (error) {
     console.error("[urlMetadata] Reddit JSON metadata parse failed", {
       url: safeUrlForLog(url),
+      error: errorMessage(error),
+    });
+    return null;
+  }
+}
+
+function extractReadableArticleContent(html: string, pageUrl: string): string | null {
+  try {
+    const dom = new JSDOM(html, { url: pageUrl });
+    const parsed = new Readability(dom.window.document).parse();
+    const text = parsed?.textContent?.replace(/\r/g, "").trim() ?? "";
+    if (!text) return null;
+    const paragraphs = text
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (paragraphs.length === 0) return null;
+    const body = paragraphs.join("\n\n");
+    const title = parsed?.title?.replace(/\s+/g, " ").trim() ?? "";
+    if (title.length > 0) {
+      return `# ${title}\n\n${body}`;
+    }
+    return body;
+  } catch (error) {
+    console.error("[urlMetadata] Readability content extraction failed", {
+      url: safeUrlForLog(pageUrl),
       error: errorMessage(error),
     });
     return null;
@@ -435,6 +526,27 @@ async function fetchYoutubeOembedMetadata(url: string): Promise<{
   }
 }
 
+async function fetchYouTubeTranscriptContent(url: URL): Promise<string | null> {
+  const videoId = extractYouTubeVideoId(url);
+  if (!videoId) return null;
+  try {
+    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    const lines = transcript
+      .map((entry: { text?: unknown }) =>
+        typeof entry.text === "string" ? entry.text.replace(/\s+/g, " ").trim() : "",
+      )
+      .filter((line): line is string => line.length > 0);
+    if (lines.length === 0) return null;
+    return lines.join("\n");
+  } catch (error) {
+    console.error("[urlMetadata] YouTube transcript fetch failed", {
+      url: safeUrlForLog(url.href),
+      error: errorMessage(error),
+    });
+    return null;
+  }
+}
+
 /** Preview only: site / page name for UI. Same SSRF rules as full ingest. */
 export async function fetchUrlPreviewMetadata(
   rawUrl: string,
@@ -445,9 +557,9 @@ export async function fetchUrlPreviewMetadata(
     const hostname = u.hostname;
 
     if (isRedditHost(hostname)) {
-      const redditMeta = await fetchRedditJsonMetadata(trimmed);
-      if (redditMeta) {
-        return { hostname, ...redditMeta };
+      const redditMetaAndContent = await fetchRedditJsonMetadata(trimmed);
+      if (redditMetaAndContent) {
+        return { hostname, ...redditMetaAndContent };
       }
       const redditFallback = deriveRedditFallbackMetadata(trimmed);
       if (redditFallback && isMeaningfulTitle(redditFallback.pageTitle)) {
@@ -465,9 +577,14 @@ export async function fetchUrlPreviewMetadata(
         });
         return null;
       }
+      const transcriptContent = await fetchYouTubeTranscriptContent(u);
       const youtubeMeta = await fetchYoutubeOembedMetadata(trimmed);
-      if (youtubeMeta) {
-        return { hostname, ...youtubeMeta };
+      if (youtubeMeta || transcriptContent) {
+        return {
+          hostname,
+          ...(youtubeMeta ?? {}),
+          ...(transcriptContent ? { content: transcriptContent } : {}),
+        };
       }
     }
 
@@ -481,6 +598,7 @@ export async function fetchUrlPreviewMetadata(
     const meta = parseHtmlMeta(html);
     const siteName = normalizeMetaText(meta.siteName);
     const pageTitle = normalizeMetaText(meta.pageTitle);
+    const readableContent = extractReadableArticleContent(html, finalUrl);
     if (!isMeaningfulTitle(pageTitle)) {
       console.error("[urlMetadata] Metadata title rejected as non-meaningful", {
         url: safeUrlForLog(finalUrl),
@@ -493,6 +611,7 @@ export async function fetchUrlPreviewMetadata(
       siteName,
       pageTitle,
       contentLengthWords: meta.contentLengthWords,
+      ...(readableContent ? { content: readableContent } : {}),
     };
   } catch (error) {
     console.error("[urlMetadata] URL preview metadata fetch failed", {
