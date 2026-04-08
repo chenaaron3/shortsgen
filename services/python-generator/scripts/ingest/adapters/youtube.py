@@ -81,10 +81,29 @@ def _yt_dlp_base_options() -> dict[str, object]:
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
+        # Pull latest challenge solver script for YouTube n-challenge compatibility.
+        "remote_components": ["ejs:github"],
     }
     cookiefile = _resolve_cookiefile_path()
     if cookiefile:
         options["cookiefile"] = cookiefile
+
+    pot_base_url = os.environ.get("YTDLP_POT_BASE_URL", "").strip()
+    pot_trace = os.environ.get("YTDLP_POT_TRACE", "").strip().lower() in {"1", "true", "yes", "on"}
+    fetch_pot_policy = os.environ.get("YTDLP_FETCH_POT", "auto").strip() or "auto"
+    extractor_args: dict[str, object] = {
+        "youtube": {
+            "fetch_pot": [fetch_pot_policy],
+        }
+    }
+    if pot_trace:
+        extractor_args["youtube"]["pot_trace"] = ["true"]  # type: ignore[index]
+    if pot_base_url:
+        extractor_args["youtubepot-bgutilhttp"] = {
+            "base_url": [pot_base_url],
+        }
+        info(f"[youtube_ingest] using bgutil POT provider base_url={pot_base_url}")
+    options["extractor_args"] = extractor_args
     return options
 
 
