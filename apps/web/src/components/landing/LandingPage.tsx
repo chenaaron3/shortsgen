@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { Coins, MousePointerClick, UserRoundCheck } from 'lucide-react';
+import { Coins, Sparkles, UserRoundCheck } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -96,10 +96,10 @@ export function LandingPage() {
   return (
     <>
       <Head>
-        <title>Shortgen | One-click shorts from links or text</title>
+        <title>Shortgen | AI-powered faceless shorts</title>
         <meta
           name="description"
-          content="Start from a YouTube link, blog URL, or your own text. One click creates your draft—review scripts and scenes before images and voice."
+          content="Build a faceless channel with AI-powered shorts from YouTube, blogs, or text. Review scripts and scenes before visuals and voice are generated."
         />
       </Head>
       <main className="relative min-h-screen overflow-x-clip bg-background">
@@ -125,12 +125,20 @@ export function LandingPage() {
           <motion.div className="mx-auto w-full max-w-6xl" {...heroMotion}>
             <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
               <div className="text-center lg:text-left">
+                <motion.div variants={reduceMotion ? undefined : heroItem}>
+                  <Badge
+                    variant="secondary"
+                    className="mb-4 border-primary/20 bg-primary/10 text-primary"
+                  >
+                    AI-powered
+                  </Badge>
+                </motion.div>
                 <motion.h1
                   className="text-4xl font-bold tracking-tight md:text-5xl lg:text-[3.25rem] lg:leading-tight"
                   variants={reduceMotion ? undefined : heroItem}
                 >
                   Build a faceless channel
-                  <span className="text-primary"> that ships consistently</span>
+                  <span className="text-primary"> that ships with AI</span>
                 </motion.h1>
                 <motion.p
                   className="mt-5 text-lg text-muted-foreground md:text-xl lg:max-w-2xl"
@@ -207,20 +215,20 @@ export function LandingPage() {
                 </div>
                 <CardTitle className="text-xl">Post consistently</CardTitle>
                 <CardDescription className="text-base leading-relaxed">
-                  Publish on schedule and build your niche from content you
-                  already have.
+                  Turn one source into multiple shorts within minutes and
+                  publish 3-5 times per week.
                 </CardDescription>
               </CardHeader>
             </Card>
             <Card className="border-primary/20 bg-linear-to-br from-card to-primary/5">
               <CardHeader>
                 <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <MousePointerClick className="h-6 w-6" />
+                  <Sparkles className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-xl">Save hours every week</CardTitle>
+                <CardTitle className="text-xl">AI does the heavy lifting</CardTitle>
                 <CardDescription className="text-base leading-relaxed">
-                  Generate polished videos in one click, not hours of manual
-                  editing.
+                  Scripts, scene planning, visuals, and voiceover are generated
+                  in one flow, so you can focus on quality.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -231,7 +239,8 @@ export function LandingPage() {
                 </div>
                 <CardTitle className="text-xl">Cut production costs</CardTitle>
                 <CardDescription className="text-base leading-relaxed">
-                  Skip editor costs while maintaining high-quality output.
+                  Replace fragmented editing tools and reduce production costs
+                  per short by an estimated 60-80%.
                 </CardDescription>
               </CardHeader>
             </Card>

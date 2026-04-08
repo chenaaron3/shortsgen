@@ -264,18 +264,18 @@ async function fetchRedditJsonMetadata(url: string): Promise<{
 export async function fetchUrlPreviewMetadata(
   rawUrl: string,
 ): Promise<UrlPreviewMetadata | null> {
-  const trimmed = rawUrl.trim();
-  const u = assertUrlSafeForServerFetch(trimmed);
-  const hostname = u.hostname;
-
-  if (isRedditHost(hostname)) {
-    const redditMeta = await fetchRedditJsonMetadata(trimmed);
-    if (redditMeta) {
-      return { hostname, ...redditMeta };
-    }
-  }
-
   try {
+    const trimmed = rawUrl.trim();
+    const u = assertUrlSafeForServerFetch(trimmed);
+    const hostname = u.hostname;
+
+    if (isRedditHost(hostname)) {
+      const redditMeta = await fetchRedditJsonMetadata(trimmed);
+      if (redditMeta) {
+        return { hostname, ...redditMeta };
+      }
+    }
+
     const { html, url: finalUrl } = await fetchArticleHtml(trimmed);
     if (!html.trim()) return null;
     const meta = await parseHtmlMeta(html, finalUrl);
