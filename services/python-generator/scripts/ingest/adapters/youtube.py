@@ -76,17 +76,24 @@ def _resolve_cookiefile_path() -> str | None:
     return str(_COOKIEFILE_PATH)
 
 
-def _yt_dlp_base_options() -> dict[str, object]:
+def _cookies_configured() -> bool:
+    return bool(os.environ.get("YTDLP_COOKIES_GZ_B64", "").strip())
+
+
+def _yt_dlp_base_options(*, use_cookies: bool) -> dict[str, object]:
     options: dict[str, object] = {
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
+        # Python API equivalent of --no-cache-dir
+        "cachedir": False,
         # Pull latest challenge solver script for YouTube n-challenge compatibility.
         "remote_components": ["ejs:github"],
     }
-    cookiefile = _resolve_cookiefile_path()
-    if cookiefile:
-        options["cookiefile"] = cookiefile
+    if use_cookies:
+        cookiefile = _resolve_cookiefile_path()
+        if cookiefile:
+            options["cookiefile"] = cookiefile
 
     pot_base_url = os.environ.get("YTDLP_POT_BASE_URL", "").strip()
     pot_trace = os.environ.get("YTDLP_POT_TRACE", "").strip().lower() in {"1", "true", "yes", "on"}
@@ -107,10 +114,10 @@ def _yt_dlp_base_options() -> dict[str, object]:
     return options
 
 
-def _fetch_transcript_lines_from_captions(url: str, video_id: str) -> list[str]:
+def _fetch_transcript_lines_from_captions(url: str, video_id: str, *, use_cookies: bool) -> list[str]:
     with TemporaryDirectory(prefix="yt_captions_") as tmpdir:
         output_template = str(Path(tmpdir) / "%(id)s.%(ext)s")
-        options = _yt_dlp_base_options()
+        options = _yt_dlp_base_options(use_cookies=use_cookies)
         options.update(
             {
                 "skip_download": True,
@@ -124,6 +131,7 @@ def _fetch_transcript_lines_from_captions(url: str, video_id: str) -> list[str]:
         with yt_dlp.YoutubeDL(
             options
         ) as ydl:
+            ydl.cache.remove()
             ydl.download([url])
 
         caption_path = _find_downloaded_caption(tmpdir, video_id)
@@ -150,10 +158,10 @@ def _find_downloaded_audio(tmpdir: str, video_id: str) -> Path:
     return max(candidates, key=lambda p: p.stat().st_size)
 
 
-def _transcribe_via_audio_fallback(url: str, video_id: str) -> list[str]:
+def _transcribe_via_audio_fallback(url: str, video_id: str, *, use_cookies: bool) -> list[str]:
     with TemporaryDirectory(prefix="yt_ingest_") as tmpdir:
         output_template = str(Path(tmpdir) / "%(id)s.%(ext)s")
-        options = _yt_dlp_base_options()
+        options = _yt_dlp_base_options(use_cookies=use_cookies)
         options.update(
             {
                 # Prefer smallest audio-only stream to minimize fallback latency.
@@ -164,6 +172,7 @@ def _transcribe_via_audio_fallback(url: str, video_id: str) -> list[str]:
         with yt_dlp.YoutubeDL(
             options
         ) as ydl:
+            ydl.cache.remove()
             ydl.download([url])
 
         audio_path = _find_downloaded_audio(tmpdir, video_id)
@@ -187,20 +196,53 @@ class YouTubeAdapter(UrlAdapter):
         if not video_id:
             raise ValueError("Could not determine YouTube video id from URL.")
         transcript_lines: list[str] = []
-        try:
-            transcript_lines = _fetch_transcript_lines_from_captions(url, video_id)
-        except Exception:
-            transcript_lines = []
-        if transcript_lines:
-            info(f"[youtube_ingest] yt-dlp captions succeeded video_id={video_id} lines={len(transcript_lines)}")
+
+        modes: list[tuple[str, bool]] = [("guest", False)]
+        if _cookies_configured():
+            modes.append(("auth", True))
+        else:
+            warn("[youtube_ingest] no cookie secret configured; skipping auth mode")
+
+        for mode_name, use_cookies in modes:
+            info(f"[youtube_ingest] attempting captions mode={mode_name} video_id={video_id}")
+            try:
+                transcript_lines = _fetch_transcript_lines_from_captions(
+                    url,
+                    video_id,
+                    use_cookies=use_cookies,
+                )
+            except Exception as exc:
+                warn(f"[youtube_ingest] captions failed mode={mode_name} video_id={video_id}: {exc}")
+                transcript_lines = []
+                continue
+            if transcript_lines:
+                info(
+                    f"[youtube_ingest] yt-dlp captions succeeded mode={mode_name} video_id={video_id} lines={len(transcript_lines)}"
+                )
+                break
+
         if not transcript_lines:
             warn(f"[youtube_ingest] captions unavailable/empty, using audio fallback video_id={video_id}")
-            try:
-                transcript_lines = _transcribe_via_audio_fallback(url, video_id)
-                info(f"[youtube_ingest] audio fallback succeeded video_id={video_id} lines={len(transcript_lines)}")
-            except Exception as exc:
-                error(f"[youtube_ingest] fallback transcription failed video_id={video_id}: {exc}")
-                raise
+            last_error: Exception | None = None
+            for mode_name, use_cookies in modes:
+                info(f"[youtube_ingest] attempting audio fallback mode={mode_name} video_id={video_id}")
+                try:
+                    transcript_lines = _transcribe_via_audio_fallback(
+                        url,
+                        video_id,
+                        use_cookies=use_cookies,
+                    )
+                    info(
+                        f"[youtube_ingest] audio fallback succeeded mode={mode_name} video_id={video_id} lines={len(transcript_lines)}"
+                    )
+                    break
+                except Exception as exc:
+                    last_error = exc
+                    warn(f"[youtube_ingest] audio fallback failed mode={mode_name} video_id={video_id}: {exc}")
+                    transcript_lines = []
+            if not transcript_lines:
+                error(f"[youtube_ingest] fallback transcription failed video_id={video_id}: {last_error}")
+                raise RuntimeError("YouTube transcript unavailable for guest/auth caption+audio paths.") from last_error
 
         body = "\n".join(transcript_lines)
         markdown = "\n".join(
