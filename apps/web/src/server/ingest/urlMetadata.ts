@@ -200,6 +200,10 @@ function decodeHtmlEntities(value: string): string {
   });
 }
 
+function stripXmlTags(value: string): string {
+  return value.replace(/<[^>]+>/g, " ");
+}
+
 function stripHtmlToText(html: string): string {
   return html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
@@ -578,6 +582,45 @@ async function fetchYoutubeOembedMetadata(url: string): Promise<{
   }
 }
 
+function parseTimedtextXmlToLines(xml: string): string[] {
+  const matches = [...xml.matchAll(/<text\b[^>]*>([\s\S]*?)<\/text>/gi)];
+  const lines = matches
+    .map((m) => decodeHtmlEntities(stripXmlTags(m[1] ?? "")).replace(/\s+/g, " ").trim())
+    .filter((line) => line.length > 0);
+  return lines;
+}
+
+async function fetchYouTubeTimedtextContent(videoId: string): Promise<string | null> {
+  const candidates = [
+    `https://www.youtube.com/api/timedtext?lang=en&v=${encodeURIComponent(videoId)}`,
+    `https://www.youtube.com/api/timedtext?lang=en&kind=asr&v=${encodeURIComponent(videoId)}`,
+    `https://www.youtube.com/api/timedtext?lang=en-US&kind=asr&v=${encodeURIComponent(videoId)}`,
+  ];
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (compatible; Shortgen/1.0; +https://shortgen.app)",
+          Accept: "application/xml,text/xml;q=0.9,*/*;q=0.8",
+        },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (!res.ok) continue;
+      const xml = await res.text();
+      if (!xml || !xml.includes("<text")) continue;
+      const lines = parseTimedtextXmlToLines(xml);
+      if (lines.length > 0) {
+        return lines.join("\n");
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
 async function fetchYouTubeTranscriptContent(url: URL): Promise<string | null> {
   const videoId = extractYouTubeVideoId(url);
   if (!videoId) return null;
@@ -593,6 +636,12 @@ async function fetchYouTubeTranscriptContent(url: URL): Promise<string | null> {
     if (lines.length === 0) return null;
     return lines.join("\n");
   } catch (error) {
+    console.warn("[urlMetadata] YouTube transcript library failed, trying timedtext fallback", {
+      url: safeUrlForLog(url.href),
+      error: errorMessage(error),
+    });
+    const timedtextContent = await fetchYouTubeTimedtextContent(videoId);
+    if (timedtextContent) return timedtextContent;
     console.error("[urlMetadata] YouTube transcript fetch failed", {
       url: safeUrlForLog(url.href),
       error: errorMessage(error),
