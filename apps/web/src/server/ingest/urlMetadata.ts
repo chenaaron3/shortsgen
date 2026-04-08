@@ -599,6 +599,10 @@ async function fetchYouTubeTimedtextContent(videoId: string): Promise<string | n
 
   for (const url of candidates) {
     try {
+      console.info("[urlMetadata] YouTube timedtext attempt", {
+        videoId,
+        endpoint: url,
+      });
       const res = await fetch(url, {
         headers: {
           "User-Agent":
@@ -607,47 +611,108 @@ async function fetchYouTubeTimedtextContent(videoId: string): Promise<string | n
         },
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        console.warn("[urlMetadata] YouTube timedtext non-200", {
+          videoId,
+          endpoint: url,
+          status: res.status,
+        });
+        continue;
+      }
       const xml = await res.text();
-      if (!xml || !xml.includes("<text")) continue;
+      if (!xml || !xml.includes("<text")) {
+        console.warn("[urlMetadata] YouTube timedtext empty/no-text", {
+          videoId,
+          endpoint: url,
+          responseSize: xml?.length ?? 0,
+        });
+        continue;
+      }
       const lines = parseTimedtextXmlToLines(xml);
       if (lines.length > 0) {
+        console.info("[urlMetadata] YouTube timedtext succeeded", {
+          videoId,
+          endpoint: url,
+          lines: lines.length,
+        });
         return lines.join("\n");
       }
-    } catch {
+      console.warn("[urlMetadata] YouTube timedtext parsed zero lines", {
+        videoId,
+        endpoint: url,
+      });
+    } catch (error) {
+      console.warn("[urlMetadata] YouTube timedtext request error", {
+        videoId,
+        endpoint: url,
+        error: errorMessage(error),
+      });
       continue;
     }
   }
+  console.warn("[urlMetadata] YouTube timedtext all attempts exhausted", { videoId });
   return null;
 }
 
 async function fetchYouTubeTranscriptContent(url: URL): Promise<string | null> {
   const videoId = extractYouTubeVideoId(url);
-  if (!videoId) return null;
+  if (!videoId) {
+    console.warn("[urlMetadata] YouTube transcript skipped: missing videoId", {
+      url: safeUrlForLog(url.href),
+    });
+    return null;
+  }
+  console.info("[urlMetadata] YouTube transcript start", {
+    url: safeUrlForLog(url.href),
+    videoId,
+  });
+  let lines: string[] = [];
+  let libraryError: string | null = null;
   try {
+    console.info("[urlMetadata] YouTube transcript library attempt", { videoId });
     const transcript = await YoutubeTranscript.fetchTranscript(videoId);
-    const lines = transcript
+    lines = transcript
       .map((entry: { text?: unknown }) =>
         typeof entry.text === "string"
           ? entry.text.replace(/\s+/g, " ").trim()
           : "",
       )
       .filter((line): line is string => line.length > 0);
-    if (lines.length === 0) return null;
-    return lines.join("\n");
   } catch (error) {
+    libraryError = errorMessage(error);
     console.warn("[urlMetadata] YouTube transcript library failed, trying timedtext fallback", {
       url: safeUrlForLog(url.href),
-      error: errorMessage(error),
+      videoId,
+      error: libraryError,
     });
-    const timedtextContent = await fetchYouTubeTimedtextContent(videoId);
-    if (timedtextContent) return timedtextContent;
-    console.error("[urlMetadata] YouTube transcript fetch failed", {
-      url: safeUrlForLog(url.href),
-      error: errorMessage(error),
-    });
-    return null;
+    lines = [];
   }
+  if (lines.length > 0) {
+    console.info("[urlMetadata] YouTube transcript library succeeded", {
+      videoId,
+      lines: lines.length,
+    });
+    return lines.join("\n");
+  }
+  console.warn("[urlMetadata] YouTube transcript library returned zero lines", {
+    videoId,
+  });
+  const timedtextContent = await fetchYouTubeTimedtextContent(videoId);
+  if (timedtextContent) {
+    console.info("[urlMetadata] YouTube transcript timedtext fallback succeeded", {
+      videoId,
+      chars: timedtextContent.length,
+    });
+    return timedtextContent;
+  }
+  console.error("[urlMetadata] YouTube transcript fetch failed", {
+    url: safeUrlForLog(url.href),
+    videoId,
+    error:
+      libraryError ??
+      "YouTube transcript library returned zero lines and timedtext fallback failed",
+  });
+  return null;
 }
 
 /** Preview only: site / page name for UI. Same SSRF rules as full ingest. */
