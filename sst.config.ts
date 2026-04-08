@@ -79,6 +79,8 @@ export default $config({
       XDG_CACHE_HOME: "/var/task/whisper-models",
       // uv needs a writable cache dir; /var/task is read-only in Lambda
       UV_CACHE_DIR: "/tmp/uv-cache",
+      // crawl4ai creates ~/.crawl4ai at import time; Lambda $HOME is read-only (see CRAWL4_AI_BASE_DIRECTORY in crawl4ai/async_database.py)
+      CRAWL4_AI_BASE_DIRECTORY: "/tmp",
     };
 
     // Python pipeline Lambdas (container image, 15min timeout)
