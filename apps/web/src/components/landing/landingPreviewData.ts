@@ -9,25 +9,25 @@ export const LANDING_SCRUB_STEPS: LandingScrubStep[] = [
     id: "clips",
     title: "Identify Clips",
     description:
-      "Split one source into focused clips you can turn into consistent posts.",
+      "Start by entering a YouTube video, Reddit post, or custom text. Our AI will split that source into focused clips.",
   },
   {
     id: "scriptVerify",
     title: "Generate Script + Verify",
     description:
-      "Generate draft copy fast, then scan and approve it before moving forward.",
+      "Then our AI will generate a draft script for you. You can review and approve it before moving forward.",
   },
   {
     id: "assets",
     title: "Generate Assets with AI",
     description:
-      "Create visuals and voiceover from the approved script in one step.",
+      "Lastly, we will automatically generate the visuals and voiceover to create your short.",
   },
   {
     id: "upload",
     title: "Upload",
     description:
-      "Export and publish quickly so your channel can grow and monetize consistently.",
+      "Export and publish your short to YouTube or TikTok, and start growing your channel.",
   },
 ];
 
