@@ -15,8 +15,6 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from config_loader import load_config
-from ingest.resolve import resolve_url_to_text
-from ingest.url_security import assert_url_safe_for_ingest
 from logger import error as log_error, info as log_info, run_context, video_context, warn as log_warn
 from models import Nugget, ProcessedClip
 from path_utils import breakdown_dir, video_cache_path
@@ -26,7 +24,6 @@ from pipeline.run_chunker import run as run_chunker
 from run_video.persistence.run_video_writer import (
     create_video,
     get_run,
-    update_run_after_url_ingest,
     update_run_status,
     update_video,
 )
@@ -102,47 +99,20 @@ def _handler_impl(run_id: str) -> dict:
 
     config_name = row.config or "default"
     source_content = (row.user_input or "").strip()
-    is_url_flow = bool(row.source_url)
+    has_source_url = bool(row.source_url)
     max_nuggets = int(row.max_nuggets) if row.max_nuggets is not None else 5
-    log_info(f"[initial_processing] starting runId={run_id} config={config_name} url_flow={is_url_flow}")
+    log_info(
+        f"[initial_processing] starting runId={run_id} config={config_name} source_url_present={has_source_url}"
+    )
     config = load_config(config_name)
     config_hash = config.hash
     log_info(f"[initial_processing] config_hash={config_hash}")
 
-    # 0. URL ingest (source_url set): fetch body; user_input stays the label from create
-    if is_url_flow:
-        source_url = row.source_url
-        if not source_url:
-            log_warn(f"[initial_processing] 400 url flow but missing source_url runId={run_id}")
-            return {"statusCode": 400, "body": json.dumps({"error": "run has no source_url"})}
-        try:
-            safe_url = assert_url_safe_for_ingest(source_url)
-            emit_event(run_id, ProgressEventType.breakdown_started, status_message="Fetching source…")
-            scraped_text, adapter = resolve_url_to_text(safe_url)
-            update_run_after_url_ingest(run_id, source_adapter=adapter)
-            source_content = scraped_text
-            log_info(f"[initial_processing] url ingest adapter={adapter}")
-            emit_event(
-                run_id,
-                ProgressEventType.breakdown_started,
-                status_message="Analysing your content...",
-            )
-        except Exception as e:
-            log_error(f"[initial_processing] url ingest failed runId={run_id}: {e}")
-            traceback.print_exc()
-            update_run_status(run_id, "failed")
-            emit_event(
-                run_id,
-                ProgressEventType.error,
-                status_message="",
-                payload={"error": str(e)},
-            )
-            return {"statusCode": 200, "body": json.dumps({"runId": run_id, "status": "failed"})}
-    else:
-        if not source_content:
-            log_warn(f"[initial_processing] 400 empty user_input for text flow runId={run_id}")
-            return {"statusCode": 400, "body": json.dumps({"error": "run has empty user_input"})}
-        emit_event(run_id, ProgressEventType.breakdown_started, status_message="Analysing your content...")
+    # Invariant: source content is always pre-populated in runs.user_input.
+    if not source_content:
+        log_warn(f"[initial_processing] 400 empty user_input (content invariant violated) runId={run_id}")
+        return {"statusCode": 400, "body": json.dumps({"error": "run has empty user_input"})}
+    emit_event(run_id, ProgressEventType.breakdown_started, status_message="Analysing your content...")
 
     # 1. Breakdown
     source_key = source_hash(source_content)

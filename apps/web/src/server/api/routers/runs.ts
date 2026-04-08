@@ -88,19 +88,12 @@ export const runsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const config = input.config;
-      const userInput = input.userInput.trim();
+      let sourceContent = input.userInput.trim();
       const isUrlFlow = !!input.sourceUrl?.trim();
       let normalizedSourceUrl: string | null = null;
       if (isUrlFlow) {
         try {
           normalizedSourceUrl = assertUrlSafeForServerFetch(input.sourceUrl!.trim()).href;
-          const preview = await fetchUrlPreviewMetadata(normalizedSourceUrl);
-          if (!preview) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: "Could not validate this URL. Please use a valid page link.",
-            });
-          }
         } catch (e) {
           if (e instanceof TRPCError) throw e;
           throw new TRPCError({
@@ -109,13 +102,13 @@ export const runsRouter = createTRPCRouter({
           });
         }
       }
-      const copy = await generateBreakdownContent(userInput);
+      const copy = await generateBreakdownContent(sourceContent);
 
       const [run] = await ctx.db
         .insert(runs)
         .values({
           userId: ctx.session.user.id,
-          user_input: userInput,
+          user_input: sourceContent,
           source_url: normalizedSourceUrl,
           title: copy.title,
           breakdown_messages: copy.breakdownMessagesJson,

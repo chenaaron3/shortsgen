@@ -19,7 +19,6 @@ import { Textarea } from '~/components/ui/textarea';
 import { ARTICLE_SAMPLE, REDDIT_SAMPLE, YOUTUBE_SAMPLE } from '~/constants/inspirationSamples';
 import { SHORTGEN_PENDING_SOURCE_KEY } from '~/constants/pendingSource';
 import { useUserConfig } from '~/hooks/useUserConfig';
-import { buildSourceLabel } from '~/lib/urlPreviewLabel';
 import { isSingleLineHttpsUrl } from '~/lib/urlValidation';
 import { api } from '~/utils/api';
 
@@ -103,7 +102,7 @@ export function CreateForm() {
       if (
         previewedUrl !== t ||
         previewUrlMetadata.isPending ||
-        !previewUrlMetadata.data
+        !previewUrlMetadata.data?.content?.trim()
       ) {
         return;
       }
@@ -115,7 +114,7 @@ export function CreateForm() {
       }
       if (u.protocol !== "https:") return;
       createRunMutation.mutate({
-        userInput: buildSourceLabel(previewUrlMetadata.data, t),
+        userInput: previewUrlMetadata.data.content,
         sourceUrl: t,
         config: pipelineConfig,
       });
@@ -146,7 +145,7 @@ export function CreateForm() {
     isUrlInput &&
     previewedUrl === trimmedInput &&
     !previewUrlMetadata.isPending &&
-    !!previewUrlMetadata.data;
+    !!previewUrlMetadata.data?.content?.trim();
   const showInvalidUrlHint =
     isUrlInput &&
     previewedUrl === trimmedInput &&
@@ -249,7 +248,7 @@ export function CreateForm() {
         )}
       {showInvalidUrlHint && (
         <p className="text-sm text-destructive">
-          Could not validate this URL. Please use a valid page link.
+          Could not extract source content from this URL. Please use a different link.
         </p>
       )}
       {showMinWordHint && (

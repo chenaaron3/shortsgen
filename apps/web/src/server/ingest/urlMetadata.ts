@@ -11,7 +11,7 @@ import { YoutubeTranscript } from "youtube-transcript/dist/youtube-transcript.es
 const MAX_ARTICLE_BYTES = 3 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
 const FETCH_TIMEOUT_MS = 20_000;
-const REDDIT_TOP_COMMENTS_LIMIT = 10;
+const REDDIT_TOP_COMMENTS_LIMIT = 25;
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
