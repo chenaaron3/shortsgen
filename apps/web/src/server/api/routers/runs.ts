@@ -1,23 +1,31 @@
-import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
-import { z } from 'zod';
-import { env } from '~/env';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
-import { debitCredits, getBalance } from '~/server/credits';
-
-import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
+import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { z } from "zod";
+import { env } from "~/env";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { debitCredits, getBalance } from "~/server/credits";
+import { generateBreakdownContent } from "~/server/ingest/generateBreakdownContent";
+import { resolveUrlContentWithSupadata } from "~/server/ingest/supadata";
 import {
-    CREDITS_ASSETS_PER_VIDEO, CREDITS_IMAGE_REGEN, CREDITS_INGEST_PER_RUN, runs,
-    SCRIPT_REGEN_FREE_LIMIT, videos
-} from '@shortgen/db';
-import { chunksSchema, manifestSchema } from '@shortgen/types';
-import { TRPCError } from '@trpc/server';
+  assertUrlSafeForServerFetch,
+  fetchUrlPreviewMetadata,
+} from "~/server/ingest/urlMetadata";
+
+import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
+import {
+  CREDITS_ASSETS_PER_VIDEO,
+  CREDITS_IMAGE_REGEN,
+  CREDITS_INGEST_PER_RUN,
+  runs,
+  SCRIPT_REGEN_FREE_LIMIT,
+  videos,
+} from "@shortgen/db";
+import { chunksSchema, manifestSchema } from "@shortgen/types";
+import { TRPCError } from "@trpc/server";
+
+import { triggerRemotionExports } from "./runs.utils";
 
 import type { VideoManifest } from "@shortgen/types";
 import type { InferSelectModel } from "drizzle-orm";
-
-import { triggerRemotionExports } from "./runs.utils";
-import { generateBreakdownContent } from "~/server/ingest/generateBreakdownContent";
-import { assertUrlSafeForServerFetch, fetchUrlPreviewMetadata } from "~/server/ingest/urlMetadata";
 
 /** Run with videos relation. Used as explicit return type for getById so tRPC infers it. */
 export type RunWithVideos = InferSelectModel<typeof runs> & {
@@ -93,12 +101,28 @@ export const runsRouter = createTRPCRouter({
       let normalizedSourceUrl: string | null = null;
       if (isUrlFlow) {
         try {
-          normalizedSourceUrl = assertUrlSafeForServerFetch(input.sourceUrl!.trim()).href;
+          normalizedSourceUrl = assertUrlSafeForServerFetch(
+            input.sourceUrl!.trim(),
+          ).href;
+          const resolved = await resolveUrlContentWithSupadata(
+            normalizedSourceUrl!,
+          );
+          sourceContent = resolved.markdown.trim();
+          if (!sourceContent) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message:
+                "Could not extract source content from this URL. Please use a different link.",
+            });
+          }
         } catch (e) {
           if (e instanceof TRPCError) throw e;
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: e instanceof Error ? e.message : "Invalid URL",
+            message:
+              e instanceof Error
+                ? e.message
+                : "Could not extract source content from this URL. Please use a different link.",
           });
         }
       }
@@ -444,9 +468,7 @@ export const runsRouter = createTRPCRouter({
    * Trigger Remotion Lambda render for a single video. Video must have status "assets".
    */
   triggerExportVideo: protectedProcedure
-    .input(
-      z.object({ runId: z.string().uuid(), videoId: z.string().uuid() }),
-    )
+    .input(z.object({ runId: z.string().uuid(), videoId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [run] = await ctx.db
         .select()
@@ -461,13 +483,14 @@ export const runsRouter = createTRPCRouter({
       }
 
       const [video] = await ctx.db
-        .select({ id: videos.id, s3_prefix: videos.s3_prefix, status: videos.status })
+        .select({
+          id: videos.id,
+          s3_prefix: videos.s3_prefix,
+          status: videos.status,
+        })
         .from(videos)
         .where(
-          and(
-            eq(videos.id, input.videoId),
-            eq(videos.run_id, input.runId),
-          ),
+          and(eq(videos.id, input.videoId), eq(videos.run_id, input.runId)),
         );
 
       if (!video || video.status !== "assets" || !video.s3_prefix) {

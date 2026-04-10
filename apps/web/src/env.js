@@ -35,6 +35,10 @@ export const env = createEnv({
     STRIPE_PRICE_PRO: z.string().min(1).optional(),
     STRIPE_PRICE_BUSINESS: z.string().min(1).optional(),
     STRIPE_PRICE_CREDITS_100: z.string().min(1).optional(),
+    /** Supadata API key for URL source extraction (transcript/crawl). */
+    SUPADATA_API_KEY: z.string().min(1).optional(),
+    /** Optional Supadata base URL override. */
+    SUPADATA_BASE_URL: z.string().url().optional(),
   },
   client: {
     NEXT_PUBLIC_SHORTGEN_WS_URL: z.string().url(),
@@ -63,6 +67,8 @@ export const env = createEnv({
     STRIPE_PRICE_PRO: process.env.STRIPE_PRICE_PRO,
     STRIPE_PRICE_BUSINESS: process.env.STRIPE_PRICE_BUSINESS,
     STRIPE_PRICE_CREDITS_100: process.env.STRIPE_PRICE_CREDITS_100,
+    SUPADATA_API_KEY: process.env.SUPADATA_API_KEY,
+    SUPADATA_BASE_URL: process.env.SUPADATA_BASE_URL,
     NEXT_PUBLIC_SHORTGEN_WS_URL: process.env.NEXT_PUBLIC_SHORTGEN_WS_URL,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
