@@ -119,8 +119,7 @@ def update_run_after_url_ingest(run_id: str, *, source_adapter: str) -> None:
             cur.execute(
                 f"""
                 UPDATE {RUNS_TABLE}
-                SET source_adapter = %s,
-                    source_resolved_at = NOW()
+                SET source_adapter = %s
                 WHERE id = %s
                 """,
                 (source_adapter, run_id),
@@ -131,7 +130,7 @@ def update_run_after_url_ingest(run_id: str, *, source_adapter: str) -> None:
 def _row_to_model(
     row: dict,
     model_cls: type[T],
-    datetime_fields: tuple[str, ...] = ("created_at", "source_resolved_at"),
+    datetime_fields: tuple[str, ...] = ("created_at",),
 ) -> T:
     """Convert DB row to Pydantic model, serializing datetime fields to ISO strings."""
     d = dict(row)
@@ -149,7 +148,7 @@ def get_run(run_id: str) -> Run | None:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 f"""
-                SELECT id, "userId", user_input, source_url, source_adapter, source_resolved_at,
+                SELECT id, "userId", user_input, source_url, source_adapter,
                        title, config, max_nuggets, status, breakdown_messages, script_regen_count, created_at
                 FROM {RUNS_TABLE} WHERE id = %s
                 """,

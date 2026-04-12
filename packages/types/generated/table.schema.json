@@ -29,23 +29,6 @@
                 "null"
               ]
             },
-            "source_resolved_at": {
-              "anyOf": [
-                {
-                  "anyOf": [
-                    {
-                      "not": {}
-                    },
-                    {
-                      "type": "string"
-                    }
-                  ]
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
             "title": {
               "type": [
                 "string",

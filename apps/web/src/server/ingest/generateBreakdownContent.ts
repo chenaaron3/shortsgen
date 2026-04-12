@@ -30,7 +30,7 @@ export async function generateBreakdownContent(content: string): Promise<{
   const client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
   try {
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5-nano",
       messages: [
         { role: "system", content: BREAKDOWN_SYSTEM },
         {

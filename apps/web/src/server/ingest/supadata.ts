@@ -6,6 +6,14 @@ const TRANSCRIPT_POLL_MAX_ATTEMPTS = 20;
 
 export type SupadataStrategy = "transcript" | "scrape";
 
+export type SupadataSourceAdapter =
+  | "youtube"
+  | "tiktok"
+  | "x"
+  | "instagram"
+  | "facebook"
+  | "reddit";
+
 const SUPADATA_HOST_STRATEGY: Readonly<Record<string, SupadataStrategy>> = {
   "youtube.com": "transcript",
   "www.youtube.com": "transcript",
@@ -26,6 +34,28 @@ const SUPADATA_HOST_STRATEGY: Readonly<Record<string, SupadataStrategy>> = {
   "reddit.com": "scrape",
   "www.reddit.com": "scrape",
   "old.reddit.com": "scrape",
+};
+
+const SUPADATA_HOST_ADAPTER: Readonly<Record<string, SupadataSourceAdapter>> = {
+  "youtube.com": "youtube",
+  "www.youtube.com": "youtube",
+  "m.youtube.com": "youtube",
+  "music.youtube.com": "youtube",
+  "youtu.be": "youtube",
+  "tiktok.com": "tiktok",
+  "www.tiktok.com": "tiktok",
+  "x.com": "x",
+  "www.x.com": "x",
+  "twitter.com": "x",
+  "www.twitter.com": "x",
+  "instagram.com": "instagram",
+  "www.instagram.com": "instagram",
+  "facebook.com": "facebook",
+  "www.facebook.com": "facebook",
+  "fb.watch": "facebook",
+  "reddit.com": "reddit",
+  "www.reddit.com": "reddit",
+  "old.reddit.com": "reddit",
 };
 
 type SupadataTranscriptChunk = {
@@ -71,6 +101,12 @@ function resolveStrategy(url: URL): SupadataStrategy {
 
 export function isSupadataReservedHostname(hostname: string): boolean {
   return SUPADATA_HOST_STRATEGY[hostname.toLowerCase()] !== undefined;
+}
+
+export function resolveSupadataSourceAdapter(
+  hostname: string,
+): SupadataSourceAdapter | null {
+  return SUPADATA_HOST_ADAPTER[hostname.toLowerCase()] ?? null;
 }
 
 function transcriptContentToString(

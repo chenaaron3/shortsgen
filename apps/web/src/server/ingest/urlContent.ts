@@ -1,12 +1,19 @@
-import { isSupadataReservedHostname, resolveUrlContentWithSupadata } from "~/server/ingest/supadata";
+import {
+  isSupadataReservedHostname,
+  resolveSupadataSourceAdapter,
+  resolveUrlContentWithSupadata,
+  type SupadataSourceAdapter,
+} from "~/server/ingest/supadata";
 import { fetchArticleHtml } from "~/server/ingest/urlMetadata";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
 
 export type UrlContentStrategy = "fetch" | "supadata";
+export type UrlContentSourceAdapter = SupadataSourceAdapter | "html";
 
 export type UrlContentResolved = {
   strategy: UrlContentStrategy;
+  sourceAdapter: UrlContentSourceAdapter;
   markdown: string;
 };
 
@@ -76,7 +83,11 @@ export async function resolveUrlContent(normalizedUrl: string): Promise<UrlConte
   const parsed = new URL(normalizedUrl);
   if (isSupadataReservedHostname(parsed.hostname)) {
     const resolved = await resolveUrlContentWithSupadata(normalizedUrl);
-    return { strategy: "supadata", markdown: resolved.markdown };
+    const sourceAdapter = resolveSupadataSourceAdapter(parsed.hostname);
+    if (!sourceAdapter) {
+      throw new Error("Unsupported Supadata source host.");
+    }
+    return { strategy: "supadata", sourceAdapter, markdown: resolved.markdown };
   }
 
   const { html, url: finalUrl } = await fetchArticleHtml(normalizedUrl);
@@ -88,6 +99,7 @@ export async function resolveUrlContent(normalizedUrl: string): Promise<UrlConte
 
   return {
     strategy: "fetch",
+    sourceAdapter: "html",
     markdown: formatFetchedMarkdown(finalUrl, title, content),
   };
 }
