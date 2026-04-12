@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "~/components/ui/button";
+import { useOptimisticScenePatcher } from "~/hooks/useOptimisticScenePatcher";
 import { useRunStore } from "~/stores/useRunStore";
-import { api } from "~/utils/api";
 
 import { WordDiff } from "../WordDiff";
 
@@ -23,18 +23,10 @@ export function SceneSuggestionDiff({
   suggestedImagery,
   acceptPending,
 }: SceneSuggestionDiffProps) {
-  const utils = api.useUtils();
   const runId = useRunStore((s) => s.ui.runId) ?? "";
   const videoId = useRunStore((s) => s.ui.activeVideoId) ?? "";
   const clearSceneSuggestionAt = useRunStore((s) => s.clearSceneSuggestionAt);
-  const persistSceneMutation = api.runs.acceptSceneSuggestions.useMutation({
-    onSuccess: () => {
-      if (runId) {
-        void utils.runs.getById.invalidate({ runId });
-      }
-      clearSceneSuggestionAt(sceneIndex);
-    },
-  });
+  const { persistSceneDrafts, isPending } = useOptimisticScenePatcher(runId, videoId);
 
   return (
     <div className="space-y-2">
@@ -46,19 +38,19 @@ export function SceneSuggestionDiff({
           variant="outline"
           size="sm"
           className="h-6 text-xs"
-          disabled={acceptPending || persistSceneMutation.isPending}
+          disabled={acceptPending || isPending}
           onClick={() => {
-            if (!runId || !videoId) return;
-            persistSceneMutation.mutate({
-              runId,
-              videoId,
-              sceneDraftsByIndex: {
+            persistSceneDrafts(
+              {
                 [String(sceneIndex)]: {
                   scriptText: suggestedText,
                   imageryText: suggestedImagery,
                 },
               },
-            });
+              {
+                onSuccess: () => clearSceneSuggestionAt(sceneIndex),
+              },
+            );
           }}
         >
           Accept

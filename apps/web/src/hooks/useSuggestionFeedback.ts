@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
+import { useOptimisticScenePatcher } from "~/hooks/useOptimisticScenePatcher";
 import { useRunStore } from "~/stores/useRunStore";
-import { api } from "~/utils/api";
 
 import type { ChunksOutput } from "@shortgen/types";
 
@@ -19,17 +19,8 @@ export function useSuggestionFeedback({
   sceneSuggestions,
   onAcceptAllSuccess,
 }: UseSuggestionFeedbackOptions) {
-  const utils = api.useUtils();
   const clearSceneSuggestions = useRunStore((s) => s.clearSceneSuggestions);
-  const persistAllSuggestionsMutation = api.runs.acceptSceneSuggestions.useMutation({
-    onSuccess: () => {
-      clearSceneSuggestions();
-      if (runId) {
-        void utils.runs.getById.invalidate({ runId });
-      }
-      onAcceptAllSuccess?.();
-    },
-  });
+  const { persistSceneDrafts, isPending } = useOptimisticScenePatcher(runId, videoId);
 
   const acceptAllSceneSuggestions = useCallback(() => {
     if (!runId || !videoId || !sceneSuggestions?.scenes?.length) return;
@@ -43,16 +34,17 @@ export function useSuggestionFeedback({
       };
       return acc;
     }, {});
-    persistAllSuggestionsMutation.mutate({
-      runId,
-      videoId,
-      sceneDraftsByIndex,
+    persistSceneDrafts(sceneDraftsByIndex, {
+      onSuccess: () => {
+        clearSceneSuggestions();
+        onAcceptAllSuccess?.();
+      },
     });
   }, [
-    runId,
-    videoId,
     sceneSuggestions,
-    persistAllSuggestionsMutation,
+    persistSceneDrafts,
+    clearSceneSuggestions,
+    onAcceptAllSuccess,
   ]);
 
   const declineSuggestion = useCallback(() => {
@@ -62,6 +54,6 @@ export function useSuggestionFeedback({
   return {
     acceptAllSceneSuggestions,
     declineSuggestion,
-    isDecisionPending: persistAllSuggestionsMutation.isPending,
+    isDecisionPending: isPending,
   };
 }

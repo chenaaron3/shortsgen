@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play } from 'lucide-react';
 import { AutosizeTextarea } from '~/components/ui/autosize-textarea';
 import { Button } from '~/components/ui/button';
+import { useOptimisticScenePatcher } from '~/hooks/useOptimisticScenePatcher';
 import { useVideoSceneAssetUrls } from '~/hooks/useVideoSceneAssetUrls';
 import { expectsSceneAssetsForVideo } from '~/lib/sceneAssetLoading';
 import { EMPTY_SCENE_FEEDBACK } from '~/lib/sceneFeedback';
 import { useRunStore } from '~/stores/useRunStore';
-import { api } from '~/utils/api';
 
 import { useSceneAudio } from '../hooks/useSceneAudio';
 import { useSceneRowMutations } from '../hooks/useSceneRowMutations';
@@ -24,7 +24,6 @@ export function SceneEditableContent({
   sceneText,
   sceneImagery,
 }: SceneEditableContentProps) {
-  const utils = api.useUtils();
   const runId = useRunStore((s) => s.ui.runId) ?? "";
   const videoId = useRunStore((s) => s.ui.activeVideoId) ?? "";
   const runPhase = useRunStore((s) => s.ui.activeRunPhase) ?? "breakdown";
@@ -81,13 +80,7 @@ export function SceneEditableContent({
     voiceInitialLoadPending,
     setVoiceInitialLoadPending,
   } = useSceneAudio(voiceUrl);
-  const persistSceneMutation = api.runs.acceptSceneSuggestions.useMutation({
-    onSuccess: () => {
-      if (runId) {
-        void utils.runs.getById.invalidate({ runId });
-      }
-    },
-  });
+  const { persistSceneDrafts } = useOptimisticScenePatcher(runId, videoId);
 
   useEffect(() => {
     if (!scriptEditorOpen) {
@@ -105,19 +98,14 @@ export function SceneEditableContent({
 
   const persistScene = useCallback(
     (nextScriptText: string, nextImageryText: string) => {
-      if (!runId || !videoId) return;
-      persistSceneMutation.mutate({
-        runId,
-        videoId,
-        sceneDraftsByIndex: {
-          [String(sceneIndex)]: {
-            scriptText: nextScriptText,
-            imageryText: nextImageryText,
-          },
+      persistSceneDrafts({
+        [String(sceneIndex)]: {
+          scriptText: nextScriptText,
+          imageryText: nextImageryText,
         },
       });
     },
-    [persistSceneMutation, runId, videoId, sceneIndex],
+    [persistSceneDrafts, sceneIndex],
   );
 
   const openScriptEditor = useCallback(() => {
