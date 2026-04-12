@@ -4,7 +4,7 @@ import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { debitCredits, getBalance } from "~/server/credits";
 import { generateBreakdownContent } from "~/server/ingest/generateBreakdownContent";
-import { resolveUrlContentWithSupadata } from "~/server/ingest/supadata";
+import { resolveUrlContent } from "~/server/ingest/urlContent";
 import {
   assertUrlSafeForServerFetch,
   fetchUrlPreviewMetadata,
@@ -104,9 +104,11 @@ export const runsRouter = createTRPCRouter({
           normalizedSourceUrl = assertUrlSafeForServerFetch(
             input.sourceUrl!.trim(),
           ).href;
-          const resolved = await resolveUrlContentWithSupadata(
-            normalizedSourceUrl!,
-          );
+          const resolved = await resolveUrlContent(normalizedSourceUrl!);
+          console.info("[runs.createRun] URL ingest strategy selected", {
+            strategy: resolved.strategy,
+            sourceUrl: normalizedSourceUrl,
+          });
           sourceContent = resolved.markdown.trim();
           if (!sourceContent) {
             throw new TRPCError({

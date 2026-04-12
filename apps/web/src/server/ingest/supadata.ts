@@ -4,24 +4,29 @@ const DEFAULT_SUPADATA_BASE_URL = "https://api.supadata.ai/v1";
 const TRANSCRIPT_POLL_INTERVAL_MS = 1500;
 const TRANSCRIPT_POLL_MAX_ATTEMPTS = 20;
 
-const TRANSCRIPT_HOSTS = new Set([
-  "youtube.com",
-  "www.youtube.com",
-  "m.youtube.com",
-  "music.youtube.com",
-  "youtu.be",
-  "tiktok.com",
-  "www.tiktok.com",
-  "x.com",
-  "www.x.com",
-  "twitter.com",
-  "www.twitter.com",
-  "instagram.com",
-  "www.instagram.com",
-  "facebook.com",
-  "www.facebook.com",
-  "fb.watch",
-]);
+export type SupadataStrategy = "transcript" | "scrape";
+
+const SUPADATA_HOST_STRATEGY: Readonly<Record<string, SupadataStrategy>> = {
+  "youtube.com": "transcript",
+  "www.youtube.com": "transcript",
+  "m.youtube.com": "transcript",
+  "music.youtube.com": "transcript",
+  "youtu.be": "transcript",
+  "tiktok.com": "transcript",
+  "www.tiktok.com": "transcript",
+  "x.com": "transcript",
+  "www.x.com": "transcript",
+  "twitter.com": "transcript",
+  "www.twitter.com": "transcript",
+  "instagram.com": "transcript",
+  "www.instagram.com": "transcript",
+  "facebook.com": "transcript",
+  "www.facebook.com": "transcript",
+  "fb.watch": "transcript",
+  "reddit.com": "scrape",
+  "www.reddit.com": "scrape",
+  "old.reddit.com": "scrape",
+};
 
 type SupadataTranscriptChunk = {
   text?: string;
@@ -43,8 +48,6 @@ type SupadataScrapeResponse = {
   description?: string;
 };
 
-export type SupadataStrategy = "transcript" | "crawl";
-
 export type SupadataResolvedContent = {
   strategy: SupadataStrategy;
   markdown: string;
@@ -63,7 +66,11 @@ function supadataApiKey(): string {
 }
 
 function resolveStrategy(url: URL): SupadataStrategy {
-  return TRANSCRIPT_HOSTS.has(url.hostname.toLowerCase()) ? "transcript" : "crawl";
+  return SUPADATA_HOST_STRATEGY[url.hostname.toLowerCase()] ?? "scrape";
+}
+
+export function isSupadataReservedHostname(hostname: string): boolean {
+  return SUPADATA_HOST_STRATEGY[hostname.toLowerCase()] !== undefined;
 }
 
 function transcriptContentToString(
@@ -197,7 +204,7 @@ async function getScrapeMarkdown(url: string): Promise<string> {
 /**
  * Resolve URL source content using Supadata.
  * - Transcript strategy for supported social/video domains.
- * - Crawl strategy for web/blog domains.
+ * - Scrape strategy for single-page domains.
  */
 export async function resolveUrlContentWithSupadata(
   normalizedUrl: string,

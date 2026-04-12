@@ -131,7 +131,7 @@ async function readBodyWithLimit(
   return out.buffer;
 }
 
-async function fetchArticleHtml(url: string): Promise<{ html: string; url: string }> {
+export async function fetchArticleHtml(url: string): Promise<{ html: string; url: string }> {
   let currentUrl = url;
 
   for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {

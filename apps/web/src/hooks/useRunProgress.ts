@@ -283,7 +283,11 @@ function createProgressHandler(refetch: (() => void) | undefined) {
     const isActiveVideo =
       !!activeVideoId && !!eventVideoId && activeVideoId === eventVideoId;
 
-    if (msg.type === "breakdown_completed") setBreakdownComplete(true);
+    if (msg.type === "breakdown_completed") {
+      setBreakdownComplete(true);
+      // Refresh run data so /runs/[runId] can detect created videos and redirect.
+      refetch?.();
+    }
 
     if (msg.type === "suggestion_partial" && msg.payload) {
       const p = msg.payload as { partial?: string };
