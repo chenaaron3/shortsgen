@@ -22,16 +22,7 @@ export interface VideoProgress {
 }
 
 export interface SceneRowUiState {
-  draft: {
-    scriptText: string;
-    imageryText: string;
-    dirty: boolean;
-  };
   feedback: SceneFeedback;
-  editor: {
-    scriptOpen: boolean;
-    imageryOpen: boolean;
-  };
   assets: {
     imagePath: string | null;
     voicePath: string | null;
@@ -89,19 +80,6 @@ interface RunStore {
   clearSceneSuggestions: () => void;
   clearSceneSuggestionAt: (sceneIndex: number) => void;
   setSceneFeedback: (sceneIndex: number, feedback: SceneFeedback) => void;
-  setSceneDraft: (
-    sceneIndex: number,
-    patch: Partial<SceneRowUiState["draft"]>,
-  ) => void;
-  syncSceneDraftFromSource: (
-    sceneIndex: number,
-    source: { scriptText: string; imageryText: string },
-  ) => void;
-  setSceneEditorOpen: (
-    sceneIndex: number,
-    field: keyof SceneRowUiState["editor"],
-    open: boolean,
-  ) => void;
   setLogsModalOpen: (open: boolean) => void;
   setBreakdownComplete: (complete: boolean) => void;
   setSceneUpdating: (index: number | null) => void;
@@ -141,9 +119,7 @@ const initialProgress: RunStoreProgress = {
 
 function defaultSceneRowUiState(): SceneRowUiState {
   return {
-    draft: { scriptText: "", imageryText: "", dirty: false },
     feedback: { sentiment: null, note: "" },
-    editor: { scriptOpen: false, imageryOpen: false },
     assets: { imagePath: null, voicePath: null },
   };
 }
@@ -214,34 +190,6 @@ export const useRunStore = create<RunStore>((set) => ({
       produce(s, (draft) => {
         const ui = ensureSceneUi(draft.ui, sceneIndex);
         ui.feedback = feedback;
-      }),
-    ),
-  setSceneDraft: (sceneIndex, patch) =>
-    set((s) =>
-      produce(s, (draft) => {
-        const ui = ensureSceneUi(draft.ui, sceneIndex);
-        ui.draft = { ...ui.draft, ...patch };
-      }),
-    ),
-  syncSceneDraftFromSource: (sceneIndex, source) =>
-    set((s) =>
-      produce(s, (draft) => {
-        const ui = ensureSceneUi(draft.ui, sceneIndex);
-        const sourceChanged =
-          ui.draft.scriptText !== source.scriptText ||
-          ui.draft.imageryText !== source.imageryText;
-        if (!ui.draft.dirty || !sourceChanged) {
-          ui.draft.scriptText = source.scriptText;
-          ui.draft.imageryText = source.imageryText;
-          ui.draft.dirty = false;
-        }
-      }),
-    ),
-  setSceneEditorOpen: (sceneIndex, field, open) =>
-    set((s) =>
-      produce(s, (draft) => {
-        const ui = ensureSceneUi(draft.ui, sceneIndex);
-        ui.editor[field] = open;
       }),
     ),
   setLogsModalOpen: (open) =>

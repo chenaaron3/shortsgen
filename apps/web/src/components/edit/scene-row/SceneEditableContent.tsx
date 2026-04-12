@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play } from 'lucide-react';
 import { AutosizeTextarea } from '~/components/ui/autosize-textarea';
 import { Button } from '~/components/ui/button';
@@ -7,6 +8,7 @@ import { useVideoSceneAssetUrls } from '~/hooks/useVideoSceneAssetUrls';
 import { expectsSceneAssetsForVideo } from '~/lib/sceneAssetLoading';
 import { EMPTY_SCENE_FEEDBACK } from '~/lib/sceneFeedback';
 import { useRunStore } from '~/stores/useRunStore';
+import { api } from '~/utils/api';
 
 import { useSceneAudio } from '../hooks/useSceneAudio';
 import { useSceneRowMutations } from '../hooks/useSceneRowMutations';
@@ -22,13 +24,12 @@ export function SceneEditableContent({
   sceneText,
   sceneImagery,
 }: SceneEditableContentProps) {
+  const utils = api.useUtils();
   const runId = useRunStore((s) => s.ui.runId) ?? "";
   const videoId = useRunStore((s) => s.ui.activeVideoId) ?? "";
   const runPhase = useRunStore((s) => s.ui.activeRunPhase) ?? "breakdown";
   const videoStatus = useRunStore((s) => s.ui.activeVideoStatus);
   const sceneUi = useRunStore((s) => s.ui.activeSceneUiByIndex[sceneIndex]);
-  const setSceneDraft = useRunStore((s) => s.setSceneDraft);
-  const setSceneEditorOpen = useRunStore((s) => s.setSceneEditorOpen);
   const suggestion = useRunStore(
     (s) => s.ui.activeSceneSuggestions?.scenes?.[sceneIndex],
   );
@@ -40,10 +41,14 @@ export function SceneEditableContent({
   });
   const voiceUrl = voiceUrlByIndex?.[sceneIndex];
   const imageUrl = imageUrlByIndex?.[sceneIndex];
-  const scriptText = sceneUi?.draft.scriptText ?? sceneText;
-  const imageryText = sceneUi?.draft.imageryText ?? sceneImagery;
-  const scriptEditorOpen = sceneUi?.editor.scriptOpen ?? false;
-  const imageryEditorOpen = sceneUi?.editor.imageryOpen ?? false;
+  const [scriptEditorOpen, setScriptEditorOpen] = useState(false);
+  const [imageryEditorOpen, setImageryEditorOpen] = useState(false);
+  const [committedScriptText, setCommittedScriptText] = useState(sceneText);
+  const [committedImageryText, setCommittedImageryText] = useState(sceneImagery);
+  const [scriptDraft, setScriptDraft] = useState(sceneText);
+  const [imageryDraft, setImageryDraft] = useState(sceneImagery);
+  const cancelScriptOnBlurRef = useRef(false);
+  const cancelImageryOnBlurRef = useRef(false);
   const scriptLocked = runPhase === "asset_gen" || runPhase === "export";
   const scriptLineEditable = runPhase === "scripting";
   const imageryEditable = scriptLineEditable || (scriptLocked && !!imageUrl);
@@ -65,7 +70,7 @@ export function SceneEditableContent({
     sceneIndex,
     imageryEditable,
     regenerateAllowed,
-    imageryText,
+    imageryText: committedImageryText,
     sceneImagery,
     feedback,
   });
@@ -76,6 +81,81 @@ export function SceneEditableContent({
     voiceInitialLoadPending,
     setVoiceInitialLoadPending,
   } = useSceneAudio(voiceUrl);
+  const persistSceneMutation = api.runs.acceptSceneSuggestions.useMutation({
+    onSuccess: () => {
+      if (runId) {
+        void utils.runs.getById.invalidate({ runId });
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (!scriptEditorOpen) {
+      setCommittedScriptText(sceneText);
+      setScriptDraft(sceneText);
+    }
+  }, [sceneText, scriptEditorOpen]);
+
+  useEffect(() => {
+    if (!imageryEditorOpen) {
+      setCommittedImageryText(sceneImagery);
+      setImageryDraft(sceneImagery);
+    }
+  }, [sceneImagery, imageryEditorOpen]);
+
+  const persistScene = useCallback(
+    (nextScriptText: string, nextImageryText: string) => {
+      if (!runId || !videoId) return;
+      persistSceneMutation.mutate({
+        runId,
+        videoId,
+        sceneDraftsByIndex: {
+          [String(sceneIndex)]: {
+            scriptText: nextScriptText,
+            imageryText: nextImageryText,
+          },
+        },
+      });
+    },
+    [persistSceneMutation, runId, videoId, sceneIndex],
+  );
+
+  const openScriptEditor = useCallback(() => {
+    setScriptDraft(committedScriptText);
+    setScriptEditorOpen(true);
+  }, [committedScriptText]);
+
+  const openImageryEditor = useCallback(() => {
+    setImageryDraft(committedImageryText);
+    setImageryEditorOpen(true);
+  }, [committedImageryText]);
+
+  const closeScriptEditor = useCallback(() => {
+    setScriptEditorOpen(false);
+    if (cancelScriptOnBlurRef.current) {
+      cancelScriptOnBlurRef.current = false;
+      setScriptDraft(committedScriptText);
+      return;
+    }
+    if (scriptDraft === committedScriptText) return;
+    setCommittedScriptText(scriptDraft);
+    persistScene(scriptDraft, committedImageryText);
+  }, [scriptDraft, committedScriptText, committedImageryText, persistScene]);
+
+  const closeImageryEditor = useCallback(() => {
+    setImageryEditorOpen(false);
+    if (cancelImageryOnBlurRef.current) {
+      cancelImageryOnBlurRef.current = false;
+      setImageryDraft(committedImageryText);
+      return;
+    }
+    if (imageryDraft === committedImageryText) return;
+    setCommittedImageryText(imageryDraft);
+    persistScene(committedScriptText, imageryDraft);
+  }, [imageryDraft, committedImageryText, committedScriptText, persistScene]);
+
+  const scriptText = showScriptEditor ? scriptDraft : committedScriptText;
+  const imageryText = showImageryEditor ? imageryDraft : committedImageryText;
   const scriptVoiceShimmer =
     !blockingSuggestion &&
     expectsAssetMedia &&
@@ -109,22 +189,19 @@ export function SceneEditableContent({
         )}
         {showScriptEditor ? (
           <AutosizeTextarea
-            value={scriptText}
-            onChange={(e) =>
-              setSceneDraft(sceneIndex, { scriptText: e.target.value, dirty: true })
-            }
-            onBlur={() => setSceneEditorOpen(sceneIndex, "scriptOpen", false)}
+            value={scriptDraft}
+            onChange={(e) => setScriptDraft(e.target.value)}
+            onBlur={closeScriptEditor}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                setSceneEditorOpen(sceneIndex, "scriptOpen", false);
-                e.currentTarget.blur();
+                closeScriptEditor();
                 return;
               }
               if (e.key === "Escape") {
                 e.preventDefault();
-                setSceneEditorOpen(sceneIndex, "scriptOpen", false);
-                e.currentTarget.blur();
+                cancelScriptOnBlurRef.current = true;
+                closeScriptEditor();
               }
             }}
             autoFocus
@@ -134,7 +211,7 @@ export function SceneEditableContent({
         ) : scriptLineEditable && !scriptLocked ? (
           <button
             type="button"
-            onClick={() => setSceneEditorOpen(sceneIndex, "scriptOpen", true)}
+            onClick={openScriptEditor}
             className="min-w-0 flex-1 text-left text-sm leading-snug text-foreground transition-colors hover:underline cursor-text"
           >
             {scriptVoiceShimmer ? (
@@ -156,22 +233,19 @@ export function SceneEditableContent({
       <div>
         {showImageryEditor ? (
           <AutosizeTextarea
-            value={imageryText}
-            onChange={(e) =>
-              setSceneDraft(sceneIndex, { imageryText: e.target.value, dirty: true })
-            }
-            onBlur={() => setSceneEditorOpen(sceneIndex, "imageryOpen", false)}
+            value={imageryDraft}
+            onChange={(e) => setImageryDraft(e.target.value)}
+            onBlur={closeImageryEditor}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                setSceneEditorOpen(sceneIndex, "imageryOpen", false);
-                e.currentTarget.blur();
+                closeImageryEditor();
                 return;
               }
               if (e.key === "Escape") {
                 e.preventDefault();
-                setSceneEditorOpen(sceneIndex, "imageryOpen", false);
-                e.currentTarget.blur();
+                cancelImageryOnBlurRef.current = true;
+                closeImageryEditor();
               }
             }}
             autoFocus
@@ -181,7 +255,7 @@ export function SceneEditableContent({
         ) : imageryEditable ? (
           <button
             type="button"
-            onClick={() => setSceneEditorOpen(sceneIndex, "imageryOpen", true)}
+            onClick={openImageryEditor}
             className="w-full text-left text-xs text-muted-foreground transition-colors hover:underline cursor-text"
           >
             {imageryText}

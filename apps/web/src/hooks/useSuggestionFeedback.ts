@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { useRunStore } from "~/stores/useRunStore";
+import { api } from "~/utils/api";
 
 import type { ChunksOutput } from "@shortgen/types";
 
@@ -14,32 +15,44 @@ interface UseSuggestionFeedbackOptions {
 
 export function useSuggestionFeedback({
   runId,
-  videoId: _videoId,
+  videoId,
   sceneSuggestions,
   onAcceptAllSuccess,
 }: UseSuggestionFeedbackOptions) {
-  const setSceneDraft = useRunStore((s) => s.setSceneDraft);
+  const utils = api.useUtils();
   const clearSceneSuggestions = useRunStore((s) => s.clearSceneSuggestions);
+  const persistAllSuggestionsMutation = api.runs.acceptSceneSuggestions.useMutation({
+    onSuccess: () => {
+      clearSceneSuggestions();
+      if (runId) {
+        void utils.runs.getById.invalidate({ runId });
+      }
+      onAcceptAllSuccess?.();
+    },
+  });
 
   const acceptAllSceneSuggestions = useCallback(() => {
-    if (!runId || !sceneSuggestions?.scenes?.length) return;
-    sceneSuggestions.scenes.forEach((sug, sceneIndex) => {
-      const suggestion = sug;
-      if (!suggestion) return;
-      setSceneDraft(sceneIndex, {
+    if (!runId || !videoId || !sceneSuggestions?.scenes?.length) return;
+    const sceneDraftsByIndex = sceneSuggestions.scenes.reduce<
+      Record<string, { scriptText: string; imageryText: string }>
+    >((acc, suggestion, sceneIndex) => {
+      if (!suggestion) return acc;
+      acc[String(sceneIndex)] = {
         scriptText: suggestion.text,
         imageryText: suggestion.imagery,
-        dirty: true,
-      });
+      };
+      return acc;
+    }, {});
+    persistAllSuggestionsMutation.mutate({
+      runId,
+      videoId,
+      sceneDraftsByIndex,
     });
-    clearSceneSuggestions();
-    onAcceptAllSuccess?.();
   }, [
     runId,
+    videoId,
     sceneSuggestions,
-    setSceneDraft,
-    clearSceneSuggestions,
-    onAcceptAllSuccess,
+    persistAllSuggestionsMutation,
   ]);
 
   const declineSuggestion = useCallback(() => {
@@ -49,6 +62,6 @@ export function useSuggestionFeedback({
   return {
     acceptAllSceneSuggestions,
     declineSuggestion,
-    isDecisionPending: false,
+    isDecisionPending: persistAllSuggestionsMutation.isPending,
   };
 }

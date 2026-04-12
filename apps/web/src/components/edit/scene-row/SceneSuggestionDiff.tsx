@@ -2,6 +2,7 @@
 
 import { Button } from "~/components/ui/button";
 import { useRunStore } from "~/stores/useRunStore";
+import { api } from "~/utils/api";
 
 import { WordDiff } from "../WordDiff";
 
@@ -22,8 +23,18 @@ export function SceneSuggestionDiff({
   suggestedImagery,
   acceptPending,
 }: SceneSuggestionDiffProps) {
-  const setSceneDraft = useRunStore((s) => s.setSceneDraft);
+  const utils = api.useUtils();
+  const runId = useRunStore((s) => s.ui.runId) ?? "";
+  const videoId = useRunStore((s) => s.ui.activeVideoId) ?? "";
   const clearSceneSuggestionAt = useRunStore((s) => s.clearSceneSuggestionAt);
+  const persistSceneMutation = api.runs.acceptSceneSuggestions.useMutation({
+    onSuccess: () => {
+      if (runId) {
+        void utils.runs.getById.invalidate({ runId });
+      }
+      clearSceneSuggestionAt(sceneIndex);
+    },
+  });
 
   return (
     <div className="space-y-2">
@@ -35,14 +46,19 @@ export function SceneSuggestionDiff({
           variant="outline"
           size="sm"
           className="h-6 text-xs"
-          disabled={acceptPending}
+          disabled={acceptPending || persistSceneMutation.isPending}
           onClick={() => {
-            setSceneDraft(sceneIndex, {
-              scriptText: suggestedText,
-              imageryText: suggestedImagery,
-              dirty: true,
+            if (!runId || !videoId) return;
+            persistSceneMutation.mutate({
+              runId,
+              videoId,
+              sceneDraftsByIndex: {
+                [String(sceneIndex)]: {
+                  scriptText: suggestedText,
+                  imageryText: suggestedImagery,
+                },
+              },
             });
-            clearSceneSuggestionAt(sceneIndex);
           }}
         >
           Accept
