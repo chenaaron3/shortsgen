@@ -29,6 +29,7 @@ dependencies = [
     "boto3>=1.28.0",
     "datamodel-code-generator>=0.26.0",
     "youtube-transcript-api>=1.2.4",
+    "textgrad>=0.1.4",
 ]
 
 [build-system]
