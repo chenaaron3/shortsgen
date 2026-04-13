@@ -19,7 +19,7 @@ import { api } from '~/utils/api';
 import { InspirationCard } from './InspirationCard';
 
 const PIPELINE_CONFIG_OPTIONS: {
-  value: "prototype" | "default";
+  value: "prototype" | "prototype2" | "default";
   label: string;
   description: string;
 }[] = [
@@ -27,6 +27,11 @@ const PIPELINE_CONFIG_OPTIONS: {
       value: "prototype",
       label: "Prototype",
       description: "Faster, lower cost models",
+    },
+    {
+      value: "prototype2",
+      label: "Prototype 2",
+      description: "Improved script, cheaper voice/image generation",
     },
     {
       value: "default",

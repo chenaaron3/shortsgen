@@ -200,7 +200,7 @@ export function SceneEditableContent({
           <button
             type="button"
             onClick={openScriptEditor}
-            className="min-w-0 flex-1 text-left text-sm leading-snug text-foreground transition-colors hover:underline cursor-text"
+            className="w-full cursor-text rounded-md px-1 py-0.5 text-left text-sm leading-snug text-foreground transition-colors hover:bg-primary/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           >
             {scriptVoiceShimmer ? (
               <span className="text-shimmer-inline">{scriptText}</span>
@@ -244,7 +244,7 @@ export function SceneEditableContent({
           <button
             type="button"
             onClick={openImageryEditor}
-            className="w-full text-left text-xs text-muted-foreground transition-colors hover:underline cursor-text"
+            className="w-full cursor-text rounded-md px-1 py-0.5 text-left text-xs text-muted-foreground transition-colors hover:bg-primary/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           >
             {imageryText}
           </button>

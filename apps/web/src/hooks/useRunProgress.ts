@@ -271,6 +271,7 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       setSceneUpdating,
       setVideoUpdating,
       setSceneSuggestions,
+      setFeedbackLocked,
       setVideoProgress,
       setAssetUploaded,
       bumpAssetsRefreshKey,
@@ -299,6 +300,7 @@ function createProgressHandler(refetch: (() => void) | undefined) {
     if (msg.type === "suggestion_completed" && isActiveVideo) {
       const p = msg.payload as { chunks?: ChunksOutput } | undefined;
       if (p?.chunks) setSceneSuggestions(p.chunks);
+      setFeedbackLocked(false);
 
       const { ui, setScriptFeedback, setSceneFeedback } = useRunStore.getState();
       setScriptFeedback("");

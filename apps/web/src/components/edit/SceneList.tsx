@@ -1,8 +1,10 @@
 "use client";
 
-import { useRunStore } from "~/stores/useRunStore";
-import { ScriptingScenesSkeleton } from "./RunPageSkeleton";
-import { SceneRow } from "./SceneRow";
+import { useRunStore } from '~/stores/useRunStore';
+
+import { useActiveSuggestionScene } from './hooks/useActiveSuggestionScene';
+import { ScriptingScenesSkeleton } from './RunPageSkeleton';
+import { SceneRow } from './SceneRow';
 
 interface Scene {
   text: string;
@@ -15,12 +17,18 @@ interface SceneListProps {
 }
 
 const SECTIONS = ["Hook", "Body", "Close"] as const;
+const EMPTY_SUGGESTED_SCENES: Array<{ text: string; imagery: string } | undefined> = [];
 
 export function SceneList({
   scenes,
 }: SceneListProps) {
   const runPhase = useRunStore((s) => s.ui.activeRunPhase) ?? "breakdown";
   const videoStatus = useRunStore((s) => s.ui.activeVideoStatus);
+  const suggestedScenes = useRunStore(
+    (s) => s.ui.activeSceneSuggestions?.scenes ?? EMPTY_SUGGESTED_SCENES,
+  );
+
+  useActiveSuggestionScene({ scenes, suggestedScenes });
 
   if (scenes.length === 0) {
     if (runPhase === "scripting" && videoStatus !== "failed") {

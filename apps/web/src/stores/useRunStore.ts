@@ -43,10 +43,12 @@ export interface RunStoreUi {
   activeSourceText: string;
   scriptFeedback: string;
   activeSceneSuggestions: ChunksOutput | null;
+  activeSuggestionSceneIndex: number | null;
   /** Bumped when update_imagery completes; used as cache-buster for image URLs */
   activeAssetsRefreshKey: number;
   /** True if a manual decision is pending on a script suggestion (blocks accept/discard actions). */
   suggestionDecisionPending: boolean;
+  feedbackLocked: boolean;
   activeSceneUiByIndex: Record<number, SceneRowUiState>;
   breakdownComplete: boolean;
   sceneUpdating: number | null;
@@ -75,6 +77,7 @@ interface RunStore {
   setActiveVideoStatus: (status: string | null) => void;
   setActiveSourceText: (text: string) => void;
   setScriptFeedback: (s: string) => void;
+  setActiveSuggestionSceneIndex: (sceneIndex: number | null) => void;
   /** Set from suggestion_partial (parsed string) or suggestion_completed (chunks object). */
   setSceneSuggestions: (data: string | ChunksOutput) => void;
   clearSceneSuggestions: () => void;
@@ -85,6 +88,7 @@ interface RunStore {
   setSceneUpdating: (index: number | null) => void;
   setVideoUpdating: (updating: boolean) => void;
   setSuggestionDecisionPending: (pending: boolean) => void;
+  setFeedbackLocked: (locked: boolean) => void;
   setVideoProgress: (videoId: string, progress: VideoProgress | null) => void;
   setAssetUploaded: (
     kind: "image" | "voice",
@@ -104,8 +108,10 @@ const initialUi: RunStoreUi = {
   activeSourceText: "",
   scriptFeedback: "",
   activeSceneSuggestions: null,
+  activeSuggestionSceneIndex: null,
   activeAssetsRefreshKey: 0,
   suggestionDecisionPending: false,
+  feedbackLocked: false,
   activeSceneUiByIndex: {},
   breakdownComplete: false,
   sceneUpdating: null,
@@ -131,6 +137,25 @@ function ensureSceneUi(draft: RunStoreUi, sceneIndex: number): SceneRowUiState {
   return draft.activeSceneUiByIndex[sceneIndex]!;
 }
 
+function findFirstSuggestedSceneIndex(
+  scenes: Array<ChunksOutput["scenes"][number] | undefined>,
+): number | null {
+  for (let i = 0; i < scenes.length; i += 1) {
+    if (scenes[i]) return i;
+  }
+  return null;
+}
+
+function findNextSuggestedSceneIndex(
+  scenes: Array<ChunksOutput["scenes"][number] | undefined>,
+  fromIndex: number,
+): number | null {
+  for (let i = fromIndex + 1; i < scenes.length; i += 1) {
+    if (scenes[i]) return i;
+  }
+  return findFirstSuggestedSceneIndex(scenes);
+}
+
 export const useRunStore = create<RunStore>((set) => ({
   ui: initialUi,
   progress: initialProgress,
@@ -154,8 +179,10 @@ export const useRunStore = create<RunStore>((set) => ({
 
         draft.ui.scriptFeedback = "";
         draft.ui.activeSceneSuggestions = null;
+        draft.ui.activeSuggestionSceneIndex = null;
         draft.ui.activeAssetsRefreshKey = 0;
         draft.ui.suggestionDecisionPending = false;
+        draft.ui.feedbackLocked = false;
         draft.ui.activeSceneUiByIndex = {};
         draft.ui.sceneUpdating = null;
         draft.ui.videoUpdating = false;
@@ -183,6 +210,12 @@ export const useRunStore = create<RunStore>((set) => ({
     set((s) =>
       produce(s, (draft) => {
         draft.ui.scriptFeedback = val;
+      }),
+    ),
+  setActiveSuggestionSceneIndex: (sceneIndex) =>
+    set((s) =>
+      produce(s, (draft) => {
+        draft.ui.activeSuggestionSceneIndex = sceneIndex;
       }),
     ),
   setSceneFeedback: (sceneIndex, feedback) =>
@@ -228,6 +261,14 @@ export const useRunStore = create<RunStore>((set) => ({
           : { success: false as const, data: null };
         if (result.success) {
           draft.ui.activeSceneSuggestions = result.data;
+          const activeIndex = draft.ui.activeSuggestionSceneIndex;
+          const hasActiveSuggestion =
+            activeIndex !== null && !!result.data.scenes[activeIndex];
+          if (!hasActiveSuggestion) {
+            draft.ui.activeSuggestionSceneIndex = findFirstSuggestedSceneIndex(
+              result.data.scenes,
+            );
+          }
         }
       }),
     ),
@@ -235,6 +276,7 @@ export const useRunStore = create<RunStore>((set) => ({
     set((s) =>
       produce(s, (draft) => {
         draft.ui.activeSceneSuggestions = null;
+        draft.ui.activeSuggestionSceneIndex = null;
       }),
     ),
   clearSceneSuggestionAt: (sceneIndex) =>
@@ -246,9 +288,27 @@ export const useRunStore = create<RunStore>((set) => ({
           idx === sceneIndex ? undefined : scene,
         );
         const hasRemaining = nextScenes.some((x) => !!x);
-        draft.ui.activeSceneSuggestions = hasRemaining
-          ? ({ ...current, scenes: nextScenes } as ChunksOutput)
-          : null;
+        if (!hasRemaining) {
+          draft.ui.activeSceneSuggestions = null;
+          draft.ui.activeSuggestionSceneIndex = null;
+          return;
+        }
+
+        draft.ui.activeSceneSuggestions = {
+          ...current,
+          scenes: nextScenes as ChunksOutput["scenes"],
+        };
+
+        const activeIndex = draft.ui.activeSuggestionSceneIndex;
+        const activeWasCleared = activeIndex === sceneIndex;
+        const activeStillValid =
+          activeIndex !== null && !!nextScenes[activeIndex];
+        if (activeWasCleared || !activeStillValid) {
+          draft.ui.activeSuggestionSceneIndex = findNextSuggestedSceneIndex(
+            nextScenes,
+            sceneIndex,
+          );
+        }
       }),
     ),
   setVideoUpdating: (updating) =>
@@ -261,6 +321,12 @@ export const useRunStore = create<RunStore>((set) => ({
     set((s) =>
       produce(s, (draft) => {
         draft.ui.suggestionDecisionPending = pending;
+      }),
+    ),
+  setFeedbackLocked: (locked) =>
+    set((s) =>
+      produce(s, (draft) => {
+        draft.ui.feedbackLocked = locked;
       }),
     ),
   setVideoProgress: (videoId, progress) =>

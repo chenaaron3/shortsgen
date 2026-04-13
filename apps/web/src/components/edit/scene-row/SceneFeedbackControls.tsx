@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { AutosizeTextarea } from '~/components/ui/autosize-textarea';
 import { Button } from '~/components/ui/button';
@@ -17,11 +17,22 @@ export function SceneFeedbackControls({
 }: SceneFeedbackControlsProps) {
   const sceneUi = useRunStore((s) => s.ui.activeSceneUiByIndex[sceneIndex]);
   const setSceneFeedback = useRunStore((s) => s.setSceneFeedback);
+  const feedbackLocked = useRunStore((s) => s.ui.feedbackLocked);
   const sentiment = sceneUi?.feedback.sentiment ?? null;
   const note = sceneUi?.feedback.note ?? "";
   const [popoverOpen, setPopoverOpen] = useState(false);
 
+  useEffect(() => {
+    if (feedbackLocked) {
+      setPopoverOpen(false);
+    }
+  }, [feedbackLocked]);
+
   const handleLikeClick = (e: React.MouseEvent) => {
+    if (feedbackLocked) {
+      e.stopPropagation();
+      return;
+    }
     if (sentiment === "like") {
       e.stopPropagation();
       setSceneFeedback(sceneIndex, emptySceneFeedback());
@@ -33,6 +44,10 @@ export function SceneFeedbackControls({
   };
 
   const handleDislikeClick = (e: React.MouseEvent) => {
+    if (feedbackLocked) {
+      e.stopPropagation();
+      return;
+    }
     if (sentiment === "dislike") {
       e.stopPropagation();
       setSceneFeedback(sceneIndex, emptySceneFeedback());
@@ -44,6 +59,7 @@ export function SceneFeedbackControls({
   };
 
   const handlePopoverOpenChange = (open: boolean) => {
+    if (feedbackLocked) return;
     setPopoverOpen(open);
   };
 
@@ -64,6 +80,7 @@ export function SceneFeedbackControls({
               variant="ghost"
               size="icon-xs"
               onClick={handleLikeClick}
+              disabled={feedbackLocked}
               className={
                 sentiment === "like"
                   ? "text-green-600 hover:bg-green-500/10 hover:text-green-600"
@@ -78,6 +95,7 @@ export function SceneFeedbackControls({
               variant="ghost"
               size="icon-xs"
               onClick={handleDislikeClick}
+              disabled={feedbackLocked}
               className={
                 sentiment === "dislike"
                   ? "text-amber-600 hover:bg-amber-500/10 hover:text-amber-600"
@@ -111,6 +129,7 @@ export function SceneFeedbackControls({
           onKeyDown={handleDraftNoteKeyDown}
           placeholder="Optional note…"
           className="max-h-48 text-sm"
+          disabled={feedbackLocked}
         />
       </PopoverContent>
     </Popover>

@@ -220,20 +220,24 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
                 <div className="mx-auto max-w-2xl">
                   <div
                     className={
-                      description ? "mb-1 flex items-center gap-2" : "mb-4 flex items-center gap-2"
+                      description
+                        ? "mb-1 flex items-center justify-between gap-3"
+                        : "mb-4 flex items-center justify-between gap-3"
                     }
                   >
-                    <h1 className="text-xl font-bold">
-                      {getVideoDisplayName(selectedVideo)}
-                    </h1>
-                    <Badge variant="secondary" className="text-xs">
-                      {scenes.length} scenes
-                    </Badge>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <h1 className="truncate text-xl font-bold">
+                        {getVideoDisplayName(selectedVideo)}
+                      </h1>
+                      <Badge variant="secondary" className="text-xs">
+                        {scenes.length} scenes
+                      </Badge>
+                    </div>
+                    {sourceText && <RawScriptCard sourceText={sourceText} />}
                   </div>
                   {description && (
                     <p className="mb-4 text-sm text-muted-foreground">{description}</p>
                   )}
-                  {sourceText && <RawScriptCard sourceText={sourceText} />}
                   <div className="mb-8">
                     <SceneList
                       scenes={scenes}
@@ -266,6 +270,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
           <ScriptingPhaseFooter
             runId={runId}
             videoId={videoId}
+            scenes={scenes}
             onLoadingStateChange={setScriptingFooterLoading}
           />
         )}
