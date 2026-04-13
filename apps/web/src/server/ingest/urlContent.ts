@@ -23,6 +23,7 @@ const turndown = new TurndownService({
   codeBlockStyle: "fenced",
 });
 turndown.use(gfm);
+turndown.remove(["script", "style", "noscript"]);
 turndown.addRule("stripLinks", {
   filter: ["a"],
   replacement: (content) => content || "",

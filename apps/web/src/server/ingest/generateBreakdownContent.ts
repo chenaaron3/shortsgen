@@ -6,6 +6,15 @@
 import OpenAI from "openai";
 import { env } from "~/env";
 
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
 const BREAKDOWN_SYSTEM = `You generate a short title and playful loading messages for a video creation app. The user pasted content and the app is analyzing it to create short-form videos.
 
 Title:
@@ -43,7 +52,10 @@ export async function generateBreakdownContent(content: string): Promise<{
       response_format: { type: "json_object" },
     });
     const raw = completion.choices[0]?.message?.content;
-    if (!raw) return { title: null, breakdownMessagesJson: null };
+    if (!raw) {
+      console.warn("[generateBreakdownContent] Empty model response");
+      return { title: null, breakdownMessagesJson: null };
+    }
     const data = JSON.parse(raw) as { title?: unknown; messages?: unknown };
     const title =
       typeof data.title === "string" && data.title.trim().length > 0
@@ -53,13 +65,20 @@ export async function generateBreakdownContent(content: string): Promise<{
       ? data.messages.filter((m): m is string => typeof m === "string" && m.trim().length > 0)
       : [];
     if (!title || messages.length === 0) {
+      console.warn("[generateBreakdownContent] Invalid generated payload", {
+        hasTitle: !!title,
+        messagesCount: messages.length,
+      });
       return { title: null, breakdownMessagesJson: null };
     }
     return {
       title,
       breakdownMessagesJson: JSON.stringify(messages),
     };
-  } catch {
+  } catch (error) {
+    console.warn("[generateBreakdownContent] Failed to generate title/messages", {
+      error: errorMessage(error),
+    });
     return { title: null, breakdownMessagesJson: null };
   }
 }
