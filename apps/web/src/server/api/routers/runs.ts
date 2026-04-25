@@ -4,7 +4,7 @@ import { env } from "~/env";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { debitCredits, getBalance } from "~/server/credits";
 import { generateBreakdownContent } from "~/server/ingest/generateBreakdownContent";
-import { resolveUrlContent, type UrlContentSourceAdapter } from "~/server/ingest/urlContent";
+import { resolveUrlContent } from "~/server/ingest/urlContent";
 import {
   assertUrlSafeForServerFetch,
   fetchUrlPreviewMetadata,
@@ -24,6 +24,7 @@ import { TRPCError } from "@trpc/server";
 
 import { triggerRemotionExports } from "./runs.utils";
 
+import type { UrlContentSourceAdapter } from "~/server/ingest/urlContent";
 import type { VideoManifest } from "@shortgen/types";
 import type { InferSelectModel } from "drizzle-orm";
 
@@ -89,7 +90,7 @@ export const runsRouter = createTRPCRouter({
             }
           }, "Must be a valid https URL"),
         config: z
-          .enum(["prototype", "default"])
+          .enum(["prototype", "prototype2", "default"])
           .optional()
           .default("prototype"),
       }),

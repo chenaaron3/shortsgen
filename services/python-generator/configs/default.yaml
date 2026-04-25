@@ -13,6 +13,8 @@ chunk:
   model: gpt-4o
   system_prompt: transcript-chunker-system-prompt.md
 image:
-  model: openai/gpt-image-1-mini
+  model: openai/gpt-image-2
+  quality: low
+  mascot_path: services/python-generator/assets/stick.png
 voice:
   backend: elevenlabs

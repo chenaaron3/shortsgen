@@ -81,6 +81,7 @@ def _generate_one(
     *,
     source_image: Path | None = None,
     input_fidelity: str = "low",
+    quality: str = "low",
     text_to_image_only: bool = False,
 ) -> tuple[int, bytes | None, str | None]:
     """Worker: generate one image. When source_image is set, use it (transition); else use mascot. When text_to_image_only, use text-to-image only."""
@@ -91,6 +92,7 @@ def _generate_one(
             source_image=source_image,
             model=model,
             input_fidelity=input_fidelity,
+            quality=quality,
             text_to_image_only=text_to_image_only,
         )
         return (i, img_bytes, None)
@@ -111,6 +113,7 @@ def run(
     scene_indices: list[int] | None = None,
     concurrency: int = DEFAULT_CONCURRENCY,
     model: str | None = None,
+    quality: str = "low",
     skip_cache: bool = False,
     on_image_complete: Callable[[int, int, str | None], None] | None = None,
 ) -> Chunks:
@@ -144,6 +147,7 @@ def run(
     only_indices = set(scene_indices) if scene_indices is not None else None
     effective_model = model
     config = get_config(model_override=effective_model)
+    config["quality"] = quality
 
     work: list[tuple[int, str, Path, str, Path]] = []
     cached_count = 0
@@ -199,7 +203,14 @@ def run(
             fidelity = "low"
             try:
                 _, img_bytes, err = _generate_one(
-                    i, mascot, full_prompt, effective_model, source_image=source, input_fidelity=fidelity, text_to_image_only=text_to_image_only
+                    i,
+                    mascot,
+                    full_prompt,
+                    effective_model,
+                    source_image=source,
+                    input_fidelity=fidelity,
+                    quality=quality,
+                    text_to_image_only=text_to_image_only,
                 )
             except Exception as e:
                 progress(i + 1, total, f"failed: {e}")

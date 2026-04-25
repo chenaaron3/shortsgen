@@ -46,6 +46,7 @@ export interface RunStoreUi {
   activeSuggestionSceneIndex: number | null;
   /** Bumped when update_imagery completes; used as cache-buster for image URLs */
   activeAssetsRefreshKey: number;
+  activeAssetBaseUrl: string | null;
   /** True if a manual decision is pending on a script suggestion (blocks accept/discard actions). */
   suggestionDecisionPending: boolean;
   feedbackLocked: boolean;
@@ -95,6 +96,7 @@ interface RunStore {
     sceneIndex: number,
     path: string,
   ) => void;
+  setActiveAssetBaseUrl: (url: string | null) => void;
   bumpAssetsRefreshKey: () => void;
   init: (runId: string) => void;
   reset: () => void;
@@ -110,6 +112,7 @@ const initialUi: RunStoreUi = {
   activeSceneSuggestions: null,
   activeSuggestionSceneIndex: null,
   activeAssetsRefreshKey: 0,
+  activeAssetBaseUrl: null,
   suggestionDecisionPending: false,
   feedbackLocked: false,
   activeSceneUiByIndex: {},
@@ -181,6 +184,7 @@ export const useRunStore = create<RunStore>((set) => ({
         draft.ui.activeSceneSuggestions = null;
         draft.ui.activeSuggestionSceneIndex = null;
         draft.ui.activeAssetsRefreshKey = 0;
+        draft.ui.activeAssetBaseUrl = null;
         draft.ui.suggestionDecisionPending = false;
         draft.ui.feedbackLocked = false;
         draft.ui.activeSceneUiByIndex = {};
@@ -348,6 +352,12 @@ export const useRunStore = create<RunStore>((set) => ({
         } else {
           ui.assets.voicePath = path;
         }
+      }),
+    ),
+  setActiveAssetBaseUrl: (url) =>
+    set((s) =>
+      produce(s, (draft) => {
+        draft.ui.activeAssetBaseUrl = url;
       }),
     ),
   bumpAssetsRefreshKey: () =>

@@ -147,12 +147,13 @@ export function SceneEditableContent({
   const scriptVoiceShimmer =
     !blockingSuggestion &&
     expectsAssetMedia &&
-    (!voiceUrl || voiceInitialLoadPending) &&
+    !!voiceUrl &&
+    voiceInitialLoadPending &&
     !showScriptEditor;
 
   return (
     <>
-      <div className="flex items-start gap-2" aria-busy={scriptVoiceShimmer || undefined}>
+      <div className="flex items-center gap-2" aria-busy={scriptVoiceShimmer || undefined}>
         {voiceUrl && (
           <>
             <audio
@@ -168,7 +169,7 @@ export function SceneEditableContent({
               variant="ghost"
               size="icon-xs"
               onClick={handlePlayPause}
-              className="mt-0.5 shrink-0 text-muted-foreground hover:text-foreground"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
               aria-label={isPlaying ? "Pause" : "Play scene audio"}
             >
               {isPlaying ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}

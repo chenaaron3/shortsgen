@@ -11,6 +11,8 @@ chunk:
   model: gpt-4o
   system_prompt: transcript-chunker-system-prompt.md
 image:
-  model: bytedance/hyper-flux-8step:16084e9731223a4367228928a6cb393b21736da2a0ca6a5a492ce311f0a97143
+  model: openai/gpt-image-2
+  quality: low
+  mascot_path: services/python-generator/assets/stick.png
 voice:
   backend: elevenlabs

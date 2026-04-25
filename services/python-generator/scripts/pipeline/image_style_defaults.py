@@ -1,7 +1,7 @@
 """Default style / mascot copy for image generation. Shared by generate_images and brand_resolve."""
 
 STYLE_PROMPT = (
-    "Hand-drawn stick figure style. Black line art on transparent background. "
+    "Hand-drawn stick figure style. Black line art on a plain solid white background. "
     "Crisp, clean linework. Thin solid black outlines only. "
     "Flat style: no soft shading, no gradients, no airbrush, no gray smudges, no blotchy texture, no halftones. "
     "Optional: discrete hatching lines only where needed; never soft or blended shading. "

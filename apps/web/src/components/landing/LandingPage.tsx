@@ -4,19 +4,17 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Coins, Sparkles, UserRoundCheck } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import Head from 'next/head';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { PricingSection } from '~/components/billing/PricingSection';
 import { Badge } from '~/components/ui/badge';
-import { Button, buttonVariants } from '~/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
+import { Button } from '~/components/ui/button';
+import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Button as MovingBorderButton } from '~/components/ui/moving-border';
 import { SHORTGEN_PENDING_SOURCE_KEY } from '~/constants/pendingSource';
-import { cn } from '~/lib/utils';
-
-import { SIGNUP_CREDITS } from '@shortgen/db';
 
 import { HeroRemotionPreview } from './HeroRemotionPreview';
+import { TypewriterPlaceholder } from './TypewriterPlaceholder';
 import { VerticalScrubSection } from './VerticalScrubSection';
 
 import type { ComponentProps } from 'react';
@@ -47,27 +45,12 @@ const sectionView = {
   },
 };
 
-const rotatingPlaceholders = [
-  "Paste a YouTube link",
-  "Paste a blog link",
-  "Paste a Reddit link",
-];
+const rotatingPlaceholderWords = ["YouTube Video", "Your Blog", "Reddit Post", "An Article"];
 
 export function LandingPage() {
   const [heroInput, setHeroInput] = useState("");
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const reduceMotion = useReducedMotion();
   const isHeroInputEmpty = heroInput.trim().length === 0;
-
-  useEffect(() => {
-    if (!isHeroInputEmpty) return;
-
-    const id = window.setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % rotatingPlaceholders.length);
-    }, 2200);
-
-    return () => window.clearInterval(id);
-  }, [isHeroInputEmpty]);
 
   const handleGetStarted = () => {
     const v = heroInput.trim();
@@ -144,7 +127,7 @@ export function LandingPage() {
                   className="mt-5 text-lg text-muted-foreground md:text-xl lg:max-w-2xl"
                   variants={reduceMotion ? undefined : heroItem}
                 >
-                  Turn YouTube and articles into polished shorts, ready to
+                  Transform any text into polished shorts, ready to
                   review and publish with confidence.
                 </motion.p>
                 <motion.div
@@ -152,11 +135,18 @@ export function LandingPage() {
                   variants={reduceMotion ? undefined : heroItem}
                 >
                   <div className="relative flex items-center rounded-xl border border-input bg-background/70 p-1 shadow-xs">
+                    {isHeroInputEmpty && (
+                      <TypewriterPlaceholder
+                        words={rotatingPlaceholderWords}
+                        prefix="Paste link to"
+                      />
+                    )}
                     <Input
                       type="text"
                       inputMode="text"
                       autoComplete="off"
-                      placeholder={rotatingPlaceholders[placeholderIndex]}
+                      placeholder=""
+                      aria-label="Source URL or text"
                       value={heroInput}
                       onChange={(e) => setHeroInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -165,28 +155,14 @@ export function LandingPage() {
                       className="h-11 flex-1 border-0 bg-transparent px-3 text-base shadow-none focus-visible:ring-0"
                     />
                     <div className="relative">
-                      {reduceMotion ? (
-                        <Button
-                          size="lg"
-                          className="h-11 min-w-[170px] rounded-lg"
-                          disabled={!heroInput.trim()}
-                          onClick={handleGetStarted}
-                        >
-                          Get started
-                        </Button>
-                      ) : (
-                        <MovingBorderButton
-                          duration={2200}
-                          borderRadius="0.62rem"
-                          disabled={!heroInput.trim()}
-                          onClick={handleGetStarted}
-                          containerClassName="h-11 min-w-[170px] w-auto"
-                          className="h-full w-full rounded-[calc(var(--radius)-2px)] border-border bg-primary text-primary-foreground text-sm font-medium disabled:pointer-events-none disabled:opacity-50"
-                          borderClassName="bg-[radial-gradient(oklch(0.8_0.15_240)_35%,transparent_65%)] opacity-90"
-                        >
-                          Get started
-                        </MovingBorderButton>
-                      )}
+                      <Button
+                        size="lg"
+                        className="h-11 min-w-[170px] rounded-lg"
+                        disabled={!heroInput.trim()}
+                        onClick={handleGetStarted}
+                      >
+                        Get started
+                      </Button>
                     </div>
                   </div>
                 </motion.div>
@@ -249,33 +225,7 @@ export function LandingPage() {
 
         <VerticalScrubSection />
 
-        {/* Pricing CTA */}
-        <section className="px-4 py-16 md:py-24">
-          <motion.div
-            className="mx-auto max-w-2xl"
-            {...scrollMotion}
-          >
-            <Card className="overflow-hidden border-primary/25 bg-linear-to-b from-card to-primary/5 shadow-lg shadow-primary/5">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-semibold">
-                  Simple, transparent pricing
-                </CardTitle>
-                <CardDescription className="text-base">
-                  Start free with {SIGNUP_CREDITS} signup credits. Upgrade when
-                  you need more.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex justify-center pb-8">
-                <Link
-                  href="/pricing"
-                  className={cn(buttonVariants({ variant: "default", size: "lg" }))}
-                >
-                  View pricing
-                </Link>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </section>
+        <PricingSection cancelPath="/" />
       </main>
     </>
   );

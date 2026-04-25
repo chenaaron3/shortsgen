@@ -48,6 +48,19 @@ def _disable_safety_checker() -> bool:
     return True
 
 
+def _supports_transparent_background(model: str) -> bool:
+    """openai/gpt-image-2 currently rejects background=transparent."""
+    return "gpt-image-2" not in model
+
+
+def _normalize_quality(raw_quality: Any) -> str:
+    """Normalize quality input to low/medium/high."""
+    if not isinstance(raw_quality, str):
+        return "low"
+    quality = raw_quality.strip().lower()
+    return quality if quality in {"low", "medium", "high"} else "low"
+
+
 def generate_image(
     mascot_path: Path,
     prompt: str,
@@ -55,12 +68,13 @@ def generate_image(
     api_token: str,
     model: str = DEFAULT_MODEL,
     input_fidelity: str = "low",
+    quality: str = "low",
     text_to_image_only: bool = False,
-    **kwargs,
 ) -> bytes:
     """Call Replicate HTTP API. When text_to_image_only, text-to-image only (no mascot). Otherwise img2img."""
     model = _resolve_model(model)
     disable_safety = _disable_safety_checker()
+    quality = _normalize_quality(quality)
 
     input_payload: dict[str, Any]
     if text_to_image_only:
@@ -91,9 +105,12 @@ def generate_image(
                 "input_fidelity": input_fidelity,
                 "output_format": "png",
                 "aspect_ratio": "1:1", #"2:3" use for tall images
-                "background": "transparent",
                 "openai_api_key": api_key,
+                "quality": quality,
+                "moderation": "low",
             }
+            if _supports_transparent_background(model):
+                input_payload["background"] = "transparent"
             # gpt-image may pass through to models with Replicate safety checker
             if disable_safety:
                 input_payload["disable_safety_checker"] = True

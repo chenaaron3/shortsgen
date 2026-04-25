@@ -1,14 +1,14 @@
 "use client";
 
-import { diffWordsWithSpace } from "diff";
-import { useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Button } from "~/components/ui/button";
-import { useOptimisticScenePatcher } from "~/hooks/useOptimisticScenePatcher";
-import { useRunStore } from "~/stores/useRunStore";
-import { cn } from "~/lib/utils";
+import { diffWordsWithSpace } from 'diff';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useMemo } from 'react';
+import { Button } from '~/components/ui/button';
+import { useOptimisticScenePatcher } from '~/hooks/useOptimisticScenePatcher';
+import { cn } from '~/lib/utils';
+import { useRunStore } from '~/stores/useRunStore';
 
-import { WordDiff } from "../WordDiff";
+import { WordDiff } from '../WordDiff';
 
 interface SceneSuggestionDiffProps {
   sceneIndex: number;
@@ -17,7 +17,6 @@ interface SceneSuggestionDiffProps {
   suggestedText: string;
   suggestedImagery: string;
   isActive: boolean;
-  onActiveLayoutReady?: () => void;
   acceptPending: boolean;
 }
 
@@ -58,8 +57,8 @@ function HighlightedDiffText({
             key={idx}
             className={cn(
               mode === "before" &&
-                part.removed &&
-                "text-destructive line-through decoration-destructive/70",
+              part.removed &&
+              "text-destructive line-through decoration-destructive/70",
               mode === "after" && part.added && "text-emerald-600 dark:text-emerald-400",
             )}
           >
@@ -117,7 +116,6 @@ export function SceneSuggestionDiff({
   suggestedText,
   suggestedImagery,
   isActive,
-  onActiveLayoutReady,
   acceptPending,
 }: SceneSuggestionDiffProps) {
   const runId = useRunStore((s) => s.ui.runId) ?? "";
@@ -136,7 +134,6 @@ export function SceneSuggestionDiff({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.995 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            onAnimationComplete={onActiveLayoutReady}
             className="space-y-2"
           >
             <SideBySideDiffBlock

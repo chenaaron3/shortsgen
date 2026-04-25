@@ -18,12 +18,11 @@ _SCRIPTS = Path(__file__).resolve().parent.parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
-from config_loader import load_config
+from config_loader import config_with_resolved_image, load_config
 from logger import error as log_error, run_video_context, warn as log_warn
 from models import Chunks
 from path_utils import remotion_composite_key, video_public
 from pipeline.run_pipeline import run as run_pipeline
-from run_video.brand_resolve import resolve_brand_for_video_pipeline
 from run_video.persistence.run_video_writer import get_video, update_video
 from run_video.s3_upload import upload_single_file, upload_to_run
 from run_video.websocket_progress import emit_event
@@ -184,21 +183,18 @@ def _handler_impl(event: dict, run_id: str, video_id: str) -> dict:
                 )
         _emit_asset_progress()
 
-    resolved = resolve_brand_for_video_pipeline(run_id, video_id)
+    resolved_config = config_with_resolved_image(config, run_id=run_id, video_id=video_id)
 
     run_pipeline(
         cache_key=cache_key,
         chunks=chunks,
-        config=config,
+        config=resolved_config,
         config_hash=config_hash,
         break_at="prepare",
         on_step_complete=on_step_complete,
         on_image_scene=on_image_scene,
         on_voice_scene=on_voice_scene,
         on_caption_scene=on_caption_scene,
-        image_style_prompt=resolved.style_prompt,
-        image_mascot_description=resolved.mascot_description,
-        image_mascot_path=resolved.mascot_path,
     )
 
     composite_key = remotion_composite_key(config_hash, cache_key)

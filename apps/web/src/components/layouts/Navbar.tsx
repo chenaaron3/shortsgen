@@ -95,13 +95,6 @@ export function Navbar() {
         </Link>
 
         <nav className="flex items-center gap-6">
-          <Link
-            href="/pricing"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Pricing
-          </Link>
-
           {status === "authenticated" && (
             <>
               <Link href="/create">

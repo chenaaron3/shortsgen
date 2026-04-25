@@ -274,6 +274,7 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       setFeedbackLocked,
       setVideoProgress,
       setAssetUploaded,
+      setActiveAssetBaseUrl,
       bumpAssetsRefreshKey,
     } = useRunStore.getState();
     const activeVideoId = useRunStore.getState().ui.activeVideoId;
@@ -331,6 +332,12 @@ function createProgressHandler(refetch: (() => void) | undefined) {
     }
 
     if (msg.type === "asset_gen_started" && msg.payload && isActiveVideo) {
+      const assetBaseUrl = (
+        msg.payload as { assetBaseUrl?: string } | undefined
+      )?.assetBaseUrl;
+      if (typeof assetBaseUrl === "string" && assetBaseUrl.length > 0) {
+        setActiveAssetBaseUrl(assetBaseUrl);
+      }
       refetch?.();
     }
 

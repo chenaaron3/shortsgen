@@ -26,10 +26,12 @@ function AppContent({
 }) {
   const router = useRouter();
   const isRunsPage = router.pathname.startsWith("/runs/");
+  const isAuthPage = router.pathname === "/login";
+  const shouldShowNavbar = !isRunsPage && !isAuthPage;
 
   return (
     <>
-      {!isRunsPage && <Navbar />}
+      {shouldShowNavbar && <Navbar />}
       <Component {...pageProps} />
     </>
   );

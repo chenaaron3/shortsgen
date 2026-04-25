@@ -16,13 +16,12 @@ _SCRIPTS = Path(__file__).resolve().parent.parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
-from config_loader import load_config
+from config_loader import config_with_resolved_image, load_config
 from logger import error as log_error, info as log_info, run_video_context, warn as log_warn
 from models import Chunks
 from path_utils import remotion_composite_key, video_cache_path, video_public
 from pipeline.generate_images import run as run_images
 from pipeline.revise_imagery import revise_single_scene_imagery
-from run_video.brand_resolve import resolve_brand_for_video_pipeline
 from run_video.persistence.run_video_writer import get_video, update_video
 from run_video.s3_upload import upload_to_run
 from run_video.websocket_progress import emit_event
@@ -128,18 +127,21 @@ def _handler_impl(
         payload={"step": "images_voice", "totalScenes": 1},
     )
 
-    resolved = resolve_brand_for_video_pipeline(run_id, video_id)
+    resolved_config = config_with_resolved_image(config, run_id=run_id, video_id=video_id)
+    resolved_image = resolved_config.image
+    resolved_mascot_path = Path(resolved_image.mascot_path) if resolved_image and resolved_image.mascot_path else None
 
     run_images(
         chunks,
         cache_key,
         config_hash,
-        resolved.mascot_path,
-        style_prompt=resolved.style_prompt,
-        mascot_description=resolved.mascot_description,
+        resolved_mascot_path,
+        style_prompt=resolved_image.style_prompt if resolved_image else None,
+        mascot_description=resolved_image.mascot_description if resolved_image else None,
         scene_indices=[scene_index],
         skip_cache=True,
-        model=config.image.model if config.image else None,
+        model=resolved_image.model if resolved_image else None,
+        quality=resolved_image.quality if resolved_image else "low",
     )
     emit_event(
         run_id,

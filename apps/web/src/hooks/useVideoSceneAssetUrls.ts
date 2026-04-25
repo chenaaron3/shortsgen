@@ -10,6 +10,7 @@ export function useVideoSceneAssetUrls(opts: {
   videoId: string;
 }) {
   const { runId, videoId } = opts;
+  const activeAssetBaseUrl = useRunStore((s) => s.ui.activeAssetBaseUrl);
   const activeSceneUiByIndex = useRunStore((s) => s.ui.activeSceneUiByIndex);
   const activeAssetsRefreshKey = useRunStore(
     (s) => s.ui.activeAssetsRefreshKey,
@@ -21,15 +22,31 @@ export function useVideoSceneAssetUrls(opts: {
   );
 
   return useMemo(() => {
-    const base = videoAssets?.assetBaseUrl;
-    if (!base)
-      return { imageUrlByIndex: undefined, voiceUrlByIndex: undefined };
+    const base = videoAssets?.assetBaseUrl ?? activeAssetBaseUrl;
+    if (!base) return { imageUrlByIndex: undefined, voiceUrlByIndex: undefined };
 
     const baseNorm = base.replace(/\/$/, "");
     const refreshKey = activeAssetsRefreshKey;
     const imageSuffix = refreshKey != null ? `?v=${refreshKey}` : "";
     const imageMap: Record<number, string> = {};
     const voiceMap: Record<number, string> = {};
+
+    const activeImageByIndex = Object.entries(activeSceneUiByIndex).reduce<
+      Record<number, string>
+    >((acc, [sceneIndex, sceneUi]) => {
+      if (sceneUi?.assets.imagePath) {
+        acc[Number(sceneIndex)] = sceneUi.assets.imagePath;
+      }
+      return acc;
+    }, {});
+    const activeVoiceByIndex = Object.entries(activeSceneUiByIndex).reduce<
+      Record<number, string>
+    >((acc, [sceneIndex, sceneUi]) => {
+      if (sceneUi?.assets.voicePath) {
+        acc[Number(sceneIndex)] = sceneUi.assets.voicePath;
+      }
+      return acc;
+    }, {});
 
     if (videoAssets?.manifest?.scenes) {
       videoAssets.manifest.scenes.forEach((scene, i) => {
@@ -38,22 +55,6 @@ export function useVideoSceneAssetUrls(opts: {
         if (scene.voicePath) voiceMap[i] = `${baseNorm}/${scene.voicePath}`;
       });
     } else {
-      const activeImageByIndex = Object.entries(activeSceneUiByIndex).reduce<
-        Record<number, string>
-      >((acc, [sceneIndex, sceneUi]) => {
-        if (sceneUi?.assets.imagePath) {
-          acc[Number(sceneIndex)] = sceneUi.assets.imagePath;
-        }
-        return acc;
-      }, {});
-      const activeVoiceByIndex = Object.entries(activeSceneUiByIndex).reduce<
-        Record<number, string>
-      >((acc, [sceneIndex, sceneUi]) => {
-        if (sceneUi?.assets.voicePath) {
-          acc[Number(sceneIndex)] = sceneUi.assets.voicePath;
-        }
-        return acc;
-      }, {});
       const imgSrc =
         Object.keys(activeImageByIndex).length > 0
           ? activeImageByIndex
@@ -76,6 +77,7 @@ export function useVideoSceneAssetUrls(opts: {
     };
   }, [
     videoAssets,
+    activeAssetBaseUrl,
     activeSceneUiByIndex,
     activeAssetsRefreshKey,
   ]);

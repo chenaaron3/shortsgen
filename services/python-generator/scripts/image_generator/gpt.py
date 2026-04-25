@@ -1,5 +1,5 @@
 """
-OpenAI images/edits (img2img) using gpt-image-1-mini.
+OpenAI images/edits (img2img) using GPT image models.
 """
 
 import base64
@@ -12,14 +12,21 @@ from urllib.request import Request, urlopen
 GPT_IMAGE_MINI = "gpt-image-1-mini"
 GPT_IMAGE_1 = "gpt-image-1"
 GPT_IMAGE_15 = "gpt-image-1.5"
+GPT_IMAGE_2 = "gpt-image-2"
 
 # Model → size override (must be valid API sizes: 1024x1024, 1536x1024, 1024x1536, auto)
 MODEL_SIZE: dict[str, str] = {
     GPT_IMAGE_MINI: "1024x1024",
     GPT_IMAGE_1: "1024x1024",
     GPT_IMAGE_15: "1024x1024",
+    GPT_IMAGE_2: "1024x1024",
 }
 RETRY_DELAY = 5  # seconds between retries on 429
+
+
+def _supports_transparent_background(model: str) -> bool:
+    """gpt-image-2 currently rejects background=transparent."""
+    return model != GPT_IMAGE_2
 
 
 def _image_to_data_uri(path: Path) -> str:
@@ -38,6 +45,7 @@ def generate_image(
     api_key: str,
     input_fidelity: str = "low",
     model: str = GPT_IMAGE_MINI,
+    quality: str = "low",
     **kwargs,
 ) -> bytes:
     """Call OpenAI images/edits API (img2img) via JSON."""
@@ -49,11 +57,12 @@ def generate_image(
         "prompt": prompt,
         "model": model,
         "size": size,
-        "quality": "low",
+        "quality": quality,
         "output_format": "png",
-        "background": "transparent",
         "n": 1,
     }
+    if _supports_transparent_background(model):
+        payload["background"] = "transparent"
     if model != GPT_IMAGE_MINI:
         payload["input_fidelity"] = input_fidelity
 
@@ -95,3 +104,5 @@ def generate_image(
             raise RuntimeError("OpenAI returned no base64 image data")
 
         return base64.b64decode(b64_data)
+
+    raise RuntimeError("OpenAI images/edits failed after all retries")

@@ -61,8 +61,8 @@ def generate_image(
     source_image: Path | None = None,
     model: str | None = None,
     input_fidelity: str = "low",
+    quality: str = "low",
     text_to_image_only: bool = False,
-    **kwargs,
 ) -> bytes:
     """Generate an image. When source_image is set, use it as img2img input (for transitions); else use mascot_path. When text_to_image_only, use Replicate text-to-image only (no mascot)."""
     if text_to_image_only:
@@ -82,7 +82,7 @@ def generate_image(
             api_key=os.environ["OPENAI_API_KEY"],
             input_fidelity=input_fidelity,
             model=model_to_use,
-            **kwargs,
+            quality=quality,
         )
     else:
         return replicate_generate_image(
@@ -91,6 +91,6 @@ def generate_image(
             api_token=os.environ["REPLICATE_API_TOKEN"],
             model=model_to_use,
             input_fidelity=input_fidelity,
+            quality=quality,
             text_to_image_only=text_to_image_only,
-            **kwargs,
         )

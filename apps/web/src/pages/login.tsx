@@ -1,20 +1,15 @@
 "use client";
 
-import { signIn, useSession } from "next-auth/react";
-import Head from "next/head";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
-
-import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { motion } from 'framer-motion';
+import { ArrowLeft, Sparkles, WandSparkles } from 'lucide-react';
+import { signIn, useSession } from 'next-auth/react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
+import { HoverBorderGradient } from '~/components/ui/hover-border-gradient';
 
 function GoogleIcon() {
   return (
@@ -74,49 +69,109 @@ export default function LoginPage() {
           content="Sign in to Shortgen to create short videos from your content."
         />
       </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+      <main className="relative min-h-screen overflow-hidden bg-background">
+        <div className="pointer-events-none absolute inset-0">
+          <motion.div
+            className="absolute -left-32 top-16 h-80 w-80 rounded-full bg-primary/15 blur-3xl"
+            animate={{ x: [0, 24, 0], y: [0, -20, 0] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute -right-24 bottom-10 h-80 w-80 rounded-full bg-violet-500/10 blur-3xl"
+            animate={{ x: [0, -20, 0], y: [0, 26, 0] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+
         <Link
           href="/"
-          className="absolute left-4 top-4 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="absolute left-4 top-4 z-10 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to home
         </Link>
 
-        <div className="mx-auto w-full max-w-sm">
-          <div className="mb-8 text-center">
-            <Link href="/" className="text-2xl font-bold">
-              Shortgen
-            </Link>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Create short videos from your content
+        <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-6xl grid-cols-1 gap-8 px-4 py-16 md:grid-cols-2 md:items-center">
+          <motion.section
+            className="hidden md:block"
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+          >
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/80 px-3 py-1 text-xs text-muted-foreground">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              AI-powered short video generation
             </p>
-          </div>
+            <h1 className="max-w-md text-4xl font-semibold tracking-tight text-foreground">
+              Turn your content into publish-ready shorts.
+            </h1>
+            <p className="mt-4 max-w-md text-base text-muted-foreground">
+              Sign in to create scripts, imagery, voiceovers, and exports from one
+              workflow.
+            </p>
 
-          <Card>
-            <CardHeader className="space-y-1 text-center">
-              <CardTitle className="text-xl">Welcome back</CardTitle>
-              <CardDescription>
-                Sign in with your Google account to get started.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                className="w-full gap-2"
-                variant="outline"
-                onClick={() =>
-                  void signIn("google", { callbackUrl })
-                }
-              >
-                <GoogleIcon />
-                Sign in with Google
-              </Button>
-            </CardContent>
-          </Card>
+            <HoverBorderGradient
+              containerClassName="mt-8 max-w-md"
+              className="rounded-xl border border-border/70 bg-card/80 p-5 backdrop-blur-sm"
+              duration={2.2}
+            >
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <WandSparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Smart scene generation
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    From one source, generate scenes with visuals and narration in
+                    minutes.
+                  </p>
+                </div>
+              </div>
+            </HoverBorderGradient>
+          </motion.section>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            By signing in, you agree to our terms of service and privacy policy.
-          </p>
+          <motion.section
+            className="mx-auto w-full max-w-sm"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+          >
+            <div className="mb-8 text-center">
+              <div className="text-2xl font-bold">
+                Shortgen
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Create short videos from your content
+              </p>
+            </div>
+
+            <Card className="border-border/70 bg-card/90 shadow-lg shadow-primary/5">
+              <CardHeader className="space-y-1 text-center">
+                <CardTitle className="text-xl">Welcome back</CardTitle>
+                <CardDescription>
+                  Sign in with your Google account to get started.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  className="w-full gap-2"
+                  variant="outline"
+                  onClick={() =>
+                    void signIn("google", { callbackUrl })
+                  }
+                >
+                  <GoogleIcon />
+                  Sign in with Google
+                </Button>
+              </CardContent>
+            </Card>
+
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              By signing in, you agree to our terms of service and privacy policy.
+            </p>
+          </motion.section>
         </div>
       </main>
     </>

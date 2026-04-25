@@ -18,7 +18,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from config_loader import load_config
+from config_loader import config_with_resolved_image
 from models import Chunks
 from path_utils import env_path, video_cache_path, video_public
 from logger import error, info, progress, set_step_context
@@ -88,9 +88,6 @@ def run(
     on_image_scene: Callable[[int, int, str | None], None] | None = None,
     on_voice_scene: Callable[[int, int, str | None], None] | None = None,
     on_caption_scene: Callable[[float], None] | None = None,
-    image_style_prompt: str | None = None,
-    image_mascot_description: str | None = None,
-    image_mascot_path: Path | None = None,
 ) -> Path | None:
     """
     Run the full pipeline for raw content, an existing cache, or in-memory chunks.
@@ -130,6 +127,7 @@ def run(
     if cache_key is None:
         raise ValueError("cache_key required")
     info(f"🔑 cache_key: {cache_key} | config: {config.name}")
+    config = config_with_resolved_image(config)
 
     usage_set_context(cache_key, config_hash)
     invalidate_steps = _steps_from(step) if step else frozenset()
@@ -166,6 +164,10 @@ def run(
     set_step_context(3, 6)
     # ThreadPoolExecutor workers don't inherit contextvars; each worker needs its own context copy
     image_model = config.image.model if config.image else None
+    image_quality = config.image.quality if config.image else "low"
+    resolved_style_prompt = config.image.style_prompt if config.image else None
+    resolved_mascot_description = config.image.mascot_description if config.image else None
+    resolved_mascot_path = Path(config.image.mascot_path) if config.image and config.image.mascot_path else None
     voice_backend = config.voice.backend if config.voice else None
 
     def _run_images():
@@ -175,12 +177,13 @@ def run(
                 chunks,
                 cache_key,
                 config_hash,
-                image_mascot_path,
-                style_prompt=image_style_prompt,
-                mascot_description=image_mascot_description,
+                resolved_mascot_path,
+                style_prompt=resolved_style_prompt,
+                mascot_description=resolved_mascot_description,
                 max_scenes=max_scenes,
                 skip_cache="image" in invalidate_steps,
                 model=image_model,
+                quality=image_quality,
                 on_image_complete=on_image_scene,
             )
         )

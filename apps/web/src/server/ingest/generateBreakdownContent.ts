@@ -48,7 +48,7 @@ export async function generateBreakdownContent(content: string): Promise<{
             `${truncated}\n\nRespond with JSON only: {"title": string, "messages": string[]}`,
         },
       ],
-      max_tokens: 250,
+      max_completion_tokens: 250,
       response_format: { type: "json_object" },
     });
     const raw = completion.choices[0]?.message?.content;

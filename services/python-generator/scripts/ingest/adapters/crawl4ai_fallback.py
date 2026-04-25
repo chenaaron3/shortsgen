@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
 from crawl4ai.content_filter_strategy import PruningContentFilter
@@ -8,6 +9,26 @@ from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 
 from ingest.adapters.base import UrlAdapter
 from ingest.models import ScrapeResult
+
+
+_MD_INLINE_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+_MD_AUTOLINK_RE = re.compile(r"<https?://[^>]+>")
+_BARE_URL_RE = re.compile(r"(?<!\()https?://[^\s)]+")
+_REFERENCE_LINK_DEF_RE = re.compile(r"^\s*\[[^\]]+\]:\s*\S+.*$", re.MULTILINE)
+
+
+def _strip_links(markdown: str) -> str:
+    """Remove URLs from markdown while preserving nearby readable text."""
+    out = markdown
+    # [label](url) -> label
+    out = _MD_INLINE_LINK_RE.sub(r"\1", out)
+    # <https://...> -> ""
+    out = _MD_AUTOLINK_RE.sub("", out)
+    # bare URLs in text -> ""
+    out = _BARE_URL_RE.sub("", out)
+    # [id]: https://... reference definitions -> remove full line
+    out = _REFERENCE_LINK_DEF_RE.sub("", out)
+    return out
 
 
 def _extract_markdown(markdown_obj: object) -> str:
@@ -26,7 +47,7 @@ def _extract_markdown(markdown_obj: object) -> str:
     if isinstance(markdown, str) and markdown.strip():
         return markdown.strip()
 
-    return str(markdown_obj).strip()
+    return _strip_links(str(markdown_obj).strip())
 
 
 async def _crawl(url: str) -> str:
@@ -49,7 +70,7 @@ async def _crawl(url: str) -> str:
     markdown = _extract_markdown(getattr(result, "markdown", ""))
     if not markdown:
         raise RuntimeError("Crawl succeeded but markdown output was empty.")
-    return markdown
+    return _strip_links(markdown)
 
 class Crawl4AiFallbackAdapter(UrlAdapter):
     name = "crawl4ai-fallback"
