@@ -42,7 +42,7 @@ Return **only** valid JSON in this exact structure:
 
 - **title:** Short, YouTube-friendly title for the short. One line, under ~60 characters. Capture the main hook or takeaway.
 - **description:** 1–2 sentences for the short's description (used as YouTube description). Summarize the idea or outcome.
-- **text:** The spoken words for this scene. **Must be verbatim from the original script**—no paraphrasing, summarizing, or rewriting. TTS-ready (natural pause point, no mid-word cuts). **Aim for 7–13 words per scene** (~3–5 seconds of speech). If a phrase exceeds ~13 words, split it—you may cut mid-sentence at natural breaks (comma, em-dash, conjunctions) to stay within the limit.
+- **text:** The spoken words for this scene. **Must be verbatim from the original script**—no paraphrasing, summarizing, or rewriting. TTS-ready (natural pause point, no mid-word cuts). **Must be 45–140 characters per scene.** Aim for natural 3–6 second beats. If a phrase is under 45 characters, combine it with adjacent script text at a natural break. If a phrase exceeds 140 characters, split it at a natural break (comma, em-dash, semicolon, conjunctions).
 - **imagery:** Use the 4-component template (Shot Angle + Emotion/Pose + Object/Metaphor + Environment). See Imagery Rules below. Max 200 characters.
 - **section:** `"Hook"`, `"Body"`, or `"Close"`. First 1–2 = Hook, middle = Body, last 1–2 = Close.
 
@@ -52,7 +52,7 @@ Return **only** valid JSON in this exact structure:
 
 1. **Keep text verbatim.** Copy phrases from the script exactly. Do not paraphrase, summarize, or rewrite—the scene text must match the original word-for-word.
 2. **One idea per scene.** Don't cram multiple concepts into one image.
-3. **Respect natural breaks.** Prefer sentence boundaries. If needed to fit 3–5 seconds (~7–13 words), split at clause boundaries (comma, em-dash, semicolon, conjunctions like "but" or "and"). Never cut mid-word.
+3. **Respect natural breaks.** Prefer sentence boundaries. If needed to fit 45–140 characters, split or combine at clause boundaries (comma, em-dash, semicolon, conjunctions like "but" or "and"). Never cut mid-word.
 4. **Scene count:** 4–10 total. Shorter scripts = fewer scenes.
 
 ---
@@ -119,13 +119,8 @@ The study took 85 years to figure this out. You don't have to.
   "description": "Harvard's long-running study found that relationships—not career or money—best predict a healthy, happy life. Here's what people in their 80s said they regret.",
   "scenes": [
     {
-      "text": "What if everything you've been told",
+      "text": "What if everything you've been told about building a good life is wrong?",
       "imagery": "Wide shot. Mascot standing at threshold, uncertain. Forked path ahead. Overcast sky.",
-      "section": "Hook"
-    },
-    {
-      "text": "about building a good life is wrong?",
-      "imagery": "Wide shot. Mascot pushing aside large stone block, questioning. Cracked ground, rubble. Overcast sky.",
       "section": "Hook"
     },
     {
@@ -139,24 +134,14 @@ The study took 85 years to figure this out. You don't have to.
       "section": "Body"
     },
     {
-      "text": "Not career. Not money.",
+      "text": "Not career. Not money. When they asked people in their 80s what they regret,",
       "imagery": "High angle. Mascot stepping over scatter of coins, gaze ahead. Stone path. Cool shadow.",
       "section": "Body"
     },
     {
-      "text": "When they asked people in their 80s what they regret,",
-      "imagery": "Medium shot. Mascot at small round table, empty chair opposite. Single candle between. Dim, intimate light.",
-      "section": "Body"
-    },
-    {
-      "text": "nobody said they wished they'd worked more.",
+      "text": "nobody said they wished they'd worked more. The universal regret, relationships.",
       "imagery": "Extreme close-up. Mascot hands releasing clock, letting it go. Face resigned. Wooden surface. Soft light.",
       "section": "Body"
-    },
-    {
-      "text": "The universal regret, relationships.",
-      "imagery": "Medium shot. Mascot at small round table, empty chair opposite. Single candle between. Dim, intimate light.",
-      "section": "Close"
     },
     {
       "text": "The study took 85 years to figure this out. You don't have to.",

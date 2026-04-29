@@ -36,6 +36,7 @@ export async function generateBreakdownContent(content: string): Promise<{
   breakdownMessagesJson: string | null;
 }> {
   const truncated = content.slice(0, 4000);
+  const maxCompletionTokens = 1200;
   const client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
   try {
     const completion = await client.chat.completions.create({
@@ -48,7 +49,7 @@ export async function generateBreakdownContent(content: string): Promise<{
             `${truncated}\n\nRespond with JSON only: {"title": string, "messages": string[]}`,
         },
       ],
-      max_completion_tokens: 250,
+      max_completion_tokens: maxCompletionTokens,
       response_format: { type: "json_object" },
     });
     const raw = completion.choices[0]?.message?.content;

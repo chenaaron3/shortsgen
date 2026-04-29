@@ -43,7 +43,12 @@ class ProcessedClip(BaseModel):
 class SceneOutput(BaseModel):
     """LLM output for a single scene (text, imagery, section only)."""
 
-    text: str = Field(..., description="Spoken words for this scene")
+    text: str = Field(
+        ...,
+        min_length=45,
+        max_length=140,
+        description="Spoken words for this scene, copied verbatim from the script (45-140 chars)",
+    )
     imagery: str = Field(
         ...,
         max_length=200,
