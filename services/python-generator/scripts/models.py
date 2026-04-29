@@ -46,8 +46,8 @@ class SceneOutput(BaseModel):
     text: str = Field(
         ...,
         min_length=45,
-        max_length=140,
-        description="Spoken words for this scene, copied verbatim from the script (45-140 chars)",
+        max_length=100,
+        description="Spoken words for this scene, copied verbatim from the script (45-100 chars)",
     )
     imagery: str = Field(
         ...,
