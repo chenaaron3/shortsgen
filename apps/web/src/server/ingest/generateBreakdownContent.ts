@@ -3,8 +3,8 @@
  * Same prompt contract as the former Python breakdown_run_copy helper.
  */
 
-import OpenAI from "openai";
-import { env } from "~/env";
+import OpenAI from 'openai';
+import { env } from '~/env';
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -35,8 +35,7 @@ export async function generateBreakdownContent(content: string): Promise<{
   title: string | null;
   breakdownMessagesJson: string | null;
 }> {
-  const truncated = content.slice(0, 4000);
-  const maxCompletionTokens = 1200;
+  const truncated = content.slice(0, 1000);
   const client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
   try {
     const completion = await client.chat.completions.create({
@@ -45,11 +44,9 @@ export async function generateBreakdownContent(content: string): Promise<{
         { role: "system", content: BREAKDOWN_SYSTEM },
         {
           role: "user",
-          content:
-            `${truncated}\n\nRespond with JSON only: {"title": string, "messages": string[]}`,
+          content: `${truncated}\n\nRespond with JSON only: {"title": string, "messages": string[]}`,
         },
       ],
-      max_completion_tokens: maxCompletionTokens,
       response_format: { type: "json_object" },
     });
     const raw = completion.choices[0]?.message?.content;
@@ -63,7 +60,9 @@ export async function generateBreakdownContent(content: string): Promise<{
         ? data.title.trim().slice(0, 80)
         : null;
     const messages = Array.isArray(data.messages)
-      ? data.messages.filter((m): m is string => typeof m === "string" && m.trim().length > 0)
+      ? data.messages.filter(
+          (m): m is string => typeof m === "string" && m.trim().length > 0,
+        )
       : [];
     if (!title || messages.length === 0) {
       console.warn("[generateBreakdownContent] Invalid generated payload", {
@@ -77,9 +76,12 @@ export async function generateBreakdownContent(content: string): Promise<{
       breakdownMessagesJson: JSON.stringify(messages),
     };
   } catch (error) {
-    console.warn("[generateBreakdownContent] Failed to generate title/messages", {
-      error: errorMessage(error),
-    });
+    console.warn(
+      "[generateBreakdownContent] Failed to generate title/messages",
+      {
+        error: errorMessage(error),
+      },
+    );
     return { title: null, breakdownMessagesJson: null };
   }
 }
