@@ -1,28 +1,21 @@
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
-import { z } from "zod";
-import { env } from "~/env";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { debitCredits, getBalance } from "~/server/credits";
-import { generateBreakdownContent } from "~/server/ingest/generateBreakdownContent";
-import { resolveUrlContent } from "~/server/ingest/urlContent";
-import {
-  assertUrlSafeForServerFetch,
-  fetchUrlPreviewMetadata,
-} from "~/server/ingest/urlMetadata";
+import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
+import { z } from 'zod';
+import { env } from '~/env';
+import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import { debitCredits, getBalance } from '~/server/credits';
+import { generateBreakdownContent } from '~/server/ingest/generateBreakdownContent';
+import { resolveUrlContent } from '~/server/ingest/urlContent';
+import { assertUrlSafeForServerFetch, fetchUrlPreviewMetadata } from '~/server/ingest/urlMetadata';
 
-import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import {
-  CREDITS_ASSETS_PER_VIDEO,
-  CREDITS_IMAGE_REGEN,
-  CREDITS_INGEST_PER_RUN,
-  runs,
-  SCRIPT_REGEN_FREE_LIMIT,
-  videos,
-} from "@shortgen/db";
-import { chunksSchema, manifestSchema } from "@shortgen/types";
-import { TRPCError } from "@trpc/server";
+    CREDITS_ASSETS_PER_VIDEO, CREDITS_IMAGE_REGEN, CREDITS_INGEST_PER_RUN, runs,
+    SCRIPT_REGEN_FREE_LIMIT, videos
+} from '@shortgen/db';
+import { chunksSchema, manifestSchema } from '@shortgen/types';
+import { TRPCError } from '@trpc/server';
 
-import { triggerRemotionExports } from "./runs.utils";
+import { triggerRemotionExports } from './runs.utils';
 
 import type { UrlContentSourceAdapter } from "~/server/ingest/urlContent";
 import type { VideoManifest } from "@shortgen/types";
@@ -90,7 +83,7 @@ export const runsRouter = createTRPCRouter({
             }
           }, "Must be a valid https URL"),
         config: z
-          .enum(["prototype", "prototype2", "default"])
+          .enum(["prototype", "default"])
           .optional()
           .default("prototype"),
       }),

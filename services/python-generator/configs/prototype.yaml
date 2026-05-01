@@ -1,16 +1,14 @@
 name: prototype
 breakdown:
   chunker: line_split
-  model: gpt-4o-mini
+  model: gpt-4o
   system_prompt: source-breakdown-system-prompt.md
 script:
-  model: gpt-4o-mini
+  model: gpt-4o
   system_prompt: short-script-system-prompt.md
   temperature: 1.0
-  judge_gate: true
-  judge_max_retries: 2
 chunk:
-  model: gpt-4o-mini
+  model: gpt-4o
   system_prompt: transcript-chunker-system-prompt.md
 image:
   model: openai/gpt-image-2

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
 import { ARTICLE_SAMPLE, REDDIT_SAMPLE, YOUTUBE_SAMPLE } from '~/constants/inspirationSamples';
@@ -19,7 +19,7 @@ import { api } from '~/utils/api';
 import { InspirationCard } from './InspirationCard';
 
 const PIPELINE_CONFIG_OPTIONS: {
-  value: "prototype" | "prototype2" | "default";
+  value: "prototype" | "default";
   label: string;
   description: string;
 }[] = [
@@ -27,11 +27,6 @@ const PIPELINE_CONFIG_OPTIONS: {
       value: "prototype",
       label: "Prototype",
       description: "Faster, lower cost models",
-    },
-    {
-      value: "prototype2",
-      label: "Prototype 2",
-      description: "Improved script, cheaper voice/image generation",
     },
     {
       value: "default",
