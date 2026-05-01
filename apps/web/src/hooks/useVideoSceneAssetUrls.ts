@@ -4,6 +4,11 @@ import { useMemo } from 'react';
 import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
+function withImageRefresh(path: string, refreshKey: number): string {
+  if (path.includes("?")) return path;
+  return `${path}?v=${refreshKey}`;
+}
+
 /** CDN URLs per scene index for thumbnails/audio; merges manifest, S3 listing, and WS progressive assets. */
 export function useVideoSceneAssetUrls(opts: {
   runId: string;
@@ -27,7 +32,6 @@ export function useVideoSceneAssetUrls(opts: {
 
     const baseNorm = base.replace(/\/$/, "");
     const refreshKey = activeAssetsRefreshKey;
-    const imageSuffix = refreshKey != null ? `?v=${refreshKey}` : "";
     const imageMap: Record<number, string> = {};
     const voiceMap: Record<number, string> = {};
 
@@ -50,9 +54,13 @@ export function useVideoSceneAssetUrls(opts: {
 
     if (videoAssets?.manifest?.scenes) {
       videoAssets.manifest.scenes.forEach((scene, i) => {
-        if (scene.imagePath)
-          imageMap[i] = `${baseNorm}/${scene.imagePath}${imageSuffix}`;
-        if (scene.voicePath) voiceMap[i] = `${baseNorm}/${scene.voicePath}`;
+        const imagePath =
+          videoAssets.imageByIndex[i] ?? activeImageByIndex[i] ?? scene.imagePath;
+        const voicePath =
+          videoAssets.voiceByIndex[i] ?? activeVoiceByIndex[i] ?? scene.voicePath;
+        if (imagePath)
+          imageMap[i] = `${baseNorm}/${withImageRefresh(imagePath, refreshKey)}`;
+        if (voicePath) voiceMap[i] = `${baseNorm}/${voicePath}`;
       });
     } else {
       const imgSrc =
@@ -64,7 +72,7 @@ export function useVideoSceneAssetUrls(opts: {
           ? activeVoiceByIndex
           : (videoAssets?.voiceByIndex ?? {});
       Object.entries(imgSrc).forEach(([k, path]) => {
-        imageMap[Number(k)] = `${baseNorm}/${path}${imageSuffix}`;
+        imageMap[Number(k)] = `${baseNorm}/${withImageRefresh(path, refreshKey)}`;
       });
       Object.entries(voiceSrc).forEach(([k, path]) => {
         voiceMap[Number(k)] = `${baseNorm}/${path}`;

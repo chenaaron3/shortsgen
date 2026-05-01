@@ -821,44 +821,47 @@ export const runsRouter = createTRPCRouter({
           console.log("error fetching manifest", manifestUrl);
         }
 
-        if (!manifest) {
-          const s3Prefix = prefix + "/";
-          try {
-            const client = new S3Client({});
-            for (const subPrefix of ["images/", "voice/"] as const) {
-              const fullPrefix = s3Prefix + subPrefix;
-              let continuationToken: string | undefined;
-              do {
-                const resp = await client.send(
-                  new ListObjectsV2Command({
-                    Bucket: bucket,
-                    Prefix: fullPrefix,
-                    ContinuationToken: continuationToken,
-                  }),
+        const s3Prefix = prefix + "/";
+        try {
+          const client = new S3Client({});
+          for (const subPrefix of ["images/", "voice/"] as const) {
+            const fullPrefix = s3Prefix + subPrefix;
+            let continuationToken: string | undefined;
+            do {
+              const resp = await client.send(
+                new ListObjectsV2Command({
+                  Bucket: bucket,
+                  Prefix: fullPrefix,
+                  ContinuationToken: continuationToken,
+                }),
+              );
+              for (const obj of resp.Contents ?? []) {
+                if (!obj.Key || !obj.Key.startsWith(fullPrefix)) continue;
+                const rel = obj.Key.slice(fullPrefix.length);
+                const match = rel.match(
+                  subPrefix === "images/"
+                    ? /^image_(\d+)\.png$/
+                    : /^voice_(\d+)\.mp3$/,
                 );
-                for (const obj of resp.Contents ?? []) {
-                  if (!obj.Key || !obj.Key.startsWith(fullPrefix)) continue;
-                  const rel = obj.Key.slice(fullPrefix.length);
-                  const match = rel.match(
-                    subPrefix === "images/"
-                      ? /^image_(\d+)\.png$/
-                      : /^voice_(\d+)\.mp3$/,
-                  );
-                  if (!match) continue;
-                  const sceneIndex = parseInt(match[1]!, 10) - 1;
-                  const path = subPrefix + rel;
-                  if (subPrefix === "images/") {
-                    imageByIndex[sceneIndex] = path;
-                  } else {
-                    voiceByIndex[sceneIndex] = path;
-                  }
+                if (!match) continue;
+                const sceneIndex = parseInt(match[1]!, 10) - 1;
+                const path = subPrefix + rel;
+                if (subPrefix === "images/") {
+                  const version =
+                    obj.ETag?.replaceAll('"', "") ??
+                    obj.LastModified?.getTime().toString();
+                  imageByIndex[sceneIndex] = version
+                    ? `${path}?v=${encodeURIComponent(version)}`
+                    : path;
+                } else {
+                  voiceByIndex[sceneIndex] = path;
                 }
-                continuationToken = resp.NextContinuationToken;
-              } while (continuationToken);
-            }
-          } catch {
-            // Best-effort listing; return what we have.
+              }
+              continuationToken = resp.NextContinuationToken;
+            } while (continuationToken);
           }
+        } catch {
+          // Best-effort listing; manifest paths can still render assets.
         }
 
         return {
