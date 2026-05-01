@@ -68,6 +68,7 @@ export default $config({
       WEBSOCKET_ENDPOINT: wsApi.managementEndpoint,
       BUCKET_NAME: bucket.name,
       SHORTGEN_CDN_URL: assetsRouter.url,
+      CLOUDFRONT_DISTRIBUTION_ID: assetsRouter.distributionID,
       DATABASE_URL: databaseUrl.value,
       OPENAI_API_KEY: openaiApiKey.value,
       REPLICATE_API_TOKEN: replicateApiToken.value,
@@ -142,6 +143,12 @@ export default $config({
         replicateApiToken,
         elevenlabsApiKey,
         anthropicApiKey,
+      ],
+      permissions: [
+        {
+          actions: ["cloudfront:CreateInvalidation"],
+          resources: ["*"],
+        },
       ],
       transform: {
         function: (args) => {
