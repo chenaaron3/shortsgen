@@ -10,9 +10,12 @@ import sys
 import threading
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from io import BytesIO
 from pathlib import Path
+from typing import cast
 
 from dotenv import load_dotenv
+from PIL import Image
 
 from image_generator import generate_image as generate_image_impl, get_config
 from models import Chunks, Scene
@@ -98,6 +101,61 @@ def _generate_one(
         return (i, img_bytes, None)
     except Exception as e:
         return (i, None, str(e))
+
+
+def _remove_edge_white_background(img_bytes: bytes) -> bytes:
+    """Convert edge-connected near-white background pixels to transparent PNG."""
+    with Image.open(BytesIO(img_bytes)) as img:
+        rgba = img.convert("RGBA")
+
+    width, height = rgba.size
+    if width <= 0 or height <= 0:
+        return img_bytes
+
+    def is_whiteish(x: int, y: int) -> bool:
+        r, g, b, _ = cast(tuple[int, int, int, int], rgba.getpixel((x, y)))
+        return min(r, g, b) >= 235 and max(r, g, b) - min(r, g, b) <= 24
+
+    stack: list[tuple[int, int]] = []
+    seen: set[tuple[int, int]] = set()
+    for x in range(width):
+        stack.append((x, 0))
+        stack.append((x, height - 1))
+    for y in range(height):
+        stack.append((0, y))
+        stack.append((width - 1, y))
+
+    while stack:
+        x, y = stack.pop()
+        if (x, y) in seen or not is_whiteish(x, y):
+            continue
+        seen.add((x, y))
+        if x > 0:
+            stack.append((x - 1, y))
+        if x < width - 1:
+            stack.append((x + 1, y))
+        if y > 0:
+            stack.append((x, y - 1))
+        if y < height - 1:
+            stack.append((x, y + 1))
+
+    if len(seen) <= (width * height) / 2:
+        out = BytesIO()
+        rgba.save(out, format="PNG")
+        return out.getvalue()
+
+    for x, y in seen:
+        r, g, b, a = cast(tuple[int, int, int, int], rgba.getpixel((x, y)))
+        whiteness = min(r, g, b)
+        if whiteness >= 250:
+            new_alpha = 0
+        else:
+            new_alpha = int(((250 - whiteness) / 15) * a)
+        rgba.putpixel((x, y), (r, g, b, max(0, min(a, new_alpha))))
+
+    out = BytesIO()
+    rgba.save(out, format="PNG")
+    return out.getvalue()
 
 
 def run(
@@ -219,7 +277,7 @@ def run(
                 progress(i + 1, total, f"failed: {err}")
                 continue
             assert img_bytes is not None
-            filename.write_bytes(img_bytes)
+            filename.write_bytes(_remove_edge_white_background(img_bytes))
             to_process[i].image_path = str(filename)
             record_image("Images", config["model"], 1)
             progress(i + 1, total, f"saved -> {filename.name}")
