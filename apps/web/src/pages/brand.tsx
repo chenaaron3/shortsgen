@@ -1,35 +1,22 @@
 "use client";
 
-import Head from "next/head";
-import Link from "next/link";
-import { CheckCircle2, History, Loader2, Upload, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDropzone } from "react-dropzone";
-
-import { AuthRequiredLayout } from "~/components/layouts/AuthRequiredLayout";
-import { Button } from "~/components/ui/button";
+import { CheckCircle2, History, Loader2, Upload, X } from 'lucide-react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { AuthRequiredLayout } from '~/components/layouts/AuthRequiredLayout';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+    Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle
+} from '~/components/ui/dialog';
+import { Textarea } from '~/components/ui/textarea';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
-import { Textarea } from "~/components/ui/textarea";
-import {
-  DEFAULT_MASCOT_DESCRIPTION,
-  DEFAULT_MASCOT_IMAGE_SRC,
-  DEFAULT_STYLE_PROMPT,
-} from "~/lib/brandDefaults";
-import { cn } from "~/lib/utils";
-import { api } from "~/utils/api";
+    DEFAULT_MASCOT_DESCRIPTION, DEFAULT_MASCOT_IMAGE_SRC, DEFAULT_STYLE_PROMPT
+} from '~/lib/brandDefaults';
+import { cn } from '~/lib/utils';
+import { api } from '~/utils/api';
 
 function avatarContentType(file: File): "image/png" | "image/jpeg" | "image/webp" {
   const t = file.type;
@@ -281,18 +268,6 @@ function BrandForm() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium" htmlFor="mascot">
-              Mascot description
-            </label>
-            <Textarea
-              id="mascot"
-              rows={3}
-              placeholder="Short description of the character (used for text-to-image models)."
-              value={mascotDescription}
-              onChange={(e) => setMascotDescription(e.target.value)}
-            />
-          </div>
-          <div>
             <p className="mb-1 text-sm font-medium">Reference avatar image</p>
             {!hydrated ? (
               <div
@@ -465,9 +440,9 @@ function BrandForm() {
                           ? "Built-in default"
                           : item.created_at
                             ? new Date(item.created_at).toLocaleString(undefined, {
-                                dateStyle: "short",
-                                timeStyle: "short",
-                              })
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })
                             : ""}
                         {isCurrent ? " · Current" : ""}
                       </span>
