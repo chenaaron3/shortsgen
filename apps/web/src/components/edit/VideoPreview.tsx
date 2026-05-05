@@ -1,14 +1,18 @@
 "use client";
 
-import { Download, Video } from "lucide-react";
-import dynamic from "next/dynamic";
-import React, { Component } from "react";
-import { useRunStore } from "~/stores/useRunStore";
-import { api } from "~/utils/api";
+import { Download, Video } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import React, { Component } from 'react';
+import { buttonVariants } from '~/components/ui/button';
+import { RainbowButton } from '~/components/ui/rainbow-button';
+import { cn } from '~/lib/utils';
+import { useRunStore } from '~/stores/useRunStore';
+import { api } from '~/utils/api';
 
 import type { ReactNode } from "react";
 
 import type { RunPhase } from "./RunProgressSteps";
+
 class PlayerErrorBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
   { hasError: boolean; error: Error | null }
@@ -31,15 +35,69 @@ class PlayerErrorBoundary extends Component<
   }
 }
 
-function DownloadButton({ href }: { href: string }) {
+/** Magic UI rainbow accent ([Rainbow Button](https://magicui.design/docs/components/rainbow-button)) until first download (`export_downloaded_at`). */
+function ExportMp4Download({
+  downloadHref,
+  useRainbowStripe,
+  onDownloadRecorded,
+}: {
+  downloadHref: string;
+  useRainbowStripe: boolean;
+  onDownloadRecorded: () => void;
+}) {
+  const handleClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(downloadHref);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = "short.mp4";
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      onDownloadRecorded();
+    } catch {
+      window.location.href = downloadHref;
+    }
+  };
+
+  const downloadButtonClassName = cn(
+    buttonVariants({ variant: "outline", size: "default" }),
+    "w-full justify-center gap-2",
+  );
+
+  const contents = (
+    <>
+      <Download className="h-4 w-4 shrink-0" />
+      Download
+    </>
+  );
+
+  if (useRainbowStripe) {
+    return (
+      <RainbowButton
+        variant="outline"
+        size="sm"
+        className="w-full rounded-lg border-primary/30"
+        asChild
+      >
+        <a href={downloadHref} download="short.mp4" onClick={handleClick}>
+          {contents}
+        </a>
+      </RainbowButton>
+    );
+  }
+
   return (
     <a
-      href={href}
+      href={downloadHref}
       download="short.mp4"
-      className="flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
+      onClick={handleClick}
+      className={downloadButtonClassName}
     >
-      <Download className="h-4 w-4" />
-      Download
+      {contents}
     </a>
   );
 }
@@ -66,12 +124,12 @@ function ExportButton({
 
 const Player = dynamic(
   () => import("@remotion/player").then((mod) => mod.Player),
-  { ssr: false }
+  { ssr: false },
 );
 
 const ShortVideo = dynamic(
   () => import("@shortgen/remotion/ShortVideo").then((mod) => mod.ShortVideo),
-  { ssr: false }
+  { ssr: false },
 );
 
 interface VideoPreviewProps {
@@ -106,7 +164,7 @@ export function VideoPreview({
     isError,
   } = api.runs.getVideoAssets.useQuery(
     { runId, videoId },
-    { enabled: !!runId && !!videoId }
+    { enabled: !!runId && !!videoId },
   );
 
   if (isError) {
@@ -134,8 +192,19 @@ export function VideoPreview({
     );
   }
 
-  const { manifest, assetBaseUrl, exportUrl, backgroundMusicUrl } =
-    videoAssets;
+  const {
+    manifest,
+    assetBaseUrl,
+    exportUrl,
+    exportDownloadedAt,
+    backgroundMusicUrl,
+  } = videoAssets;
+
+  const downloadHref = `/api/download-video?path=${encodeURIComponent(
+    `runs/${runId}/${videoId}/short.mp4`,
+  )}`;
+  const showRainbowDownload =
+    Boolean(exportUrl) && exportDownloadedAt == null;
 
   const playerFallback = (
     <div className="flex h-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/10 p-4">
@@ -183,8 +252,12 @@ export function VideoPreview({
         </PlayerErrorBoundary>
       </div>
       {exportUrl && (
-        <DownloadButton
-          href={`/api/download-video?path=${encodeURIComponent(`runs/${runId}/${videoId}/short.mp4`)}`}
+        <ExportMp4Download
+          downloadHref={downloadHref}
+          useRainbowStripe={showRainbowDownload}
+          onDownloadRecorded={() => {
+            void utils.runs.getVideoAssets.invalidate({ runId, videoId });
+          }}
         />
       )}
       {!exportUrl &&

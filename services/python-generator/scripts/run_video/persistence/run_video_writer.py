@@ -130,7 +130,7 @@ def update_run_after_url_ingest(run_id: str, *, source_adapter: str) -> None:
 def _row_to_model(
     row: dict,
     model_cls: type[T],
-    datetime_fields: tuple[str, ...] = ("created_at",),
+    datetime_fields: tuple[str, ...] = ("created_at", "export_downloaded_at"),
 ) -> T:
     """Convert DB row to Pydantic model, serializing datetime fields to ISO strings."""
     d = dict(row)
@@ -165,7 +165,7 @@ def get_video(video_id: str) -> Video | None:
     with _conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                f"SELECT id, run_id, s3_prefix, render_id, source_text, status, script, chunks, cache_key, config_hash, brand_id, created_at FROM {VIDEOS_TABLE} WHERE id = %s",
+                f"SELECT id, run_id, s3_prefix, render_id, source_text, status, script, chunks, cache_key, config_hash, brand_id, export_downloaded_at, created_at FROM {VIDEOS_TABLE} WHERE id = %s",
                 (video_id,),
             )
             row = cur.fetchone()

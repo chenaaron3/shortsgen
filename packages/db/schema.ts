@@ -149,6 +149,8 @@ export const videos = pgTable(t("videos"), {
   brand_id: uuid("brand_id").references(() => brand.id, {
     onDelete: "set null",
   }),
+  /** Set when the user first downloads the exported MP4 via the app (see /api/download-video). */
+  export_downloaded_at: timestamp("export_downloaded_at", { mode: "date" }),
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -239,6 +241,7 @@ export const runSchema = createSelectSchema(runs, {
 });
 export const videoSchema = createSelectSchema(videos, {
   created_at: timestampSchema,
+  export_downloaded_at: timestampSchema,
 });
 export const brandSchema = createSelectSchema(brand, {
   created_at: timestampSchema,

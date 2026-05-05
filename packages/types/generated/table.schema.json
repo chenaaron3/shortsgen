@@ -168,6 +168,23 @@
                 }
               ]
             },
+            "export_downloaded_at": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "not": {}
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "created_at": {
               "anyOf": [
                 {

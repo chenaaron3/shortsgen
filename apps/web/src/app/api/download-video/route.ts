@@ -1,11 +1,11 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 import { env } from "~/env";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
-import { runs } from "@shortgen/db";
+import { runs, videos } from "@shortgen/db";
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -85,6 +85,24 @@ export async function GET(request: Request) {
     });
     const contentLength = res.headers.get("Content-Length");
     if (contentLength) headers.set("Content-Length", contentLength);
+
+    const videoId = segments[2];
+    if (
+      videoId &&
+      UUID_REGEX.test(videoId) &&
+      path.endsWith("short.mp4")
+    ) {
+      await db
+        .update(videos)
+        .set({ export_downloaded_at: new Date() })
+        .where(
+          and(
+            eq(videos.id, videoId),
+            eq(videos.run_id, runId),
+            isNull(videos.export_downloaded_at),
+          ),
+        );
+    }
 
     return new NextResponse(res.body, { headers });
   } catch (e) {

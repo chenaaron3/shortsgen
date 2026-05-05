@@ -791,12 +791,15 @@ export const runsRouter = createTRPCRouter({
         imageByIndex: Record<number, string>;
         voiceByIndex: Record<number, string>;
         exportUrl?: string;
+        /** Present when the user has downloaded the MP4 at least once via `/api/download-video`. */
+        exportDownloadedAt?: Date | null;
         backgroundMusicUrl: string;
       } | null> => {
         const [video] = await ctx.db
           .select({
             s3Prefix: videos.s3_prefix,
             status: videos.status,
+            exportDownloadedAt: videos.export_downloaded_at,
           })
           .from(videos)
           .where(
@@ -885,6 +888,7 @@ export const runsRouter = createTRPCRouter({
           imageByIndex,
           voiceByIndex,
           exportUrl,
+          exportDownloadedAt: video.exportDownloadedAt,
           backgroundMusicUrl,
         };
       },
