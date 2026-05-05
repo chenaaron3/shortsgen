@@ -14,8 +14,8 @@ import type { Session } from "next-auth";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import { env } from "~/env";
 import { auth, authUncached } from "~/server/auth";
+import { isAdminSessionUser } from "~/server/isAdminUser";
 import { db } from "~/server/db";
 /**
  * 1. CONTEXT
@@ -170,6 +170,8 @@ export const protectedProcedure = t.procedure
     });
   });
 
+export { isAdminSessionUser } from "~/server/isAdminUser";
+
 /** Admin-only procedure. Requires session.user.email in ADMIN_EMAILS. */
 export const adminProcedure = t.procedure
   .use(timingMiddleware)
@@ -177,14 +179,7 @@ export const adminProcedure = t.procedure
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
-    const emails = env.ADMIN_EMAILS.split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
-    const isAdmin =
-      emails.length > 0 &&
-      ctx.session.user.email &&
-      emails.includes(ctx.session.user.email.toLowerCase());
-    if (!isAdmin) {
+    if (!isAdminSessionUser(ctx.session.user)) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Admin access required",

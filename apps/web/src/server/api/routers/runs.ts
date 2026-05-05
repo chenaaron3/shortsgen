@@ -4,6 +4,7 @@ import { env } from '~/env';
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 import { debitCredits, getBalance } from '~/server/credits';
 import { generateBreakdownContent } from '~/server/ingest/generateBreakdownContent';
+import { isAdminSessionUser } from '~/server/isAdminUser';
 import { resolveUrlContent } from '~/server/ingest/urlContent';
 import { assertUrlSafeForServerFetch, fetchUrlPreviewMetadata } from '~/server/ingest/urlMetadata';
 
@@ -26,6 +27,15 @@ export type RunWithVideos = InferSelectModel<typeof runs> & {
   videos: InferSelectModel<typeof videos>[];
 };
 
+function canAccessRunAsViewer(
+  ctx: { session: { user: { id: string; email?: string | null } } },
+  runUserId: string,
+) {
+  return (
+    runUserId === ctx.session.user.id || isAdminSessionUser(ctx.session.user)
+  );
+}
+
 export const runsRouter = createTRPCRouter({
   /** List all runs for the current user with their videos. */
   listRunsForUser: protectedProcedure.query(async ({ ctx }) => {
@@ -47,7 +57,7 @@ export const runsRouter = createTRPCRouter({
         with: { videos: true },
       });
 
-      if (!runWithVideos || runWithVideos.userId !== ctx.session.user.id)
+      if (!runWithVideos || !canAccessRunAsViewer(ctx, runWithVideos.userId))
         return null;
 
       return runWithVideos as RunWithVideos;
@@ -546,7 +556,7 @@ export const runsRouter = createTRPCRouter({
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || run.userId !== ctx.session.user.id) {
+      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Run not found" });
       }
 
@@ -813,7 +823,7 @@ export const runsRouter = createTRPCRouter({
           .from(runs)
           .where(eq(runs.id, input.runId));
 
-        if (!run || run.userId !== ctx.session.user.id) return null;
+        if (!run || !canAccessRunAsViewer(ctx, run.userId)) return null;
 
         const prefix = video.s3Prefix.replace(/\/$/, "");
         const cdnBase = env.SHORTGEN_CDN_URL.replace(/\/$/, "");

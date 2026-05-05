@@ -1,11 +1,8 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { env } from "~/env";
-import {
-  adminProcedure,
-  createTRPCRouter,
-  protectedProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, adminProcedure, protectedProcedure } from "~/server/api/trpc";
+import { isAdminSessionUser } from "~/server/isAdminUser";
 
 import {
   CloudWatchLogsClient,
@@ -106,14 +103,7 @@ function getCloudWatchClient(): CloudWatchLogsClient | null {
 export const adminRouter = createTRPCRouter({
   /** Returns whether the current user is an admin (for showing admin UI). */
   isAdmin: protectedProcedure.query(({ ctx }) => {
-    const emails = env.ADMIN_EMAILS.split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
-    const isAdmin =
-      emails.length > 0 &&
-      !!ctx.session.user.email &&
-      emails.includes(ctx.session.user.email.toLowerCase());
-    return { isAdmin };
+    return { isAdmin: isAdminSessionUser(ctx.session.user) };
   }),
 
   /** Fetch CloudWatch logs for a run. When videoId is provided, returns only logs for that video (excludes other videos in the run). */

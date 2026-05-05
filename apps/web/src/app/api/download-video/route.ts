@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { env } from "~/env";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import { isAdminSessionUser } from "~/server/isAdminUser";
 
 import { runs, videos } from "@shortgen/db";
 
@@ -21,7 +22,7 @@ const CONTENT_TYPES: Record<string, string> = {
 };
 
 /**
- * Proxies S3/CDN assets to avoid CORS. Path must be under runs/{runId}/ and user must own the run.
+ * Proxies S3/CDN assets to avoid CORS. Path must be under runs/{runId}/ and the user must own the run or be an admin.
  * GET /api/download-video?path=runs/{runId}/{videoId}/short.mp4
  */
 export async function GET(request: Request) {
@@ -56,7 +57,8 @@ export async function GET(request: Request) {
     .from(runs)
     .where(eq(runs.id, runId));
 
-  if (!run || run.userId !== session.user.id) {
+  const ownsRun = !!run && run.userId === session.user.id;
+  if (!run || (!ownsRun && !isAdminSessionUser(session.user))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -88,6 +90,7 @@ export async function GET(request: Request) {
 
     const videoId = segments[2];
     if (
+      ownsRun &&
       videoId &&
       UUID_REGEX.test(videoId) &&
       path.endsWith("short.mp4")
