@@ -4,9 +4,9 @@ import { env } from '~/env';
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 import { debitCredits, getBalance } from '~/server/credits';
 import { generateBreakdownContent } from '~/server/ingest/generateBreakdownContent';
-import { isAdminSessionUser } from '~/server/isAdminUser';
 import { resolveUrlContent } from '~/server/ingest/urlContent';
 import { assertUrlSafeForServerFetch, fetchUrlPreviewMetadata } from '~/server/ingest/urlMetadata';
+import { isAdminSessionUser } from '~/server/isAdminUser';
 
 import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import {
@@ -211,7 +211,7 @@ export const runsRouter = createTRPCRouter({
         where: eq(runs.id, run.id),
         with: { videos: true },
       });
-      if (!runWithVideos || runWithVideos.userId !== ctx.session.user.id) {
+      if (!runWithVideos || !canAccessRunAsViewer(ctx, runWithVideos.userId)) {
         throw new Error("Failed to load run after create");
       }
 
@@ -241,7 +241,7 @@ export const runsRouter = createTRPCRouter({
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || run.userId !== ctx.session.user.id) {
+      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
         throw new Error("Run not found");
       }
 
@@ -318,7 +318,7 @@ export const runsRouter = createTRPCRouter({
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || run.userId !== ctx.session.user.id) {
+      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
         throw new Error("Run not found");
       }
 
@@ -392,7 +392,7 @@ export const runsRouter = createTRPCRouter({
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || run.userId !== ctx.session.user.id) {
+      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
       }
 
@@ -450,7 +450,7 @@ export const runsRouter = createTRPCRouter({
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || run.userId !== ctx.session.user.id) {
+      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
         throw new Error("Run not found");
       }
 
@@ -500,7 +500,7 @@ export const runsRouter = createTRPCRouter({
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || run.userId !== ctx.session.user.id) {
+      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Run not found",
@@ -653,7 +653,7 @@ export const runsRouter = createTRPCRouter({
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || run.userId !== ctx.session.user.id) {
+      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
         throw new Error("Run not found");
       }
 
@@ -712,7 +712,7 @@ export const runsRouter = createTRPCRouter({
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || run.userId !== ctx.session.user.id) {
+      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
         throw new Error("Run not found");
       }
 
