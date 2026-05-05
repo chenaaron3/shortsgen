@@ -38,27 +38,36 @@ def assets_dir() -> Path:
 
 def mascot_path() -> Path:
     """Default mascot canvas image path."""
-    return assets_dir() / "mascot_multiple.png"
+    return assets_dir() / "stick.png"
+
+
+def _is_assets_basename_only(raw: str) -> bool:
+    """True when config should resolve only under assets/ (single filename, no path separators)."""
+    if raw in (".", ".."):
+        return False
+    return "/" not in raw and "\\" not in raw
 
 
 def resolve_config_mascot_path(raw_path: str | None) -> Path | None:
     """Resolve a config/YAML mascot_path for monorepo dev and Lambda.
 
-    Relative paths in YAML are usually monorepo-relative (e.g. services/python-generator/assets/stick.png)
-    or generation-relative (assets/stick.png). In the container, code lives under
-    ``/var/task/generation/``, not ``/var/task/services/python-generator/``.
+    **Convention:** a basename only (e.g. ``stick.png``, no ``/``) resolves to
+    ``<generation-root>/assets/<name>``. Same layout locally and in the Lambda bundle.
+
+    Other relative paths: try monorepo root, then generation root (e.g. ``assets/foo.png``).
 
     Returns the first path that exists, or None so callers can fall back to :func:`mascot_path`.
     """
     if not raw_path or not str(raw_path).strip():
         return None
-    p = Path(str(raw_path).strip())
+    s = str(raw_path).strip()
+    p = Path(s)
     if p.is_absolute():
         return p if p.exists() else None
-    candidates: list[Path] = [project_root() / p, generation_root() / p]
-    parts = p.parts
-    if len(parts) >= 2 and parts[0] == "services" and parts[1] == "python-generator":
-        candidates.append(generation_root() / Path(*parts[2:]))
+    candidates: list[Path] = []
+    if _is_assets_basename_only(s):
+        candidates.append(assets_dir() / s)
+    candidates.extend([project_root() / p, generation_root() / p])
     for c in candidates:
         try:
             resolved = c.resolve()

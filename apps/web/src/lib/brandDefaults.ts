@@ -17,5 +17,5 @@ export const DEFAULT_MASCOT_DESCRIPTION =
   "A minimalist, cute, gender-neutral stick-figure mascot with a very large perfectly round head " +
   "and a very small simple body underneath it. ";
 
-/** Same reference as path_utils.mascot_path() → assets/mascot_multiple.png, copied to public/. */
+/** Same reference as path_utils.mascot_path() → assets/stick.png, copied to public/ as brand-default-mascot.png. */
 export const DEFAULT_MASCOT_IMAGE_SRC = "/brand-default-mascot.png";

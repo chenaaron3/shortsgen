@@ -13,6 +13,6 @@ chunk:
 image:
   model: openai/gpt-image-2
   quality: low
-  mascot_path: services/python-generator/assets/stick.png
+  mascot_path: stick.png
 voice:
   backend: elevenlabs

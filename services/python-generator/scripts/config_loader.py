@@ -54,7 +54,10 @@ class ImageConfig(BaseModel):
     )
     mascot_path: str | None = Field(
         default=None,
-        description="Optional mascot image path (absolute or relative to project root)",
+        description=(
+            "Optional mascot image: basename only (e.g. stick.png) resolves under "
+            "generation assets/; otherwise absolute or path relative to repo or generation root"
+        ),
     )
 
 
