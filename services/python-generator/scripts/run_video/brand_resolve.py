@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from path_utils import mascot_path as default_mascot_path, project_root
+from path_utils import mascot_path as default_mascot_path, resolve_config_mascot_path
 from pipeline.image_style_defaults import MASCOT_DESCRIPTION, STYLE_PROMPT
 from run_video.persistence.run_video_writer import (
     get_brand,
@@ -32,14 +32,6 @@ def _resolved_prompts_from_brand(brand: Brand | None) -> tuple[str, str]:
     style = _text_override(brand.style_prompt) or STYLE_PROMPT
     mascot = _text_override(brand.mascot_description) or MASCOT_DESCRIPTION
     return style, mascot
-
-
-def _resolve_config_mascot_path(raw_path: str | None) -> Path | None:
-    """Resolve config mascot path (absolute or relative to project root)."""
-    if not raw_path or not str(raw_path).strip():
-        return None
-    p = Path(str(raw_path).strip())
-    return p if p.is_absolute() else (project_root() / p)
 
 
 def _resolved_prompts_with_fallbacks(
@@ -83,7 +75,7 @@ def resolve_brand_for_video_pipeline(
     Pins video.brand_id to latest user brand on first asset gen if unset.
     """
     run = get_run(run_id)
-    config_mascot = _resolve_config_mascot_path(config_mascot_path)
+    config_mascot = resolve_config_mascot_path(config_mascot_path)
     if not run:
         style, mascot = _resolved_prompts_with_fallbacks(
             None,

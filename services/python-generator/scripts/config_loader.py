@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, computed_field, Field
 
-from path_utils import generation_root, project_root
+from path_utils import generation_root, project_root, resolve_config_mascot_path
 
 
 def config_path_key(name: str) -> str:
@@ -89,12 +89,9 @@ def _text_override(raw: str | None) -> str | None:
 
 
 def _resolve_mascot_path(raw_path: str | None) -> str | None:
-    """Resolve mascot path to absolute string; relative paths are project-root based."""
-    if not raw_path or not str(raw_path).strip():
-        return None
-    p = Path(str(raw_path).strip())
-    resolved = p if p.is_absolute() else (project_root() / p)
-    return str(resolved)
+    """Resolve mascot path to absolute string; None if missing (caller uses default mascot)."""
+    found = resolve_config_mascot_path(raw_path)
+    return str(found) if found else None
 
 
 def config_with_resolved_image(

@@ -41,6 +41,34 @@ def mascot_path() -> Path:
     return assets_dir() / "mascot_multiple.png"
 
 
+def resolve_config_mascot_path(raw_path: str | None) -> Path | None:
+    """Resolve a config/YAML mascot_path for monorepo dev and Lambda.
+
+    Relative paths in YAML are usually monorepo-relative (e.g. services/python-generator/assets/stick.png)
+    or generation-relative (assets/stick.png). In the container, code lives under
+    ``/var/task/generation/``, not ``/var/task/services/python-generator/``.
+
+    Returns the first path that exists, or None so callers can fall back to :func:`mascot_path`.
+    """
+    if not raw_path or not str(raw_path).strip():
+        return None
+    p = Path(str(raw_path).strip())
+    if p.is_absolute():
+        return p if p.exists() else None
+    candidates: list[Path] = [project_root() / p, generation_root() / p]
+    parts = p.parts
+    if len(parts) >= 2 and parts[0] == "services" and parts[1] == "python-generator":
+        candidates.append(generation_root() / Path(*parts[2:]))
+    for c in candidates:
+        try:
+            resolved = c.resolve()
+        except OSError:
+            resolved = c
+        if resolved.exists():
+            return resolved
+    return None
+
+
 def prompts_dir() -> Path:
     """Generation prompts."""
     return _GENERATION_ROOT / "prompts"
