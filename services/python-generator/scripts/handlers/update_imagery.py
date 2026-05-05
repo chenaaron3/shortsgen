@@ -6,9 +6,10 @@ Either path: regenerate image, copy to public, upload single image to S3.
 """
 
 import json
-import os
 import shutil
 import sys
+import threading
+import time
 import traceback
 from pathlib import Path
 
@@ -27,6 +28,12 @@ from run_video.persistence.run_video_writer import get_video, update_video
 from run_video.s3_upload import upload_to_run
 from run_video.websocket_progress import emit_event
 from schemas.progress_event_type import ProgressEventType
+
+# Artificial progress during Replicate (majority of wall time): linear ramp over this window.
+FAKE_IMAGE_PROGRESS_SECONDS = 10.0
+# Progress band [GENERATE_LO, GENERATE_HI] reserved for the image generation step.
+GENERATE_LO = 0.10
+GENERATE_HI = 0.72
 
 
 def handler(event: dict, context) -> dict:
@@ -82,15 +89,46 @@ def _handler_impl(
         log_warn(f"[update_imagery] 400 sceneIndex={scene_index} out of range (0..{len(chunks.scenes) - 1})")
         return {"statusCode": 400, "body": json.dumps({"error": "sceneIndex out of range"})}
 
+    last_progress_lock = threading.Lock()
+    last_progress: list[float] = [0.0]
+
+    def _emit_phase(progress_val: float, status_message: str, phase: str) -> None:
+        with last_progress_lock:
+            if progress_val < last_progress[0] - 1e-9:
+                return
+            last_progress[0] = max(last_progress[0], progress_val)
+            p_out = last_progress[0]
+        emit_event(
+            run_id,
+            ProgressEventType.asset_gen_progress,
+            status_message=status_message,
+            video_id=video_id,
+            workflow="update_imagery",
+            progress=p_out,
+            payload={"sceneIndex": scene_index, "phase": phase},
+        )
+
+    emit_event(
+        run_id,
+        ProgressEventType.asset_gen_started,
+        status_message="Starting…",
+        video_id=video_id,
+        workflow="update_imagery",
+        progress=0.0,
+        payload={"step": "update_imagery", "sceneIndex": scene_index, "totalScenes": 1},
+    )
+
     config = load_config(config_hash)
 
     if imagery is not None and imagery.strip():
         # Path A: direct imagery
+        _emit_phase(0.06, "Applying changes", "apply_imagery")
         chunks.scenes[scene_index].imagery = imagery.strip()
         log_info(f"[update_imagery] direct imagery for scene {scene_index}")
     else:
         # Path B: LLM from feedback — revise only this scene's imagery
         scene = chunks.scenes[scene_index]
+        _emit_phase(0.06, "Revising image", "revise_imagery")
 
         new_imagery = revise_single_scene_imagery(
             scene_text=scene.text,
@@ -118,41 +156,51 @@ def _handler_impl(
                     scene.voice_path = existing_scene["voice_path"]
     chunks_path.write_text(chunks.model_dump_json(indent=2), encoding="utf-8")
 
-    emit_event(
-        run_id,
-        ProgressEventType.asset_gen_started,
-        status_message="Regenerating image…",
-        video_id=video_id,
-        workflow="update_imagery",
-        progress=0.0,
-        payload={"step": "images_voice", "totalScenes": 1},
-    )
+    _emit_phase(GENERATE_LO, "Generating image…", "generate_start")
 
     resolved_config = config_with_resolved_image(config, run_id=run_id, video_id=video_id)
     resolved_image = resolved_config.image
     resolved_mascot_path = Path(resolved_image.mascot_path) if resolved_image and resolved_image.mascot_path else None
 
-    run_images(
-        chunks,
-        cache_key,
-        config_hash,
-        resolved_mascot_path,
-        style_prompt=resolved_image.style_prompt if resolved_image else None,
-        mascot_description=resolved_image.mascot_description if resolved_image else None,
-        scene_indices=[scene_index],
-        skip_cache=True,
-        model=resolved_image.model if resolved_image else None,
-        quality=resolved_image.quality if resolved_image else "low",
-    )
-    emit_event(
-        run_id,
-        ProgressEventType.asset_gen_progress,
-        status_message="Regenerating image…",
-        video_id=video_id,
-        workflow="update_imagery",
-        progress=1.0,
-        payload={"sceneIndex": scene_index},
-    )
+    stop_fake_progress = threading.Event()
+
+    def _fake_generate_timer() -> None:
+        start = time.monotonic()
+        span = GENERATE_HI - GENERATE_LO
+        while not stop_fake_progress.is_set():
+            if stop_fake_progress.wait(timeout=1.0):
+                return
+            elapsed = time.monotonic() - start
+            frac = min(1.0, elapsed / FAKE_IMAGE_PROGRESS_SECONDS)
+            p = GENERATE_LO + span * frac
+            _emit_phase(p, "Generating image…", "generate_fake")
+            if frac >= 1.0:
+                return
+
+    def _on_image_complete(_done: int, _total: int, _path: str | None) -> None:
+        _emit_phase(GENERATE_HI, "Image generated, publishing…", "image_saved")
+
+    timer_thread = threading.Thread(target=_fake_generate_timer, daemon=True, name="update_imagery_fake_progress")
+    timer_thread.start()
+    try:
+        run_images(
+            chunks,
+            cache_key,
+            config_hash,
+            resolved_mascot_path,
+            style_prompt=resolved_image.style_prompt if resolved_image else None,
+            mascot_description=resolved_image.mascot_description if resolved_image else None,
+            scene_indices=[scene_index],
+            skip_cache=True,
+            model=resolved_image.model if resolved_image else None,
+            quality=resolved_image.quality if resolved_image else "low",
+            on_image_complete=_on_image_complete,
+        )
+    finally:
+        stop_fake_progress.set()
+        timer_thread.join(timeout=2.0)
+
+    _emit_phase(GENERATE_HI, "Generating image…", "generate_done")
 
     composite_key = remotion_composite_key(config_hash, cache_key)
     cache_images_dir = video_cache_path(cache_key, config_hash, "images")
@@ -166,6 +214,8 @@ def _handler_impl(
     shutil.copy2(cache_image_path, output_image_path)
     image_s3_path = f"images/{image_filename}"
 
+    _emit_phase(0.78, "Publishing…", "publish_local")
+
     upload_to_run(
         run_id,
         output_image_path,
@@ -173,7 +223,9 @@ def _handler_impl(
         path=image_s3_path,
         extra_args={"CacheControl": "no-cache, max-age=0, must-revalidate"},
     )
+    _emit_phase(0.88, "Uploaded…", "upload")
     invalidate_cdn_paths([f"/runs/{run_id}/{video_id}/{image_s3_path}"])
+    _emit_phase(0.97, "Finishing…", "finish")
 
     emit_event(
         run_id,

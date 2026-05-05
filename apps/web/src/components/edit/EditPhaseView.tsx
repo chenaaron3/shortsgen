@@ -184,6 +184,7 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
         runPhase={runPhase}
         videos={videos}
         activeVideoId={videoId}
+        isAdmin={!!isAdminQuery.data?.isAdmin}
         wsStatus={wsStatus}
         wsCloseInfo={wsCloseInfo}
         revisionLoadingVideoId={

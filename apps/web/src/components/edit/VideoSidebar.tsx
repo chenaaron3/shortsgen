@@ -33,6 +33,8 @@ interface VideoSidebarProps {
   runPhase: RunPhase;
   videos: Video[];
   activeVideoId: string;
+  /** When true, show WebSocket connection status (admin diagnostic). */
+  isAdmin: boolean;
   wsStatus: string;
   wsCloseInfo?: { code: number; reason: string } | null;
   /** Video ID showing revision loading indicator (feedback submitted, waiting for apply). */
@@ -46,6 +48,7 @@ export function VideoSidebar({
   runPhase,
   videos,
   activeVideoId,
+  isAdmin,
   wsStatus,
   wsCloseInfo,
   revisionLoadingVideoId,
@@ -69,24 +72,26 @@ export function VideoSidebar({
 
   return (
     <aside className="scrollbar-seamless w-56 shrink-0 overflow-y-auto bg-card p-4 lg:w-64">
-      <div className="mb-3 flex items-center gap-2">
-        <span
-          className={`h-2 w-2 rounded-full ${
-            wsStatus === "connected"
-              ? "bg-green-500"
-              : wsStatus === "connecting"
-                ? "bg-yellow-500 animate-pulse"
-                : "bg-muted-foreground/50"
-          }`}
-        />
-        <span className="text-xs text-muted-foreground">
-          {wsStatus === "connected"
-            ? "Live"
-            : wsStatus === "closed" && wsCloseInfo
-              ? `closed (${wsCloseInfo.code})`
-              : wsStatus}
-        </span>
-      </div>
+      {isAdmin && (
+        <div className="mb-3 flex items-center gap-2">
+          <span
+            className={`h-2 w-2 rounded-full ${
+              wsStatus === "connected"
+                ? "bg-green-500"
+                : wsStatus === "connecting"
+                  ? "bg-yellow-500 animate-pulse"
+                  : "bg-muted-foreground/50"
+            }`}
+          />
+          <span className="text-xs text-muted-foreground">
+            {wsStatus === "connected"
+              ? "Live"
+              : wsStatus === "closed" && wsCloseInfo
+                ? `closed (${wsCloseInfo.code})`
+                : wsStatus}
+          </span>
+        </div>
+      )}
       <h3 className="mb-2 text-sm font-medium text-foreground">Videos</h3>
       {videos.length === 0 ? (
         <div className="space-y-2">
