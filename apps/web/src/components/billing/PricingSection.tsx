@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import {
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
+    Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
 } from '~/components/ui/card';
 import { useUserConfig } from '~/hooks/useUserConfig';
 import { cn } from '~/lib/utils';
@@ -256,6 +256,11 @@ export function PricingSection({ cancelPath, className }: PricingSectionProps) {
           ))}
         </div>
 
+        {createCheckout.isError && (
+          <p className="mt-6 text-center text-destructive">
+            {createCheckout.error.message}
+          </p>
+        )}
       </div>
     </section>
   );

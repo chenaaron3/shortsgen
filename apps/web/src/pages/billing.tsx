@@ -1,22 +1,16 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import Head from "next/head";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { BuyCreditsForm } from "~/components/billing/BuyCreditsForm";
-import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import { useUserConfig } from "~/hooks/useUserConfig";
-import { api } from "~/utils/api";
+import { useSession } from 'next-auth/react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { BuyCreditsForm } from '~/components/billing/BuyCreditsForm';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
+import { useUserConfig } from '~/hooks/useUserConfig';
+import { api } from '~/utils/api';
 
-import { formatTierPrice } from "@shortgen/db";
+import { formatTierPrice } from '@shortgen/db';
 
 const TIER_LABELS: Record<string, string> = {
   free: "Free",

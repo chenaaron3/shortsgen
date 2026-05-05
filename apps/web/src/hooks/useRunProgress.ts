@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { env } from "~/env";
-import { useRunStore } from "~/stores/useRunStore";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { env } from '~/env';
+import { useRunStore } from '~/stores/useRunStore';
 
 import type {
   ChunksOutput,
@@ -278,9 +278,8 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       bumpAssetsRefreshKey,
     } = useRunStore.getState();
     const activeVideoId = useRunStore.getState().ui.activeVideoId;
-    const payloadVideoId = (
-      msg.payload as { videoId?: string } | undefined
-    )?.videoId;
+    const payloadVideoId = (msg.payload as { videoId?: string } | undefined)
+      ?.videoId;
     const eventVideoId = payloadVideoId ?? msg.videoId;
     const isActiveVideo =
       !!activeVideoId && !!eventVideoId && activeVideoId === eventVideoId;
@@ -303,7 +302,8 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       if (p?.chunks) setSceneSuggestions(p.chunks);
       setFeedbackLocked(false);
 
-      const { ui, setScriptFeedback, setSceneFeedback } = useRunStore.getState();
+      const { ui, setScriptFeedback, setSceneFeedback } =
+        useRunStore.getState();
       setScriptFeedback("");
       Object.keys(ui.activeSceneUiByIndex).forEach((sceneIndex) => {
         setSceneFeedback(Number(sceneIndex), { sentiment: null, note: "" });
@@ -319,8 +319,13 @@ function createProgressHandler(refetch: (() => void) | undefined) {
       }
     }
 
+    // Run-level: emit_event uses default videoId="", so isActiveVideo is never true — refetch anyway.
+    if (msg.type === "initial_processing_complete") {
+      setSceneUpdating(null);
+      refetch?.();
+    }
+
     if (
-      msg.type === "initial_processing_complete" ||
       msg.type === "script_created" ||
       msg.type === "video_completed" ||
       msg.type === "suggestion_completed"
