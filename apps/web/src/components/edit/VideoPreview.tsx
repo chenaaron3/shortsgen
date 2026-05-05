@@ -117,7 +117,7 @@ function ExportButton({
       className="flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
     >
       <Video className="h-4 w-4" />
-      Export
+      Re-Export
     </button>
   );
 }
@@ -223,6 +223,7 @@ export function VideoPreview({
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg bg-black">
         <PlayerErrorBoundary fallback={playerFallback}>
           <Player
+            key={assetsRefreshKey}
             {...({
               acknowledgeRemotionLicense: true,
               component: ShortVideo as React.ComponentType<Record<string, unknown>>,

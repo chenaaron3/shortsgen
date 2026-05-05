@@ -147,10 +147,8 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
     runPhase === "export" &&
     videos.length > 0 &&
     videos.every((v) => v.status === "exported");
-  const hasExportableVideos = videos.some((v) => v.status === "assets");
   const canShowExportButton =
-    ((runPhase === "asset_gen" && allVideosHaveAssets) ||
-      (runPhase === "export" && hasExportableVideos)) &&
+    (runPhase === "asset_gen" && allVideosHaveAssets) &&
     !triggerExportMutation.isPending;
 
   const handleFinalizeAll = useCallback(() => {

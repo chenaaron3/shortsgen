@@ -4,9 +4,10 @@ import { useMemo } from 'react';
 import { useRunStore } from '~/stores/useRunStore';
 import { api } from '~/utils/api';
 
+/** Server `getVideoAssets` may add `?v=<version>`; still append client `rg` so bumpAssetsRefreshKey busts cache. */
 function withImageRefresh(path: string, refreshKey: number): string {
-  if (path.includes("?")) return path;
-  return `${path}?v=${refreshKey}`;
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}rg=${refreshKey}`;
 }
 
 /** CDN URLs per scene index for thumbnails/audio; merges manifest, S3 listing, and WS progressive assets. */

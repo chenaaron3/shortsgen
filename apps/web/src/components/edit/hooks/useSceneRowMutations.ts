@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { sceneFeedbackToApiString } from "~/lib/sceneFeedback";
-import { useRunStore } from "~/stores/useRunStore";
-import { api } from "~/utils/api";
+import { useCallback, useMemo } from 'react';
+import { sceneFeedbackToApiString } from '~/lib/sceneFeedback';
+import { useRunStore } from '~/stores/useRunStore';
+import { api } from '~/utils/api';
+
 import type { SceneFeedback } from "~/lib/sceneFeedback";
 
 interface UseSceneRowMutationsOptions {
@@ -23,7 +24,8 @@ export function useSceneRowMutations({
   sceneImagery,
   feedback,
 }: UseSceneRowMutationsOptions) {
-  const variationFeedback = "Generate a different visual variation from the current image.";
+  const variationFeedback =
+    "Generate a different visual variation from the current image.";
   const runId = useRunStore((s) => s.ui.runId);
   const videoId = useRunStore((s) => s.ui.activeVideoId);
   const acceptSuggestionPending = useRunStore(

@@ -19,7 +19,7 @@ type ShortVideoProps = {
   assetBaseUrl?: string;
   /** When set (e.g. for web Player), use this URL for background music instead of staticFile. */
   backgroundMusicUrl?: string;
-  /** Cache-buster for images (e.g. after regenerate). Appended as ?v=N to image URLs. */
+  /** Cache-buster for images (e.g. after regenerate). Appended as `rg=N` (and `&rg=` if URL already has a query). */
   assetsRefreshKey?: number;
 };
 
@@ -34,7 +34,9 @@ function resolveAssetUrl(
   }
   if (assetBaseUrl) {
     const base = `${assetBaseUrl.replace(/\/$/, "")}/${relativePath}`;
-    return assetsRefreshKey != null ? `${base}?v=${assetsRefreshKey}` : base;
+    if (assetsRefreshKey == null) return base;
+    const sep = base.includes("?") ? "&" : "?";
+    return `${base}${sep}rg=${assetsRefreshKey}`;
   }
   return staticFile(`${basePath}/${relativePath}`);
 }
