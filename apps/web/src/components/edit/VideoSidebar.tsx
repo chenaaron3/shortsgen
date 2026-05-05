@@ -101,7 +101,7 @@ export function VideoSidebar({
         </div>
       ) : (
         <nav className="space-y-1">
-          {videos.map((v) => {
+          {videos.map((v, i) => {
             const progress = videoProgressByVideo[v.id];
             const stepLabel = getStepLabel(progress);
             const progressPct = getProgressValue(progress);
@@ -144,8 +144,8 @@ export function VideoSidebar({
                   )}
                   <div className="relative z-10 flex w-full flex-col gap-0.5 px-3 py-2">
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="min-w-0 flex-1 truncate font-mono">
-                        {getVideoDisplayName(v)}
+                      <span className="min-w-0 flex-1 truncate">
+                        {getVideoDisplayName({ ...v, placeholderIndex: i + 1 })}
                       </span>
                       {(!!progress || revisionLoadingVideoId === v.id) && (
                         <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />

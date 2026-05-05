@@ -35,7 +35,19 @@ export function SceneList({
       return <ScriptingScenesSkeleton />;
     }
     return (
-      <p className="text-muted-foreground">No scenes yet. Processing…</p>
+      <div role="status" aria-live="polite" className="space-y-4">
+        <span className="sr-only">Preparing scenes…</span>
+        <div>
+          <h2 className="text-base font-semibold text-foreground">
+            Analyzing your video
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            We&apos;re detecting scenes and preparing the script. This usually takes a
+            moment.
+          </p>
+        </div>
+        <ScriptingScenesSkeleton rowCount={3} />
+      </div>
     );
   }
 

@@ -46,6 +46,10 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
 
   const videos = runData.videos ?? [];
   const selectedVideo = videos.find((v) => v.id === videoId);
+  const videoPlaceholderIndex = Math.max(
+    1,
+    videos.findIndex((v) => v.id === videoId) + 1,
+  );
 
   const { scenes, description } = useMemo(
     () => parseVideoChunks(selectedVideo?.chunks),
@@ -226,10 +230,15 @@ export function EditPhaseView({ runData, videoId, wsStatus, wsCloseInfo }: EditP
                   >
                     <div className="flex min-w-0 items-center gap-2">
                       <h1 className="truncate text-xl font-bold">
-                        {getVideoDisplayName(selectedVideo)}
+                        {getVideoDisplayName({
+                          ...selectedVideo,
+                          placeholderIndex: videoPlaceholderIndex,
+                        })}
                       </h1>
                       <Badge variant="secondary" className="text-xs">
-                        {scenes.length} scenes
+                        {scenes.length === 0
+                          ? "In progress"
+                          : `${scenes.length} scenes`}
                       </Badge>
                     </div>
                     {sourceText && <RawScriptCard sourceText={sourceText} />}

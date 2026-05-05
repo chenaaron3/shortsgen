@@ -40,11 +40,17 @@ export function parseVideoChunks(chunks: unknown): {
   };
 }
 
-/** Display label for a video: title from chunks, or truncated hash. */
+/** Display label for a video: title from chunks, or `Video N` when index is set, else `Video`. */
 export function getVideoDisplayName(video: {
   id: string;
   chunks?: unknown;
+  /** 1-based index for placeholder when title is missing */
+  placeholderIndex?: number;
 }): string {
   const { title } = parseVideoChunks(video.chunks);
-  return title ?? video.id.slice(0, 8);
+  if (title) return title;
+  if (video.placeholderIndex != null && video.placeholderIndex >= 1) {
+    return `Video ${video.placeholderIndex}`;
+  }
+  return "Video";
 }

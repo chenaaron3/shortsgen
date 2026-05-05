@@ -61,12 +61,13 @@ export function RunCard({ run }: RunCardProps) {
         </div>
         {videos.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {videos.map((v) => (
+            {videos.map((v, i) => (
               <VideoListItem
                 key={v.id}
                 runId={run.id}
                 videoId={v.id}
                 chunks={v.chunks}
+                placeholderIndex={i + 1}
               />
             ))}
           </div>
