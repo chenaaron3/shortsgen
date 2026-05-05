@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState } from 'react';
 import { Dialog, DialogContent } from '~/components/ui/dialog';
 import { Skeleton } from '~/components/ui/skeleton';
 import { useVideoSceneAssetUrls } from '~/hooks/useVideoSceneAssetUrls';

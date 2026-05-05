@@ -287,10 +287,18 @@ export const runsRouter = createTRPCRouter({
         videoId: z.string().uuid(),
         sceneDraftsByIndex: z.record(
           z.string(),
-          z.object({
-            scriptText: z.string(),
-            imageryText: z.string(),
-          }),
+          z
+            .object({
+              scriptText: z.string().optional(),
+              imageryText: z.string().optional(),
+            })
+            .refine(
+              (p) => p.scriptText !== undefined || p.imageryText !== undefined,
+              {
+                message:
+                  "Each scene patch must include scriptText and/or imageryText",
+              },
+            ),
         ),
       }),
     )
@@ -329,11 +337,18 @@ export const runsRouter = createTRPCRouter({
 
       const nextScenes = parsedChunks.data.scenes.map((scene, idx) => {
         const patch = input.sceneDraftsByIndex[String(idx)];
-        if (!patch) return scene;
+        if (
+          !patch ||
+          (patch.scriptText === undefined && patch.imageryText === undefined)
+        ) {
+          return scene;
+        }
         return {
           ...scene,
-          text: patch.scriptText,
-          imagery: patch.imageryText,
+          ...(patch.scriptText !== undefined ? { text: patch.scriptText } : {}),
+          ...(patch.imageryText !== undefined
+            ? { imagery: patch.imageryText }
+            : {}),
         };
       });
 

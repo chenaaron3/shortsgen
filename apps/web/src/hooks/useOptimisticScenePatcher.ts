@@ -7,7 +7,11 @@ import { api } from "~/utils/api";
 import type { RouterOutputs } from "~/utils/api";
 
 type RunByIdOutput = RouterOutputs["runs"]["getById"];
-type SceneDraftPatch = { scriptText: string; imageryText: string };
+/** At least one field should be set; optimistic patch merges onto existing scene. */
+export type SceneDraftPatch = {
+  scriptText?: string;
+  imageryText?: string;
+};
 type SceneDraftsByIndex = Record<string, SceneDraftPatch>;
 
 function patchVideoChunks(
@@ -29,11 +33,16 @@ function patchVideoChunks(
 
   const nextScenes = parsed.data.scenes.map((scene, idx) => {
     const patch = sceneDraftsByIndex[String(idx)];
-    if (!patch) return scene;
+    if (
+      !patch ||
+      (patch.scriptText === undefined && patch.imageryText === undefined)
+    ) {
+      return scene;
+    }
     return {
       ...scene,
-      text: patch.scriptText,
-      imagery: patch.imageryText,
+      ...(patch.scriptText !== undefined ? { text: patch.scriptText } : {}),
+      ...(patch.imageryText !== undefined ? { imagery: patch.imageryText } : {}),
     };
   });
   const nextChunks = {
