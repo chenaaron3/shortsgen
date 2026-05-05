@@ -30,7 +30,7 @@ from run_video.websocket_progress import emit_event
 from schemas.progress_event_type import ProgressEventType
 
 # Artificial progress during Replicate (majority of wall time): linear ramp over this window.
-FAKE_IMAGE_PROGRESS_SECONDS = 10.0
+FAKE_IMAGE_PROGRESS_SECONDS = 25.0
 # Progress band [GENERATE_LO, GENERATE_HI] reserved for the image generation step.
 GENERATE_LO = 0.10
 GENERATE_HI = 0.72
