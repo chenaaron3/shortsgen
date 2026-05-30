@@ -14,9 +14,12 @@ import type { Session } from "next-auth";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
+import { runs } from "@shortgen/db";
+import { eq } from "drizzle-orm";
 import { auth, authUncached } from "~/server/auth";
 import { isAdminSessionUser } from "~/server/isAdminUser";
 import { db } from "~/server/db";
+import { canAccessRunAsViewer } from "~/server/runAccess";
 /**
  * 1. CONTEXT
  *
@@ -169,6 +172,29 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Use after `.input(...)` that includes `runId`. Ensures the run exists and the caller is the owner
+ * or an admin. Throws NOT_FOUND otherwise (opaque for non-owners, same as missing run).
+ */
+export const runAccessMiddleware = t.middleware(async ({ ctx, next, input }) => {
+  const user = ctx.session?.user;
+  if (!user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  const runId = (input as { runId: string }).runId;
+  const [row] = await ctx.db
+    .select({ userId: runs.userId })
+    .from(runs)
+    .where(eq(runs.id, runId));
+
+  if (!row || !canAccessRunAsViewer(user, row.userId)) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
+  }
+
+  return next();
+});
 
 export { isAdminSessionUser } from "~/server/isAdminUser";
 

@@ -7,7 +7,7 @@ export const CREDITS_INGEST_PER_RUN = 100;
 export const CREDITS_ASSETS_PER_VIDEO = 300;
 export const CREDITS_IMAGE_REGEN = 50;
 export const SCRIPT_REGEN_FREE_LIMIT = 10;
-export const SIGNUP_CREDITS = 500;
+export const SIGNUP_CREDITS = 5000;
 export const CREDITS_PER_DOLLAR = 100;
 
 /** Monthly price in cents per tier. */
@@ -33,8 +33,6 @@ export const TIER_CREDIT_ALLOWANCE = {
 } as const satisfies Record<string, number>;
 
 /** e.g. "Basic — $29/mo" */
-export function formatTierPrice(
-  tierId: keyof typeof TIER_PRICE_CENTS,
-): string {
+export function formatTierPrice(tierId: keyof typeof TIER_PRICE_CENTS): string {
   return `${TIER_NAMES[tierId]} — $${(TIER_PRICE_CENTS[tierId] / 100).toFixed(0)}/mo`;
 }

@@ -1,12 +1,16 @@
 import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { env } from '~/env';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  runAccessMiddleware,
+} from '~/server/api/trpc';
 import { debitCredits, getBalance } from '~/server/credits';
 import { generateBreakdownContent } from '~/server/ingest/generateBreakdownContent';
 import { resolveUrlContent } from '~/server/ingest/urlContent';
 import { assertUrlSafeForServerFetch, fetchUrlPreviewMetadata } from '~/server/ingest/urlMetadata';
-import { isAdminSessionUser } from '~/server/isAdminUser';
+import { canAccessRunAsViewer } from '~/server/runAccess';
 
 import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import {
@@ -26,15 +30,6 @@ import type { InferSelectModel } from "drizzle-orm";
 export type RunWithVideos = InferSelectModel<typeof runs> & {
   videos: InferSelectModel<typeof videos>[];
 };
-
-function canAccessRunAsViewer(
-  ctx: { session: { user: { id: string; email?: string | null } } },
-  runUserId: string,
-) {
-  return (
-    runUserId === ctx.session.user.id || isAdminSessionUser(ctx.session.user)
-  );
-}
 
 export const runsRouter = createTRPCRouter({
   /** List all runs for the current user with their videos. */
@@ -57,7 +52,7 @@ export const runsRouter = createTRPCRouter({
         with: { videos: true },
       });
 
-      if (!runWithVideos || !canAccessRunAsViewer(ctx, runWithVideos.userId))
+      if (!runWithVideos || !canAccessRunAsViewer(ctx.session.user, runWithVideos.userId))
         return null;
 
       return runWithVideos as RunWithVideos;
@@ -211,7 +206,7 @@ export const runsRouter = createTRPCRouter({
         where: eq(runs.id, run.id),
         with: { videos: true },
       });
-      if (!runWithVideos || !canAccessRunAsViewer(ctx, runWithVideos.userId)) {
+      if (!runWithVideos || !canAccessRunAsViewer(ctx.session.user, runWithVideos.userId)) {
         throw new Error("Failed to load run after create");
       }
 
@@ -235,13 +230,14 @@ export const runsRouter = createTRPCRouter({
           .optional(),
       }),
     )
+    .use(runAccessMiddleware)
     .mutation(async ({ ctx, input }) => {
       const [run] = await ctx.db
         .select()
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
+      if (!run) {
         throw new Error("Run not found");
       }
 
@@ -312,16 +308,8 @@ export const runsRouter = createTRPCRouter({
         ),
       }),
     )
+    .use(runAccessMiddleware)
     .mutation(async ({ ctx, input }) => {
-      const [run] = await ctx.db
-        .select()
-        .from(runs)
-        .where(eq(runs.id, input.runId));
-
-      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
-        throw new Error("Run not found");
-      }
-
       const [video] = await ctx.db
         .select()
         .from(videos)
@@ -386,13 +374,14 @@ export const runsRouter = createTRPCRouter({
         videoId: z.string().uuid(),
       }),
     )
+    .use(runAccessMiddleware)
     .mutation(async ({ ctx, input }) => {
       const [run] = await ctx.db
         .select()
         .from(runs)
         .where(eq(runs.id, input.runId));
 
-      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
+      if (!run) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
       }
 
@@ -444,16 +433,8 @@ export const runsRouter = createTRPCRouter({
    */
   triggerExport: protectedProcedure
     .input(z.object({ runId: z.string().uuid() }))
+    .use(runAccessMiddleware)
     .mutation(async ({ ctx, input }) => {
-      const [run] = await ctx.db
-        .select()
-        .from(runs)
-        .where(eq(runs.id, input.runId));
-
-      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
-        throw new Error("Run not found");
-      }
-
       const videosToExport = await ctx.db
         .select({ id: videos.id, s3_prefix: videos.s3_prefix })
         .from(videos)
@@ -494,19 +475,8 @@ export const runsRouter = createTRPCRouter({
    */
   triggerExportVideo: protectedProcedure
     .input(z.object({ runId: z.string().uuid(), videoId: z.string().uuid() }))
+    .use(runAccessMiddleware)
     .mutation(async ({ ctx, input }) => {
-      const [run] = await ctx.db
-        .select()
-        .from(runs)
-        .where(eq(runs.id, input.runId));
-
-      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Run not found",
-        });
-      }
-
       const [video] = await ctx.db
         .select({
           id: videos.id,
@@ -550,16 +520,8 @@ export const runsRouter = createTRPCRouter({
    */
   getExportProgress: protectedProcedure
     .input(z.object({ runId: z.string().uuid(), videoId: z.string().uuid() }))
+    .use(runAccessMiddleware)
     .query(async ({ ctx, input }) => {
-      const [run] = await ctx.db
-        .select()
-        .from(runs)
-        .where(eq(runs.id, input.runId));
-
-      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "Run not found" });
-      }
-
       const [video] = await ctx.db
         .select({ render_id: videos.render_id, status: videos.status })
         .from(videos)
@@ -647,16 +609,8 @@ export const runsRouter = createTRPCRouter({
           { message: "Provide imagery or feedback" },
         ),
     )
+    .use(runAccessMiddleware)
     .mutation(async ({ ctx, input }) => {
-      const [run] = await ctx.db
-        .select()
-        .from(runs)
-        .where(eq(runs.id, input.runId));
-
-      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
-        throw new Error("Run not found");
-      }
-
       const debitResult = await debitCredits(
         ctx.db,
         ctx.session.user.id,
@@ -706,16 +660,8 @@ export const runsRouter = createTRPCRouter({
    */
   finalizeAll: protectedProcedure
     .input(z.object({ runId: z.string().uuid() }))
+    .use(runAccessMiddleware)
     .mutation(async ({ ctx, input }) => {
-      const [run] = await ctx.db
-        .select()
-        .from(runs)
-        .where(eq(runs.id, input.runId));
-
-      if (!run || !canAccessRunAsViewer(ctx, run.userId)) {
-        throw new Error("Run not found");
-      }
-
       const scriptsVideos = await ctx.db
         .select({ id: videos.id })
         .from(videos)
@@ -823,7 +769,7 @@ export const runsRouter = createTRPCRouter({
           .from(runs)
           .where(eq(runs.id, input.runId));
 
-        if (!run || !canAccessRunAsViewer(ctx, run.userId)) return null;
+        if (!run || !canAccessRunAsViewer(ctx.session.user, run.userId)) return null;
 
         const prefix = video.s3Prefix.replace(/\/$/, "");
         const cdnBase = env.SHORTGEN_CDN_URL.replace(/\/$/, "");
