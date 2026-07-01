@@ -57,7 +57,7 @@ def generate_for_scenes(
         return ttsvibes_generate_for_scenes(scenes, voice=voice, **kwargs)
     else:
         api_key = (os.getenv("ELEVENLABS_API_KEY") or os.getenv("XI_API_KEY") or "").strip()
-        voice_id = (os.getenv("ELEVENLABS_VOICE_ID") or "").strip() or "NFG5qt843uXKj4pFvR7C"
+        voice_id = (os.getenv("ELEVENLABS_VOICE_ID") or "").strip() or "JBFqnCBsd6RMkjVDRZzb"
         model_id = (os.getenv("ELEVENLABS_MODEL_ID") or "").strip() or "eleven_v3"
         output_format = (os.getenv("ELEVENLABS_OUTPUT_FORMAT") or "").strip() or "mp3_44100_128"
 
