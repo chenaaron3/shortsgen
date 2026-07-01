@@ -12,7 +12,7 @@ from pydub import AudioSegment
 
 from usage_trace import record_voice
 
-DEFAULT_VOICE_ID = "NFG5qt843uXKj4pFvR7C"
+DEFAULT_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb' # "NFG5qt843uXKj4pFvR7C"
 DEFAULT_MODEL_ID = "eleven_v3"
 DEFAULT_OUTPUT_FORMAT = "mp3_44100_128"
 DEFAULT_STABILITY = 1
